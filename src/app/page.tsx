@@ -1,6 +1,9 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
+import type { User } from "@supabase/supabase-js";
 
 const THEMES = {
   light: {
@@ -82,6 +85,9 @@ const SUGGESTED_PROMPTS = [
 ];
 
 export default function Home() {
+  const router = useRouter();
+  const [user, setUser] = useState<User | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const [messages, setMessages] = useState<{role: string, text: string}[]>([]);
   const [chatInput, setChatInput] = useState("");
@@ -90,6 +96,17 @@ export default function Home() {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const C = THEMES[theme];
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) {
+        router.push("/auth");
+      } else {
+        setUser(user);
+        setAuthLoading(false);
+      }
+    });
+  }, [router]);
 
   useEffect(() => {
     const link = document.createElement("link");
@@ -101,6 +118,11 @@ export default function Home() {
   useEffect(() => {
     if (chatEndRef.current) chatEndRef.current.scrollIntoView({ behavior: "smooth" });
   }, [messages, isTyping]);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.push("/auth");
+  };
 
   const sendMessage = async () => {
     if (!chatInput.trim()) return;
@@ -118,7 +140,7 @@ export default function Home() {
       });
       const data = await response.json();
       setMessages(prev => [...prev, { role: "assistant", text: data.reply || "Sorry, something went wrong." }]);
-    } catch (error) {
+    } catch {
       setMessages(prev => [...prev, { role: "assistant", text: "I'm having trouble connecting right now. Please try again." }]);
     } finally {
       setIsTyping(false);
@@ -139,6 +161,14 @@ export default function Home() {
     </button>
   );
 
+  if (authLoading) {
+    return (
+      <div style={{ minHeight: "100vh", background: "#FAF8F4", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: sans, color: "#5A6B5E", fontSize: 14 }}>
+        Loading...
+      </div>
+    );
+  }
+
   return (
     <div style={{ minHeight: "100vh", background: C.bgContent, fontFamily: sans, transition: "background 0.4s ease" }}>
       <style>{`
@@ -150,7 +180,9 @@ export default function Home() {
       `}</style>
 
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 20px", background: C.topBarBg, backdropFilter: "blur(16px)", borderBottom: `1px solid ${C.border}`, position: "sticky", top: 0, zIndex: 100 }}>
-        <div style={{ width: 30 }} />
+        <button onClick={handleLogout} style={{ background: "none", border: "none", color: C.textMuted, fontFamily: sans, fontSize: 12, cursor: "pointer", padding: "4px 8px" }}>
+          Logout
+        </button>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <Logo size={24} />
           <span style={{ fontFamily: serif, fontSize: 18, color: C.text }}>Nura</span>
@@ -164,7 +196,7 @@ export default function Home() {
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "100%", padding: "20px 0 40px" }}>
               <div style={{ marginBottom: 24 }}><Logo size={44} /></div>
               <h1 style={{ fontFamily: serif, fontSize: 24, fontWeight: 400, color: C.text, textAlign: "center", margin: "0 0 8px", lineHeight: 1.3 }}>
-                How can I help you on your wellness journey?
+                {user?.user_metadata?.name ? `Welcome back, ${user.user_metadata.name}` : "How can I help you on your wellness journey?"}
               </h1>
               <p style={{ fontFamily: sans, fontSize: 13, color: C.textLight, textAlign: "center", margin: "0 0 28px" }}>
                 Nutrition · Supplements · Movement · Natural Healing
