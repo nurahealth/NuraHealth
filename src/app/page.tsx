@@ -84,6 +84,14 @@ const SUGGESTED_PROMPTS = [
   "How do I balance cortisol naturally?",
 ];
 
+const NAV_ITEMS = [
+  { id: "home", label: "Home", icon: "⌂" },
+  { id: "explore", label: "Explore", icon: "✦" },
+  { id: "conditions", label: "Conditions", icon: "◈" },
+  { id: "saved", label: "Saved", icon: "♡" },
+  { id: "settings", label: "Settings", icon: "⚙" },
+];
+
 export default function Home() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
@@ -92,6 +100,8 @@ export default function Home() {
   const [messages, setMessages] = useState<{role: string, text: string}[]>([]);
   const [chatInput, setChatInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [activeNav, setActiveNav] = useState("home");
   const chatEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -169,6 +179,9 @@ export default function Home() {
     );
   }
 
+  const userName = user?.user_metadata?.name || user?.email?.split("@")[0] || "Friend";
+  const userInitial = userName.charAt(0).toUpperCase();
+
   return (
     <div style={{ minHeight: "100vh", background: C.bgContent, fontFamily: sans, transition: "background 0.4s ease" }}>
       <style>{`
@@ -179,9 +192,51 @@ export default function Home() {
         html, body { margin: 0; padding: 0; }
       `}</style>
 
+      {sidebarOpen && (
+        <div onClick={() => setSidebarOpen(false)} style={{ position: "fixed", inset: 0, background: C.overlay, zIndex: 200, backdropFilter: "blur(4px)" }} />
+      )}
+
+      <div style={{ position: "fixed", left: sidebarOpen ? 0 : -300, top: 0, bottom: 0, width: 280, background: C.sidebar, zIndex: 201, transition: "left 0.3s cubic-bezier(0.4,0,0.2,1)", display: "flex", flexDirection: "column", borderRight: `1px solid ${C.border}` }}>
+        <div style={{ padding: "20px 20px 16px", display: "flex", alignItems: "center", gap: 10, borderBottom: `1px solid ${C.border}` }}>
+          <Logo size={32} />
+          <span style={{ fontFamily: serif, fontSize: 22, color: C.text }}>Nura</span>
+        </div>
+
+        <div style={{ flex: 1, padding: "16px 12px", overflowY: "auto" }}>
+          {NAV_ITEMS.map(item => (
+            <button key={item.id} onClick={() => { setActiveNav(item.id); setSidebarOpen(false); }}
+              style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "11px 14px", marginBottom: 2, background: activeNav === item.id ? C.sidebarHover : "transparent", border: "none", borderRadius: 10, fontFamily: sans, fontSize: 14, color: activeNav === item.id ? C.text : C.textMuted, cursor: "pointer", textAlign: "left", fontWeight: activeNav === item.id ? 500 : 400 }}>
+              <span style={{ fontSize: 16, color: activeNav === item.id ? C.terracotta : C.textLight, width: 18, textAlign: "center" }}>{item.icon}</span>
+              <span>{item.label}</span>
+            </button>
+          ))}
+
+          <div style={{ marginTop: 24, padding: "0 14px 8px", fontFamily: sans, fontSize: 11, fontWeight: 600, color: C.textLight, textTransform: "uppercase", letterSpacing: 0.5 }}>
+            Recent Chats
+          </div>
+          <div style={{ padding: "8px 14px", fontFamily: sans, fontSize: 12.5, color: C.textFaint, fontStyle: "italic" }}>
+            No saved chats yet
+          </div>
+        </div>
+
+        <div style={{ padding: "12px", borderTop: `1px solid ${C.border}` }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 10 }}>
+            <div style={{ width: 32, height: 32, borderRadius: "50%", background: C.terracotta, color: C.white, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: serif, fontSize: 14, flexShrink: 0 }}>
+              {userInitial}
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontFamily: sans, fontSize: 13, color: C.text, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{userName}</div>
+              <button onClick={handleLogout} style={{ background: "none", border: "none", color: C.textMuted, fontFamily: sans, fontSize: 11.5, cursor: "pointer", padding: 0, textAlign: "left" }}>
+                Sign out
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 20px", background: C.topBarBg, backdropFilter: "blur(16px)", borderBottom: `1px solid ${C.border}`, position: "sticky", top: 0, zIndex: 100 }}>
-        <button onClick={handleLogout} style={{ background: "none", border: "none", color: C.textMuted, fontFamily: sans, fontSize: 12, cursor: "pointer", padding: "4px 8px" }}>
-          Logout
+        <button onClick={() => setSidebarOpen(true)} style={{ width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", background: "none", border: "none", cursor: "pointer", color: C.text, fontSize: 18 }}>
+          ☰
         </button>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <Logo size={24} />
@@ -196,7 +251,7 @@ export default function Home() {
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "100%", padding: "20px 0 40px" }}>
               <div style={{ marginBottom: 24 }}><Logo size={44} /></div>
               <h1 style={{ fontFamily: serif, fontSize: 24, fontWeight: 400, color: C.text, textAlign: "center", margin: "0 0 8px", lineHeight: 1.3 }}>
-                {user?.user_metadata?.name ? `Welcome back, ${user.user_metadata.name}` : "How can I help you on your wellness journey?"}
+                {`Welcome back, ${userName}`}
               </h1>
               <p style={{ fontFamily: sans, fontSize: 13, color: C.textLight, textAlign: "center", margin: "0 0 28px" }}>
                 Nutrition · Supplements · Movement · Natural Healing
