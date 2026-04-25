@@ -204,7 +204,7 @@ export default function Home() {
 
         <div style={{ flex: 1, padding: "16px 12px", overflowY: "auto" }}>
           {NAV_ITEMS.map(item => (
-            <button key={item.id} onClick={() => { setActiveNav(item.id); setSidebarOpen(false); }}
+            <button key={item.id} onClick={() => { setActiveNav(item.id); setSidebarOpen(false); if (item.id !== "home") router.push(`/${item.id}`); }}
               style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "11px 14px", marginBottom: 2, background: activeNav === item.id ? C.sidebarHover : "transparent", border: "none", borderRadius: 10, fontFamily: sans, fontSize: 14, color: activeNav === item.id ? C.text : C.textMuted, cursor: "pointer", textAlign: "left", fontWeight: activeNav === item.id ? 500 : 400 }}>
               <span style={{ fontSize: 16, color: activeNav === item.id ? C.terracotta : C.textLight, width: 18, textAlign: "center" }}>{item.icon}</span>
               <span>{item.label}</span>
