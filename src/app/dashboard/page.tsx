@@ -11,6 +11,7 @@ import {
   unlogSupplementTaken,
   type Supplement,
 } from "@/lib/supplements";
+import { getLatestBiomarkers, type Biomarker } from "@/lib/bloodwork";
 import { TrendingUp, Check } from "lucide-react";
 import { FONTS } from "@/lib/theme";
 import { useTheme } from "@/components/ThemeProvider";
@@ -97,6 +98,8 @@ export default function DashboardPage() {
   const [todaysLogs, setTodaysLogs] = useState<string[]>([]);
   const [suppLoading, setSuppLoading] = useState(true);
   const [pendingIds, setPendingIds] = useState<Set<string>>(new Set());
+  const [biomarkers, setBiomarkers] = useState<Biomarker[]>([]);
+  const [biomarkersLoading, setBiomarkersLoading] = useState(true);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -117,6 +120,14 @@ export default function DashboardPage() {
       .catch(() => setSuppLoading(false));
   }, [user]);
 
+  useEffect(() => {
+    if (!user) return;
+    setBiomarkersLoading(true);
+    getLatestBiomarkers(user.id)
+      .then((bm) => { setBiomarkers(bm.slice(0, 3)); setBiomarkersLoading(false); })
+      .catch(() => setBiomarkersLoading(false));
+  }, [user]);
+
   if (authLoading) {
     return (
       <div style={{ minHeight: "100vh", background: colors.bg, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: FONTS.mono, color: colors.textFaint, fontSize: 12, letterSpacing: "1.5px" }}>
@@ -125,11 +136,15 @@ export default function DashboardPage() {
     );
   }
 
-  const BIOMARKERS = [
-    { label: "VIT D", value: "22", unit: "ng/mL", status: "LOW", color: colors.warn },
-    { label: "FERRITIN", value: "88", unit: "ng/mL", status: "OPT", color: colors.mint },
-    { label: "B12", value: "612", unit: "pg/mL", status: "OPT", color: colors.mint },
-  ];
+  const biomarkerColor = (status: string) => {
+    if (status === "low" || status === "high" || status === "critical") return colors.danger;
+    if (status === "watch") return colors.warn;
+    return colors.mint;
+  };
+  const biomarkerLabel = (status: string) => {
+    const map: Record<string, string> = { low: "LOW", high: "HIGH", critical: "CRIT", watch: "WATCH", optimal: "OPT" };
+    return map[status] ?? status.toUpperCase();
+  };
 
   const userName = user?.user_metadata?.name || user?.email?.split("@")[0] || "USER";
   const userInitial = userName.charAt(0).toUpperCase();
@@ -365,39 +380,49 @@ export default function DashboardPage() {
         </Panel>
 
         {/* Biomarkers */}
-        <div style={{ marginBottom: 4 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
           <MonoLabel color={colors.textFaint}>BIOMARKERS LATEST</MonoLabel>
+          <button
+            onClick={() => router.push("/bloodwork")}
+            style={{ background: "none", border: "none", cursor: "pointer", fontFamily: FONTS.mono, fontSize: 9, fontWeight: 600, letterSpacing: "1px", color: colors.mint, textTransform: "uppercase", padding: 0 }}
+          >
+            VIEW ALL →
+          </button>
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 16, marginTop: 8 }}>
-          {BIOMARKERS.map((b) => (
-            <Panel key={b.label} style={{ padding: "12px 10px", textAlign: "center" }}>
-              <CornerBrackets size={6} color={b.color} />
-              <MonoLabel color={colors.textFaint}>{b.label}</MonoLabel>
-              <div style={{ fontFamily: FONTS.mono, fontSize: 18, fontWeight: 700, color: colors.text, margin: "4px 0 2px" }}>
-                {b.value}
-              </div>
-              <div
-                style={{
-                  fontFamily: FONTS.mono,
-                  fontSize: 9,
-                  fontWeight: 700,
-                  color: b.color,
-                  letterSpacing: "1px",
-                  background: `${b.color}18`,
-                  border: `1px solid ${b.color}30`,
-                  borderRadius: 4,
-                  padding: "2px 6px",
-                  display: "inline-block",
-                }}
-              >
-                {b.status}
-              </div>
-              <div style={{ marginTop: 2 }}>
-                <MonoLabel color={colors.textGhost}>{b.unit}</MonoLabel>
-              </div>
-            </Panel>
-          ))}
-        </div>
+        {biomarkersLoading ? (
+          <div style={{ fontFamily: FONTS.mono, fontSize: 10, color: colors.textFaint, letterSpacing: "1.2px", textAlign: "center", padding: "16px 0", marginBottom: 8 }}>
+            LOADING...
+          </div>
+        ) : biomarkers.length === 0 ? (
+          <button
+            onClick={() => router.push("/bloodwork")}
+            style={{ width: "100%", marginBottom: 16, padding: "16px", background: colors.mintBgSubtle, border: `1px dashed ${colors.mintBorder}`, borderRadius: 12, fontFamily: FONTS.mono, fontSize: 10, fontWeight: 600, letterSpacing: "1px", textTransform: "uppercase", color: colors.textFaint, cursor: "pointer", textAlign: "center" }}
+          >
+            No bloodwork uploaded yet — Upload labs
+          </button>
+        ) : (
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 16 }}>
+            {biomarkers.map((b) => {
+              const c = biomarkerColor(b.status);
+              const shortName = b.name.split(",")[0].split(" ").slice(0, 2).join(" ").toUpperCase();
+              return (
+                <Panel key={b.id} style={{ padding: "12px 10px", textAlign: "center", cursor: "pointer" }} >
+                  <CornerBrackets size={6} color={c} />
+                  <MonoLabel color={colors.textFaint}>{shortName}</MonoLabel>
+                  <div style={{ fontFamily: FONTS.mono, fontSize: 16, fontWeight: 700, color: colors.text, margin: "4px 0 2px", lineHeight: 1 }}>
+                    {b.value % 1 === 0 ? b.value.toString() : b.value.toFixed(1)}
+                  </div>
+                  <div style={{ fontFamily: FONTS.mono, fontSize: 9, fontWeight: 700, color: c, letterSpacing: "1px", background: `${c}18`, border: `1px solid ${c}30`, borderRadius: 4, padding: "2px 6px", display: "inline-block" }}>
+                    {biomarkerLabel(b.status)}
+                  </div>
+                  <div style={{ marginTop: 2 }}>
+                    <MonoLabel color={colors.textGhost}>{b.unit}</MonoLabel>
+                  </div>
+                </Panel>
+              );
+            })}
+          </div>
+        )}
 
         {/* Supplements Today */}
         <Panel>
