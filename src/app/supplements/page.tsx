@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, MoreVertical, Check, X } from "lucide-react";
+import { Plus, MoreVertical, Check, X, BookmarkCheck } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import type { User } from "@supabase/supabase-js";
 import {
@@ -16,6 +16,7 @@ import {
   getSupplementStreak,
   type Supplement,
 } from "@/lib/supplements";
+import { saveItem } from "@/lib/saved";
 import { useTheme } from "@/components/ThemeProvider";
 import { FONTS } from "@/lib/theme";
 import Topbar from "@/components/Topbar";
@@ -99,6 +100,12 @@ export default function SupplementsPage() {
 
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+
+  // Stack save state
+  const [stackSaved, setStackSaved] = useState(false);
+  const [stackSaving, setStackSaving] = useState(false);
+  const [showStackForm, setShowStackForm] = useState(false);
+  const [stackTitle, setStackTitle] = useState("");
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user: u } }) => {
@@ -247,6 +254,29 @@ export default function SupplementsPage() {
       setDeleting(false);
     }
     setDeleting(false);
+  };
+
+  const handleSaveStack = async () => {
+    if (!user || !stackTitle.trim()) return;
+    setStackSaving(true);
+    try {
+      const content = supplements
+        .map((s) => `${s.name}${s.dose ? ` · ${s.dose}` : ""}${s.timing ? ` · ${s.timing}` : ""} (${s.frequency})`)
+        .join("\n");
+      await saveItem(user.id, {
+        type: "stack",
+        title: stackTitle.trim(),
+        description: `${supplements.length} supplement${supplements.length !== 1 ? "s" : ""} snapshot`,
+        content,
+        metadata: { supplement_count: supplements.length },
+      });
+      setStackSaved(true);
+      setShowStackForm(false);
+    } catch {
+      // silent
+    } finally {
+      setStackSaving(false);
+    }
   };
 
   const allCount = supplements.length;
@@ -466,6 +496,7 @@ export default function SupplementsPage() {
           </div>
         ) : (
           /* Supplement list */
+          <>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {filtered.map((s) => {
               const isLogged = todaysLogs.includes(s.id);
@@ -642,6 +673,68 @@ export default function SupplementsPage() {
               );
             })}
           </div>
+
+          {/* Save Stack */}
+          {supplements.length >= 2 && (
+            <div style={{ marginTop: 16 }}>
+              {stackSaved ? (
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "10px 0" }}>
+                  <BookmarkCheck size={13} color={colors.mint} />
+                  <span style={{ fontFamily: FONTS.mono, fontSize: 9, fontWeight: 700, letterSpacing: "1px", color: colors.mint }}>
+                    STACK SAVED
+                  </span>
+                </div>
+              ) : showStackForm ? (
+                <div style={{ padding: "12px 14px", background: colors.mintBgSubtle, border: `1px solid ${colors.mintBorder}`, borderRadius: 10 }}>
+                  <div style={{ fontFamily: FONTS.mono, fontSize: 8.5, color: colors.textFaint, letterSpacing: "1px", marginBottom: 8 }}>
+                    STACK SNAPSHOT TITLE
+                  </div>
+                  <div style={{ display: "flex", gap: 6 }}>
+                    <input
+                      value={stackTitle}
+                      onChange={(e) => setStackTitle(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter") handleSaveStack(); if (e.key === "Escape") setShowStackForm(false); }}
+                      autoFocus
+                      style={{ flex: 1, padding: "7px 10px", background: colors.mintBgMedium, border: `1px solid ${colors.mintBorder}`, borderRadius: 7, fontFamily: FONTS.sans, fontSize: 13, color: colors.text, outline: "none" }}
+                    />
+                    <button
+                      onClick={handleSaveStack}
+                      disabled={stackSaving || !stackTitle.trim()}
+                      style={{ padding: "7px 14px", background: `linear-gradient(135deg, ${colors.mint}, ${colors.mintDeep})`, border: "none", borderRadius: 7, fontFamily: FONTS.mono, fontSize: 8.5, fontWeight: 700, color: colors.textOnAccent, cursor: "pointer", letterSpacing: "0.8px", opacity: stackSaving ? 0.5 : 1, whiteSpace: "nowrap" }}
+                    >
+                      {stackSaving ? "..." : "SAVE"}
+                    </button>
+                    <button
+                      onClick={() => setShowStackForm(false)}
+                      style={{ width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center", background: colors.mintBgSubtle, border: `1px solid ${colors.border}`, borderRadius: 7, cursor: "pointer", color: colors.textFaint, padding: 0, flexShrink: 0 }}
+                    >
+                      <X size={13} />
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  onClick={() => {
+                    const today = new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+                    setStackTitle(`My Stack — ${today}`);
+                    setShowStackForm(true);
+                  }}
+                  style={{
+                    width: "100%", padding: "10px 0",
+                    background: "transparent",
+                    border: `1px solid ${colors.mintBorder}`,
+                    borderRadius: 10,
+                    fontFamily: FONTS.mono, fontSize: 9.5, fontWeight: 700,
+                    letterSpacing: "1px", color: colors.mint,
+                    cursor: "pointer",
+                  }}
+                >
+                  + SAVE CURRENT STACK
+                </button>
+              )}
+            </div>
+          )}
+          </>
         )}
       </div>
 

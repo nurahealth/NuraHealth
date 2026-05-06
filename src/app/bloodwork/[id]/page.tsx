@@ -4,12 +4,13 @@ import { useState, useEffect, useCallback, use } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import type { User } from "@supabase/supabase-js";
-import { ChevronLeft, MoreVertical, AlertTriangle } from "lucide-react";
+import { ChevronLeft, MoreVertical, AlertTriangle, BookmarkCheck } from "lucide-react";
 import { FONTS } from "@/lib/theme";
 import { useTheme } from "@/components/ThemeProvider";
 import Topbar from "@/components/Topbar";
 import Sidebar from "@/components/Sidebar";
 import { addSupplement } from "@/lib/supplements";
+import { saveItem } from "@/lib/saved";
 import {
   getPanelById,
   getPanelScore,
@@ -442,6 +443,12 @@ export default function BloodworkDetailPage({ params }: { params: Promise<{ id: 
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
+  // Protocol save state
+  const [protocolSaved, setProtocolSaved] = useState(false);
+  const [protocolSaving, setProtocolSaving] = useState(false);
+  const [showProtocolForm, setShowProtocolForm] = useState(false);
+  const [protocolTitle, setProtocolTitle] = useState("");
+
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user: u } }) => {
       if (!u) { router.push("/auth"); return; }
@@ -505,6 +512,29 @@ export default function BloodworkDetailPage({ params }: { params: Promise<{ id: 
       // silent
     } finally {
       setAddingSupp(null);
+    }
+  };
+
+  const handleSaveProtocol = async () => {
+    if (!user || !panel || !protocolTitle.trim()) return;
+    setProtocolSaving(true);
+    try {
+      const content = actionItems
+        .map((a, i) => `${i + 1}. ${a.title}\n   ${a.reasoning}${a.supplement_suggestion ? `\n   → ${a.supplement_suggestion.name} ${a.supplement_suggestion.dose} ${a.supplement_suggestion.timing}` : ""}`)
+        .join("\n\n");
+      await saveItem(user.id, {
+        type: "protocol",
+        title: protocolTitle.trim(),
+        description: `${actionItems.length} action${actionItems.length !== 1 ? "s" : ""} from ${panel.name}`,
+        content,
+        metadata: { panel_id: panel.id, panel_name: panel.name, action_count: actionItems.length },
+      });
+      setProtocolSaved(true);
+      setShowProtocolForm(false);
+    } catch {
+      // silent
+    } finally {
+      setProtocolSaving(false);
     }
   };
 
@@ -734,6 +764,64 @@ export default function BloodworkDetailPage({ params }: { params: Promise<{ id: 
                 {panel.insight}
               </p>
             )}
+
+            {/* Save Protocol button */}
+            <div style={{ marginTop: 14, paddingTop: 12, borderTop: `1px solid ${colors.borderFaint}` }}>
+              {protocolSaved ? (
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "9px 0" }}>
+                  <BookmarkCheck size={13} color={colors.mint} />
+                  <span style={{ fontFamily: FONTS.mono, fontSize: 9, fontWeight: 700, letterSpacing: "1px", color: colors.mint }}>
+                    SAVED AS PROTOCOL
+                  </span>
+                </div>
+              ) : showProtocolForm ? (
+                <div>
+                  <div style={{ fontFamily: FONTS.mono, fontSize: 8.5, color: colors.textFaint, letterSpacing: "1px", marginBottom: 6 }}>
+                    PROTOCOL TITLE
+                  </div>
+                  <div style={{ display: "flex", gap: 6 }}>
+                    <input
+                      value={protocolTitle}
+                      onChange={(e) => setProtocolTitle(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter") handleSaveProtocol(); if (e.key === "Escape") setShowProtocolForm(false); }}
+                      autoFocus
+                      style={{ flex: 1, padding: "7px 10px", background: colors.mintBgMedium, border: `1px solid ${colors.mintBorder}`, borderRadius: 7, fontFamily: FONTS.sans, fontSize: 12.5, color: colors.text, outline: "none" }}
+                    />
+                    <button
+                      onClick={handleSaveProtocol}
+                      disabled={protocolSaving || !protocolTitle.trim()}
+                      style={{ padding: "7px 14px", background: `linear-gradient(135deg, ${colors.mint}, ${colors.mintDeep})`, border: "none", borderRadius: 7, fontFamily: FONTS.mono, fontSize: 8.5, fontWeight: 700, color: colors.textOnAccent, cursor: "pointer", letterSpacing: "0.8px", opacity: protocolSaving ? 0.5 : 1, whiteSpace: "nowrap" }}
+                    >
+                      {protocolSaving ? "..." : "SAVE"}
+                    </button>
+                    <button
+                      onClick={() => setShowProtocolForm(false)}
+                      style={{ width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center", background: colors.mintBgSubtle, border: `1px solid ${colors.border}`, borderRadius: 7, cursor: "pointer", color: colors.textFaint, padding: 0, flexShrink: 0 }}
+                    >
+                      <span style={{ fontSize: 14, lineHeight: 1 }}>×</span>
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  onClick={() => {
+                    setProtocolTitle(`${panel.name} Protocol — ${formatDate(panel.collected_date)}`);
+                    setShowProtocolForm(true);
+                  }}
+                  style={{
+                    width: "100%", padding: "9px 0",
+                    background: "transparent",
+                    border: `1px solid ${colors.mintBorder}`,
+                    borderRadius: 8,
+                    fontFamily: FONTS.mono, fontSize: 9, fontWeight: 700,
+                    letterSpacing: "1px", color: colors.mint,
+                    cursor: "pointer",
+                  }}
+                >
+                  + SAVE AS PROTOCOL
+                </button>
+              )}
+            </div>
           </div>
         )}
 
