@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import {
   Home,
@@ -14,9 +14,11 @@ import {
   X,
   Settings,
   MessageSquare,
+  Shield,
 } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
 import { FONTS } from "@/lib/theme";
+import { supabase } from "@/lib/supabase";
 
 interface SidebarProps {
   open: boolean;
@@ -44,7 +46,22 @@ export default function Sidebar({ open, onClose, userName, userInitial }: Sideba
   const router = useRouter();
   const pathname = usePathname();
   const [chatsOpen, setChatsOpen] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
   const { colors } = useTheme();
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) return;
+      supabase
+        .from("profiles")
+        .select("is_admin")
+        .eq("id", user.id)
+        .single()
+        .then(({ data }) => {
+          if (data?.is_admin) setIsAdmin(true);
+        });
+    });
+  }, []);
 
   const navigate = (href: string) => {
     router.push(href);
@@ -167,6 +184,49 @@ export default function Sidebar({ open, onClose, userName, userInitial }: Sideba
               </button>
             );
           })}
+
+          {/* Admin nav item */}
+          {isAdmin && (
+            <button
+              onClick={() => navigate("/admin/knowledge")}
+              style={{
+                width: "100%",
+                display: "flex",
+                alignItems: "center",
+                gap: 12,
+                padding: "11px 14px",
+                marginBottom: 2,
+                background: isActive("/admin") ? colors.mintBgMedium : "transparent",
+                border: `1px solid ${isActive("/admin") ? colors.mintBorder : "transparent"}`,
+                borderRadius: 10,
+                fontFamily: FONTS.sans,
+                fontSize: 14,
+                color: isActive("/admin") ? colors.mint : colors.textMuted,
+                cursor: "pointer",
+                textAlign: "left",
+                fontWeight: isActive("/admin") ? 500 : 400,
+                transition: "all 0.15s",
+              }}
+            >
+              <Shield size={16} style={{ flexShrink: 0 }} />
+              <span style={{ flex: 1 }}>Admin</span>
+              <span
+                style={{
+                  fontFamily: FONTS.mono,
+                  fontSize: 9,
+                  fontWeight: 600,
+                  color: colors.mintDeep,
+                  background: colors.mintBgMedium,
+                  border: `1px solid ${colors.mintBorder}`,
+                  borderRadius: 4,
+                  padding: "2px 5px",
+                  letterSpacing: "0.08em",
+                }}
+              >
+                ADMIN
+              </span>
+            </button>
+          )}
 
           {/* Divider */}
           <div
