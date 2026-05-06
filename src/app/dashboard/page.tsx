@@ -4,7 +4,14 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import type { User } from "@supabase/supabase-js";
-import { TrendingUp } from "lucide-react";
+import {
+  getUserSupplements,
+  getTodaysLogs,
+  logSupplementTaken,
+  unlogSupplementTaken,
+  type Supplement,
+} from "@/lib/supplements";
+import { TrendingUp, Check } from "lucide-react";
 import { FONTS } from "@/lib/theme";
 import { useTheme } from "@/components/ThemeProvider";
 import Topbar from "@/components/Topbar";
@@ -86,6 +93,10 @@ export default function DashboardPage() {
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [supplements, setSupplements] = useState<Supplement[]>([]);
+  const [todaysLogs, setTodaysLogs] = useState<string[]>([]);
+  const [suppLoading, setSuppLoading] = useState(true);
+  const [pendingIds, setPendingIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -93,6 +104,18 @@ export default function DashboardPage() {
       else { setUser(user); setAuthLoading(false); }
     });
   }, [router]);
+
+  useEffect(() => {
+    if (!user) return;
+    setSuppLoading(true);
+    Promise.all([getUserSupplements(user.id), getTodaysLogs(user.id)])
+      .then(([supps, logs]) => {
+        setSupplements(supps);
+        setTodaysLogs(logs);
+        setSuppLoading(false);
+      })
+      .catch(() => setSuppLoading(false));
+  }, [user]);
 
   if (authLoading) {
     return (
@@ -108,17 +131,38 @@ export default function DashboardPage() {
     { label: "B12", value: "612", unit: "pg/mL", status: "OPT", color: colors.mint },
   ];
 
-  const SUPPLEMENTS = [
-    { name: "Vitamin D3 5000IU", done: true },
-    { name: "Magnesium Glycinate", done: true },
-    { name: "Omega-3 Fish Oil", done: true },
-    { name: "Zinc + Copper", done: false },
-    { name: "Ashwagandha KSM-66", done: false },
-  ];
-
   const userName = user?.user_metadata?.name || user?.email?.split("@")[0] || "USER";
   const userInitial = userName.charAt(0).toUpperCase();
   const userHandle = (user?.user_metadata?.name || user?.email?.split("@")[0] || "USER").toUpperCase().replace(/\s/g, "_");
+
+  const handleDashCheck = async (supplementId: string, isLogged: boolean) => {
+    if (!user || pendingIds.has(supplementId)) return;
+    setPendingIds((prev) => new Set(prev).add(supplementId));
+    setTodaysLogs((prev) =>
+      isLogged ? prev.filter((id) => id !== supplementId) : [...prev, supplementId]
+    );
+    try {
+      if (isLogged) await unlogSupplementTaken(user.id, supplementId);
+      else await logSupplementTaken(user.id, supplementId);
+    } catch {
+      setTodaysLogs((prev) =>
+        isLogged ? [...prev, supplementId] : prev.filter((id) => id !== supplementId)
+      );
+    } finally {
+      setPendingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(supplementId);
+        return next;
+      });
+    }
+  };
+
+  const dailySupplements = supplements.filter((s) => s.frequency === "daily");
+  const displayedSupplements = dailySupplements.slice(0, 4);
+  const remainingSupplements = dailySupplements.length - displayedSupplements.length;
+  const dailyTakenCount = todaysLogs.filter((id) =>
+    dailySupplements.some((s) => s.id === id)
+  ).length;
 
   const chartH = 60;
   const chartW = 260;
@@ -358,51 +402,124 @@ export default function DashboardPage() {
         {/* Supplements Today */}
         <Panel>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-            <MonoLabel color={colors.textMuted}>SUPPLEMENTS TODAY</MonoLabel>
-            <div style={{ fontFamily: FONTS.mono, fontSize: 13, fontWeight: 700, color: colors.mint }}>
-              3<span style={{ color: colors.textFaint }}>/5</span>
-            </div>
+            <MonoLabel color={colors.textMuted}>SUPPLEMENTS · TODAY</MonoLabel>
+            {suppLoading ? (
+              <MonoLabel color={colors.textFaint}>—</MonoLabel>
+            ) : (
+              <button
+                onClick={() => router.push("/supplements")}
+                style={{ background: "none", border: "none", cursor: "pointer", padding: 0, display: "flex", alignItems: "baseline", gap: 1 }}
+              >
+                <span style={{ fontFamily: FONTS.mono, fontSize: 13, fontWeight: 700, color: colors.mint }}>{dailyTakenCount}</span>
+                <span style={{ fontFamily: FONTS.mono, fontSize: 13, fontWeight: 700, color: colors.textFaint }}>/{dailySupplements.length}</span>
+              </button>
+            )}
           </div>
-          {SUPPLEMENTS.map((s, i) => (
-            <div
-              key={i}
+
+          {suppLoading ? (
+            <div style={{ fontFamily: FONTS.mono, fontSize: 10, color: colors.textFaint, letterSpacing: "1.2px", padding: "8px 0" }}>
+              LOADING...
+            </div>
+          ) : dailySupplements.length === 0 ? (
+            <button
+              onClick={() => router.push("/supplements")}
               style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-                padding: "8px 0",
-                borderBottom: i < SUPPLEMENTS.length - 1 ? `1px solid ${colors.border}` : "none",
+                width: "100%",
+                padding: "12px 0",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                fontFamily: FONTS.mono,
+                fontSize: 10,
+                fontWeight: 600,
+                letterSpacing: "1px",
+                textTransform: "uppercase",
+                color: colors.textFaint,
+                textAlign: "center",
               }}
             >
-              <div
-                style={{
-                  width: 16,
-                  height: 16,
-                  borderRadius: 4,
-                  border: `1.5px solid ${s.done ? colors.mint : colors.textGhost}`,
-                  background: s.done ? `${colors.mint}20` : "transparent",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  flexShrink: 0,
-                }}
-              >
-                {s.done && (
-                  <div style={{ width: 8, height: 8, borderRadius: 2, background: colors.mint }} />
-                )}
-              </div>
-              <span
-                style={{
-                  fontFamily: FONTS.sans,
-                  fontSize: 13,
-                  color: s.done ? colors.textDim : colors.textMuted,
-                  textDecoration: s.done ? "line-through" : "none",
-                }}
-              >
-                {s.name}
-              </span>
-            </div>
-          ))}
+              No supplements added yet — Tap to add
+            </button>
+          ) : (
+            <>
+              {displayedSupplements.map((s, i) => {
+                const isLogged = todaysLogs.includes(s.id);
+                const isPending = pendingIds.has(s.id);
+                return (
+                  <div
+                    key={s.id}
+                    onClick={() => router.push("/supplements")}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 10,
+                      padding: "8px 0",
+                      borderBottom: i < displayedSupplements.length - 1 ? `1px solid ${colors.border}` : "none",
+                      cursor: "pointer",
+                    }}
+                  >
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleDashCheck(s.id, isLogged); }}
+                      disabled={isPending}
+                      style={{
+                        width: 18,
+                        height: 18,
+                        borderRadius: 4,
+                        border: `1.5px solid ${isLogged ? colors.mint : colors.textGhost}`,
+                        background: isLogged ? `${colors.mint}20` : "transparent",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        flexShrink: 0,
+                        padding: 0,
+                        cursor: isPending ? "not-allowed" : "pointer",
+                        opacity: isPending ? 0.5 : 1,
+                        boxShadow: isLogged ? `0 0 6px ${colors.mint}40` : "none",
+                        transition: "all 0.15s",
+                      }}
+                    >
+                      {isLogged && <Check size={11} color={colors.mint} strokeWidth={2.5} />}
+                    </button>
+                    <span
+                      style={{
+                        fontFamily: FONTS.sans,
+                        fontSize: 13,
+                        color: isLogged ? colors.textDim : colors.textMuted,
+                        textDecoration: isLogged ? "line-through" : "none",
+                        flex: 1,
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {s.name}
+                    </span>
+                  </div>
+                );
+              })}
+              {remainingSupplements > 0 && (
+                <button
+                  onClick={() => router.push("/supplements")}
+                  style={{
+                    width: "100%",
+                    padding: "8px 0 0",
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    fontFamily: FONTS.mono,
+                    fontSize: 10,
+                    fontWeight: 600,
+                    letterSpacing: "0.08em",
+                    color: colors.mint,
+                    textAlign: "left",
+                  }}
+                >
+                  +{remainingSupplements} MORE
+                </button>
+              )}
+            </>
+          )}
+
           <div
             style={{
               position: "absolute",

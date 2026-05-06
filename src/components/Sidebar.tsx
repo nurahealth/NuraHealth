@@ -5,6 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import {
   Home,
   BarChart2,
+  Pill,
   Zap,
   FlaskConical,
   Bookmark,
@@ -27,6 +28,7 @@ interface SidebarProps {
 const NAV_ITEMS = [
   { id: "home", label: "Home", icon: Home, href: "/" },
   { id: "dashboard", label: "Dashboard", icon: BarChart2, href: "/dashboard" },
+  { id: "supplements", label: "Supplements", icon: Pill, href: "/supplements" },
   { id: "integrations", label: "Integrations", icon: Zap, href: "/integrations" },
   { id: "bloodwork", label: "Bloodwork Panel", icon: FlaskConical, href: "/bloodwork", badge: "NEW" },
   { id: "saved", label: "Saved", icon: Bookmark, href: "/saved" },
