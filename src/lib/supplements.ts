@@ -27,7 +27,7 @@ export async function getUserSupplements(userId: string): Promise<Supplement[]> 
 
 export async function addSupplement(
   userId: string,
-  fields: { name: string; dose?: string; timing?: string; frequency: string; notes?: string }
+  fields: { name: string; dose?: string; timing?: string; frequency: string; notes?: string; recommended_by_nura?: boolean; recommendation_reason?: string }
 ): Promise<Supplement> {
   const { data, error } = await supabase
     .from("supplements")
@@ -38,7 +38,8 @@ export async function addSupplement(
       timing: fields.timing || null,
       frequency: fields.frequency,
       notes: fields.notes || null,
-      recommended_by_nura: false,
+      recommended_by_nura: fields.recommended_by_nura ?? false,
+      recommendation_reason: fields.recommendation_reason ?? null,
       started_at: new Date().toISOString(),
     })
     .select()

@@ -406,19 +406,21 @@ export default function DashboardPage() {
               const c = biomarkerColor(b.status);
               const shortName = b.name.split(",")[0].split(" ").slice(0, 2).join(" ").toUpperCase();
               return (
-                <Panel key={b.id} style={{ padding: "12px 10px", textAlign: "center", cursor: "pointer" }} >
-                  <CornerBrackets size={6} color={c} />
-                  <MonoLabel color={colors.textFaint}>{shortName}</MonoLabel>
-                  <div style={{ fontFamily: FONTS.mono, fontSize: 16, fontWeight: 700, color: colors.text, margin: "4px 0 2px", lineHeight: 1 }}>
-                    {b.value % 1 === 0 ? b.value.toString() : b.value.toFixed(1)}
-                  </div>
-                  <div style={{ fontFamily: FONTS.mono, fontSize: 9, fontWeight: 700, color: c, letterSpacing: "1px", background: `${c}18`, border: `1px solid ${c}30`, borderRadius: 4, padding: "2px 6px", display: "inline-block" }}>
-                    {biomarkerLabel(b.status)}
-                  </div>
-                  <div style={{ marginTop: 2 }}>
-                    <MonoLabel color={colors.textGhost}>{b.unit}</MonoLabel>
-                  </div>
-                </Panel>
+                <div key={b.id} onClick={() => router.push("/bloodwork")} style={{ cursor: "pointer" }}>
+                  <Panel style={{ padding: "12px 10px", textAlign: "center" }}>
+                    <CornerBrackets size={6} color={c} />
+                    <MonoLabel color={colors.textFaint}>{shortName}</MonoLabel>
+                    <div style={{ fontFamily: FONTS.mono, fontSize: 16, fontWeight: 700, color: colors.text, margin: "4px 0 2px", lineHeight: 1 }}>
+                      {b.value % 1 === 0 ? b.value.toString() : b.value.toFixed(1)}
+                    </div>
+                    <div style={{ fontFamily: FONTS.mono, fontSize: 9, fontWeight: 700, color: c, letterSpacing: "1px", background: `${c}18`, border: `1px solid ${c}30`, borderRadius: 4, padding: "2px 6px", display: "inline-block" }}>
+                      {biomarkerLabel(b.status)}
+                    </div>
+                    <div style={{ marginTop: 2 }}>
+                      <MonoLabel color={colors.textGhost}>{b.unit}</MonoLabel>
+                    </div>
+                  </Panel>
+                </div>
               );
             })}
           </div>
