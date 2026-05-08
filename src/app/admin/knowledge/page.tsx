@@ -10,7 +10,6 @@ import {
 } from "lucide-react";
 import { FONTS } from "@/lib/theme";
 import { useTheme } from "@/components/ThemeProvider";
-import Topbar from "@/components/Topbar";
 import Sidebar from "@/components/Sidebar";
 
 // ─── Primitives ──────────────────────────────────────────────────────────────
@@ -112,17 +111,14 @@ function UploadModal({ token, onClose, onSuccess }: {
   const [stage, setStage] = useState<UploadStage>("idle");
   const [errorMsg, setErrorMsg] = useState("");
 
-  // File tab
   const [file, setFile] = useState<File | null>(null);
   const [fileTitle, setFileTitle] = useState("");
   const [fileAuthor, setFileAuthor] = useState("");
 
-  // Photos tab
   const [photos, setPhotos] = useState<File[]>([]);
   const [photoTitle, setPhotoTitle] = useState("");
   const [photoAuthor, setPhotoAuthor] = useState("");
 
-  // Text tab
   const [textTitle, setTextTitle] = useState("");
   const [textAuthor, setTextAuthor] = useState("");
   const [textBody, setTextBody] = useState("");
@@ -172,7 +168,6 @@ function UploadModal({ token, onClose, onSuccess }: {
         setErrorMsg(e instanceof Error ? e.message : "Upload failed");
       }
     } else {
-      // Text paste — create a blob and upload as .txt
       if (!textBody.trim()) return;
       const blob = new Blob([textBody], { type: "text/plain" });
       const txtFile = new File([blob], `${textTitle || "paste"}.txt`, { type: "text/plain" });
@@ -234,7 +229,6 @@ function UploadModal({ token, onClose, onSuccess }: {
           </button>
         </div>
 
-        {/* Tabs */}
         <div style={{ display: "flex", gap: 6, padding: "14px 20px 0" }}>
           {tabs.map(({ id, label, Icon }) => (
             <button
@@ -255,7 +249,6 @@ function UploadModal({ token, onClose, onSuccess }: {
         </div>
 
         <div style={{ padding: "16px 20px 0" }}>
-          {/* Stage progress */}
           {stage !== "idle" && (
             <div style={{ padding: "10px 12px", background: stage === "error" ? "rgba(255,76,92,0.08)" : stage === "done" ? `${colors.mint}15` : colors.mintBgSubtle, border: `1px solid ${stage === "error" ? "rgba(255,76,92,0.4)" : stage === "done" ? colors.mintBorder : colors.borderFaint}`, borderRadius: 8, marginBottom: 16, display: "flex", alignItems: "center", gap: 8 }}>
               {stage !== "done" && stage !== "error" && (
@@ -267,7 +260,6 @@ function UploadModal({ token, onClose, onSuccess }: {
             </div>
           )}
 
-          {/* File tab */}
           {tab === "file" && (
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               <div
@@ -285,7 +277,6 @@ function UploadModal({ token, onClose, onSuccess }: {
             </div>
           )}
 
-          {/* Photos tab */}
           {tab === "photos" && (
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               <div
@@ -305,7 +296,6 @@ function UploadModal({ token, onClose, onSuccess }: {
             </div>
           )}
 
-          {/* Text tab */}
           {tab === "text" && (
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               <div><label style={labelStyle}>TITLE <span style={{ color: "#FF4C5C" }}>*</span></label><input value={textTitle} onChange={(e) => setTextTitle(e.target.value)} placeholder="Source title" style={inputStyle} /></div>
@@ -344,32 +334,46 @@ export default function AdminKnowledgePage() {
   const router = useRouter();
   const { colors } = useTheme();
 
+  // ── Auth state ──────────────────────────────────────────────────────────────
+  const [authStatus, setAuthStatus] = useState<"checking" | "allowed" | "denied">("checking");
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string>("");
-  const [authLoading, setAuthLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
+  useEffect(() => {
+    async function checkAdmin() {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) {
+        router.push("/");
+        return;
+      }
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("is_admin")
+        .eq("id", session.user.id)
+        .single();
+      if (!profile?.is_admin) {
+        router.push("/");
+        return;
+      }
+      setUser(session.user);
+      setToken(session.access_token);
+      setAuthStatus("allowed");
+    }
+    checkAdmin();
+  }, [router]);
+
+  // ── Knowledge state ─────────────────────────────────────────────────────────
   const [sources, setSources] = useState<KnowledgeSource[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<FilterType>("all");
   const [search, setSearch] = useState("");
   const [showUploadModal, setShowUploadModal] = useState(false);
-
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-
   const [testQuery, setTestQuery] = useState("");
   const [testResults, setTestResults] = useState<SearchResult[] | null>(null);
   const [testLoading, setTestLoading] = useState(false);
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session?.user) { router.push("/"); return; }
-      setUser(session.user);
-      setToken(session.access_token);
-      setAuthLoading(false);
-    });
-  }, [router]);
 
   const loadSources = useCallback(async () => {
     setLoading(true);
@@ -387,11 +391,10 @@ export default function AdminKnowledgePage() {
   }, []);
 
   useEffect(() => {
-    if (!user) return;
+    if (authStatus !== "allowed") return;
     loadSources();
-  }, [user, loadSources]);
+  }, [authStatus, loadSources]);
 
-  // Poll for processing sources every 3s
   useEffect(() => {
     const hasProcessing = sources.some((s) => s.status === "processing");
     if (!hasProcessing) return;
@@ -432,6 +435,20 @@ export default function AdminKnowledgePage() {
     }
   };
 
+  // ── Loading / denied ────────────────────────────────────────────────────────
+  if (authStatus === "checking") {
+    return (
+      <div style={{ minHeight: "100vh", background: colors.bg, display: "flex", alignItems: "center", justifyContent: "center", gap: 12 }}>
+        <div style={{ width: 8, height: 8, borderRadius: "50%", background: colors.mint, animation: "live-pulse 1.5s ease-in-out infinite" }} />
+        <span style={{ fontFamily: FONTS.mono, fontSize: 11, color: colors.textFaint, letterSpacing: "1.5px" }}>
+          VERIFYING ACCESS...
+        </span>
+        <style>{`@keyframes live-pulse { 0%, 100% { opacity: 0.4; transform: scale(1); } 50% { opacity: 1; transform: scale(1.5); } }`}</style>
+      </div>
+    );
+  }
+
+  // ── Admin UI ────────────────────────────────────────────────────────────────
   const filtered = sources.filter((s) => {
     if (filter !== "all" && s.source_type !== filter) return false;
     if (search) {
@@ -463,14 +480,6 @@ export default function AdminKnowledgePage() {
     color: colors.text, outline: "none",
   };
 
-  if (authLoading) {
-    return (
-      <div style={{ minHeight: "100vh", background: colors.bg, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: FONTS.mono, color: colors.textFaint, fontSize: 12, letterSpacing: "1.5px" }}>
-        LOADING...
-      </div>
-    );
-  }
-
   return (
     <div style={{ minHeight: "100vh", background: colors.bg, fontFamily: FONTS.sans }}>
       <style>{`
@@ -480,7 +489,6 @@ export default function AdminKnowledgePage() {
         ::-webkit-scrollbar { width: 0; }
       `}</style>
 
-      {/* Custom topbar */}
       <div style={{ position: "sticky", top: 0, zIndex: 100, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 20px", height: 56, background: colors.bgTopbar, backdropFilter: "blur(20px)", borderBottom: `1px solid ${colors.border}` }}>
         <button onClick={() => setSidebarOpen(true)} style={{ width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", background: "none", border: "none", cursor: "pointer", color: colors.textMuted, borderRadius: 8, padding: 0 }}>
           <Shield size={18} color={colors.mint} />
@@ -498,7 +506,6 @@ export default function AdminKnowledgePage() {
 
       <div style={{ padding: "20px 20px 100px", maxWidth: 480, margin: "0 auto" }}>
 
-        {/* Header */}
         <div style={{ marginBottom: 20 }}>
           <h1 style={{ fontFamily: FONTS.serif, fontSize: 26, fontWeight: 400, color: colors.text, margin: "0 0 4px" }}>
             Knowledge Base
@@ -506,7 +513,6 @@ export default function AdminKnowledgePage() {
           <MonoLabel color={colors.textFaint}>NŪRA&apos;S BRAIN · TRAINING CORPUS</MonoLabel>
         </div>
 
-        {/* Stats grid */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 8, marginBottom: 16 }}>
           {[
             { label: "SOURCES", value: sources.length.toString(), color: colors.mint },
@@ -522,7 +528,6 @@ export default function AdminKnowledgePage() {
           ))}
         </div>
 
-        {/* Processing banner */}
         {processingCount > 0 && (
           <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 14px", background: `${colors.mint}15`, border: `1px solid ${colors.mintBorder}`, borderRadius: 10, marginBottom: 14 }}>
             <div style={{ width: 7, height: 7, borderRadius: "50%", background: colors.mint, animation: "live-pulse 1.5s ease-in-out infinite", flexShrink: 0 }} />
@@ -530,7 +535,6 @@ export default function AdminKnowledgePage() {
           </div>
         )}
 
-        {/* Upload button */}
         <button
           onClick={() => setShowUploadModal(true)}
           style={{ width: "100%", padding: "12px 0", marginBottom: 16, background: `linear-gradient(135deg, ${colors.mint}, ${colors.mintDeep})`, border: "none", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, fontFamily: FONTS.mono, fontSize: 11, fontWeight: 700, letterSpacing: "1px", color: colors.textOnAccent, cursor: "pointer" }}
@@ -539,7 +543,6 @@ export default function AdminKnowledgePage() {
           ADD KNOWLEDGE SOURCE
         </button>
 
-        {/* Search + filter */}
         <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
           <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", background: colors.mintBgSubtle, border: `1px solid ${colors.border}`, borderRadius: 10 }}>
             <Search size={13} color={colors.textFaint} />
@@ -562,7 +565,6 @@ export default function AdminKnowledgePage() {
           ))}
         </div>
 
-        {/* Sources list */}
         {loading ? (
           <div style={{ fontFamily: FONTS.mono, fontSize: 11, color: colors.textFaint, letterSpacing: "1.4px", textAlign: "center", padding: "40px 0" }}>LOADING...</div>
         ) : filtered.length === 0 ? (
@@ -642,7 +644,6 @@ export default function AdminKnowledgePage() {
           </div>
         )}
 
-        {/* Test Query section */}
         <div style={{ marginTop: 24 }}>
           <div style={{ marginBottom: 12 }}>
             <MonoLabel color={colors.textMuted}>TEST QUERY</MonoLabel>
@@ -692,10 +693,8 @@ export default function AdminKnowledgePage() {
         </div>
       </div>
 
-      {/* Menu close backdrop */}
       {menuOpenId && <div onClick={() => setMenuOpenId(null)} style={{ position: "fixed", inset: 0, zIndex: 55 }} />}
 
-      {/* Upload modal */}
       {showUploadModal && token && (
         <UploadModal
           token={token}

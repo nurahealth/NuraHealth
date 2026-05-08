@@ -1,8 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
-import { cookies } from "next/headers";
+import { createSupabaseServerClient } from "./supabase-server";
 import { NextRequest } from "next/server";
 
-// Server-side check using user ID (uses service role or anon key against profiles)
 export async function isUserAdmin(userId: string): Promise<boolean> {
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -16,29 +15,15 @@ export async function isUserAdmin(userId: string): Promise<boolean> {
   return (data as { is_admin: boolean } | null)?.is_admin === true;
 }
 
-// Use in server components (layout.tsx) — reads session from cookies
-export async function getAdminSessionFromCookies(): Promise<{ userId: string } | null> {
+// Use in server components / layouts — reads session from Next.js cookies
+export async function getAdminSessionFromCookies(): Promise<{ userId: string; email?: string } | null> {
   try {
-    const cookieStore = await cookies();
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        global: {
-          headers: {
-            cookie: cookieStore
-              .getAll()
-              .map((c) => `${c.name}=${c.value}`)
-              .join("; "),
-          },
-        },
-      }
-    );
+    const supabase = await createSupabaseServerClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return null;
     const ok = await isUserAdmin(user.id);
     if (!ok) return null;
-    return { userId: user.id };
+    return { userId: user.id, email: user.email };
   } catch {
     return null;
   }
