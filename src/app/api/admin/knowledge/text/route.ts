@@ -1,9 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
-import { supabaseAdmin } from "@/lib/supabase-admin";
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const pdfParse = require("pdf-parse") as (buf: Buffer) => Promise<{ text: string }>;
 import { chunkText } from "@/lib/chunking";
 import { generateEmbeddings } from "@/lib/embeddings";
 import { createKnowledgeSource, updateKnowledgeSource, insertChunks } from "@/lib/knowledge";
@@ -46,22 +43,27 @@ async function extractMetadata(text: string) {
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
   try {
-    let formData: FormData;
-    try {
-      formData = await req.formData();
-    } catch {
-      return NextResponse.json({ error: "Invalid form data" }, { status: 400 });
-    }
+    const body = await req.json() as {
+      title?: string;
+      author?: string;
+      content?: string;
+      userId?: string;
+      token?: string;
+    };
 
-    const userId = formData.get("userId") as string | null;
-    const token = formData.get("token") as string | null;
+    console.log("[admin/text/api] received body:", {
+      userId: body.userId,
+      title: body.title,
+      contentLength: body.content?.length,
+    });
 
-    console.log("[admin/upload/api] userId:", userId, "hasToken:", !!token);
+    const { title, author, content, userId, token } = body;
 
     if (!userId || !token) {
       return NextResponse.json({ error: "FORBIDDEN — ADMIN ONLY" }, { status: 403 });
     }
 
+    // Authenticate as the requesting user so RLS allows reading their own profile row
     const authClient = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -73,67 +75,25 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       .eq("id", userId)
       .single();
 
-    console.log("[admin/upload/api] profile query result:", profile, "error:", profileError);
+    console.log("[admin/text/api] profile query result:", profile, "error:", profileError);
 
     if (!profile?.is_admin) {
       return NextResponse.json({ error: "FORBIDDEN — ADMIN ONLY" }, { status: 403 });
     }
 
-    const file = formData.get("file");
-    const title = String(formData.get("title") ?? "");
-    const author = formData.get("author") ? String(formData.get("author")) : null;
-
-    if (!(file instanceof File)) {
-      return NextResponse.json({ error: "No file provided" }, { status: 400 });
-    }
-    if (file.size > 50 * 1024 * 1024) {
-      return NextResponse.json({ error: "File must be under 50MB" }, { status: 400 });
-    }
-
-    const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
-    if (!["pdf", "md", "txt"].includes(ext)) {
-      return NextResponse.json({ error: "Only PDF, MD, and TXT files are supported" }, { status: 400 });
-    }
-
-    const fileBuffer = Buffer.from(await file.arrayBuffer());
-
-    // Storage upload (non-fatal — missing bucket shouldn't block ingestion)
-    const storagePath = `knowledge/${crypto.randomUUID()}.${ext}`;
-    let fileUrl: string | undefined;
-    try {
-      const { error: storageErr } = await supabaseAdmin.storage
-        .from("knowledge")
-        .upload(storagePath, fileBuffer, { contentType: file.type || "application/octet-stream" });
-      if (storageErr) {
-        console.warn("[admin/upload/api] storage error (non-fatal):", storageErr.message);
-      } else {
-        fileUrl = supabaseAdmin.storage.from("knowledge").getPublicUrl(storagePath).data.publicUrl;
-      }
-    } catch (err) {
-      console.warn("[admin/upload/api] storage threw (non-fatal):", err instanceof Error ? err.message : err);
+    if (!content?.trim()) {
+      return NextResponse.json({ error: "Content is required" }, { status: 400 });
     }
 
     const source = await createKnowledgeSource({
       uploaded_by: userId,
-      title: title || file.name.replace(/\.[^.]+$/, ""),
-      author,
+      title: title?.trim() || "Pasted Text",
+      author: author?.trim() || null,
       status: "processing",
-      file_url: fileUrl,
-      file_size: file.size,
     });
 
     try {
-      let text = "";
-      if (ext === "pdf") {
-        const parsed = await pdfParse(fileBuffer);
-        text = parsed.text;
-      } else {
-        text = fileBuffer.toString("utf-8");
-      }
-
-      if (!text.trim()) throw new Error("No text extracted from file");
-
-      const meta = await extractMetadata(text);
+      const meta = await extractMetadata(content);
 
       await updateKnowledgeSource(source.id, {
         source_type: meta.source_type as "book" | "research" | "article" | "other",
@@ -143,22 +103,16 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         summary: meta.summary,
       });
 
-      const chunks = chunkText(text);
+      const chunks = chunkText(content);
       const embeddings = await generateEmbeddings(chunks);
       await insertChunks(
         source.id,
-        chunks.map((content, i) => ({ content, chunk_index: i, embedding: embeddings[i] }))
+        chunks.map((c, i) => ({ content: c, chunk_index: i, embedding: embeddings[i] }))
       );
       await updateKnowledgeSource(source.id, { status: "analyzed", chunk_count: chunks.length });
 
-      return NextResponse.json({
-        sourceId: source.id,
-        title: title || source.title,
-        chunkCount: chunks.length,
-        metadata: meta,
-      });
+      return NextResponse.json({ success: true, sourceId: source.id, chunkCount: chunks.length, metadata: meta });
     } catch (err) {
-      console.error("[admin/upload/api] processing error:", err);
       await updateKnowledgeSource(source.id, {
         status: "failed",
         error_message: err instanceof Error ? err.message : "Processing failed",
@@ -166,7 +120,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       throw err;
     }
   } catch (err) {
-    console.error("[admin/upload/api] error:", err);
+    console.error("[admin/text/api] error:", err);
     return NextResponse.json(
       { error: err instanceof Error ? err.message : "Processing failed" },
       { status: 500 }

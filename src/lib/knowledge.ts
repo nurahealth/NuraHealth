@@ -1,15 +1,8 @@
-import { createClient } from "@supabase/supabase-js";
-
-// Use service role when available (server-side only), fall back to anon
-function getAdminClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
-}
+import { supabaseAdmin } from "./supabase-admin";
 
 export interface KnowledgeSource {
   id: string;
+  uploaded_by: string;
   title: string;
   author: string | null;
   source_type: "book" | "research" | "article" | "other";
@@ -60,7 +53,7 @@ export interface SourceCounts {
 export async function createKnowledgeSource(
   data: Partial<Omit<KnowledgeSource, "id" | "created_at" | "updated_at">>
 ): Promise<KnowledgeSource> {
-  const sb = getAdminClient();
+  const sb = supabaseAdmin;
   const { data: row, error } = await sb
     .from("knowledge_sources")
     .insert({ ...data, status: data.status ?? "processing" })
@@ -74,7 +67,7 @@ export async function updateKnowledgeSource(
   sourceId: string,
   data: Partial<Omit<KnowledgeSource, "id" | "created_at">>
 ): Promise<void> {
-  const sb = getAdminClient();
+  const sb = supabaseAdmin;
   const { error } = await sb
     .from("knowledge_sources")
     .update({ ...data, updated_at: new Date().toISOString() })
@@ -83,7 +76,7 @@ export async function updateKnowledgeSource(
 }
 
 export async function deleteKnowledgeSource(sourceId: string): Promise<void> {
-  const sb = getAdminClient();
+  const sb = supabaseAdmin;
   // Chunks cascade via FK, but delete explicitly to be safe
   await sb.from("knowledge_chunks").delete().eq("source_id", sourceId);
   const { error } = await sb.from("knowledge_sources").delete().eq("id", sourceId);
@@ -94,7 +87,7 @@ export async function getKnowledgeSources(filters?: {
   status?: KnowledgeSource["status"];
   source_type?: KnowledgeSource["source_type"];
 }): Promise<KnowledgeSource[]> {
-  const sb = getAdminClient();
+  const sb = supabaseAdmin;
   let q = sb.from("knowledge_sources").select("*").order("created_at", { ascending: false });
   if (filters?.status) q = q.eq("status", filters.status);
   if (filters?.source_type) q = q.eq("source_type", filters.source_type);
@@ -104,7 +97,7 @@ export async function getKnowledgeSources(filters?: {
 }
 
 export async function getSourceCounts(): Promise<SourceCounts> {
-  const sb = getAdminClient();
+  const sb = supabaseAdmin;
   const { data, error } = await sb.from("knowledge_sources").select("source_type, status");
   if (error) throw error;
   const rows = (data ?? []) as { source_type: string; status: string }[];
@@ -125,7 +118,7 @@ export async function insertChunks(
   chunks: { content: string; chunk_index: number; embedding: number[] | null; metadata?: Record<string, unknown> | null }[]
 ): Promise<void> {
   if (chunks.length === 0) return;
-  const sb = getAdminClient();
+  const sb = supabaseAdmin;
   const rows = chunks.map((c) => ({
     source_id: sourceId,
     content: c.content,
@@ -147,7 +140,7 @@ export async function searchKnowledgeBase(
   limit = 5,
   threshold = 0.7
 ): Promise<ChunkSearchResult[]> {
-  const sb = getAdminClient();
+  const sb = supabaseAdmin;
   const { data, error } = await sb.rpc("match_knowledge_chunks", {
     query_embedding: queryEmbedding,
     match_threshold: threshold,
@@ -164,7 +157,7 @@ export async function searchKnowledgeBaseByText(
   query: string,
   limit = 5
 ): Promise<ChunkSearchResult[]> {
-  const sb = getAdminClient();
+  const sb = supabaseAdmin;
   const { data, error } = await sb
     .from("knowledge_chunks")
     .select("id, source_id, content, knowledge_sources!inner(title, author, topics)")

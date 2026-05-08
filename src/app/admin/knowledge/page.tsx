@@ -98,7 +98,8 @@ function relativeTime(d: string): string {
 
 // ─── Upload Modal ─────────────────────────────────────────────────────────────
 
-function UploadModal({ token, onClose, onSuccess }: {
+function UploadModal({ userId, token, onClose, onSuccess }: {
+  userId: string;
   token: string;
   onClose: () => void;
   onSuccess: () => void;
@@ -129,19 +130,21 @@ function UploadModal({ token, onClose, onSuccess }: {
     setErrorMsg("");
     const fd = new FormData();
 
+    const parseError = async (res: Response, fallback: string): Promise<string> => {
+      try { const b = await res.json() as { error?: string }; return b.error ?? fallback; } catch { return res.statusText || fallback; }
+    };
+
     if (tab === "file") {
       if (!file) return;
       fd.append("file", file);
       fd.append("title", fileTitle || file.name);
       if (fileAuthor) fd.append("author", fileAuthor);
+      fd.append("userId", userId);
+      fd.append("token", token);
       setStage("uploading");
       try {
-        const res = await fetch("/api/admin/knowledge/upload", {
-          method: "POST",
-          headers: { Authorization: `Bearer ${token}` },
-          body: fd,
-        });
-        if (!res.ok) { const b = await res.json(); throw new Error(b.error ?? "Upload failed"); }
+        const res = await fetch("/api/admin/knowledge/upload", { method: "POST", body: fd });
+        if (!res.ok) throw new Error(await parseError(res, "Upload failed"));
         setStage("done");
         setTimeout(() => { onSuccess(); onClose(); }, 1200);
       } catch (e) {
@@ -153,14 +156,12 @@ function UploadModal({ token, onClose, onSuccess }: {
       photos.forEach((p) => fd.append("files", p));
       fd.append("title", photoTitle || "Photo Upload");
       if (photoAuthor) fd.append("author", photoAuthor);
+      fd.append("userId", userId);
+      fd.append("token", token);
       setStage("uploading");
       try {
-        const res = await fetch("/api/admin/knowledge/photos", {
-          method: "POST",
-          headers: { Authorization: `Bearer ${token}` },
-          body: fd,
-        });
-        if (!res.ok) { const b = await res.json(); throw new Error(b.error ?? "Upload failed"); }
+        const res = await fetch("/api/admin/knowledge/photos", { method: "POST", body: fd });
+        if (!res.ok) throw new Error(await parseError(res, "Upload failed"));
         setStage("done");
         setTimeout(() => { onSuccess(); onClose(); }, 1200);
       } catch (e) {
@@ -169,19 +170,15 @@ function UploadModal({ token, onClose, onSuccess }: {
       }
     } else {
       if (!textBody.trim()) return;
-      const blob = new Blob([textBody], { type: "text/plain" });
-      const txtFile = new File([blob], `${textTitle || "paste"}.txt`, { type: "text/plain" });
-      fd.append("file", txtFile);
-      fd.append("title", textTitle || "Pasted Text");
-      if (textAuthor) fd.append("author", textAuthor);
+      console.log("[admin/text/submit] sending userId:", userId, "title:", textTitle || "Pasted Text");
       setStage("uploading");
       try {
-        const res = await fetch("/api/admin/knowledge/upload", {
+        const res = await fetch("/api/admin/knowledge/text", {
           method: "POST",
-          headers: { Authorization: `Bearer ${token}` },
-          body: fd,
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ title: textTitle || "Pasted Text", author: textAuthor || undefined, content: textBody, userId, token }),
         });
-        if (!res.ok) { const b = await res.json(); throw new Error(b.error ?? "Save failed"); }
+        if (!res.ok) throw new Error(await parseError(res, "Save failed"));
         setStage("done");
         setTimeout(() => { onSuccess(); onClose(); }, 1200);
       } catch (e) {
@@ -213,11 +210,11 @@ function UploadModal({ token, onClose, onSuccess }: {
   return (
     <div
       onClick={() => !busy && onClose()}
-      style={{ position: "fixed", inset: 0, background: colors.overlay, zIndex: 300, display: "flex", alignItems: "flex-end", backdropFilter: "blur(6px)" }}
+      style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(6px)", padding: "0 16px" }}
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        style={{ width: "100%", maxWidth: 480, margin: "0 auto", background: colors.bgSidebar, borderRadius: "20px 20px 0 0", border: `1px solid ${colors.mintBorder}`, borderBottom: "none", maxHeight: "92vh", overflowY: "auto", paddingBottom: 32 }}
+        style={{ width: "100%", maxWidth: 480, background: colors.bgSidebar, borderRadius: 20, border: `1px solid ${colors.mintBorder}`, maxHeight: "90vh", overflowY: "auto", paddingBottom: 32 }}
       >
         <div style={{ display: "flex", justifyContent: "center", padding: "12px 0 0" }}>
           <div style={{ width: 36, height: 4, borderRadius: 2, background: colors.border }} />
@@ -337,6 +334,7 @@ export default function AdminKnowledgePage() {
   // ── Auth state ──────────────────────────────────────────────────────────────
   const [authStatus, setAuthStatus] = useState<"checking" | "allowed" | "denied">("checking");
   const [user, setUser] = useState<User | null>(null);
+  const [userId, setUserId] = useState<string>("");
   const [token, setToken] = useState<string>("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -357,6 +355,7 @@ export default function AdminKnowledgePage() {
         return;
       }
       setUser(session.user);
+      setUserId(session.user.id);
       setToken(session.access_token);
       setAuthStatus("allowed");
     }
@@ -417,14 +416,14 @@ export default function AdminKnowledgePage() {
   };
 
   const handleTestQuery = async () => {
-    if (!testQuery.trim() || !token) return;
+    if (!testQuery.trim() || !userId) return;
     setTestLoading(true);
     setTestResults(null);
     try {
       const res = await fetch("/api/admin/knowledge/search", {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ query: testQuery }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: testQuery, userId, token }),
       });
       const data = await res.json() as { results: SearchResult[] };
       setTestResults(data.results ?? []);
@@ -695,8 +694,9 @@ export default function AdminKnowledgePage() {
 
       {menuOpenId && <div onClick={() => setMenuOpenId(null)} style={{ position: "fixed", inset: 0, zIndex: 55 }} />}
 
-      {showUploadModal && token && (
+      {showUploadModal && userId && token && (
         <UploadModal
+          userId={userId}
           token={token}
           onClose={() => setShowUploadModal(false)}
           onSuccess={loadSources}
