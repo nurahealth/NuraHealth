@@ -1,9 +1,8 @@
 import Anthropic from "@anthropic-ai/sdk";
+import type { ContentBlockParam } from "@anthropic-ai/sdk/resources";
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const pdfParse = require("pdf-parse") as (buf: Buffer) => Promise<{ text: string }>;
 import { chunkText } from "@/lib/chunking";
 import { generateEmbeddings } from "@/lib/embeddings";
 import { createKnowledgeSource, updateKnowledgeSource, insertChunks } from "@/lib/knowledge";
@@ -37,6 +36,59 @@ async function extractMetadata(text: string) {
   const parsed = JSON.parse(match[0]) as Record<string, unknown>;
   return {
     source_type: (parsed.source_type as string) ?? "other",
+    topics: Array.isArray(parsed.topics) ? (parsed.topics as string[]) : [],
+    conditions: Array.isArray(parsed.conditions) ? (parsed.conditions as string[]) : [],
+    key_concepts: Array.isArray(parsed.key_concepts) ? (parsed.key_concepts as string[]) : [],
+    summary: (parsed.summary as string) ?? "",
+  };
+}
+
+async function extractPdfTextAndMetadata(fileBuffer: Buffer) {
+  const base64Pdf = fileBuffer.toString("base64");
+  const res = await anthropic.messages.create({
+    model: "claude-opus-4-7",
+    max_tokens: 8000,
+    messages: [
+      {
+        role: "user",
+        content: [
+          {
+            type: "document",
+            source: { type: "base64", media_type: "application/pdf", data: base64Pdf },
+          },
+          {
+            type: "text",
+            text: 'Extract the full text content from this PDF and analyze it. Respond ONLY with valid JSON in this exact structure: { "full_text": "...", "source_type": "book|research|article|notes|protocol", "topics": ["topic1", "topic2", ...], "conditions": ["condition1", ...], "key_concepts": ["concept1", ...], "summary": "2-sentence description" }. The full_text should be the complete readable content of the PDF as plain text.',
+          },
+        ] as ContentBlockParam[],
+      },
+    ],
+  });
+
+  const raw = res.content.find((c) => c.type === "text");
+  const txt = raw && "text" in raw ? raw.text : "";
+  const cleaned = txt.replace(/^```(?:json)?\s*/i, "").replace(/\s*```\s*$/i, "").trim();
+  const match = cleaned.match(/\{[\s\S]*\}/);
+  if (!match) {
+    console.error("[admin/upload/api] Claude raw PDF response:", txt);
+    throw new Error("Claude returned malformed JSON for PDF extraction");
+  }
+
+  let parsed: Record<string, unknown>;
+  try {
+    parsed = JSON.parse(match[0]) as Record<string, unknown>;
+  } catch {
+    console.error("[admin/upload/api] JSON parse error. Raw:", txt);
+    throw new Error("Failed to parse Claude's JSON response for PDF extraction");
+  }
+
+  const VALID_SOURCE_TYPES = new Set(["book", "research", "article", "other"]);
+  const rawType = parsed.source_type as string;
+  const source_type = VALID_SOURCE_TYPES.has(rawType) ? rawType : "other";
+
+  return {
+    full_text: (parsed.full_text as string) ?? "",
+    source_type,
     topics: Array.isArray(parsed.topics) ? (parsed.topics as string[]) : [],
     conditions: Array.isArray(parsed.conditions) ? (parsed.conditions as string[]) : [],
     key_concepts: Array.isArray(parsed.key_concepts) ? (parsed.key_concepts as string[]) : [],
@@ -94,6 +146,9 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     if (!["pdf", "md", "txt"].includes(ext)) {
       return NextResponse.json({ error: "Only PDF, MD, and TXT files are supported" }, { status: 400 });
     }
+    if (ext === "pdf" && file.size > 32 * 1024 * 1024) {
+      return NextResponse.json({ error: "PDF must be under 32MB (Claude limit)" }, { status: 400 });
+    }
 
     const fileBuffer = Buffer.from(await file.arrayBuffer());
 
@@ -124,16 +179,18 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
     try {
       let text = "";
+      let meta: Awaited<ReturnType<typeof extractMetadata>>;
+
       if (ext === "pdf") {
-        const parsed = await pdfParse(fileBuffer);
-        text = parsed.text;
+        const pdfResult = await extractPdfTextAndMetadata(fileBuffer);
+        text = pdfResult.full_text;
+        meta = pdfResult;
       } else {
         text = fileBuffer.toString("utf-8");
+        meta = await extractMetadata(text);
       }
 
       if (!text.trim()) throw new Error("No text extracted from file");
-
-      const meta = await extractMetadata(text);
 
       await updateKnowledgeSource(source.id, {
         source_type: meta.source_type as "book" | "research" | "article" | "other",

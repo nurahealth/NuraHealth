@@ -115,16 +115,75 @@ function UploadModal({ userId, token, onClose, onSuccess }: {
   const [file, setFile] = useState<File | null>(null);
   const [fileTitle, setFileTitle] = useState("");
   const [fileAuthor, setFileAuthor] = useState("");
+  const [fileDragOver, setFileDragOver] = useState(false);
+  const [fileDropError, setFileDropError] = useState("");
 
   const [photos, setPhotos] = useState<File[]>([]);
   const [photoTitle, setPhotoTitle] = useState("");
   const [photoAuthor, setPhotoAuthor] = useState("");
+  const [photosDragOver, setPhotosDragOver] = useState(false);
+  const [photosDropError, setPhotosDropError] = useState("");
+  const [photoUrls, setPhotoUrls] = useState<string[]>([]);
 
   const [textTitle, setTextTitle] = useState("");
   const [textAuthor, setTextAuthor] = useState("");
   const [textBody, setTextBody] = useState("");
 
   const busy = stage !== "idle" && stage !== "done" && stage !== "error";
+
+  useEffect(() => {
+    const urls = photos.map((p) => URL.createObjectURL(p));
+    setPhotoUrls(urls);
+    return () => urls.forEach((u) => URL.revokeObjectURL(u));
+  }, [photos]);
+
+  // ── File drag handlers ──────────────────────────────────────────────────────
+  const handleFileDragEnter = (e: React.DragEvent) => { e.preventDefault(); e.stopPropagation(); if (!busy) setFileDragOver(true); };
+  const handleFileDragOver = (e: React.DragEvent) => { e.preventDefault(); e.stopPropagation(); if (!busy) setFileDragOver(true); };
+  const handleFileDragLeave = (e: React.DragEvent) => { e.preventDefault(); e.stopPropagation(); if (!e.currentTarget.contains(e.relatedTarget as Node)) setFileDragOver(false); };
+  const handleFileDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setFileDragOver(false);
+    if (busy) return;
+    setFileDropError("");
+    const dropped = e.dataTransfer.files[0];
+    if (!dropped) return;
+    const ext = dropped.name.split(".").pop()?.toLowerCase() ?? "";
+    if (!["pdf", "md", "txt"].includes(ext)) { setFileDropError("File type not supported"); return; }
+    if (dropped.size > 50 * 1024 * 1024) { setFileDropError("File must be under 50MB"); return; }
+    setFile(dropped);
+    setFileTitle(dropped.name.replace(/\.[^.]+$/, ""));
+  };
+
+  // ── Photos drag handlers ────────────────────────────────────────────────────
+  const handlePhotosDragEnter = (e: React.DragEvent) => { e.preventDefault(); e.stopPropagation(); if (!busy) setPhotosDragOver(true); };
+  const handlePhotosDragOver = (e: React.DragEvent) => { e.preventDefault(); e.stopPropagation(); if (!busy) setPhotosDragOver(true); };
+  const handlePhotosDragLeave = (e: React.DragEvent) => { e.preventDefault(); e.stopPropagation(); if (!e.currentTarget.contains(e.relatedTarget as Node)) setPhotosDragOver(false); };
+  const handlePhotosDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setPhotosDragOver(false);
+    if (busy) return;
+    setPhotosDropError("");
+    const dropped = Array.from(e.dataTransfer.files);
+    const ACCEPTED = ["image/jpeg", "image/png", "image/webp", "image/heic", "image/heif"];
+    const MAX = 10 * 1024 * 1024;
+    const valid: File[] = [];
+    let skipped = 0;
+    for (const f of dropped) {
+      const ok = ACCEPTED.includes(f.type) || f.name.toLowerCase().endsWith(".heic") || f.name.toLowerCase().endsWith(".heif");
+      if (!ok || f.size > MAX) { skipped++; continue; }
+      valid.push(f);
+    }
+    if (valid.length > 0) {
+      setPhotos((prev) => [...prev, ...valid]);
+      if (!photoTitle && valid[0]) setPhotoTitle(valid[0].name.replace(/\.[^.]+$/, ""));
+    }
+    if (skipped > 0) setPhotosDropError(`${skipped} file${skipped > 1 ? "s" : ""} skipped — invalid type or over 10MB`);
+  };
+
+  const removePhoto = (idx: number) => setPhotos((prev) => prev.filter((_, i) => i !== idx));
 
   const upload = async () => {
     setErrorMsg("");
@@ -261,14 +320,36 @@ function UploadModal({ userId, token, onClose, onSuccess }: {
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               <div
                 onClick={() => !busy && fileInputRef.current?.click()}
-                style={{ border: `2px dashed ${file ? colors.mintBorder : colors.borderFaint}`, borderRadius: 10, padding: "20px", display: "flex", flexDirection: "column", alignItems: "center", gap: 8, cursor: busy ? "not-allowed" : "pointer", background: file ? colors.mintBgSubtle : "transparent" }}
+                onDragEnter={handleFileDragEnter}
+                onDragOver={handleFileDragOver}
+                onDragLeave={handleFileDragLeave}
+                onDrop={handleFileDrop}
+                style={{
+                  border: fileDragOver ? `2px solid ${colors.mint}` : file ? `2px solid ${colors.mintBorder}` : "2px dashed rgba(94,234,212,0.3)",
+                  borderRadius: 10,
+                  padding: "20px",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  gap: 8,
+                  cursor: busy ? "not-allowed" : fileDragOver ? "copy" : "pointer",
+                  background: fileDragOver ? `${colors.mint}0d` : file ? colors.mintBgSubtle : "transparent",
+                  boxShadow: fileDragOver ? `0 0 0 4px ${colors.mint}20` : "none",
+                  animation: fileDragOver ? "drop-pulse 1.2s ease-in-out infinite" : "none",
+                  transition: "border 0.15s ease, background 0.15s ease, box-shadow 0.15s ease",
+                }}
               >
-                <FileText size={22} color={file ? colors.mint : colors.textFaint} />
-                <MonoLabel color={file ? colors.mint : colors.textGhost}>{file ? file.name : "CLICK TO CHOOSE FILE"}</MonoLabel>
+                <FileText size={22} color={fileDragOver ? colors.mint : file ? colors.mint : colors.textFaint} />
+                <MonoLabel color={fileDragOver ? colors.mint : file ? colors.mint : colors.textGhost}>
+                  {fileDragOver ? "DROP FILE HERE" : file ? file.name : "CLICK OR DROP FILE HERE"}
+                </MonoLabel>
                 <MonoLabel color={colors.textGhost} size={8}>PDF · MD · TXT · MAX 50MB</MonoLabel>
                 <input ref={fileInputRef} type="file" accept=".pdf,.md,.txt" style={{ display: "none" }}
-                  onChange={(e) => { const f = e.target.files?.[0]; if (f) { setFile(f); setFileTitle(f.name.replace(/\.[^.]+$/, "")); } }} />
+                  onChange={(e) => { const f = e.target.files?.[0]; if (f) { setFile(f); setFileTitle(f.name.replace(/\.[^.]+$/, "")); setFileDropError(""); } }} />
               </div>
+              {fileDropError && (
+                <MonoLabel color="#FF4C5C" size={8}>{fileDropError}</MonoLabel>
+              )}
               <div><label style={labelStyle}>TITLE</label><input value={fileTitle} onChange={(e) => setFileTitle(e.target.value)} placeholder="Auto-detected from filename" style={inputStyle} /></div>
               <div><label style={labelStyle}>AUTHOR</label><input value={fileAuthor} onChange={(e) => setFileAuthor(e.target.value)} placeholder="Optional" style={inputStyle} /></div>
             </div>
@@ -278,16 +359,52 @@ function UploadModal({ userId, token, onClose, onSuccess }: {
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               <div
                 onClick={() => !busy && photosInputRef.current?.click()}
-                style={{ border: `2px dashed ${photos.length ? colors.mintBorder : colors.borderFaint}`, borderRadius: 10, padding: "20px", display: "flex", flexDirection: "column", alignItems: "center", gap: 8, cursor: "pointer", background: photos.length ? colors.mintBgSubtle : "transparent" }}
+                onDragEnter={handlePhotosDragEnter}
+                onDragOver={handlePhotosDragOver}
+                onDragLeave={handlePhotosDragLeave}
+                onDrop={handlePhotosDrop}
+                style={{
+                  border: photosDragOver ? `2px solid ${colors.mint}` : photos.length ? `2px solid ${colors.mintBorder}` : "2px dashed rgba(94,234,212,0.3)",
+                  borderRadius: 10,
+                  padding: "20px",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  gap: 8,
+                  cursor: busy ? "not-allowed" : photosDragOver ? "copy" : "pointer",
+                  background: photosDragOver ? `${colors.mint}0d` : photos.length ? colors.mintBgSubtle : "transparent",
+                  boxShadow: photosDragOver ? `0 0 0 4px ${colors.mint}20` : "none",
+                  animation: photosDragOver ? "drop-pulse 1.2s ease-in-out infinite" : "none",
+                  transition: "border 0.15s ease, background 0.15s ease, box-shadow 0.15s ease",
+                }}
               >
-                <Image size={22} color={photos.length ? colors.mint : colors.textFaint} />
-                <MonoLabel color={photos.length ? colors.mint : colors.textGhost}>
-                  {photos.length ? `${photos.length} IMAGE${photos.length > 1 ? "S" : ""} SELECTED` : "CLICK TO CHOOSE IMAGES"}
+                <Image size={22} color={photosDragOver ? colors.mint : photos.length ? colors.mint : colors.textFaint} />
+                <MonoLabel color={photosDragOver ? colors.mint : photos.length ? colors.mint : colors.textGhost}>
+                  {photosDragOver ? "DROP IMAGES HERE" : photos.length ? `${photos.length} IMAGE${photos.length > 1 ? "S" : ""} SELECTED` : "CLICK OR DROP IMAGES HERE"}
                 </MonoLabel>
-                <MonoLabel color={colors.textGhost} size={8}>JPEG · PNG · WEBP · IN PAGE ORDER</MonoLabel>
+                <MonoLabel color={colors.textGhost} size={8}>JPEG · PNG · WEBP · HEIC · MAX 10MB EACH</MonoLabel>
                 <input ref={photosInputRef} type="file" accept="image/*" multiple style={{ display: "none" }}
-                  onChange={(e) => { const fs = Array.from(e.target.files ?? []); setPhotos(fs); if (!photoTitle && fs[0]) setPhotoTitle(fs[0].name.replace(/\.[^.]+$/, "")); }} />
+                  onChange={(e) => { const fs = Array.from(e.target.files ?? []); if (fs.length > 0) { setPhotos((prev) => [...prev, ...fs]); if (!photoTitle && fs[0]) setPhotoTitle(fs[0].name.replace(/\.[^.]+$/, "")); setPhotosDropError(""); } }} />
               </div>
+              {photosDropError && (
+                <MonoLabel color="#FF4C5C" size={8}>{photosDropError}</MonoLabel>
+              )}
+              {photoUrls.length > 0 && (
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                  {photoUrls.map((url, i) => (
+                    <div key={i} style={{ position: "relative", width: 60, height: 60, borderRadius: 6, overflow: "hidden", border: `1px solid ${colors.mintBorder}`, flexShrink: 0 }}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={url} alt={photos[i]?.name ?? ""} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                      <button
+                        onClick={(e) => { e.stopPropagation(); removePhoto(i); }}
+                        style={{ position: "absolute", top: 2, right: 2, width: 16, height: 16, borderRadius: "50%", background: "rgba(0,0,0,0.65)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: 0, color: "#fff" }}
+                      >
+                        <X size={9} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
               <div><label style={labelStyle}>TITLE</label><input value={photoTitle} onChange={(e) => setPhotoTitle(e.target.value)} placeholder="Book or document title" style={inputStyle} /></div>
               <div><label style={labelStyle}>AUTHOR</label><input value={photoAuthor} onChange={(e) => setPhotoAuthor(e.target.value)} placeholder="Optional" style={inputStyle} /></div>
             </div>
@@ -484,6 +601,7 @@ export default function AdminKnowledgePage() {
       <style>{`
         @keyframes live-pulse { 0%, 100% { opacity: 0.5; transform: scale(1); } 50% { opacity: 1; transform: scale(1.4); } }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes drop-pulse { 0%, 100% { box-shadow: 0 0 0 4px rgba(94,234,212,0.15); } 50% { box-shadow: 0 0 0 6px rgba(94,234,212,0.3); } }
         * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
         ::-webkit-scrollbar { width: 0; }
       `}</style>
