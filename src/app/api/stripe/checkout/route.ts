@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { stripe, STRIPE_PRICE_ID_PRO } from "@/lib/stripe";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { getUserSubscription, createOrUpdateSubscription } from "@/lib/subscriptions";
+import type Stripe from "stripe";
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
   try {
@@ -30,22 +31,48 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       await createOrUpdateSubscription(userId, { stripe_customer_id: customerId });
     }
 
-    const origin = req.headers.get("origin") || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-
-    const session = await stripe.checkout.sessions.create({
-      ui_mode: "embedded_page",
-      mode: "subscription",
+    const subscription = await stripe.subscriptions.create({
       customer: customerId,
-      line_items: [{ price: STRIPE_PRICE_ID_PRO, quantity: 1 }],
-      return_url: `${origin}/upgrade/success?session_id={CHECKOUT_SESSION_ID}`,
-      allow_promotion_codes: true,
-      billing_address_collection: "auto",
-      payment_method_collection: "always",
-      subscription_data: { trial_period_days: 3 },
-      metadata: { supabase_user_id: userId },
+      items: [{ price: STRIPE_PRICE_ID_PRO }],
+      payment_behavior: "default_incomplete",
+      payment_settings: {
+        save_default_payment_method: "on_subscription",
+        payment_method_types: ["card"],
+      },
+      trial_period_days: 3,
+      trial_settings: {
+        end_behavior: { missing_payment_method: "cancel" },
+      },
+      expand: ["pending_setup_intent"],
     });
 
-    return NextResponse.json({ clientSecret: session.client_secret });
+    const setupIntent = subscription.pending_setup_intent as Stripe.SetupIntent | null;
+    const clientSecret = setupIntent?.client_secret ?? null;
+
+    if (!clientSecret) {
+      return NextResponse.json({ error: "No setup intent client secret" }, { status: 500 });
+    }
+
+    // Store subscription immediately — trialing, no charge yet
+    const item = subscription.items?.data?.[0];
+    const periodStart = item?.current_period_start ?? null;
+    const periodEnd = item?.current_period_end ?? null;
+
+    await createOrUpdateSubscription(userId, {
+      stripe_customer_id: customerId,
+      stripe_subscription_id: subscription.id,
+      status: subscription.status,
+      plan: "pro",
+      current_period_start: periodStart ? new Date(periodStart * 1000).toISOString() : null,
+      current_period_end: periodEnd ? new Date(periodEnd * 1000).toISOString() : null,
+      cancel_at_period_end: subscription.cancel_at_period_end,
+    });
+
+    return NextResponse.json({
+      subscriptionId: subscription.id,
+      clientSecret,
+      customerId,
+    });
   } catch (err) {
     console.error("[stripe/checkout] error:", err);
     return NextResponse.json(

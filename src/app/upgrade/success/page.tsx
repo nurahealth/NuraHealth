@@ -29,11 +29,18 @@ function SuccessContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const sessionId = searchParams.get("session_id");
+  const subscriptionId = searchParams.get("subscription_id");
 
-  const [syncState, setSyncState] = useState<SyncState>(sessionId ? "syncing" : "no-session");
+  // subscription_id comes from Payment Element flow — subscription already stored in DB
+  const hasDirectSub = Boolean(subscriptionId);
+  const [syncState, setSyncState] = useState<SyncState>(
+    hasDirectSub ? "trial" : sessionId ? "syncing" : "no-session"
+  );
   const [syncError, setSyncError] = useState("");
 
   useEffect(() => {
+    // Payment Element path: subscription already in DB as trialing — no sync needed
+    if (hasDirectSub) return;
     if (!sessionId) return;
     let cancelled = false;
 
@@ -67,7 +74,7 @@ function SuccessContent() {
 
     void sync();
     return () => { cancelled = true; };
-  }, [sessionId]);
+  }, [sessionId, hasDirectSub]);
 
   const showWelcome = syncState === "success" || syncState === "trial" || syncState === "no-session";
   const isTrial = syncState === "trial";
@@ -121,8 +128,8 @@ function SuccessContent() {
               We couldn&apos;t activate your subscription automatically. Please contact support.
             </p>
             <div style={{ background: "rgba(235,230,216,0.04)", border: `1px solid ${BORDER}`, borderRadius: 10, padding: "12px 14px", marginBottom: 24, textAlign: "left" }}>
-              <div style={{ fontFamily: MONO, fontSize: 8, color: TEXT_TER, letterSpacing: "1px", marginBottom: 4 }}>SESSION ID</div>
-              <div style={{ fontFamily: MONO, fontSize: 10, color: TEXT_SEC, wordBreak: "break-all" }}>{sessionId}</div>
+              <div style={{ fontFamily: MONO, fontSize: 8, color: TEXT_TER, letterSpacing: "1px", marginBottom: 4 }}>REFERENCE</div>
+              <div style={{ fontFamily: MONO, fontSize: 10, color: TEXT_SEC, wordBreak: "break-all" }}>{subscriptionId || sessionId}</div>
               {syncError && <div style={{ fontFamily: MONO, fontSize: 8, color: "#ff4c5c", marginTop: 6 }}>{syncError}</div>}
             </div>
             <button onClick={() => router.push("/")} style={ctaStyle(false)}>GO TO DASHBOARD</button>
