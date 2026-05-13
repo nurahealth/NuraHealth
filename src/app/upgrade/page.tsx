@@ -28,28 +28,12 @@ export default function UpgradePage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [portalLoading, setPortalLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [portalError, setPortalError] = useState("");
   const [hovCta, setHovCta] = useState(false);
 
-  const handleUpgrade = async () => {
-    setError("");
+  const handleUpgrade = () => {
     setLoading(true);
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { router.push("/auth"); return; }
-
-      const res = await fetch("/api/stripe/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: user.id }),
-      });
-      const data = await res.json() as { url?: string; error?: string };
-      if (!res.ok || !data.url) throw new Error(data.error ?? "Checkout failed");
-      window.location.href = data.url;
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Something went wrong");
-      setLoading(false);
-    }
+    router.push("/upgrade/checkout");
   };
 
   const handlePortal = async () => {
@@ -67,7 +51,7 @@ export default function UpgradePage() {
       if (!res.ok || !data.url) throw new Error(data.error ?? "Portal failed");
       window.location.href = data.url;
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Something went wrong");
+      setPortalError(e instanceof Error ? e.message : "Something went wrong");
       setPortalLoading(false);
     }
   };
@@ -137,10 +121,10 @@ export default function UpgradePage() {
           </div>
         </div>
 
-        {/* Error */}
-        {error && (
+        {/* Portal error */}
+        {portalError && (
           <div style={{ padding: "10px 14px", background: "rgba(255,76,92,0.08)", border: "1px solid rgba(255,76,92,0.3)", borderRadius: 8, marginBottom: 16, fontFamily: MONO, fontSize: 10, color: "#ff4c5c", letterSpacing: "0.5px" }}>
-            {error}
+            {portalError}
           </div>
         )}
 
@@ -159,7 +143,7 @@ export default function UpgradePage() {
             transition: "background 200ms", marginBottom: 14,
           }}
         >
-          {loading ? "REDIRECTING..." : "START FREE TRIAL"}
+          {loading ? "LOADING..." : "START FREE TRIAL"}
           {!loading && (
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M5 12h14M13 6l6 6-6 6"/>

@@ -33,11 +33,11 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     const origin = req.headers.get("origin") || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
     const session = await stripe.checkout.sessions.create({
+      ui_mode: "embedded_page",
       mode: "subscription",
       customer: customerId,
       line_items: [{ price: STRIPE_PRICE_ID_PRO, quantity: 1 }],
-      success_url: `${origin}/upgrade/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${origin}/upgrade/cancel`,
+      return_url: `${origin}/upgrade/success?session_id={CHECKOUT_SESSION_ID}`,
       allow_promotion_codes: true,
       billing_address_collection: "auto",
       payment_method_collection: "always",
@@ -45,7 +45,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       metadata: { supabase_user_id: userId },
     });
 
-    return NextResponse.json({ url: session.url });
+    return NextResponse.json({ clientSecret: session.client_secret });
   } catch (err) {
     console.error("[stripe/checkout] error:", err);
     return NextResponse.json(
