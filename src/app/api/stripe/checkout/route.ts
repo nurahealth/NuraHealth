@@ -40,6 +40,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       cancel_url: `${origin}/upgrade/cancel`,
       allow_promotion_codes: true,
       billing_address_collection: "auto",
+      payment_method_collection: "always",
+      subscription_data: { trial_period_days: 3 },
       metadata: { supabase_user_id: userId },
     });
 
