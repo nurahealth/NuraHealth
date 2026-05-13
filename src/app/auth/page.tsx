@@ -1,22 +1,30 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { FONTS } from "@/lib/theme";
 import { useTheme } from "@/components/ThemeProvider";
 import Logo from "@/components/Logo";
 
-export default function AuthPage() {
+function AuthContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { colors } = useTheme();
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+
+  useEffect(() => {
+    if (searchParams.get("error") === "oauth_failed") {
+      setError("Google sign-in failed. Please try again or use email.");
+    }
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,6 +52,28 @@ export default function AuthPage() {
     }
   };
 
+  const handleGoogleSignIn = async () => {
+    setError("");
+    setGoogleLoading(true);
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+          queryParams: {
+            access_type: "offline",
+            prompt: "consent",
+          },
+        },
+      });
+      if (error) throw error;
+      // Redirect handled by Supabase — keep loading state
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Google sign-in failed");
+      setGoogleLoading(false);
+    }
+  };
+
   const inputStyle: React.CSSProperties = {
     padding: "14px 18px",
     background: colors.mintBgSubtle,
@@ -56,6 +86,8 @@ export default function AuthPage() {
     width: "100%",
     boxSizing: "border-box",
   };
+
+  const anyLoading = loading || googleLoading;
 
   return (
     <div
@@ -71,6 +103,7 @@ export default function AuthPage() {
     >
       <style>{`
         @keyframes auth-breathe { 0%, 100% { opacity: 0.8; } 50% { opacity: 1; } }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
         input::placeholder { color: ${colors.textGhost} !important; }
         html, body { margin: 0; padding: 0; }
@@ -133,7 +166,7 @@ export default function AuthPage() {
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={anyLoading}
             style={{
               marginTop: 4,
               padding: "14px",
@@ -147,9 +180,9 @@ export default function AuthPage() {
               fontSize: 11,
               fontWeight: 700,
               letterSpacing: "1.5px",
-              cursor: loading ? "wait" : "pointer",
+              cursor: anyLoading ? "not-allowed" : "pointer",
               textTransform: "uppercase",
-              opacity: loading ? 0.7 : 1,
+              opacity: anyLoading ? 0.7 : 1,
             }}
           >
             {loading ? "LOADING..." : mode === "signin" ? "SIGN IN" : "CREATE ACCOUNT"}
@@ -165,7 +198,10 @@ export default function AuthPage() {
 
         {/* Social buttons */}
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {/* Google */}
           <button
+            onClick={handleGoogleSignIn}
+            disabled={anyLoading}
             style={{
               width: "100%",
               padding: "13px",
@@ -174,20 +210,29 @@ export default function AuthPage() {
               borderRadius: 12,
               fontFamily: FONTS.sans,
               fontSize: 14,
-              color: colors.textMuted,
-              cursor: "pointer",
+              color: anyLoading ? colors.textGhost : colors.textMuted,
+              cursor: anyLoading ? "not-allowed" : "pointer",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               gap: 10,
+              opacity: googleLoading ? 0.8 : 1,
+              transition: "opacity 0.15s",
             }}
           >
-            <svg width="17" height="17" viewBox="0 0 17 17" fill="none">
-              <path d="M8.5 0a8.5 8.5 0 1 0 0 17A8.5 8.5 0 0 0 8.5 0zm0 2c1.8 0 3.4.6 4.7 1.7L11 5.9a5 5 0 1 0 1.5 3.6h-4V7.4h6.4c.1.4.1.7.1 1.1A6.5 6.5 0 1 1 8.5 2z" fill={colors.textMuted} />
-            </svg>
-            Continue with Google
+            {googleLoading ? (
+              <div style={{ width: 17, height: 17, borderRadius: "50%", border: `2px solid ${colors.border}`, borderTopColor: colors.mint, animation: "spin 0.8s linear infinite", flexShrink: 0 }} />
+            ) : (
+              <svg width="17" height="17" viewBox="0 0 17 17" fill="none">
+                <path d="M8.5 0a8.5 8.5 0 1 0 0 17A8.5 8.5 0 0 0 8.5 0zm0 2c1.8 0 3.4.6 4.7 1.7L11 5.9a5 5 0 1 0 1.5 3.6h-4V7.4h6.4c.1.4.1.7.1 1.1A6.5 6.5 0 1 1 8.5 2z" fill={colors.textMuted} />
+              </svg>
+            )}
+            {googleLoading ? "Connecting..." : "Continue with Google"}
           </button>
+
+          {/* Apple — coming soon */}
           <button
+            disabled
             style={{
               width: "100%",
               padding: "13px",
@@ -196,18 +241,22 @@ export default function AuthPage() {
               borderRadius: 12,
               fontFamily: FONTS.sans,
               fontSize: 14,
-              color: colors.textMuted,
-              cursor: "pointer",
+              color: colors.textGhost,
+              cursor: "not-allowed",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               gap: 10,
+              opacity: 0.5,
             }}
           >
-            <svg width="16" height="16" viewBox="0 0 814 1000" fill={colors.textMuted}>
+            <svg width="16" height="16" viewBox="0 0 814 1000" fill={colors.textGhost}>
               <path d="M788.1 340.9c-5.8 4.5-108.2 62.2-108.2 190.5 0 148.4 130.3 200.9 134.2 202.2-.6 3.2-20.7 71.9-68.7 141.9-42.8 61.6-87.5 123.1-155.5 123.1s-85.5-39.5-164-39.5c-76 0-103.7 40.8-165.9 40.8s-105-57.8-155.5-127.4C46 790.7 0 663 0 541.8c0-207.5 135.4-317.3 269-317.3 70.2 0 128.5 46.2 172.7 46.2 42.4 0 109.2-48.7 188.3-48.7zm-163.8-97c37.8-44.6 64.7-106.3 64.7-168 0-8.7-.6-17.4-2-25.5-61.2 2.3-134.2 41.5-178.3 91.8-34 37.4-66.2 99-66.2 161.7 0 9.3 1.4 18.7 2 21.7 3.8.6 10 1.4 16.2 1.4 55.2 0 124.2-37.8 163.6-82.1z" />
             </svg>
             Continue with Apple
+            <span style={{ fontFamily: FONTS.mono, fontSize: 8, fontWeight: 700, letterSpacing: "0.5px", color: colors.textGhost, background: colors.mintBgMedium, border: `1px solid ${colors.border}`, borderRadius: 4, padding: "2px 6px" }}>
+              SOON
+            </span>
           </button>
         </div>
 
@@ -229,5 +278,13 @@ export default function AuthPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function AuthPage() {
+  return (
+    <Suspense fallback={null}>
+      <AuthContent />
+    </Suspense>
   );
 }
