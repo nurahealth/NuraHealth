@@ -13,13 +13,21 @@ const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
 
 const METADATA_PROMPT = `Analyze this document and return ONLY a JSON object with these fields:
 {
+  "suggested_title": "concise 5-12 word descriptive title",
   "source_type": "book" | "research" | "article" | "other",
   "topics": ["topic1", "topic2"],
   "conditions": ["condition1"],
   "key_concepts": ["concept1", "concept2"],
   "summary": "2-3 sentence summary of the main content"
 }
+For suggested_title: a concise 5-12 word descriptive title. If from a known book or paper, use the actual title (shortened if needed). Otherwise generate a descriptive title based on the main topic.
 Return ONLY valid JSON, no markdown.`;
+
+function isGenericTitle(t: string | null | undefined): boolean {
+  if (!t?.trim()) return true;
+  const lower = t.trim().toLowerCase();
+  return lower === "dummy" || lower === "untitled" || lower === "document" || lower === "pasted text" || t.trim().startsWith("Screenshot ");
+}
 
 async function extractMetadata(text: string) {
   const snippet = text.slice(0, 6000);
@@ -35,6 +43,7 @@ async function extractMetadata(text: string) {
   if (!match) throw new Error("No JSON in metadata response");
   const parsed = JSON.parse(match[0]) as Record<string, unknown>;
   return {
+    suggested_title: (parsed.suggested_title as string) ?? "",
     source_type: (parsed.source_type as string) ?? "other",
     topics: Array.isArray(parsed.topics) ? (parsed.topics as string[]) : [],
     conditions: Array.isArray(parsed.conditions) ? (parsed.conditions as string[]) : [],
@@ -58,7 +67,7 @@ async function extractPdfTextAndMetadata(fileBuffer: Buffer) {
           },
           {
             type: "text",
-            text: 'Extract the full text content from this PDF and analyze it. Respond ONLY with valid JSON in this exact structure: { "full_text": "...", "source_type": "book|research|article|notes|protocol", "topics": ["topic1", "topic2", ...], "conditions": ["condition1", ...], "key_concepts": ["concept1", ...], "summary": "2-sentence description" }. The full_text should be the complete readable content of the PDF as plain text.',
+            text: 'Extract the full text content from this PDF and analyze it. Respond ONLY with valid JSON in this exact structure: { "full_text": "...", "suggested_title": "...", "source_type": "book|research|article|notes|protocol", "topics": ["topic1", "topic2", ...], "conditions": ["condition1", ...], "key_concepts": ["concept1", ...], "summary": "2-sentence description" }. The full_text should be the complete readable content of the PDF as plain text. For suggested_title: a concise 5-12 word descriptive title. If from a known book or paper, use the actual title (shortened if needed). Otherwise generate a descriptive title based on the main topic.',
           },
         ] as ContentBlockParam[],
       },
@@ -88,6 +97,7 @@ async function extractPdfTextAndMetadata(fileBuffer: Buffer) {
 
   return {
     full_text: (parsed.full_text as string) ?? "",
+    suggested_title: (parsed.suggested_title as string) ?? "",
     source_type,
     topics: Array.isArray(parsed.topics) ? (parsed.topics as string[]) : [],
     conditions: Array.isArray(parsed.conditions) ? (parsed.conditions as string[]) : [],
@@ -192,7 +202,11 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
       if (!text.trim()) throw new Error("No text extracted from file");
 
+      const userTitle = title || file.name.replace(/\.[^.]+$/, "");
+      const finalTitle = isGenericTitle(userTitle) && meta.suggested_title ? meta.suggested_title : userTitle;
+
       await updateKnowledgeSource(source.id, {
+        title: finalTitle,
         source_type: meta.source_type as "book" | "research" | "article" | "other",
         topics: meta.topics,
         conditions: meta.conditions,
@@ -210,7 +224,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
       return NextResponse.json({
         sourceId: source.id,
-        title: title || source.title,
+        title: finalTitle,
         chunkCount: chunks.length,
         metadata: meta,
       });

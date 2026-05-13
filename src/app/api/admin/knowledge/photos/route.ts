@@ -14,13 +14,21 @@ const OCR_PROMPT =
 
 const METADATA_PROMPT = `Analyze this document and return ONLY a JSON object with these fields:
 {
+  "suggested_title": "concise 5-12 word descriptive title",
   "source_type": "book" | "research" | "article" | "other",
   "topics": ["topic1", "topic2"],
   "conditions": ["condition1"],
   "key_concepts": ["concept1"],
   "summary": "2-3 sentence summary"
 }
+For suggested_title: a concise 5-12 word descriptive title. If from a known book or paper, use the actual title (shortened if needed). Otherwise generate a descriptive title based on the main topic.
 Return ONLY valid JSON, no markdown.`;
+
+function isGenericTitle(t: string | null | undefined): boolean {
+  if (!t?.trim()) return true;
+  const lower = t.trim().toLowerCase();
+  return lower === "dummy" || lower === "untitled" || lower === "document" || lower === "photo upload" || lower === "pasted text" || t.trim().startsWith("Screenshot ");
+}
 
 async function ocrImage(imageBuffer: Buffer, mediaType: string): Promise<string> {
   const base64 = imageBuffer.toString("base64");
@@ -117,7 +125,11 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       const metaMatch = metaCleaned.match(/\{[\s\S]*\}/);
       const meta = metaMatch ? (JSON.parse(metaMatch[0]) as Record<string, unknown>) : {};
 
+      const suggestedTitle = (meta.suggested_title as string) ?? "";
+      const finalTitle = isGenericTitle(title) && suggestedTitle ? suggestedTitle : title;
+
       await updateKnowledgeSource(source.id, {
+        title: finalTitle,
         source_type: (meta.source_type as "book" | "research" | "article" | "other") ?? "other",
         topics: Array.isArray(meta.topics) ? (meta.topics as string[]) : [],
         conditions: Array.isArray(meta.conditions) ? (meta.conditions as string[]) : [],
