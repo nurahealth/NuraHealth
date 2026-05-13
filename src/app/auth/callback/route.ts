@@ -39,5 +39,19 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     return NextResponse.redirect(`${origin}/auth?error=oauth_failed`);
   }
 
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (user) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('onboarded')
+      .eq('id', user.id)
+      .single();
+
+    if (!profile?.onboarded) {
+      return NextResponse.redirect(`${origin}/onboarding`);
+    }
+  }
+
   return NextResponse.redirect(`${origin}/`);
 }

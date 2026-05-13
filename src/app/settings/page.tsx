@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import type { User } from "@supabase/supabase-js";
@@ -8,6 +8,7 @@ import { ChevronLeft } from "lucide-react";
 import { FONTS } from "@/lib/theme";
 import { useTheme } from "@/components/ThemeProvider";
 import UpgradeButton from "@/components/UpgradeButton";
+import { resetOnboarding } from "@/app/onboarding/actions";
 
 interface SubStatus {
   isPro: boolean;
@@ -120,6 +121,7 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const [subStatus, setSubStatus] = useState<SubStatus | null>(null);
   const [portalLoading, setPortalLoading] = useState(false);
+  const [resetPending, startReset] = useTransition();
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -307,6 +309,29 @@ export default function SettingsPage() {
           <Row label="Email" value={userEmail} />
           <Row label="Plan" value={subStatus?.isPro ? "Pro" : "Free"} last />
         </Section>
+
+        <button
+          onClick={() => startReset(() => resetOnboarding())}
+          disabled={resetPending}
+          style={{
+            width: "100%",
+            padding: "14px",
+            background: "transparent",
+            color: colors.mint,
+            border: `1px solid ${colors.mintBorder}`,
+            borderRadius: 12,
+            fontFamily: FONTS.mono,
+            fontSize: 11,
+            fontWeight: 700,
+            letterSpacing: "1.5px",
+            cursor: resetPending ? "not-allowed" : "pointer",
+            textTransform: "uppercase",
+            marginTop: 8,
+            opacity: resetPending ? 0.6 : 1,
+          }}
+        >
+          {resetPending ? "RESETTING..." : "RESET ONBOARDING"}
+        </button>
 
         <button
           onClick={handleLogout}

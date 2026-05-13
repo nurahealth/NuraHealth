@@ -94,7 +94,7 @@ function HealthDonut({ score, size = 88 }: { score: HealthScore; size?: number }
   const watchDash = watchPct * circ;
   const optDash = optPct * circ;
 
-  let offset = 0;
+  const offset = 0;
   const alertOffset = circ * 0.25; // start at top
   const watchOffset = alertOffset - alertDash;
   const optOffset = watchOffset - watchDash;

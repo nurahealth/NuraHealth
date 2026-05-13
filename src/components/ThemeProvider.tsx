@@ -17,21 +17,19 @@ const ThemeContext = createContext<ThemeContextValue>({
   toggle: () => {},
 });
 
+function readStoredMode(): Mode {
+  if (typeof window === "undefined") return "dark";
+  const stored = localStorage.getItem("nura-theme");
+  return stored === "light" || stored === "dark" ? stored : "dark";
+}
+
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [mode, setMode] = useState<Mode>("dark");
-  const [mounted, setMounted] = useState(false);
+  const [mode, setMode] = useState<Mode>(readStoredMode);
 
   useEffect(() => {
-    const stored = localStorage.getItem("nura-theme");
-    if (stored === "light" || stored === "dark") setMode(stored);
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    if (!mounted) return;
     localStorage.setItem("nura-theme", mode);
     document.body.style.background = mode === "dark" ? NURA_DARK.bg : NURA_LIGHT.bg;
-  }, [mode, mounted]);
+  }, [mode]);
 
   const toggle = () => setMode((m) => (m === "dark" ? "light" : "dark"));
   const colors: NuraPalette = mode === "dark" ? NURA_DARK : NURA_LIGHT;
