@@ -7,6 +7,15 @@ import type { User } from "@supabase/supabase-js";
 import { ChevronLeft } from "lucide-react";
 import { FONTS } from "@/lib/theme";
 import { useTheme } from "@/components/ThemeProvider";
+import UpgradeButton from "@/components/UpgradeButton";
+
+interface SubStatus {
+  isPro: boolean;
+  status: string | null;
+  plan: string | null;
+  current_period_end: string | null;
+  cancel_at_period_end: boolean;
+}
 
 function MonoLabel({ children, color }: { children: React.ReactNode; color?: string }) {
   const { colors } = useTheme();
@@ -109,13 +118,38 @@ export default function SettingsPage() {
   const { colors } = useTheme();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [subStatus, setSubStatus] = useState<SubStatus | null>(null);
+  const [portalLoading, setPortalLoading] = useState(false);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) router.push("/auth");
-      else { setUser(user); setLoading(false); }
+      if (!user) { router.push("/auth"); return; }
+      setUser(user);
+      setLoading(false);
+      fetch(`/api/subscription/status?userId=${user.id}`)
+        .then((r) => r.json())
+        .then((d: SubStatus) => setSubStatus(d))
+        .catch(() => {});
     });
   }, [router]);
+
+  const handlePortal = async () => {
+    if (!user) return;
+    setPortalLoading(true);
+    try {
+      const res = await fetch("/api/stripe/portal", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: user.id }),
+      });
+      const data = await res.json() as { url?: string };
+      if (data.url) window.location.href = data.url;
+    } catch {
+      // silent
+    } finally {
+      setPortalLoading(false);
+    }
+  };
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -215,36 +249,63 @@ export default function SettingsPage() {
 
         <Section title="SUBSCRIPTION">
           <div style={{ padding: "18px" }}>
-            <div style={{ fontFamily: FONTS.serif, fontSize: 18, color: colors.text, marginBottom: 6 }}>
-              Upgrade to NŪRA Pro
-            </div>
-            <div style={{ fontFamily: FONTS.sans, fontSize: 13, color: colors.textDim, marginBottom: 16, lineHeight: 1.6 }}>
-              Unlimited AI conversations · Saved protocols · Priority features · $19.99/month
-            </div>
-            <button
-              style={{
-                padding: "10px 24px",
-                background: `linear-gradient(135deg, ${colors.mint}, ${colors.mintDeep})`,
-                border: "none",
-                borderRadius: 10,
-                fontFamily: FONTS.mono,
-                fontSize: 10,
-                fontWeight: 700,
-                color: colors.textOnAccent,
-                letterSpacing: "1px",
-                cursor: "pointer",
-                textTransform: "uppercase",
-              }}
-            >
-              UPGRADE TO PRO
-            </button>
+            {subStatus?.isPro ? (
+              <>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                  <div style={{ fontFamily: FONTS.serif, fontSize: 18, color: colors.text }}>NŪRA Pro</div>
+                  <span style={{ fontFamily: FONTS.mono, fontSize: 8, fontWeight: 700, letterSpacing: "0.8px", color: colors.textOnAccent, background: `linear-gradient(135deg, ${colors.mint}, ${colors.mintDeep})`, borderRadius: 4, padding: "2px 7px" }}>
+                    ACTIVE
+                  </span>
+                </div>
+                {subStatus.current_period_end && (
+                  <div style={{ fontFamily: FONTS.sans, fontSize: 13, color: colors.textDim, marginBottom: subStatus.cancel_at_period_end ? 4 : 16, lineHeight: 1.6 }}>
+                    Renews on {new Date(subStatus.current_period_end).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
+                  </div>
+                )}
+                {subStatus.cancel_at_period_end && (
+                  <div style={{ fontFamily: FONTS.sans, fontSize: 13, color: colors.warn, marginBottom: 16, lineHeight: 1.6 }}>
+                    Cancels at end of billing period
+                  </div>
+                )}
+                <button
+                  onClick={handlePortal}
+                  disabled={portalLoading}
+                  style={{
+                    padding: "10px 20px",
+                    background: "transparent",
+                    border: `1px solid ${colors.mintBorder}`,
+                    borderRadius: 10,
+                    fontFamily: FONTS.mono,
+                    fontSize: 10,
+                    fontWeight: 700,
+                    color: colors.mint,
+                    letterSpacing: "1px",
+                    cursor: portalLoading ? "not-allowed" : "pointer",
+                    textTransform: "uppercase",
+                    opacity: portalLoading ? 0.6 : 1,
+                  }}
+                >
+                  {portalLoading ? "LOADING..." : "MANAGE SUBSCRIPTION"}
+                </button>
+              </>
+            ) : (
+              <>
+                <div style={{ fontFamily: FONTS.serif, fontSize: 18, color: colors.text, marginBottom: 6 }}>
+                  Upgrade to NŪRA Pro
+                </div>
+                <div style={{ fontFamily: FONTS.sans, fontSize: 13, color: colors.textDim, marginBottom: 16, lineHeight: 1.6 }}>
+                  Unlimited AI conversations · Advanced analysis · Full knowledge base · $9.99/month
+                </div>
+                <UpgradeButton variant="compact" />
+              </>
+            )}
           </div>
         </Section>
 
         <Section title="ACCOUNT">
           <Row label="Name" value={userName} />
           <Row label="Email" value={userEmail} />
-          <Row label="Plan" value="Free" last />
+          <Row label="Plan" value={subStatus?.isPro ? "Pro" : "Free"} last />
         </Section>
 
         <button

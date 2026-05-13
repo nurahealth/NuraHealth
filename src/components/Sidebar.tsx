@@ -15,6 +15,7 @@ import {
   Settings,
   MessageSquare,
   Shield,
+  Sparkles,
 } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
 import { FONTS } from "@/lib/theme";
@@ -47,6 +48,7 @@ export default function Sidebar({ open, onClose, userName, userInitial }: Sideba
   const pathname = usePathname();
   const [chatsOpen, setChatsOpen] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isPro, setIsPro] = useState<boolean | null>(null);
   const { colors } = useTheme();
 
   useEffect(() => {
@@ -60,6 +62,10 @@ export default function Sidebar({ open, onClose, userName, userInitial }: Sideba
         .then(({ data }) => {
           if (data?.is_admin) setIsAdmin(true);
         });
+      fetch(`/api/subscription/status?userId=${user.id}`)
+        .then((r) => r.json())
+        .then((d: { isPro?: boolean }) => setIsPro(d.isPro ?? false))
+        .catch(() => setIsPro(false));
     });
   }, []);
 
@@ -295,6 +301,36 @@ export default function Sidebar({ open, onClose, userName, userInitial }: Sideba
 
         {/* Footer */}
         <div style={{ padding: "12px 10px", borderTop: `1px solid ${colors.border}` }}>
+          {/* Upgrade CTA — shown only for non-Pro users once loaded */}
+          {isPro === false && (
+            <button
+              onClick={() => navigate("/upgrade")}
+              style={{
+                width: "100%",
+                marginBottom: 8,
+                padding: "10px 14px",
+                background: `linear-gradient(135deg, ${colors.mint}20, ${colors.mintDeep}15)`,
+                border: `1px solid ${colors.mintBorder}`,
+                borderRadius: 10,
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                textAlign: "left",
+              }}
+            >
+              <Sparkles size={14} color={colors.mint} style={{ flexShrink: 0 }} />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontFamily: FONTS.mono, fontSize: 9, fontWeight: 700, letterSpacing: "1px", color: colors.mint }}>
+                  UPGRADE TO PRO
+                </div>
+                <div style={{ fontFamily: FONTS.sans, fontSize: 11, color: colors.textFaint, marginTop: 1 }}>
+                  $9.99/mo · Cancel anytime
+                </div>
+              </div>
+            </button>
+          )}
+
           <button
             onClick={() => navigate("/settings")}
             style={{
@@ -329,18 +365,25 @@ export default function Sidebar({ open, onClose, userName, userInitial }: Sideba
               {userInitial}
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div
-                style={{
-                  fontFamily: FONTS.sans,
-                  fontSize: 13,
-                  color: colors.text,
-                  fontWeight: 500,
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                {userName}
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <div
+                  style={{
+                    fontFamily: FONTS.sans,
+                    fontSize: 13,
+                    color: colors.text,
+                    fontWeight: 500,
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {userName}
+                </div>
+                {isPro && (
+                  <span style={{ fontFamily: FONTS.mono, fontSize: 8, fontWeight: 700, letterSpacing: "0.8px", color: colors.textOnAccent, background: `linear-gradient(135deg, ${colors.mint}, ${colors.mintDeep})`, borderRadius: 3, padding: "1px 5px", flexShrink: 0 }}>
+                    PRO
+                  </span>
+                )}
               </div>
               <div
                 style={{
