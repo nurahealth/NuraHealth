@@ -261,13 +261,40 @@ export default function Home() {
   }
 
   return (
-    <div style={{ minHeight: "100dvh", background: BG, position: "relative", overflow: "hidden", fontFamily: SANS }}>
+    <div style={{ minHeight: "100dvh", background: BG, position: "relative", overflow: "hidden", fontFamily: SANS, display: "flex", flexDirection: "column" }}>
       <style>{`
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         html, body { margin: 0; padding: 0; background: ${BG}; }
         @keyframes mic-pulse {
           0%, 100% { box-shadow: 0 0 0 0 rgba(255,76,92,0.4); }
           50%      { box-shadow: 0 0 0 6px rgba(255,76,92,0); }
+        }
+        .nura-content {
+          width: 100%;
+          max-width: 340px;
+          padding: 0 24px;
+          display: flex;
+          flex-direction: column;
+          align-items: stretch;
+        }
+        .nura-greeting {
+          font-size: 30px;
+          line-height: 1.25;
+          letter-spacing: -0.3px;
+        }
+        .nura-subgreeting {
+          font-size: 13px;
+          line-height: 1.5;
+        }
+        @media (min-width: 640px) {
+          .nura-content { max-width: 560px; padding: 0 32px; }
+          .nura-greeting { font-size: 40px; line-height: 1.2; letter-spacing: -0.5px; }
+          .nura-subgreeting { font-size: 15px; line-height: 1.6; }
+        }
+        @media (min-width: 1024px) {
+          .nura-content { max-width: 680px; padding: 0 40px; }
+          .nura-greeting { font-size: 52px; line-height: 1.15; letter-spacing: -0.8px; }
+          .nura-subgreeting { font-size: 15px; line-height: 1.65; }
         }
       `}</style>
 
@@ -277,7 +304,7 @@ export default function Home() {
 
       {/* Header */}
       <header style={{
-        position: "relative", zIndex: 3,
+        position: "relative", zIndex: 3, flexShrink: 0,
         display: "flex", alignItems: "center", justifyContent: "space-between",
         padding: "max(env(safe-area-inset-top), 16px) 18px 0",
       }}>
@@ -318,21 +345,22 @@ export default function Home() {
       {/* Centered content */}
       <main style={{
         position: "relative", zIndex: 2,
-        maxWidth: 340, margin: "0 auto",
-        padding: "min(13vh, 88px) 22px 130px",
-        display: "flex", flexDirection: "column", alignItems: "stretch",
+        flex: 1,
+        display: "flex", flexDirection: "column",
+        justifyContent: "center", alignItems: "center",
+        padding: "32px 0",
       }}>
-        <h1 style={{
-          fontFamily: SERIF, fontSize: 30, fontWeight: 500,
-          color: TEXT, lineHeight: 1.25, letterSpacing: "-0.3px",
-          margin: "0 0 14px",
+        <div className="nura-content">
+        <h1 className="nura-greeting" style={{
+          fontFamily: SERIF, fontWeight: 500,
+          color: TEXT, margin: "0 0 14px",
         }}>
           How can I help you on your{" "}
           <em style={{ fontStyle: "italic", color: SAGE, fontWeight: 500 }}>wellness</em>
           {" "}journey?
         </h1>
 
-        <p style={{ fontSize: 13, color: TEXT_SEC, lineHeight: 1.5, margin: "0 0 24px" }}>
+        <p className="nura-subgreeting" style={{ color: TEXT_SEC, margin: "0 0 24px" }}>
           Type, snap, or speak — NŪRA understands all three.
         </p>
 
@@ -445,17 +473,18 @@ export default function Home() {
             ))}
           </div>
         </div>
+        </div>
       </main>
 
       {/* Footer */}
-      <div style={{
-        position: "absolute", bottom: 18, left: 0, right: 0,
-        textAlign: "center", padding: "0 22px",
-        fontSize: 10, color: TEXT_TER, fontFamily: SANS, zIndex: 2,
-        pointerEvents: "none",
+      <footer style={{
+        position: "relative", zIndex: 2, flexShrink: 0,
+        textAlign: "center",
+        padding: "16px 22px max(env(safe-area-inset-bottom), 18px)",
+        fontSize: 10, color: TEXT_TER, fontFamily: SANS,
       }}>
         NŪRA provides wellness information, not medical advice.
-      </div>
+      </footer>
     </div>
   );
 }
