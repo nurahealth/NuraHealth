@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { useSidebar } from "@/lib/sidebarStore";
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
 const BG = "#0d0d0e";
@@ -173,6 +174,7 @@ function ChipRow({ icon, text, onClick }: { icon: React.ReactNode; text: string;
 // ── Main page ─────────────────────────────────────────────────────────────────
 export default function Home() {
   const router = useRouter();
+  const openSidebar = useSidebar((s) => s.open);
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -184,6 +186,8 @@ export default function Home() {
   const [hovMic, setHovMic] = useState(false);
   const [hovSend, setHovSend] = useState(false);
   const [recording, setRecording] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [sendError, setSendError] = useState("");
   const [placeholderIdx, setPlaceholderIdx] = useState(0);
   const [phShow, setPhShow] = useState(true);
   const recRef = useRef<SpeechRecInstance | null>(null);
@@ -215,12 +219,25 @@ export default function Home() {
     return () => clearInterval(cycle);
   }, []);
 
-  const send = useCallback((text: string) => {
+  const send = useCallback(async (text: string) => {
     const trimmed = text.trim();
-    if (!trimmed) return;
-    try { sessionStorage.setItem("nura.initialMessage", trimmed); } catch {}
-    router.push(`/chat?q=${encodeURIComponent(trimmed)}`);
-  }, [router]);
+    if (!trimmed || sending) return;
+    setSending(true);
+    setSendError("");
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: trimmed }),
+      });
+      const data = await res.json() as { sessionId?: string; error?: string };
+      if (!res.ok || !data.sessionId) throw new Error(data.error ?? `Failed (${res.status})`);
+      router.push(`/chat/${data.sessionId}`);
+    } catch (e) {
+      setSendError(e instanceof Error ? e.message : "Something went wrong");
+      setSending(false);
+    }
+  }, [router, sending]);
 
   const onSubmit = () => send(value);
   const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -269,6 +286,7 @@ export default function Home() {
           0%, 100% { box-shadow: 0 0 0 0 rgba(255,76,92,0.4); }
           50%      { box-shadow: 0 0 0 6px rgba(255,76,92,0); }
         }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         .nura-content {
           width: 100%;
           max-width: 340px;
@@ -309,7 +327,7 @@ export default function Home() {
         padding: "max(env(safe-area-inset-top), 16px) 18px 0",
       }}>
         <button
-          onClick={() => router.push("/settings")}
+          onClick={openSidebar}
           aria-label="Menu"
           style={{
             width: 40, height: 40, borderRadius: 12,
@@ -447,6 +465,7 @@ export default function Home() {
 
             <button
               onClick={onSubmit}
+              disabled={sending}
               onMouseEnter={() => setHovSend(true)}
               onMouseLeave={() => setHovSend(false)}
               onMouseDown={e => { e.currentTarget.style.transform = "scale(0.94)"; }}
@@ -454,17 +473,32 @@ export default function Home() {
               aria-label="Send"
               style={{
                 width: 40, height: 40, borderRadius: 11, border: "none",
-                background: hovSend ? SAGE_HOV : SAGE, color: SAGE_ON,
+                background: sending ? `rgba(${SAGE_RGB},0.4)` : hovSend ? SAGE_HOV : SAGE,
+                color: SAGE_ON,
                 display: "flex", alignItems: "center", justifyContent: "center",
-                cursor: "pointer", flexShrink: 0, marginLeft: 2,
+                cursor: sending ? "not-allowed" : "pointer", flexShrink: 0, marginLeft: 2,
                 transition: "background 200ms, transform 100ms",
               }}
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 19V5M5 12l7-7 7 7"/>
-              </svg>
+              {sending ? (
+                <div style={{ width: 14, height: 14, borderRadius: "50%", border: `2px solid rgba(13,13,14,0.3)`, borderTopColor: SAGE_ON, animation: "spin 0.8s linear infinite" }} />
+              ) : (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 19V5M5 12l7-7 7 7"/>
+                </svg>
+              )}
             </button>
           </div>
+
+          {sendError && (
+            <div style={{
+              marginTop: 4, padding: "8px 12px", borderRadius: 10,
+              background: "rgba(255,76,92,0.08)", border: "1px solid rgba(255,76,92,0.25)",
+              color: "#ff8a96", fontSize: 12,
+            }}>
+              {sendError}
+            </div>
+          )}
 
           {/* Prompt chips */}
           <div style={{ display: "flex", flexDirection: "column", gap: 6, width: "100%", marginTop: 4 }}>

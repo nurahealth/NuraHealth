@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import AppSidebar from "@/components/AppSidebar";
 
 export const metadata: Metadata = {
   title: "NŪRA — Your Personal Health OS",
@@ -23,7 +24,10 @@ export default function RootLayout({
         />
       </head>
       <body style={{ margin: 0, padding: 0, background: "#000814", minHeight: "100vh" }}>
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider>
+          {children}
+          <AppSidebar />
+        </ThemeProvider>
       </body>
     </html>
   );
