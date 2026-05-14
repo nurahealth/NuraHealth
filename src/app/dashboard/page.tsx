@@ -112,15 +112,9 @@ export default function DashboardPage() {
         }
 
         .dash-marker-grid {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
+          display: flex;
+          flex-wrap: wrap;
           gap: 12px;
-        }
-        @media (min-width: 768px) {
-          .dash-marker-grid { grid-template-columns: repeat(3, 1fr); }
-        }
-        @media (min-width: 1024px) {
-          .dash-marker-grid { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
         }
       `}</style>
 
@@ -155,8 +149,16 @@ export default function DashboardPage() {
               <div style={{
                 fontFamily: SERIF, fontWeight: 500, color: SAGE, lineHeight: 1,
                 fontSize: "clamp(48px, 6vw, 56px)", marginBottom: 18,
+                display: "flex", alignItems: "baseline", gap: 4,
               }}>
-                {score?.score ?? 0}
+                <span>{score?.score ?? 0}</span>
+                <span style={{
+                  fontFamily: SERIF, fontWeight: 400,
+                  fontSize: "clamp(24px, 3vw, 28px)",
+                  color: `rgba(${SAGE_RGB},0.5)`,
+                }}>
+                  /100
+                </span>
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
                 <ScoreTile count={score?.optimalCount ?? 0} label="Optimal" color={SAGE} />
@@ -319,6 +321,8 @@ function MarkerTile({ marker, onClick }: { marker: EnrichedMarker; onClick: () =
     <div
       onClick={hasData ? onClick : undefined}
       style={{
+        flex: "1 1 240px",
+        minWidth: 200,
         background: SURFACE, border: `0.5px solid ${BORDER}`, borderRadius: 14,
         padding: 14, cursor: hasData ? "pointer" : "default",
         transition: "border-color 160ms",
