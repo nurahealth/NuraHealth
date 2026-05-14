@@ -42,6 +42,13 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   const { data: { user } } = await supabase.auth.getUser();
 
   if (user) {
+    // Consent gate — applies to all signup paths (OAuth + email/password).
+    // OAuth signups skip the auth-page checkboxes, so we catch them here.
+    const meta = (user.user_metadata ?? {}) as { terms_accepted?: boolean };
+    if (meta.terms_accepted !== true) {
+      return NextResponse.redirect(`${origin}/accept-terms`);
+    }
+
     const { data: profile } = await supabase
       .from('profiles')
       .select('onboarded')

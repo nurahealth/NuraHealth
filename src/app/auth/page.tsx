@@ -3,22 +3,136 @@
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { FONTS } from "@/lib/theme";
-import { useTheme } from "@/components/ThemeProvider";
-import Logo from "@/components/Logo";
+import NuraPlexus from "@/components/NuraPlexus";
 
+// ── Design tokens ─────────────────────────────────────────────────────────────
+const BG = "#0d0d0e";
+const TEXT = "#f0ebde";
+const TEXT_SEC = "rgba(235,230,216,0.55)";
+const BORDER = "rgba(235,230,216,0.12)";
+const SURFACE = "rgba(235,230,216,0.04)";
+const SAGE = "#9bb0a5";
+const SAGE_HOV = "#abc0b5";
+const SAGE_ON = "#0d0d0e";
+const SAGE_RGB = "155,176,165";
+const RED = "#d4574d";
+const SANS = "'Inter', system-ui, sans-serif";
+const SERIF = "'DM Serif Display', Georgia, serif";
+
+// ── Icons ─────────────────────────────────────────────────────────────────────
+function GoogleLogo({ size = 18 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 48 48" aria-hidden="true">
+      <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.7-6.1 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.8 1.1 7.9 3l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.2-.1-2.4-.4-3.5z"/>
+      <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 16 19 13 24 13c3 0 5.8 1.1 7.9 3l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.4 6.3 14.7z"/>
+      <path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2c-2 1.5-4.5 2.4-7.2 2.4-5.2 0-9.6-3.3-11.2-8l-6.5 5C9.6 39.6 16.2 44 24 44z"/>
+      <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.3 4.3-4.1 5.6l6.2 5.2c-.4.4 6.6-4.8 6.6-14.8 0-1.2-.1-2.4-.4-3.5z"/>
+    </svg>
+  );
+}
+
+function AppleLogo({ size = 18 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M16.36 1c.05 1.21-.46 2.43-1.2 3.27-.79.9-2.07 1.61-3.31 1.51-.06-1.19.51-2.38 1.25-3.18C13.9 1.62 15.23 1 16.36 1zM20.5 17.16c-.55 1.27-.81 1.84-1.52 2.97-.99 1.58-2.39 3.55-4.12 3.56-1.54.02-1.93-1-4.02-.99-2.09.01-2.53 1.02-4.06 1-1.73-.03-3.06-1.81-4.05-3.4-2.78-4.43-3.07-9.63-1.36-12.4 1.22-1.96 3.14-3.11 4.95-3.11 1.84 0 3 1.01 4.52 1.01 1.48 0 2.38-1.01 4.51-1.01 1.61 0 3.32.88 4.54 2.4-3.99 2.19-3.34 7.89.61 9.97z"/>
+    </svg>
+  );
+}
+
+function Spinner({ size = 18, color = SAGE_ON }: { size?: number; color?: string }) {
+  return (
+    <div style={{
+      width: size, height: size, borderRadius: "50%",
+      border: `2px solid ${color}33`, borderTopColor: color,
+      animation: "auth-spin 0.8s linear infinite",
+    }} />
+  );
+}
+
+function ConsentCheckbox({
+  checked, onToggle, children,
+}: {
+  checked: boolean;
+  onToggle: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <div
+      onClick={onToggle}
+      role="checkbox"
+      aria-checked={checked}
+      tabIndex={0}
+      onKeyDown={(e) => { if (e.key === " " || e.key === "Enter") { e.preventDefault(); onToggle(); } }}
+      style={{
+        display: "flex", alignItems: "flex-start", gap: 10,
+        cursor: "pointer", userSelect: "none",
+      }}
+    >
+      <div style={{
+        width: 18, height: 18, borderRadius: 5, flexShrink: 0,
+        marginTop: 1,
+        background: checked ? SAGE : "transparent",
+        border: `0.5px solid ${checked ? SAGE : "rgba(235,230,216,0.25)"}`,
+        display: "flex", alignItems: "center", justifyContent: "center",
+        transition: "background 160ms, border-color 160ms",
+      }}>
+        {checked && (
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M5 13l4 4L19 7"/>
+          </svg>
+        )}
+      </div>
+      <span style={{
+        fontFamily: SANS, fontSize: 12.5, lineHeight: 1.5,
+        color: "rgba(235,230,216,0.75)",
+      }}>
+        {children}
+      </span>
+    </div>
+  );
+}
+
+function LegalLink({ href, children }: { href: string; children: React.ReactNode }) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      onClick={(e) => e.stopPropagation()}
+      style={{
+        color: SAGE, textDecoration: "none",
+      }}
+      onMouseEnter={(e) => { e.currentTarget.style.textDecoration = "underline"; }}
+      onMouseLeave={(e) => { e.currentTarget.style.textDecoration = "none"; }}
+    >
+      {children}
+    </a>
+  );
+}
+
+// ── Page ──────────────────────────────────────────────────────────────────────
 function AuthContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { colors } = useTheme();
+
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+
+  // Focus states for sage focus ring on inputs
+  const [emailFocused, setEmailFocused] = useState(false);
+  const [passwordFocused, setPasswordFocused] = useState(false);
+
+  // Signup consent
+  const [agreedTerms, setAgreedTerms] = useState(false);
+  const [agreedMedical, setAgreedMedical] = useState(false);
+
+  // Apple "coming soon" toast
+  const [toast, setToast] = useState("");
 
   useEffect(() => {
     if (searchParams.get("error") === "oauth_failed") {
@@ -26,17 +140,30 @@ function AuthContent() {
     }
   }, [searchParams]);
 
+  // ── Auth handlers ───────────────────────────────────────────────────────────
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setMessage("");
+
+    if (mode === "signup" && !(agreedTerms && agreedMedical)) {
+      setError("Please accept both agreements to continue.");
+      return;
+    }
+
     setLoading(true);
     try {
       if (mode === "signup") {
         const { error } = await supabase.auth.signUp({
           email,
           password,
-          options: { data: { name } },
+          options: {
+            data: {
+              agreed_to_terms: true,
+              agreed_to_medical_disclaimer: true,
+              consent_timestamp: new Date().toISOString(),
+            },
+          },
         });
         if (error) throw error;
         setMessage("Check your email to confirm your account!");
@@ -67,216 +194,270 @@ function AuthContent() {
         },
       });
       if (error) throw error;
-      // Redirect handled by Supabase — keep loading state
+      // Redirect handled by Supabase
     } catch (err) {
       setError(err instanceof Error ? err.message : "Google sign-in failed");
       setGoogleLoading(false);
     }
   };
 
-  const inputStyle: React.CSSProperties = {
-    padding: "14px 18px",
-    background: colors.mintBgSubtle,
-    border: `1.5px solid ${colors.mintBorder}`,
-    borderRadius: 12,
-    fontFamily: FONTS.sans,
-    fontSize: 14,
-    color: colors.text,
-    outline: "none",
-    width: "100%",
-    boxSizing: "border-box",
+  const handleAppleClick = () => {
+    setToast("Apple sign-in coming soon");
+    setTimeout(() => setToast(""), 2200);
   };
 
   const anyLoading = loading || googleLoading;
+  const isSignup = mode === "signup";
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: colors.bg,
-        fontFamily: FONTS.sans,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "20px",
-      }}
-    >
+    <div style={{
+      minHeight: "100dvh", background: BG, color: TEXT,
+      fontFamily: SANS, position: "relative", overflow: "hidden",
+      display: "flex", alignItems: "center", justifyContent: "center",
+      padding: "max(env(safe-area-inset-top), 32px) 20px max(env(safe-area-inset-bottom), 32px)",
+    }}>
       <style>{`
-        @keyframes auth-breathe { 0%, 100% { opacity: 0.8; } 50% { opacity: 1; } }
-        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
-        input::placeholder { color: ${colors.textGhost} !important; }
-        html, body { margin: 0; padding: 0; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        html, body { margin: 0; padding: 0; background: ${BG}; }
+        @keyframes auth-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes auth-toast-in {
+          from { opacity: 0; transform: translate(-50%, 8px); }
+          to   { opacity: 1; transform: translate(-50%, 0); }
+        }
+        .auth-cta:active { transform: scale(0.98); }
+        input::placeholder { color: rgba(235,230,216,0.35) !important; }
       `}</style>
 
-      <div style={{ width: "100%", maxWidth: 400 }}>
-        {/* Logo + header */}
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: 36 }}>
-          <div style={{ marginBottom: 20 }}>
-            <Logo size={64} />
+      <NuraPlexus opacity={0.3} />
+
+      <div style={{ position: "relative", zIndex: 2, width: "100%", maxWidth: 380 }}>
+
+        {/* TOP BRAND */}
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: 32 }}>
+          <div style={{
+            fontFamily: SERIF, fontWeight: 500, fontSize: 32, color: SAGE,
+            letterSpacing: "-0.3px", lineHeight: 1,
+          }}>
+            nūra
           </div>
-          <h1 style={{ fontFamily: FONTS.serif, fontSize: 30, color: colors.text, margin: "0 0 8px", fontWeight: 400, textAlign: "center" }}>
-            {mode === "signin" ? "Welcome to NŪRA" : "Create your account"}
+          <h1 style={{
+            fontFamily: SERIF, fontWeight: 500, fontSize: 28, color: TEXT,
+            margin: "18px 0 6px", letterSpacing: "-0.3px", textAlign: "center", lineHeight: 1.15,
+          }}>
+            {isSignup ? "Create your account" : "Welcome back"}
           </h1>
-          <p style={{ fontFamily: FONTS.mono, fontSize: 10, color: colors.mint, margin: 0, letterSpacing: "1.5px", textTransform: "uppercase" }}>
-            YOUR PERSONAL HEALTH OS
+          <p style={{
+            fontFamily: SANS, fontSize: 13, color: TEXT_SEC,
+            margin: 0, textAlign: "center", lineHeight: 1.5,
+          }}>
+            {isSignup ? "Start your wellness journey." : "Sign in to continue your wellness journey."}
           </p>
         </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          {mode === "signup" && (
-            <input
-              type="text"
-              placeholder="Your name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-              style={inputStyle}
-            />
-          )}
+        {/* FORM */}
+        <form onSubmit={handleSubmit}>
           <input
             type="email"
             placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            onFocus={() => setEmailFocused(true)}
+            onBlur={() => setEmailFocused(false)}
             required
-            style={inputStyle}
+            autoComplete="email"
+            style={{
+              width: "100%", padding: "14px 16px", borderRadius: 12,
+              background: emailFocused ? "rgba(235,230,216,0.06)" : SURFACE,
+              border: `0.5px solid ${emailFocused ? `rgba(${SAGE_RGB},0.5)` : BORDER}`,
+              fontFamily: SANS, fontSize: 14, color: TEXT, outline: "none",
+              transition: "background 180ms, border-color 180ms",
+              marginBottom: 10,
+            }}
           />
           <input
             type="password"
-            placeholder="Password (min 6 characters)"
+            placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            onFocus={() => setPasswordFocused(true)}
+            onBlur={() => setPasswordFocused(false)}
             required
             minLength={6}
-            style={inputStyle}
+            autoComplete={isSignup ? "new-password" : "current-password"}
+            style={{
+              width: "100%", padding: "14px 16px", borderRadius: 12,
+              background: passwordFocused ? "rgba(235,230,216,0.06)" : SURFACE,
+              border: `0.5px solid ${passwordFocused ? `rgba(${SAGE_RGB},0.5)` : BORDER}`,
+              fontFamily: SANS, fontSize: 14, color: TEXT, outline: "none",
+              transition: "background 180ms, border-color 180ms",
+              marginBottom: 14,
+            }}
           />
 
+          {isSignup && (
+            <div style={{ marginBottom: 14 }}>
+              <div style={{ marginBottom: 10 }}>
+                <ConsentCheckbox checked={agreedTerms} onToggle={() => setAgreedTerms((v) => !v)}>
+                  I agree to NŪRA&apos;s{" "}
+                  <LegalLink href="/terms">Terms of Service</LegalLink>
+                  {" "}and{" "}
+                  <LegalLink href="/privacy">Privacy Policy</LegalLink>.
+                </ConsentCheckbox>
+              </div>
+              <ConsentCheckbox checked={agreedMedical} onToggle={() => setAgreedMedical((v) => !v)}>
+                I understand NŪRA provides wellness information based on natural healing protocols, herbal medicine, and nutritional therapy — not medical advice. I will consult a licensed healthcare provider for medical conditions, medications, and emergencies.
+              </ConsentCheckbox>
+            </div>
+          )}
+
           {error && (
-            <div style={{ padding: "10px 14px", background: `${colors.danger}12`, border: `1px solid ${colors.danger}30`, borderRadius: 10, fontSize: 12.5, color: colors.danger }}>
+            <div style={{
+              padding: "10px 14px", borderRadius: 10, marginBottom: 12,
+              background: `rgba(212,87,77,0.08)`, border: `0.5px solid rgba(212,87,77,0.35)`,
+              fontFamily: SANS, fontSize: 12.5, color: RED, lineHeight: 1.5,
+            }}>
               {error}
             </div>
           )}
           {message && (
-            <div style={{ padding: "10px 14px", background: `${colors.mint}12`, border: `1px solid ${colors.mintBorder}`, borderRadius: 10, fontSize: 12.5, color: colors.mint }}>
+            <div style={{
+              padding: "10px 14px", borderRadius: 10, marginBottom: 12,
+              background: `rgba(${SAGE_RGB},0.08)`, border: `0.5px solid rgba(${SAGE_RGB},0.35)`,
+              fontFamily: SANS, fontSize: 12.5, color: SAGE, lineHeight: 1.5,
+            }}>
               {message}
             </div>
           )}
 
-          <button
-            type="submit"
-            disabled={anyLoading}
-            style={{
-              marginTop: 4,
-              padding: "14px",
-              background: loading
-                ? colors.mintBgMedium
-                : `linear-gradient(135deg, ${colors.mint}, ${colors.mintDeep})`,
-              color: loading ? colors.textDim : colors.textOnAccent,
-              border: "none",
-              borderRadius: 12,
-              fontFamily: FONTS.mono,
-              fontSize: 11,
-              fontWeight: 700,
-              letterSpacing: "1.5px",
-              cursor: anyLoading ? "not-allowed" : "pointer",
-              textTransform: "uppercase",
-              opacity: anyLoading ? 0.7 : 1,
-            }}
-          >
-            {loading ? "LOADING..." : mode === "signin" ? "SIGN IN" : "CREATE ACCOUNT"}
-          </button>
+          {(() => {
+            const consentBlocking = isSignup && !(agreedTerms && agreedMedical);
+            const submitDisabled = anyLoading || consentBlocking;
+            return (
+              <button
+                type="submit"
+                disabled={submitDisabled}
+                className="auth-cta"
+                onMouseEnter={(e) => { if (!submitDisabled) e.currentTarget.style.background = SAGE_HOV; }}
+                onMouseLeave={(e) => { if (!submitDisabled) e.currentTarget.style.background = SAGE; }}
+                style={{
+                  width: "100%", height: 48, borderRadius: 11, border: "none",
+                  background: SAGE, color: SAGE_ON,
+                  fontFamily: SANS, fontSize: 14, fontWeight: 500,
+                  cursor: submitDisabled ? "not-allowed" : "pointer",
+                  opacity: anyLoading ? 0.75 : consentBlocking ? 0.5 : 1,
+                  transition: "background 200ms, transform 80ms, opacity 160ms",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                }}
+              >
+                {loading ? <Spinner /> : (isSignup ? "Create account" : "Sign in")}
+              </button>
+            );
+          })()}
         </form>
 
-        {/* OR divider */}
-        <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "20px 0" }}>
-          <div style={{ flex: 1, height: 1, background: colors.border }} />
-          <span style={{ fontFamily: FONTS.mono, fontSize: 10, color: colors.textGhost, letterSpacing: "1px" }}>OR</span>
-          <div style={{ flex: 1, height: 1, background: colors.border }} />
+        {/* OR DIVIDER */}
+        <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "24px 0" }}>
+          <div style={{ flex: 1, height: 0.5, background: BORDER }} />
+          <span style={{
+            fontFamily: SANS, fontSize: 10, fontWeight: 600, letterSpacing: "2px",
+            color: `rgba(${SAGE_RGB},0.55)`, textTransform: "uppercase",
+          }}>
+            OR
+          </span>
+          <div style={{ flex: 1, height: 0.5, background: BORDER }} />
         </div>
 
-        {/* Social buttons */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          {/* Google */}
-          <button
-            onClick={handleGoogleSignIn}
-            disabled={anyLoading}
-            style={{
-              width: "100%",
-              padding: "13px",
-              background: colors.mintBgSubtle,
-              border: `1px solid ${colors.border}`,
-              borderRadius: 12,
-              fontFamily: FONTS.sans,
-              fontSize: 14,
-              color: anyLoading ? colors.textGhost : colors.textMuted,
-              cursor: anyLoading ? "not-allowed" : "pointer",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 10,
-              opacity: googleLoading ? 0.8 : 1,
-              transition: "opacity 0.15s",
-            }}
-          >
-            {googleLoading ? (
-              <div style={{ width: 17, height: 17, borderRadius: "50%", border: `2px solid ${colors.border}`, borderTopColor: colors.mint, animation: "spin 0.8s linear infinite", flexShrink: 0 }} />
-            ) : (
-              <svg width="17" height="17" viewBox="0 0 17 17" fill="none">
-                <path d="M8.5 0a8.5 8.5 0 1 0 0 17A8.5 8.5 0 0 0 8.5 0zm0 2c1.8 0 3.4.6 4.7 1.7L11 5.9a5 5 0 1 0 1.5 3.6h-4V7.4h6.4c.1.4.1.7.1 1.1A6.5 6.5 0 1 1 8.5 2z" fill={colors.textMuted} />
-              </svg>
-            )}
-            {googleLoading ? "Connecting..." : "Continue with Google"}
-          </button>
+        {/* GOOGLE */}
+        <button
+          onClick={handleGoogleSignIn}
+          disabled={anyLoading}
+          className="auth-cta"
+          onMouseEnter={(e) => { if (!anyLoading) e.currentTarget.style.background = SURFACE; }}
+          onMouseLeave={(e) => { if (!anyLoading) e.currentTarget.style.background = "transparent"; }}
+          style={{
+            width: "100%", height: 48, borderRadius: 11,
+            background: "transparent", border: `0.5px solid rgba(235,230,216,0.15)`,
+            color: TEXT, fontFamily: SANS, fontSize: 14, fontWeight: 500,
+            cursor: anyLoading ? "not-allowed" : "pointer", opacity: googleLoading ? 0.8 : 1,
+            display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
+            transition: "background 180ms, opacity 180ms, transform 80ms",
+          }}
+        >
+          {googleLoading ? <Spinner size={17} color={TEXT} /> : <GoogleLogo />}
+          {googleLoading ? "Connecting…" : "Continue with Google"}
+        </button>
 
-          {/* Apple — coming soon */}
-          <button
-            disabled
-            style={{
-              width: "100%",
-              padding: "13px",
-              background: colors.mintBgSubtle,
-              border: `1px solid ${colors.border}`,
-              borderRadius: 12,
-              fontFamily: FONTS.sans,
-              fontSize: 14,
-              color: colors.textGhost,
-              cursor: "not-allowed",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 10,
-              opacity: 0.5,
-            }}
-          >
-            <svg width="16" height="16" viewBox="0 0 814 1000" fill={colors.textGhost}>
-              <path d="M788.1 340.9c-5.8 4.5-108.2 62.2-108.2 190.5 0 148.4 130.3 200.9 134.2 202.2-.6 3.2-20.7 71.9-68.7 141.9-42.8 61.6-87.5 123.1-155.5 123.1s-85.5-39.5-164-39.5c-76 0-103.7 40.8-165.9 40.8s-105-57.8-155.5-127.4C46 790.7 0 663 0 541.8c0-207.5 135.4-317.3 269-317.3 70.2 0 128.5 46.2 172.7 46.2 42.4 0 109.2-48.7 188.3-48.7zm-163.8-97c37.8-44.6 64.7-106.3 64.7-168 0-8.7-.6-17.4-2-25.5-61.2 2.3-134.2 41.5-178.3 91.8-34 37.4-66.2 99-66.2 161.7 0 9.3 1.4 18.7 2 21.7 3.8.6 10 1.4 16.2 1.4 55.2 0 124.2-37.8 163.6-82.1z" />
-            </svg>
-            Continue with Apple
-            <span style={{ fontFamily: FONTS.mono, fontSize: 8, fontWeight: 700, letterSpacing: "0.5px", color: colors.textGhost, background: colors.mintBgMedium, border: `1px solid ${colors.border}`, borderRadius: 4, padding: "2px 6px" }}>
-              SOON
-            </span>
-          </button>
-        </div>
+        {/* APPLE (coming soon) */}
+        <button
+          onClick={handleAppleClick}
+          disabled={anyLoading}
+          className="auth-cta"
+          style={{
+            width: "100%", height: 48, borderRadius: 11, marginTop: 8,
+            background: "transparent", border: `0.5px solid rgba(235,230,216,0.15)`,
+            color: TEXT, fontFamily: SANS, fontSize: 14, fontWeight: 500,
+            cursor: anyLoading ? "not-allowed" : "pointer", opacity: 0.6,
+            display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
+            transition: "transform 80ms",
+          }}
+        >
+          <AppleLogo />
+          Continue with Apple
+          <span style={{
+            padding: "4px 6px", borderRadius: 4,
+            background: `rgba(${SAGE_RGB},0.14)`,
+            fontFamily: SANS, fontSize: 9, fontWeight: 600, letterSpacing: "1px",
+            color: SAGE, textTransform: "uppercase",
+          }}>
+            Soon
+          </span>
+        </button>
 
-        {/* Toggle mode */}
-        <div style={{ marginTop: 24, textAlign: "center" }}>
-          <span style={{ fontFamily: FONTS.sans, fontSize: 13, color: colors.textDim }}>
-            {mode === "signin" ? "New to NŪRA?" : "Already have an account?"}{" "}
+        {/* FOOTER */}
+        <div style={{ marginTop: 28, textAlign: "center" }}>
+          <span style={{ fontFamily: SANS, fontSize: 13, color: TEXT_SEC }}>
+            {isSignup ? "Already have an account?" : "New to NŪRA?"}{" "}
           </span>
           <button
-            onClick={() => { setMode(mode === "signin" ? "signup" : "signin"); setError(""); setMessage(""); }}
-            style={{ background: "none", border: "none", color: colors.mint, fontFamily: FONTS.sans, fontSize: 13, fontWeight: 600, cursor: "pointer", padding: 0 }}
+            onClick={() => {
+              setMode(isSignup ? "signin" : "signup");
+              setError("");
+              setMessage("");
+              setAgreedTerms(false);
+              setAgreedMedical(false);
+            }}
+            style={{
+              background: "none", border: "none", padding: 0, cursor: "pointer",
+              fontFamily: SANS, fontSize: 13, fontWeight: 500, color: SAGE,
+            }}
           >
-            {mode === "signin" ? "Create account" : "Sign in"}
+            {isSignup ? "Sign in" : "Create account"}
           </button>
         </div>
 
-        <p style={{ marginTop: 32, textAlign: "center", fontFamily: FONTS.mono, fontSize: 9, color: colors.textGhost, letterSpacing: "0.08em" }}>
-          WELLNESS INFORMATION · NOT MEDICAL ADVICE
+        <p style={{
+          marginTop: 28, textAlign: "center",
+          fontFamily: SANS, fontSize: 10, color: "rgba(235,230,216,0.32)",
+          letterSpacing: "1px", textTransform: "uppercase",
+        }}>
+          Wellness information · not medical advice
         </p>
       </div>
+
+      {/* Toast */}
+      {toast && (
+        <div style={{
+          position: "fixed", bottom: 32, left: "50%",
+          background: "rgba(20,20,21,0.95)",
+          border: `0.5px solid rgba(${SAGE_RGB},0.3)`,
+          color: TEXT, fontFamily: SANS, fontSize: 12.5,
+          padding: "10px 16px", borderRadius: 22,
+          zIndex: 80, whiteSpace: "nowrap",
+          animation: "auth-toast-in 220ms ease both",
+        }}>
+          {toast}
+        </div>
+      )}
     </div>
   );
 }

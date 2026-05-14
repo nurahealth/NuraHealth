@@ -32,9 +32,29 @@ export async function proxy(request: NextRequest) {
   // No user — let the request through (auth pages handle unauthenticated state)
   if (!user) return supabaseResponse;
 
-  // Never redirect inside auth or API routes
-  if (pathname.startsWith('/auth') || pathname.startsWith('/api')) {
+  // Always-allowed paths — auth, API, and the legal/consent surfaces.
+  // /accept-terms must be reachable even when terms aren't accepted; the legal
+  // pages must be reachable so users can read them before consenting.
+  if (
+    pathname.startsWith('/auth') ||
+    pathname.startsWith('/api') ||
+    pathname.startsWith('/terms') ||
+    pathname.startsWith('/privacy') ||
+    pathname.startsWith('/medical-disclaimer')
+  ) {
     return supabaseResponse;
+  }
+
+  // Consent gate — every authenticated user must have accepted terms.
+  const meta = (user.user_metadata ?? {}) as { terms_accepted?: boolean };
+  const termsAccepted = meta.terms_accepted === true;
+  const onAcceptTerms = pathname === '/accept-terms';
+
+  if (!termsAccepted && !onAcceptTerms) {
+    return NextResponse.redirect(new URL('/accept-terms', request.url));
+  }
+  if (termsAccepted && onAcceptTerms) {
+    return NextResponse.redirect(new URL('/', request.url));
   }
 
   const { data: profile } = await supabase
