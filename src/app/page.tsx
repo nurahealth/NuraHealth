@@ -1,341 +1,461 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import type { User } from "@supabase/supabase-js";
-import { Send, Bookmark, BookmarkCheck, X } from "lucide-react";
-import { FONTS } from "@/lib/theme";
-import { useTheme } from "@/components/ThemeProvider";
-import Logo from "@/components/Logo";
-import Topbar from "@/components/Topbar";
-import Sidebar from "@/components/Sidebar";
-import BottomNav from "@/components/BottomNav";
-import { saveItem, deleteSavedItem } from "@/lib/saved";
 
-const SUGGESTED_PROMPTS = [
-  "What natural supplements reduce inflammation?",
-  "Create a gut healing protocol for beginners",
-  "Best herbs for anxiety without drowsiness",
-  "How do I balance cortisol naturally?",
+// ── Design tokens ─────────────────────────────────────────────────────────────
+const BG = "#0d0d0e";
+const TEXT = "#f0ebde";
+const TEXT_SEC = "rgba(235,230,216,0.55)";
+const TEXT_TER = "rgba(235,230,216,0.4)";
+const BORDER = "rgba(235,230,216,0.09)";
+const SURFACE = "rgba(235,230,216,0.04)";
+const SURFACE_HOV = "rgba(235,230,216,0.08)";
+const SAGE = "#9bb0a5";
+const SAGE_HOV = "#abc0b5";
+const SAGE_ON = "#0d0d0e";
+const SAGE_RGB = "155,176,165";
+const SANS = "'Inter', system-ui, sans-serif";
+const SERIF = "'DM Serif Display', Georgia, serif";
+
+const PROMPTS = [
+  "Ask NŪRA anything...",
+  "Snap a photo of your supplements...",
+  "Tell me how you're feeling...",
+  "Describe what's been off lately...",
+  "Hold to speak — NŪRA listens.",
 ];
 
-function defaultTitle(text: string): string {
-  return text.trim().split(/\s+/).slice(0, 8).join(" ").replace(/[*#_]/g, "").trim();
+const BoltIcon = () => (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={SAGE} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M13 3L6 13h6l-2 9 10-12h-6l1.5-9z"/>
+  </svg>
+);
+const MoonIcon = () => (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={SAGE} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z"/>
+  </svg>
+);
+const SeedingIcon = () => (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={SAGE} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 22V12M12 12c0 0-4-5-8-3s0 7 8 3M12 12c0 0 4-5 8-3s0 7-8 3"/>
+  </svg>
+);
+
+const CHIPS: { icon: React.ReactNode; text: string }[] = [
+  { icon: <BoltIcon />,    text: "What helps with low energy in the afternoon?" },
+  { icon: <MoonIcon />,    text: "Build me a wind-down routine for better sleep" },
+  { icon: <SeedingIcon />, text: "How do I support gut health naturally?" },
+];
+
+// ── Plexus canvas (pollen drift) ──────────────────────────────────────────────
+function PlexusCanvas() {
+  const ref = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const canvas = ref.current;
+    if (!canvas) return;
+
+    let W = window.innerWidth;
+    let H = window.innerHeight;
+    const dpr = window.devicePixelRatio || 1;
+
+    const resize = () => {
+      W = window.innerWidth;
+      H = window.innerHeight;
+      canvas.width = W * dpr;
+      canvas.height = H * dpr;
+      canvas.style.width = `${W}px`;
+      canvas.style.height = `${H}px`;
+      const ctx2 = canvas.getContext("2d");
+      if (ctx2) ctx2.setTransform(dpr, 0, 0, dpr, 0, 0);
+    };
+    resize();
+    window.addEventListener("resize", resize);
+
+    const ctx = canvas.getContext("2d")!;
+
+    const particles = Array.from({ length: 26 }, () => ({
+      x: Math.random() * W,
+      y: Math.random() * H,
+      vx: (Math.random() - 0.5) * 0.16,
+      vy: -(0.08 + Math.random() * 0.18),
+      r: 0.6 + Math.random() * 1.4,
+    }));
+
+    let raf = 0;
+    const draw = () => {
+      ctx.clearRect(0, 0, W, H);
+      for (let i = 0; i < particles.length; i++) {
+        const p = particles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        if (p.y < -10) { p.y = H + 10; p.x = Math.random() * W; }
+        if (p.x < -10) p.x = W + 10;
+        if (p.x > W + 10) p.x = -10;
+
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${SAGE_RGB},0.42)`;
+        ctx.fill();
+
+        for (let j = i + 1; j < particles.length; j++) {
+          const q = particles[j];
+          const dx = p.x - q.x;
+          const dy = p.y - q.y;
+          const d = Math.sqrt(dx * dx + dy * dy);
+          if (d < 105) {
+            ctx.beginPath();
+            ctx.moveTo(p.x, p.y);
+            ctx.lineTo(q.x, q.y);
+            ctx.strokeStyle = `rgba(${SAGE_RGB},${(1 - d / 105) * 0.14})`;
+            ctx.lineWidth = 0.5;
+            ctx.stroke();
+          }
+        }
+      }
+      raf = requestAnimationFrame(draw);
+    };
+
+    draw();
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("resize", resize);
+    };
+  }, []);
+
+  return (
+    <canvas ref={ref} style={{ position: "fixed", inset: 0, zIndex: 0, pointerEvents: "none" }} />
+  );
 }
 
+// ── Web Speech types (browser-only, not in DOM lib by default) ────────────────
+interface SpeechRecResult { transcript: string }
+interface SpeechRecResults { length: number; [i: number]: { 0: SpeechRecResult; isFinal: boolean } }
+interface SpeechRecEvent { resultIndex: number; results: SpeechRecResults }
+interface SpeechRecInstance {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  start(): void;
+  stop(): void;
+  onresult: ((e: SpeechRecEvent) => void) | null;
+  onend: (() => void) | null;
+  onerror: ((e: { error: string }) => void) | null;
+}
+type SpeechRecCtor = new () => SpeechRecInstance;
+
+// ── Chip ──────────────────────────────────────────────────────────────────────
+function ChipRow({ icon, text, onClick }: { icon: React.ReactNode; text: string; onClick: () => void }) {
+  const [hov, setHov] = useState(false);
+  return (
+    <button
+      onClick={onClick}
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
+      style={{
+        display: "flex", alignItems: "center", gap: 10,
+        width: "100%", textAlign: "left",
+        background: hov ? SURFACE_HOV : SURFACE,
+        border: `0.5px solid ${hov ? `rgba(${SAGE_RGB},0.3)` : BORDER}`,
+        color: TEXT, fontFamily: SANS, fontSize: 13,
+        padding: "11px 16px", borderRadius: 8, cursor: "pointer",
+        transition: "background 180ms, border-color 180ms",
+      }}
+    >
+      <span style={{ display: "flex", lineHeight: 0, flexShrink: 0 }}>{icon}</span>
+      <span>{text}</span>
+    </button>
+  );
+}
+
+// ── Main page ─────────────────────────────────────────────────────────────────
 export default function Home() {
   const router = useRouter();
-  const { colors } = useTheme();
-  const [user, setUser] = useState<User | null>(null);
-  const [authLoading, setAuthLoading] = useState(true);
-  const [messages, setMessages] = useState<{ role: string; text: string }[]>([]);
-  const [chatInput, setChatInput] = useState("");
-  const [isTyping, setIsTyping] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const chatEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Save state (session-local)
-  const [savedIndices, setSavedIndices] = useState<Set<number>>(new Set());
-  const [savedItemIds, setSavedItemIds] = useState<Record<number, string>>({});
-  const [editingIdx, setEditingIdx] = useState<number | null>(null);
-  const [titleDraft, setTitleDraft] = useState("");
-  const [savingIdx, setSavingIdx] = useState<number | null>(null);
-  const [toastIdx, setToastIdx] = useState<number | null>(null);
+  const [authChecked, setAuthChecked] = useState(false);
+  const [initial, setInitial] = useState("");
+  const [value, setValue] = useState("");
+  const [focused, setFocused] = useState(false);
+  const [hovAttach, setHovAttach] = useState(false);
+  const [hovMic, setHovMic] = useState(false);
+  const [hovSend, setHovSend] = useState(false);
+  const [recording, setRecording] = useState(false);
+  const [placeholderIdx, setPlaceholderIdx] = useState(0);
+  const [phShow, setPhShow] = useState(true);
+  const recRef = useRef<SpeechRecInstance | null>(null);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) {
-        router.push("/auth");
-      } else {
-        setUser(user);
-        setAuthLoading(false);
-      }
+      if (!user) { router.push("/auth"); return; }
+      const meta = user.user_metadata as { name?: string; full_name?: string } | undefined;
+      const fromMeta = meta?.name ?? meta?.full_name ?? "";
+      if (fromMeta) setInitial(fromMeta.trim().charAt(0).toUpperCase());
+      supabase.from("profiles").select("full_name").eq("id", user.id).single()
+        .then(({ data }) => {
+          const fn = (data?.full_name as string | null | undefined) ?? "";
+          if (fn) setInitial(fn.trim().charAt(0).toUpperCase());
+          else if (!fromMeta) setInitial((user.email ?? "?").trim().charAt(0).toUpperCase());
+        });
+      setAuthChecked(true);
     });
   }, [router]);
 
   useEffect(() => {
-    if (chatEndRef.current) chatEndRef.current.scrollIntoView({ behavior: "smooth" });
-  }, [messages, isTyping]);
+    const cycle = setInterval(() => {
+      setPhShow(false);
+      setTimeout(() => {
+        setPlaceholderIdx(i => (i + 1) % PROMPTS.length);
+        setPhShow(true);
+      }, 350);
+    }, 3000);
+    return () => clearInterval(cycle);
+  }, []);
 
-  const sendMessage = async () => {
-    if (!chatInput.trim()) return;
-    const msg = chatInput.trim();
-    setChatInput("");
-    const newMessages = [...messages, { role: "user", text: msg }];
-    setMessages(newMessages);
-    setIsTyping(true);
-    try {
-      const response = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: newMessages }),
-      });
-      const data = await response.json();
-      setMessages((prev) => [
-        ...prev,
-        { role: "assistant", text: data.reply || "Sorry, something went wrong." },
-      ]);
-    } catch {
-      setMessages((prev) => [
-        ...prev,
-        { role: "assistant", text: "I'm having trouble connecting right now. Please try again." },
-      ]);
-    } finally {
-      setIsTyping(false);
-    }
+  const send = useCallback((text: string) => {
+    const trimmed = text.trim();
+    if (!trimmed) return;
+    try { sessionStorage.setItem("nura.initialMessage", trimmed); } catch {}
+    router.push(`/chat?q=${encodeURIComponent(trimmed)}`);
+  }, [router]);
+
+  const onSubmit = () => send(value);
+  const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(value); }
   };
 
-  const handleBookmarkClick = (idx: number, text: string) => {
-    if (savedIndices.has(idx)) {
-      // Unsave
-      const itemId = savedItemIds[idx];
-      if (itemId) deleteSavedItem(itemId).catch(() => {});
-      setSavedIndices((prev) => { const next = new Set(prev); next.delete(idx); return next; });
-      setSavedItemIds((prev) => { const next = { ...prev }; delete next[idx]; return next; });
-    } else {
-      setTitleDraft(defaultTitle(text));
-      setEditingIdx(idx);
-    }
+  const onMicClick = () => {
+    if (recording) { recRef.current?.stop(); return; }
+    const w = window as unknown as { SpeechRecognition?: SpeechRecCtor; webkitSpeechRecognition?: SpeechRecCtor };
+    const Ctor = w.SpeechRecognition ?? w.webkitSpeechRecognition;
+    if (!Ctor) { alert("Voice input not supported in this browser"); return; }
+
+    const rec = new Ctor();
+    rec.continuous = false;
+    rec.interimResults = false;
+    rec.lang = "en-US";
+    rec.onresult = (e) => {
+      let transcript = "";
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        transcript += e.results[i][0].transcript;
+      }
+      if (transcript) setValue(prev => (prev ? prev + " " : "") + transcript.trim());
+    };
+    rec.onend = () => { setRecording(false); recRef.current = null; };
+    rec.onerror = () => { setRecording(false); recRef.current = null; };
+    recRef.current = rec;
+    setRecording(true);
+    rec.start();
   };
 
-  const confirmSave = async (idx: number, text: string) => {
-    if (!user || !titleDraft.trim()) return;
-    setSavingIdx(idx);
-    try {
-      const item = await saveItem(user.id, {
-        type: "chat",
-        title: titleDraft.trim(),
-        content: text,
-        description: text.slice(0, 120),
-      });
-      setSavedIndices((prev) => new Set(prev).add(idx));
-      setSavedItemIds((prev) => ({ ...prev, [idx]: item.id }));
-      setEditingIdx(null);
-      setToastIdx(idx);
-      setTimeout(() => setToastIdx((t) => (t === idx ? null : t)), 2200);
-    } catch {
-      // silent
-    } finally {
-      setSavingIdx(null);
-    }
-  };
+  const onAttachClick = () => fileInputRef.current?.click();
 
-  if (authLoading) {
-    return (
-      <div style={{ minHeight: "100vh", background: colors.bg, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: FONTS.mono, color: colors.textFaint, fontSize: 12, letterSpacing: "1.5px" }}>
-        LOADING...
-      </div>
-    );
+  const hasValue = value.length > 0;
+  const phHidden = focused || hasValue || !phShow;
+
+  if (!authChecked) {
+    return <div style={{ minHeight: "100dvh", background: BG }} />;
   }
 
-  const userName = user?.user_metadata?.name || user?.email?.split("@")[0] || "Friend";
-  const userInitial = userName.charAt(0).toUpperCase();
-  const hasMessages = messages.length > 0;
-
-  const msgHtml = (text: string) =>
-    text
-      .replace(/\*\*(.*?)\*\*/g, `<strong style="font-weight:600;color:${colors.mint}">$1</strong>`)
-      .replace(/· /g, `<span style="color:${colors.mint};margin-right:6px">·</span> `);
-
   return (
-    <div style={{ minHeight: "100vh", background: colors.bg, fontFamily: FONTS.sans }}>
+    <div style={{ minHeight: "100dvh", background: BG, position: "relative", overflow: "hidden", fontFamily: SANS }}>
       <style>{`
-        @keyframes typing-dot { 0%, 100% { opacity: 0.25; transform: scale(0.85); } 50% { opacity: 1; transform: scale(1.15); } }
-        @keyframes panel-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes toast-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
-        * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
-        ::-webkit-scrollbar { width: 0; }
-        input::placeholder { color: ${colors.textFaint} !important; }
-        html, body { margin: 0; padding: 0; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        html, body { margin: 0; padding: 0; background: ${BG}; }
+        @keyframes mic-pulse {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(255,76,92,0.4); }
+          50%      { box-shadow: 0 0 0 6px rgba(255,76,92,0); }
+        }
       `}</style>
 
-      <Topbar onMenuClick={() => setSidebarOpen(true)} />
-      <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} userName={userName} userInitial={userInitial} />
+      <PlexusCanvas />
 
-      <div style={{ display: "flex", flexDirection: "column", height: "calc(100vh - 56px)", paddingBottom: 65 }}>
-        <div style={{ flex: 1, overflowY: "auto", padding: "0 20px" }}>
-          {!hasMessages ? (
-            /* Welcome state */
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "100%", padding: "24px 0 40px", animation: "panel-in 0.4s ease" }}>
-              <div style={{ marginBottom: 24 }}><Logo size={56} /></div>
-              <h1 style={{ fontFamily: FONTS.serif, fontSize: 26, fontWeight: 400, color: colors.text, textAlign: "center", margin: "0 0 8px", lineHeight: 1.3 }}>
-                Welcome back, {userName}
-              </h1>
-              <p style={{ fontFamily: FONTS.mono, fontSize: 10, color: colors.mintDeep, textAlign: "center", margin: "0 0 32px", letterSpacing: "1.5px", textTransform: "uppercase" }}>
-                NUTRITION · SUPPLEMENTS · HEALING
-              </p>
+      <input ref={fileInputRef} type="file" accept="image/*" style={{ display: "none" }} />
 
-              <div style={{ width: "100%", maxWidth: 480, marginBottom: 12 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, background: colors.mintBgSubtle, border: `1.5px solid ${colors.mintBorder}`, borderRadius: 16, padding: "6px 6px 6px 18px" }}>
-                  <input
-                    ref={inputRef}
-                    value={chatInput}
-                    onChange={(e) => setChatInput(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-                    placeholder="Ask NŪRA anything health related..."
-                    style={{ flex: 1, border: "none", outline: "none", fontFamily: FONTS.sans, fontSize: 14, color: colors.text, background: "transparent", padding: "10px 0" }}
-                  />
-                  <button
-                    onClick={sendMessage}
-                    disabled={!chatInput.trim() || isTyping}
-                    style={{ width: 40, height: 40, borderRadius: 12, border: "none", cursor: chatInput.trim() && !isTyping ? "pointer" : "default", background: chatInput.trim() && !isTyping ? `linear-gradient(135deg, ${colors.mint}, ${colors.mintDeep})` : colors.mintBgSubtle, color: chatInput.trim() && !isTyping ? colors.textOnAccent : colors.textFaint, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}
-                  >
-                    <Send size={16} />
-                  </button>
-                </div>
-              </div>
+      {/* Header */}
+      <header style={{
+        position: "relative", zIndex: 3,
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        padding: "max(env(safe-area-inset-top), 16px) 18px 0",
+      }}>
+        <button
+          onClick={() => router.push("/settings")}
+          aria-label="Menu"
+          style={{
+            width: 40, height: 40, borderRadius: 12,
+            background: SURFACE, border: `0.5px solid ${BORDER}`,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            cursor: "pointer", color: TEXT_SEC,
+          }}
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M4 6h16M4 12h16M4 18h16"/>
+          </svg>
+        </button>
 
-              <p style={{ fontFamily: FONTS.mono, fontSize: 9, color: colors.textGhost, textAlign: "center", margin: "0 0 28px", letterSpacing: "0.08em" }}>
-                WELLNESS INFORMATION · NOT MEDICAL ADVICE
-              </p>
+        <span style={{ fontFamily: SERIF, fontSize: 19, fontWeight: 500, color: SAGE, letterSpacing: "0.3px" }}>
+          nūra
+        </span>
 
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center", maxWidth: 480 }}>
-                {SUGGESTED_PROMPTS.map((prompt, i) => (
-                  <button
-                    key={i}
-                    onClick={() => { setChatInput(prompt); inputRef.current?.focus(); }}
-                    style={{ padding: "10px 16px", background: colors.mintBgSubtle, border: `1px solid ${colors.border}`, borderRadius: 24, fontFamily: FONTS.sans, fontSize: 12.5, color: colors.textMuted, cursor: "pointer" }}
-                  >
-                    {prompt}
-                  </button>
-                ))}
-              </div>
-            </div>
-          ) : (
-            /* Chat state */
-            <div style={{ padding: "24px 0", maxWidth: 600, margin: "0 auto" }}>
-              {messages.map((msg, i) => (
-                <div key={i} style={{ marginBottom: 28 }}>
-                  {msg.role === "assistant" ? (
-                    <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
-                      <div style={{ flexShrink: 0, marginTop: 3 }}><Logo size={24} /></div>
-                      <div
-                        style={{
-                          flex: 1,
-                          background: colors.mintBgSubtle,
-                          border: `1px solid ${colors.border}`,
-                          borderRadius: "4px 16px 16px 16px",
-                          padding: "14px 18px 10px",
-                          fontFamily: FONTS.sans,
-                          fontSize: 14,
-                          color: colors.text,
-                          lineHeight: 1.8,
-                        }}
-                      >
-                        {/* Message content */}
-                        <div
-                          style={{ whiteSpace: "pre-wrap" }}
-                          dangerouslySetInnerHTML={{ __html: msgHtml(msg.text) }}
-                        />
+        <button
+          onClick={() => router.push("/settings")}
+          aria-label="Profile"
+          style={{
+            width: 40, height: 40, borderRadius: "50%",
+            background: `rgba(${SAGE_RGB},0.18)`, border: `0.5px solid rgba(${SAGE_RGB},0.35)`,
+            color: SAGE, fontFamily: SANS, fontSize: 14, fontWeight: 500,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            cursor: "pointer",
+          }}
+        >
+          {initial || "?"}
+        </button>
+      </header>
 
-                        {/* Inline title form */}
-                        {editingIdx === i && (
-                          <div style={{ marginTop: 10, paddingTop: 10, borderTop: `1px solid ${colors.borderFaint}` }}>
-                            <div style={{ fontFamily: FONTS.mono, fontSize: 8.5, color: colors.textFaint, letterSpacing: "1px", marginBottom: 6 }}>
-                              SAVE AS
-                            </div>
-                            <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                              <input
-                                value={titleDraft}
-                                onChange={(e) => setTitleDraft(e.target.value)}
-                                onKeyDown={(e) => { if (e.key === "Enter") confirmSave(i, msg.text); if (e.key === "Escape") setEditingIdx(null); }}
-                                autoFocus
-                                style={{
-                                  flex: 1, padding: "6px 10px",
-                                  background: colors.mintBgMedium,
-                                  border: `1px solid ${colors.mintBorder}`,
-                                  borderRadius: 7,
-                                  fontFamily: FONTS.sans, fontSize: 12.5,
-                                  color: colors.text, outline: "none",
-                                }}
-                              />
-                              <button
-                                onClick={() => confirmSave(i, msg.text)}
-                                disabled={savingIdx === i || !titleDraft.trim()}
-                                style={{ padding: "6px 12px", background: `linear-gradient(135deg, ${colors.mint}, ${colors.mintDeep})`, border: "none", borderRadius: 7, fontFamily: FONTS.mono, fontSize: 8.5, fontWeight: 700, color: colors.textOnAccent, cursor: "pointer", letterSpacing: "0.8px", opacity: savingIdx === i ? 0.5 : 1, whiteSpace: "nowrap" }}
-                              >
-                                {savingIdx === i ? "..." : "SAVE"}
-                              </button>
-                              <button
-                                onClick={() => setEditingIdx(null)}
-                                style={{ width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center", background: colors.mintBgSubtle, border: `1px solid ${colors.border}`, borderRadius: 7, cursor: "pointer", color: colors.textFaint, padding: 0, flexShrink: 0 }}
-                              >
-                                <X size={12} />
-                              </button>
-                            </div>
-                          </div>
-                        )}
+      {/* Centered content */}
+      <main style={{
+        position: "relative", zIndex: 2,
+        maxWidth: 340, margin: "0 auto",
+        padding: "min(13vh, 88px) 22px 130px",
+        display: "flex", flexDirection: "column", alignItems: "stretch",
+      }}>
+        <h1 style={{
+          fontFamily: SERIF, fontSize: 30, fontWeight: 500,
+          color: TEXT, lineHeight: 1.25, letterSpacing: "-0.3px",
+          margin: "0 0 14px",
+        }}>
+          How can I help you on your{" "}
+          <em style={{ fontStyle: "italic", color: SAGE, fontWeight: 500 }}>wellness</em>
+          {" "}journey?
+        </h1>
 
-                        {/* Save footer row */}
-                        <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 8, marginTop: 8 }}>
-                          {toastIdx === i && (
-                            <span style={{ fontFamily: FONTS.mono, fontSize: 8.5, color: colors.mint, letterSpacing: "0.8px", animation: "toast-in 0.2s ease" }}>
-                              SAVED TO LIBRARY
-                            </span>
-                          )}
-                          <button
-                            onClick={() => handleBookmarkClick(i, msg.text)}
-                            style={{ background: "none", border: "none", cursor: "pointer", padding: 3, display: "flex", alignItems: "center", color: savedIndices.has(i) ? colors.mint : colors.textGhost, transition: "color 0.15s" }}
-                          >
-                            {savedIndices.has(i)
-                              ? <BookmarkCheck size={15} />
-                              : <Bookmark size={15} />
-                            }
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                      <div style={{ maxWidth: "82%", padding: "12px 18px", background: `linear-gradient(135deg, ${colors.mintBgMedium}, rgba(94,234,212,0.12))`, border: `1px solid ${colors.mintBorder}`, borderRadius: "16px 16px 4px 16px", fontFamily: FONTS.sans, fontSize: 14, color: colors.text }}>
-                        {msg.text}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ))}
+        <p style={{ fontSize: 13, color: TEXT_SEC, lineHeight: 1.5, margin: "0 0 24px" }}>
+          Type, snap, or speak — NŪRA understands all three.
+        </p>
 
-              {isTyping && (
-                <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
-                  <div style={{ flexShrink: 0, marginTop: 3 }}><Logo size={24} /></div>
-                  <div style={{ display: "flex", gap: 5, padding: "14px 18px", background: colors.mintBgSubtle, border: `1px solid ${colors.border}`, borderRadius: "4px 16px 16px 16px" }}>
-                    {[0, 1, 2].map((d) => (
-                      <div key={d} style={{ width: 7, height: 7, borderRadius: "50%", background: colors.mint, animation: `typing-dot 1.4s ease-in-out ${d * 0.2}s infinite` }} />
-                    ))}
-                  </div>
-                </div>
-              )}
-              <div ref={chatEndRef} />
-            </div>
-          )}
-        </div>
+        {/* Composer pill */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, width: "100%" }}>
+          <div style={{
+            display: "flex", alignItems: "center", gap: 2,
+            background: focused ? "rgba(235,230,216,0.06)" : SURFACE,
+            border: `0.5px solid ${focused ? `rgba(${SAGE_RGB},0.5)` : "rgba(235,230,216,0.12)"}`,
+            borderRadius: 14, padding: "6px 6px 6px 8px",
+            transition: "background 200ms, border-color 200ms",
+          }}>
+            <button
+              onClick={onAttachClick}
+              onMouseEnter={() => setHovAttach(true)}
+              onMouseLeave={() => setHovAttach(false)}
+              aria-label="Attach photo"
+              style={{
+                width: 38, height: 38, borderRadius: 9, border: "none",
+                background: hovAttach ? `rgba(${SAGE_RGB},0.08)` : "transparent",
+                color: hovAttach ? SAGE : TEXT_SEC,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                cursor: "pointer", flexShrink: 0, transition: "all 200ms",
+              }}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 11.5l-9.5 9.5a5.5 5.5 0 0 1-7.78-7.78L13.5 3.5a3.5 3.5 0 0 1 4.95 4.95l-9.5 9.5a1.5 1.5 0 0 1-2.12-2.12L15 7.5"/>
+              </svg>
+            </button>
 
-        {/* Sticky chat input when messages exist */}
-        {hasMessages && (
-          <div style={{ padding: "12px 20px", borderTop: `1px solid ${colors.border}`, background: colors.bg }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, background: colors.mintBgSubtle, border: `1.5px solid ${colors.mintBorder}`, borderRadius: 16, padding: "6px 6px 6px 18px", maxWidth: 600, margin: "0 auto" }}>
+            <div style={{ flex: 1, position: "relative" }}>
               <input
-                value={chatInput}
-                onChange={(e) => setChatInput(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-                placeholder="Ask NŪRA anything health related..."
-                style={{ flex: 1, border: "none", outline: "none", fontFamily: FONTS.sans, fontSize: 14, color: colors.text, background: "transparent", padding: "10px 0" }}
+                ref={inputRef}
+                value={value}
+                onChange={e => setValue(e.target.value)}
+                onFocus={() => setFocused(true)}
+                onBlur={() => setFocused(false)}
+                onKeyDown={onKeyDown}
+                placeholder=" "
+                style={{
+                  width: "100%", padding: "11px 0", background: "transparent",
+                  border: "none", outline: "none",
+                  fontSize: 14, color: TEXT, fontFamily: SANS,
+                }}
               />
-              <button
-                onClick={sendMessage}
-                disabled={!chatInput.trim() || isTyping}
-                style={{ width: 40, height: 40, borderRadius: 12, border: "none", cursor: chatInput.trim() && !isTyping ? "pointer" : "default", background: chatInput.trim() && !isTyping ? `linear-gradient(135deg, ${colors.mint}, ${colors.mintDeep})` : colors.mintBgSubtle, color: chatInput.trim() && !isTyping ? colors.textOnAccent : colors.textFaint, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}
-              >
-                <Send size={16} />
-              </button>
+              <div style={{
+                position: "absolute", left: 0, top: "50%", transform: "translateY(-50%)",
+                fontSize: 14, color: "rgba(235,230,216,0.35)", fontFamily: SANS,
+                pointerEvents: "none", whiteSpace: "nowrap", overflow: "hidden",
+                maxWidth: "100%",
+                opacity: phHidden ? 0 : 1,
+                transition: "opacity 350ms ease",
+              }}>
+                {PROMPTS[placeholderIdx]}
+              </div>
             </div>
-          </div>
-        )}
-      </div>
 
-      <BottomNav />
+            <button
+              onClick={onMicClick}
+              onMouseEnter={() => setHovMic(true)}
+              onMouseLeave={() => setHovMic(false)}
+              aria-label={recording ? "Stop recording" : "Voice input"}
+              style={{
+                width: 38, height: 38, borderRadius: 9, border: "none",
+                background: recording ? "rgba(255,76,92,0.12)" : hovMic ? `rgba(${SAGE_RGB},0.08)` : "transparent",
+                color: recording ? "#ff4c5c" : hovMic ? SAGE : TEXT_SEC,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                cursor: "pointer", flexShrink: 0, transition: "all 200ms",
+                animation: recording ? "mic-pulse 1.4s ease-in-out infinite" : "none",
+              }}
+            >
+              {recording ? (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                  <rect x="9" y="3" width="6" height="12" rx="3"/>
+                  <path d="M19 11a7 7 0 0 1-14 0M12 18v3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
+                </svg>
+              ) : (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="9" y="3" width="6" height="12" rx="3"/>
+                  <path d="M19 11a7 7 0 0 1-14 0M12 18v3M8 21h8"/>
+                </svg>
+              )}
+            </button>
+
+            <button
+              onClick={onSubmit}
+              onMouseEnter={() => setHovSend(true)}
+              onMouseLeave={() => setHovSend(false)}
+              onMouseDown={e => { e.currentTarget.style.transform = "scale(0.94)"; }}
+              onMouseUp={e => { e.currentTarget.style.transform = "scale(1)"; }}
+              aria-label="Send"
+              style={{
+                width: 40, height: 40, borderRadius: 11, border: "none",
+                background: hovSend ? SAGE_HOV : SAGE, color: SAGE_ON,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                cursor: "pointer", flexShrink: 0, marginLeft: 2,
+                transition: "background 200ms, transform 100ms",
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 19V5M5 12l7-7 7 7"/>
+              </svg>
+            </button>
+          </div>
+
+          {/* Prompt chips */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 6, width: "100%", marginTop: 4 }}>
+            {CHIPS.map((chip, i) => (
+              <ChipRow key={i} icon={chip.icon} text={chip.text} onClick={() => send(chip.text)} />
+            ))}
+          </div>
+        </div>
+      </main>
+
+      {/* Footer */}
+      <div style={{
+        position: "absolute", bottom: 18, left: 0, right: 0,
+        textAlign: "center", padding: "0 22px",
+        fontSize: 10, color: TEXT_TER, fontFamily: SANS, zIndex: 2,
+        pointerEvents: "none",
+      }}>
+        NŪRA provides wellness information, not medical advice.
+      </div>
     </div>
   );
 }

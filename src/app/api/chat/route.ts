@@ -2,10 +2,9 @@ import Anthropic from "@anthropic-ai/sdk";
 import { NextRequest, NextResponse } from "next/server";
 import { generateEmbedding } from "@/lib/embeddings";
 import { searchKnowledgeBase, searchKnowledgeBaseByText } from "@/lib/knowledge";
+import { createSupabaseServerClient } from "@/lib/supabase-server";
 
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY!,
-});
+interface IncomingMessage { role?: string; text?: string }
 
 const BASE_SYSTEM_PROMPT = `You are Nura, a knowledgeable and caring natural wellness guide. You provide evidence-informed guidance on herbal medicine, nutritional therapy, supplements, essential oils, movement, and holistic healing practices.
 
@@ -21,18 +20,29 @@ Communication style:
 You educate and suggest natural approaches. You do not diagnose or prescribe. Your goal is to empower users with knowledge about their health sovereignty.`;
 
 async function buildSystemPrompt(userQuery: string): Promise<string> {
+  if (!userQuery) return BASE_SYSTEM_PROMPT;
+
   try {
     let chunks: { content: string; source_title: string; similarity: number }[] = [];
 
+    // Embedding step is OPTIONAL — if OPENAI_API_KEY is missing/invalid,
+    // generateEmbedding returns null and we silently fall through.
     const embedding = await generateEmbedding(userQuery);
     if (embedding) {
-      chunks = await searchKnowledgeBase(embedding, 5, 0.65);
+      try {
+        chunks = await searchKnowledgeBase(embedding, 5, 0.65);
+      } catch (err) {
+        console.warn("[chat] vector search failed (non-fatal):", err);
+      }
     }
 
-    // Fallback to text search if embedding missing or no results
+    // Text-search fallback
     if (chunks.length === 0) {
-      const textResults = await searchKnowledgeBaseByText(userQuery, 3);
-      chunks = textResults;
+      try {
+        chunks = await searchKnowledgeBaseByText(userQuery, 3);
+      } catch (err) {
+        console.warn("[chat] text search failed (non-fatal):", err);
+      }
     }
 
     if (chunks.length === 0) return BASE_SYSTEM_PROMPT;
@@ -57,33 +67,102 @@ When citing these sources, you may reference them naturally (e.g., "Research on 
   }
 }
 
-export async function POST(req: NextRequest) {
+export async function POST(req: NextRequest): Promise<NextResponse> {
   try {
-    const { messages } = await req.json();
+    // ── Auth ──
+    const supabase = await createSupabaseServerClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
-    const lastUserMessage = [...messages].reverse().find((m: { role: string; text: string }) => m.role === "user");
-    const userQuery = lastUserMessage?.text ?? "";
+    // ── Validate body ──
+    let body: { messages?: IncomingMessage[] };
+    try {
+      body = await req.json() as { messages?: IncomingMessage[] };
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    }
 
+    const messages = body.messages;
+    if (!Array.isArray(messages) || messages.length === 0) {
+      return NextResponse.json({ error: "messages must be a non-empty array" }, { status: 400 });
+    }
+
+    // ── Anthropic API key ──
+    const apiKey = process.env.ANTHROPIC_API_KEY;
+    if (!apiKey) {
+      console.error("[chat] ANTHROPIC_API_KEY is not set");
+      return NextResponse.json(
+        { error: "Server misconfigured — missing ANTHROPIC_API_KEY" },
+        { status: 500 }
+      );
+    }
+
+    const anthropic = new Anthropic({ apiKey });
+
+    // ── Build prompt ──
+    const lastUser = [...messages].reverse().find(m => m?.role === "user");
+    const userQuery = (lastUser?.text ?? "").toString();
     const systemPrompt = await buildSystemPrompt(userQuery);
 
-    const response = await anthropic.messages.create({
-      model: "claude-opus-4-7",
-      max_tokens: 1500,
-      system: systemPrompt,
-      messages: messages.map((m: { role: string; text: string }) => ({
-        role: m.role === "user" ? "user" : "assistant",
+    // Sanitize messages into the Claude API shape
+    const claudeMessages = messages
+      .filter((m): m is IncomingMessage & { text: string } => m != null && typeof m.text === "string" && m.text.trim().length > 0)
+      .map(m => ({
+        role: (m.role === "user" ? "user" : "assistant") as "user" | "assistant",
         content: m.text,
-      })),
-    });
+      }));
 
-    const textContent = response.content.find((c) => c.type === "text");
-    const reply = textContent && "text" in textContent ? textContent.text : "I'm having trouble responding right now. Please try again.";
+    if (claudeMessages.length === 0) {
+      return NextResponse.json({ error: "No valid messages to send" }, { status: 400 });
+    }
+
+    // ── Call Claude ──
+    let response;
+    try {
+      response = await anthropic.messages.create({
+        model: "claude-opus-4-7",
+        max_tokens: 1500,
+        system: systemPrompt,
+        messages: claudeMessages,
+      });
+    } catch (err) {
+      const status = (err as { status?: number }).status;
+      const message = err instanceof Error ? err.message : "Unknown Anthropic error";
+      console.error("[chat] Anthropic error:", status, message);
+
+      if (status === 401) {
+        return NextResponse.json({ error: "AI service authentication failed" }, { status: 500 });
+      }
+      if (status === 429) {
+        return NextResponse.json(
+          { error: "Too many requests right now. Please try again in a moment." },
+          { status: 429 }
+        );
+      }
+      if (status === 529 || status === 503) {
+        return NextResponse.json(
+          { error: "AI service is temporarily overloaded. Please try again." },
+          { status: 503 }
+        );
+      }
+      return NextResponse.json(
+        { error: "AI service error. Please try again." },
+        { status: 502 }
+      );
+    }
+
+    const textContent = response.content.find(c => c.type === "text");
+    const reply = textContent && "text" in textContent
+      ? textContent.text
+      : "I'm having trouble responding right now. Please try again.";
 
     return NextResponse.json({ reply });
-  } catch (error) {
-    console.error("Claude API error:", error);
+  } catch (err) {
+    console.error("[chat] unexpected error:", err);
     return NextResponse.json(
-      { error: "Failed to get response from Nura" },
+      { error: err instanceof Error ? err.message : "Internal server error" },
       { status: 500 }
     );
   }
