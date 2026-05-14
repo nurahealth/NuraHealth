@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { useSidebar, useDarkMode } from "@/lib/sidebarStore";
+import { useSidebar } from "@/lib/sidebarStore";
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
 const BG = "#0d0d0e";
@@ -136,9 +136,6 @@ export default function AppSidebar() {
   const pathname = usePathname();
   const isOpen = useSidebar((s) => s.isOpen);
   const close = useSidebar((s) => s.close);
-  const darkOn = useDarkMode((s) => s.enabled);
-  const toggleDark = useDarkMode((s) => s.toggle);
-
   const [profile, setProfile] = useState<{ name: string; email: string; status: string | null }>({ name: "", email: "", status: null });
   const [chats, setChats] = useState<ChatSessionRow[]>([]);
   const [chatsExpanded, setChatsExpanded] = useState(true);
@@ -373,20 +370,6 @@ export default function AppSidebar() {
           display: "flex", flexDirection: "column", gap: 1,
         }}>
           <BottomRow icon={<Icons.settings />} label="Settings" onClick={() => navigate("/settings")} />
-
-          <BottomRow icon={<Icons.moon />} label="Dark mode" onClick={toggleDark} right={
-            <div style={{
-              width: 36, height: 20, borderRadius: 10, position: "relative", flexShrink: 0,
-              background: darkOn ? SAGE : "rgba(235,230,216,0.12)",
-              transition: "background 200ms ease",
-            }}>
-              <div style={{
-                position: "absolute", top: 2, left: darkOn ? 18 : 2,
-                width: 16, height: 16, borderRadius: "50%", background: "#fff",
-                transition: "left 200ms cubic-bezier(0.4,0,0.2,1)",
-              }} />
-            </div>
-          } />
 
           <BottomRow icon={<Icons.logout />} label="Sign out" muted onClick={handleSignOut} />
         </div>
