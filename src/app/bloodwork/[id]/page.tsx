@@ -4,11 +4,6 @@ import { useState, useEffect, useCallback, use } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import type { User } from "@supabase/supabase-js";
-import { ChevronLeft, MoreVertical, AlertTriangle, BookmarkCheck } from "lucide-react";
-import { FONTS } from "@/lib/theme";
-import { useTheme } from "@/components/ThemeProvider";
-import Topbar from "@/components/Topbar";
-import Sidebar from "@/components/Sidebar";
 import { addSupplement } from "@/lib/supplements";
 import { saveItem } from "@/lib/saved";
 import {
@@ -25,191 +20,115 @@ import {
   type BiomarkerHistoryPoint,
   type ActionItem,
 } from "@/lib/bloodwork";
+import NuraPageShell from "@/components/NuraPageShell";
 
-// ─── Primitives ──────────────────────────────────────────────────────────────
+// ── Tokens ────────────────────────────────────────────────────────────────────
+const TEXT = "#f0ebde";
+const TEXT_SEC = "rgba(235,230,216,0.55)";
+const TEXT_TER = "rgba(235,230,216,0.4)";
+const BORDER = "rgba(235,230,216,0.09)";
+const SURFACE = "rgba(235,230,216,0.04)";
+const SAGE = "#9bb0a5";
+const SAGE_ON = "#0d0d0e";
+const SAGE_RGB = "155,176,165";
+const AMBER = "#d4a574";
+const RED = "#d4574d";
+const SANS = "'Inter', system-ui, sans-serif";
+const SERIF = "'DM Serif Display', Georgia, serif";
 
-function CornerBrackets({ size = 10, color }: { size?: number; color?: string }) {
-  const { colors } = useTheme();
-  const c = color ?? colors.mint;
-  const s = `${size}px`;
-  return (
-    <>
-      <div style={{ position: "absolute", top: 6, left: 6, width: s, height: s, borderTop: `2px solid ${c}`, borderLeft: `2px solid ${c}` }} />
-      <div style={{ position: "absolute", bottom: 6, right: 6, width: s, height: s, borderBottom: `2px solid ${c}`, borderRight: `2px solid ${c}` }} />
-    </>
-  );
-}
-
-function MonoLabel({ children, color, size = 9 }: { children: React.ReactNode; color?: string; size?: number }) {
-  const { colors } = useTheme();
-  return (
-    <span style={{ fontFamily: FONTS.mono, fontSize: size, fontWeight: 600, letterSpacing: "1.4px", textTransform: "uppercase", color: color ?? colors.textFaint }}>
-      {children}
-    </span>
-  );
-}
-
-function formatDate(d: string | null): string {
+const fmtDate = (d: string | null) => {
   if (!d) return "—";
-  try {
-    return new Date(d + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-  } catch {
-    return d;
-  }
-}
+  try { return new Date(d + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }); }
+  catch { return d; }
+};
+const fmtShort = (d: string) => {
+  try { return new Date(d + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" }); }
+  catch { return d; }
+};
+const statusColor = (s: Biomarker["status"]) =>
+  s === "watch" ? AMBER : (s === "low" || s === "high" || s === "critical") ? RED : SAGE;
+const statusLabel = (s: Biomarker["status"]) =>
+  ({ low: "LOW", high: "HIGH", critical: "CRIT", watch: "WATCH", optimal: "OPTIMAL" } as Record<Biomarker["status"], string>)[s];
 
-function formatDateShort(d: string): string {
-  try {
-    return new Date(d + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" });
-  } catch {
-    return d;
-  }
-}
-
-function statusColor(status: Biomarker["status"], fallback: string): string {
-  if (status === "low" || status === "high" || status === "critical") return "#FF4C5C";
-  if (status === "watch") return "#FFB400";
-  return fallback;
-}
-
-function statusLabel(status: Biomarker["status"]): string {
-  const map: Record<Biomarker["status"], string> = {
-    low: "LOW", high: "HIGH", critical: "CRIT", watch: "WATCH", optimal: "OPT",
-  };
-  return map[status];
-}
-
-// ─── Donut ───────────────────────────────────────────────────────────────────
-
-function HealthDonut({ score, size = 88 }: { score: HealthScore; size?: number }) {
-  const { colors } = useTheme();
-  const r = (size - 12) / 2;
-  const cx = size / 2;
-  const cy = size / 2;
+// ── Donut (sage stroke) ───────────────────────────────────────────────────────
+function HealthDonut({ score, size = 96 }: { score: HealthScore; size?: number }) {
+  const r = (size - 14) / 2;
+  const cx = size / 2, cy = size / 2;
   const circ = 2 * Math.PI * r;
-
   const { optimalCount, watchCount, alertCount, total } = score;
   const optPct = total > 0 ? optimalCount / total : 0;
   const watchPct = total > 0 ? watchCount / total : 0;
   const alertPct = total > 0 ? alertCount / total : 0;
-
-  const alertDash = alertPct * circ;
-  const watchDash = watchPct * circ;
-  const optDash = optPct * circ;
-
   const alertOffset = circ * 0.25;
-  const watchOffset = alertOffset - alertDash;
-  const optOffset = watchOffset - watchDash;
+  const watchOffset = alertOffset - alertPct * circ;
+  const optOffset = watchOffset - watchPct * circ;
 
   return (
     <div style={{ position: "relative", width: size, height: size, flexShrink: 0 }}>
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-        <circle cx={cx} cy={cy} r={r} fill="none" stroke={colors.mintBgMedium} strokeWidth={8} />
+        <circle cx={cx} cy={cy} r={r} fill="none" stroke="rgba(235,230,216,0.08)" strokeWidth={8} />
         {alertPct > 0 && (
-          <circle cx={cx} cy={cy} r={r} fill="none" stroke="#FF4C5C" strokeWidth={8}
-            strokeDasharray={`${alertDash} ${circ - alertDash}`} strokeDashoffset={alertOffset}
-            strokeLinecap="butt" transform={`rotate(-90 ${cx} ${cy})`}
-            style={{ filter: "drop-shadow(0 0 3px #FF4C5C)" }}
-          />
+          <circle cx={cx} cy={cy} r={r} fill="none" stroke={RED} strokeWidth={8}
+            strokeDasharray={`${alertPct * circ} ${circ - alertPct * circ}`} strokeDashoffset={alertOffset}
+            transform={`rotate(-90 ${cx} ${cy})`} />
         )}
         {watchPct > 0 && (
-          <circle cx={cx} cy={cy} r={r} fill="none" stroke="#FFB400" strokeWidth={8}
-            strokeDasharray={`${watchDash} ${circ - watchDash}`} strokeDashoffset={watchOffset}
-            strokeLinecap="butt" transform={`rotate(-90 ${cx} ${cy})`}
-            style={{ filter: "drop-shadow(0 0 3px #FFB400)" }}
-          />
+          <circle cx={cx} cy={cy} r={r} fill="none" stroke={AMBER} strokeWidth={8}
+            strokeDasharray={`${watchPct * circ} ${circ - watchPct * circ}`} strokeDashoffset={watchOffset}
+            transform={`rotate(-90 ${cx} ${cy})`} />
         )}
         {optPct > 0 && (
-          <circle cx={cx} cy={cy} r={r} fill="none" stroke={colors.mint} strokeWidth={8}
-            strokeDasharray={`${optDash} ${circ - optDash}`} strokeDashoffset={optOffset}
-            strokeLinecap="butt" transform={`rotate(-90 ${cx} ${cy})`}
-            style={{ filter: `drop-shadow(0 0 4px ${colors.mint})` }}
-          />
+          <circle cx={cx} cy={cy} r={r} fill="none" stroke={SAGE} strokeWidth={8}
+            strokeDasharray={`${optPct * circ} ${circ - optPct * circ}`} strokeDashoffset={optOffset}
+            transform={`rotate(-90 ${cx} ${cy})`} />
         )}
       </svg>
       <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-        <div style={{ fontFamily: FONTS.mono, fontSize: 18, fontWeight: 700, color: colors.text, lineHeight: 1 }}>
-          {score.score}
-        </div>
-        <div style={{ fontFamily: FONTS.mono, fontSize: 7, color: colors.textFaint, letterSpacing: "1px", marginTop: 1 }}>%OPT</div>
+        <div style={{ fontFamily: SERIF, fontSize: 24, fontWeight: 500, color: SAGE, lineHeight: 1 }}>{score.score}</div>
+        <div style={{ fontFamily: SANS, fontSize: 9, color: TEXT_TER, letterSpacing: "1px", marginTop: 4 }}>%OPT</div>
       </div>
     </div>
   );
 }
 
-function MetricTiles({ score }: { score: HealthScore }) {
-  const { colors } = useTheme();
-  const tiles = [
-    { label: "OPT", value: score.optimalCount, color: colors.mint, bg: `${colors.mint}18` },
-    { label: "WATCH", value: score.watchCount, color: "#FFB400", bg: "rgba(255,180,0,0.12)" },
-    { label: "ALERT", value: score.alertCount, color: "#FF4C5C", bg: "rgba(255,76,92,0.12)" },
-    { label: "TOTAL", value: score.total, color: colors.textMuted, bg: colors.mintBgMedium },
-  ];
-  return (
-    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 6, flex: 1 }}>
-      {tiles.map((t) => (
-        <div key={t.label} style={{ background: t.bg, borderRadius: 8, padding: "8px 4px", textAlign: "center" }}>
-          <div style={{ fontFamily: FONTS.mono, fontSize: 16, fontWeight: 700, color: t.color, lineHeight: 1 }}>
-            {t.value}
-          </div>
-          <div style={{ fontFamily: FONTS.mono, fontSize: 7, color: t.color, letterSpacing: "0.8px", marginTop: 3, opacity: 0.8 }}>
-            {t.label}
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-// ─── Trend chart ─────────────────────────────────────────────────────────────
-
+// ── Trend chart ──────────────────────────────────────────────────────────────
 function TrendChart({ points }: { points: ScoreTrendPoint[] }) {
-  const { colors } = useTheme();
   if (points.length < 2) return null;
-
-  const W = 320;
-  const H = 64;
-  const pad = 8;
-
+  const W = 320, H = 64, pad = 8;
   const scores = points.map((p) => p.score);
   const minV = Math.max(0, Math.min(...scores) - 10);
   const maxV = Math.min(100, Math.max(...scores) + 10);
   const range = maxV - minV || 1;
-
   const toX = (i: number) => pad + (i / (points.length - 1)) * (W - pad * 2);
   const toY = (v: number) => H - pad - ((v - minV) / range) * (H - pad * 2);
-
   const pts = points.map((p, i) => `${toX(i)},${toY(p.score)}`).join(" ");
   const lastX = toX(points.length - 1);
   const lastY = toY(points[points.length - 1].score);
-
-  const first = scores[0];
-  const last = scores[scores.length - 1];
-  const delta = last - first;
-  const deltaStr = delta > 0 ? `↑ ${delta}% VS FIRST` : delta < 0 ? `↓ ${Math.abs(delta)}% VS FIRST` : "→ STABLE";
-  const deltaColor = delta > 0 ? colors.mint : delta < 0 ? "#FF4C5C" : colors.textFaint;
+  const delta = scores[scores.length - 1] - scores[0];
+  const deltaStr = delta > 0 ? `↑ +${delta}` : delta < 0 ? `↓ ${delta}` : "→ stable";
+  const deltaColor = delta > 0 ? SAGE : delta < 0 ? RED : TEXT_TER;
 
   return (
     <div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-        <MonoLabel color={colors.textMuted}>HEALTH SCORE TREND</MonoLabel>
-        <MonoLabel color={deltaColor}>{deltaStr}</MonoLabel>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+        <SectionLabel>Health score trend</SectionLabel>
+        <span style={{ fontFamily: SANS, fontSize: 11, color: deltaColor, fontWeight: 500 }}>{deltaStr}</span>
       </div>
-      <svg width={W} height={H + 20} style={{ display: "block" }}>
+      <svg width="100%" height={H + 20} viewBox={`0 0 ${W} ${H + 20}`} preserveAspectRatio="none">
         <defs>
-          <linearGradient id="detail-trend-fill" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={colors.mint} stopOpacity="0.35" />
-            <stop offset="100%" stopColor={colors.mint} stopOpacity="0" />
+          <linearGradient id="trend-fill-d" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={SAGE} stopOpacity="0.5" />
+            <stop offset="100%" stopColor={SAGE} stopOpacity="0" />
           </linearGradient>
         </defs>
-        <polygon points={`${pad},${H - pad} ${pts} ${toX(points.length - 1)},${H - pad}`} fill="url(#detail-trend-fill)" />
-        <polyline points={pts} fill="none" stroke={colors.mint} strokeWidth={2} strokeLinejoin="round" style={{ filter: `drop-shadow(0 0 4px ${colors.mint})` }} />
-        <circle cx={lastX} cy={lastY} r={5} fill={colors.mint} style={{ filter: `drop-shadow(0 0 6px ${colors.mint})` }} />
-        <circle cx={lastX} cy={lastY} r={10} fill={colors.mintGlow} opacity={0.4} />
+        <polygon points={`${pad},${H - pad} ${pts} ${toX(points.length - 1)},${H - pad}`} fill="url(#trend-fill-d)" />
+        <polyline points={pts} fill="none" stroke={SAGE} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
+        <circle cx={lastX} cy={lastY} r={4} fill={SAGE} />
         {points.map((p, i) => (
-          <text key={i} x={toX(i)} y={H + 14} textAnchor="middle" fontFamily={FONTS.mono} fontSize="8"
-            fill={i === points.length - 1 ? colors.mint : colors.textGhost} letterSpacing="0.3">
-            {formatDateShort(p.date)}
+          <text key={i} x={toX(i)} y={H + 14} textAnchor="middle"
+            fontFamily={SANS} fontSize="9"
+            fill={i === points.length - 1 ? SAGE : TEXT_TER}>
+            {fmtShort(p.date)}
           </text>
         ))}
       </svg>
@@ -217,249 +136,180 @@ function TrendChart({ points }: { points: ScoreTrendPoint[] }) {
   );
 }
 
-// ─── Sparkline ───────────────────────────────────────────────────────────────
-
+// ── Sparkline ────────────────────────────────────────────────────────────────
 function Sparkline({ history, color, width = 100, height = 32 }: {
-  history: BiomarkerHistoryPoint[];
-  color: string;
-  width?: number;
-  height?: number;
+  history: BiomarkerHistoryPoint[]; color: string; width?: number; height?: number;
 }) {
   if (history.length === 0) return <div style={{ width, height }} />;
   if (history.length === 1) {
-    const cx = width / 2;
-    const cy = height / 2;
-    return (
-      <svg width={width} height={height}>
-        <circle cx={cx} cy={cy} r={4} fill={color} style={{ filter: `drop-shadow(0 0 4px ${color})` }} />
-      </svg>
-    );
+    return <svg width={width} height={height}><circle cx={width / 2} cy={height / 2} r={3.5} fill={color} /></svg>;
   }
-
   const values = history.map((h) => h.value);
-  const minV = Math.min(...values);
-  const maxV = Math.max(...values);
+  const minV = Math.min(...values), maxV = Math.max(...values);
   const range = maxV - minV || 1;
   const pad = 4;
-
   const toX = (i: number) => pad + (i / (history.length - 1)) * (width - pad * 2);
   const toY = (v: number) => height - pad - ((v - minV) / range) * (height - pad * 2);
-
   const pts = history.map((h, i) => `${toX(i)},${toY(h.value)}`).join(" ");
-  const lastX = toX(history.length - 1);
-  const lastY = toY(history[history.length - 1].value);
-
-  const fillId = `spark-fill-${color.replace(/[^a-z0-9]/gi, "")}`;
-
+  const lastX = toX(history.length - 1), lastY = toY(history[history.length - 1].value);
+  const fillId = `spark-${color.replace(/[^a-z0-9]/gi, "")}`;
   return (
     <svg width={width} height={height}>
       <defs>
         <linearGradient id={fillId} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={color} stopOpacity="0.4" />
+          <stop offset="0%" stopColor={color} stopOpacity="0.5" />
           <stop offset="100%" stopColor={color} stopOpacity="0" />
         </linearGradient>
       </defs>
       <polygon points={`${pad},${height - pad} ${pts} ${toX(history.length - 1)},${height - pad}`} fill={`url(#${fillId})`} />
-      <polyline points={pts} fill="none" stroke={color} strokeWidth={1.5} strokeLinejoin="round" style={{ filter: `drop-shadow(0 0 2px ${color})` }} />
-      <circle cx={lastX} cy={lastY} r={3} fill={color} style={{ filter: `drop-shadow(0 0 4px ${color})` }} />
+      <polyline points={pts} fill="none" stroke={color} strokeWidth={1.5} strokeLinejoin="round" strokeLinecap="round" />
+      <circle cx={lastX} cy={lastY} r={2.5} fill={color} />
     </svg>
   );
 }
 
-// ─── Range bar ───────────────────────────────────────────────────────────────
-
-function RangeBar({ biomarker }: { biomarker: Biomarker }) {
-  const { colors } = useTheme();
-  const { value, reference_range_low: refLow, reference_range_high: refHigh, optimal_range_low: optLow, optimal_range_high: optHigh } = biomarker;
-
+// ── Range bar ────────────────────────────────────────────────────────────────
+function RangeBar({ b }: { b: Biomarker }) {
+  const { value, reference_range_low: refLow, reference_range_high: refHigh, optimal_range_low: optLow, optimal_range_high: optHigh } = b;
   if (!refLow && !refHigh && !optLow && !optHigh) return null;
 
-  // Build a visual range: 0% = 0.5x refLow, 100% = 1.5x refHigh (or fallback)
   const low = refLow ?? (optLow ? optLow * 0.5 : 0);
   const high = refHigh ?? (optHigh ? optHigh * 1.5 : 100);
   const span = high - low || 1;
-
-  const clampPct = (v: number) => Math.min(100, Math.max(0, ((v - low) / span) * 100));
-  const markerPct = clampPct(value);
-
-  // Zone widths
   const optStart = optLow ?? refLow ?? low;
   const optEnd = optHigh ?? refHigh ?? high;
-  const optStartPct = clampPct(optStart);
-  const optEndPct = clampPct(optEnd);
+  const clamp = (v: number) => Math.min(100, Math.max(0, ((v - low) / span) * 100));
+  const sc = statusColor(b.status);
 
   return (
-    <div style={{ marginTop: 8 }}>
-      <div style={{ position: "relative", height: 5, borderRadius: 3, overflow: "visible", background: "rgba(255,76,92,0.25)" }}>
-        {/* watch low zone */}
-        <div style={{ position: "absolute", left: `${clampPct(low)}%`, width: `${optStartPct - clampPct(low)}%`, height: "100%", background: "rgba(255,180,0,0.45)", borderRadius: "3px 0 0 3px" }} />
-        {/* optimal zone */}
-        <div style={{ position: "absolute", left: `${optStartPct}%`, width: `${optEndPct - optStartPct}%`, height: "100%", background: `${colors.mint}70` }} />
-        {/* watch high zone */}
-        <div style={{ position: "absolute", left: `${optEndPct}%`, width: `${clampPct(high) - optEndPct}%`, height: "100%", background: "rgba(255,180,0,0.45)", borderRadius: "0 3px 3px 0" }} />
-        {/* marker */}
-        <div
-          style={{
-            position: "absolute",
-            left: `${markerPct}%`,
-            top: "50%",
-            transform: "translate(-50%, -50%)",
-            width: 9,
-            height: 9,
-            borderRadius: "50%",
-            background: statusColor(biomarker.status, colors.mint),
-            border: `1.5px solid ${colors.bg}`,
-            boxShadow: `0 0 6px ${statusColor(biomarker.status, colors.mint)}`,
-            zIndex: 2,
-          }}
-        />
+    <div style={{ marginTop: 10 }}>
+      <div style={{ position: "relative", height: 5, borderRadius: 3, background: `rgba(212,87,77,0.18)` }}>
+        <div style={{
+          position: "absolute", left: `${clamp(low)}%`, width: `${clamp(optStart) - clamp(low)}%`, height: "100%",
+          background: `rgba(212,165,116,0.4)`, borderRadius: "3px 0 0 3px",
+        }} />
+        <div style={{
+          position: "absolute", left: `${clamp(optStart)}%`, width: `${clamp(optEnd) - clamp(optStart)}%`, height: "100%",
+          background: `rgba(${SAGE_RGB},0.55)`,
+        }} />
+        <div style={{
+          position: "absolute", left: `${clamp(optEnd)}%`, width: `${clamp(high) - clamp(optEnd)}%`, height: "100%",
+          background: `rgba(212,165,116,0.4)`, borderRadius: "0 3px 3px 0",
+        }} />
+        <div style={{
+          position: "absolute", top: "50%", left: `${clamp(value)}%`,
+          transform: "translate(-50%, -50%)",
+          width: 9, height: 9, borderRadius: "50%",
+          background: sc, border: "1.5px solid #0d0d0e", boxShadow: `0 0 4px ${sc}`,
+        }} />
       </div>
-      <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4 }}>
-        {refLow && <MonoLabel color={colors.textGhost} size={6.5}>&lt;{refLow} LOW</MonoLabel>}
-        {optLow && optHigh && <MonoLabel color={colors.textGhost} size={6.5}>OPT {optLow}–{optHigh}</MonoLabel>}
-        {refHigh && <MonoLabel color={colors.textGhost} size={6.5}>{refHigh}+ HIGH</MonoLabel>}
+      <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6, fontSize: 9, color: TEXT_TER }}>
+        {refLow ? <span>&lt;{refLow}</span> : <span />}
+        {optLow && optHigh ? <span>Optimal {optLow}–{optHigh}</span> : <span />}
+        {refHigh ? <span>&gt;{refHigh}</span> : <span />}
       </div>
     </div>
   );
 }
 
-// ─── Biomarker card ──────────────────────────────────────────────────────────
-
-function BiomarkerCard({
-  biomarker,
-  history,
-  isFirst,
-}: {
-  biomarker: Biomarker;
-  history: BiomarkerHistoryPoint[];
-  isFirst: boolean;
-}) {
-  const { colors } = useTheme();
-  const sc = statusColor(biomarker.status, colors.mint);
-  const sl = statusLabel(biomarker.status);
-  const isAlert = biomarker.status === "low" || biomarker.status === "high" || biomarker.status === "critical";
-
-  // Trend vs previous point
-  let trendEl: React.ReactNode = null;
+// ── Biomarker card ───────────────────────────────────────────────────────────
+function BiomarkerCard({ b, history, isFirst }: { b: Biomarker; history: BiomarkerHistoryPoint[]; isFirst: boolean }) {
+  const sc = statusColor(b.status);
+  const sl = statusLabel(b.status);
+  let trend: React.ReactNode = null;
   if (history.length >= 2) {
     const prev = history[history.length - 2].value;
     const curr = history[history.length - 1].value;
     const diff = curr - prev;
-    // "trending toward optimal" means moving into range if previously out, or stable
-    const isOptimal = biomarker.status === "optimal";
-    const trendColor = isOptimal ? colors.mint : diff === 0 ? colors.textFaint : "#FF4C5C";
     const symbol = diff > 0 ? "↑" : diff < 0 ? "↓" : "→";
-    const label = diff === 0 ? "STABLE" : `${symbol} ${Math.abs(diff) % 1 === 0 ? Math.abs(diff).toString() : Math.abs(diff).toFixed(1)} VS PREV`;
-    trendEl = <MonoLabel color={trendColor} size={8}>{label}</MonoLabel>;
+    const label = diff === 0 ? "stable" : `${symbol} ${Math.abs(diff) % 1 === 0 ? Math.abs(diff) : Math.abs(diff).toFixed(1)} vs prev`;
+    const tc = b.status === "optimal" ? SAGE : diff === 0 ? TEXT_TER : RED;
+    trend = <span style={{ fontFamily: SANS, fontSize: 11, color: tc }}>{label}</span>;
   }
 
   return (
-    <div
-      style={{
-        position: "relative",
-        padding: "12px 14px",
-        background: isAlert ? "rgba(255,76,92,0.05)" : biomarker.status === "watch" ? "rgba(255,180,0,0.05)" : colors.mintBgSubtle,
-        border: `1px solid ${sc}40`,
-        borderLeft: `3px solid ${sc}`,
-        borderRadius: "0 10px 10px 0",
-        marginBottom: 8,
-      }}
-    >
-      {/* Top row */}
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 6 }}>
-        <div style={{ flex: 1, minWidth: 0, marginRight: 12 }}>
-          <div style={{ fontFamily: FONTS.sans, fontSize: 12.5, fontWeight: 600, color: colors.text, marginBottom: 2 }}>
-            {biomarker.name}
-          </div>
-          {biomarker.notes && (
-            <MonoLabel color={colors.textGhost} size={8}>{biomarker.notes}</MonoLabel>
-          )}
+    <div style={{
+      padding: "14px 16px", borderRadius: 14, marginBottom: 10,
+      background: SURFACE, border: `0.5px solid ${BORDER}`,
+      borderLeft: `2px solid ${sc}`,
+    }}>
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 6, gap: 12 }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontFamily: SANS, fontSize: 13, fontWeight: 500, color: TEXT, marginBottom: 2 }}>{b.name}</div>
+          {b.notes && <div style={{ fontFamily: SANS, fontSize: 11, color: TEXT_TER }}>{b.notes}</div>}
         </div>
-        <div
-          style={{
-            padding: "2px 8px",
-            background: `${sc}20`,
-            border: `1px solid ${sc}50`,
-            borderRadius: 4,
-            flexShrink: 0,
-          }}
-        >
-          <MonoLabel color={sc} size={8}>{sl}</MonoLabel>
-        </div>
+        <span style={{
+          padding: "2px 8px", borderRadius: 4,
+          background: `${sc}1f`, border: `1px solid ${sc}40`,
+          fontFamily: SANS, fontSize: 9, fontWeight: 600, letterSpacing: "0.8px", color: sc, textTransform: "uppercase",
+          flexShrink: 0,
+        }}>{sl}</span>
       </div>
 
-      {/* Value row */}
-      <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between" }}>
+      <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 12 }}>
         <div>
-          <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
-            <span style={{ fontFamily: FONTS.mono, fontSize: 22, fontWeight: 700, color: sc, lineHeight: 1, textShadow: `0 0 12px ${sc}60` }}>
-              {biomarker.value % 1 === 0 ? biomarker.value.toString() : biomarker.value.toFixed(1)}
+          <div style={{ display: "flex", alignItems: "baseline", gap: 5 }}>
+            <span style={{ fontFamily: SANS, fontSize: 24, fontWeight: 500, color: sc, lineHeight: 1 }}>
+              {b.value % 1 === 0 ? b.value.toString() : b.value.toFixed(1)}
             </span>
-            <span style={{ fontFamily: FONTS.mono, fontSize: 9, color: colors.textGhost, letterSpacing: "1px" }}>{biomarker.unit}</span>
+            <span style={{ fontSize: 11, color: TEXT_TER }}>{b.unit}</span>
           </div>
-          {trendEl && <div style={{ marginTop: 3 }}>{trendEl}</div>}
+          {trend && <div style={{ marginTop: 4 }}>{trend}</div>}
           {history.length === 1 && isFirst && (
-            <div style={{ marginTop: 4 }}>
-              <MonoLabel color={colors.textGhost} size={7.5}>FIRST PANEL — SPARKLINES POPULATE WITH MORE DATA</MonoLabel>
-            </div>
+            <div style={{ marginTop: 4, fontSize: 10, color: TEXT_TER }}>First panel</div>
           )}
         </div>
-        {history.length > 0 && (
-          <Sparkline history={history} color={sc} width={100} height={32} />
-        )}
+        {history.length > 0 && <Sparkline history={history} color={sc} />}
       </div>
-
-      <RangeBar biomarker={biomarker} />
+      <RangeBar b={b} />
     </div>
   );
 }
 
-// ─── Detail page ─────────────────────────────────────────────────────────────
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <span style={{
+      fontFamily: SANS, fontSize: 10, fontWeight: 600, letterSpacing: "1.5px",
+      color: TEXT_TER, textTransform: "uppercase",
+    }}>{children}</span>
+  );
+}
 
+// ── Main page ────────────────────────────────────────────────────────────────
 export default function BloodworkDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id: panelId } = use(params);
   const router = useRouter();
-  const { colors } = useTheme();
 
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
-
   const [panel, setPanel] = useState<LabPanel | null>(null);
   const [biomarkers, setBiomarkers] = useState<Biomarker[]>([]);
   const [panelScore, setPanelScore] = useState<HealthScore | null>(null);
   const [trendPoints, setTrendPoints] = useState<ScoreTrendPoint[]>([]);
   const [actionItems, setActionItems] = useState<ActionItem[]>([]);
-  const [biomarkerHistories, setBiomarkerHistories] = useState<Record<string, BiomarkerHistoryPoint[]>>({});
-
+  const [histories, setHistories] = useState<Record<string, BiomarkerHistoryPoint[]>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
   const [filter, setFilter] = useState<"all" | "alert">("all");
   const [addingSupp, setAddingSupp] = useState<string | null>(null);
   const [addedSupps, setAddedSupps] = useState<Set<string>>(new Set());
-
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
-
-  // Protocol save state
   const [protocolSaved, setProtocolSaved] = useState(false);
   const [protocolSaving, setProtocolSaving] = useState(false);
   const [showProtocolForm, setShowProtocolForm] = useState(false);
   const [protocolTitle, setProtocolTitle] = useState("");
+  const [shareToast, setShareToast] = useState("");
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user: u } }) => {
       if (!u) { router.push("/auth"); return; }
-      setUser(u);
-      setAuthLoading(false);
+      setUser(u); setAuthLoading(false);
     });
   }, [router]);
 
   const loadData = useCallback(async (userId: string) => {
-    setLoading(true);
-    setError(null);
+    setLoading(true); setError(null);
     try {
       const [{ panel: p, biomarkers: bm }, score, trend, actions] = await Promise.all([
         getPanelById(panelId),
@@ -467,20 +317,14 @@ export default function BloodworkDetailPage({ params }: { params: Promise<{ id: 
         getHealthScoreTrend(userId),
         getTopActionItems(panelId, "panel"),
       ]);
-      setPanel(p);
-      setBiomarkers(bm);
-      setPanelScore(score);
-      setTrendPoints(trend);
-      setActionItems(actions);
-
-      // load histories in parallel for all biomarkers
+      setPanel(p); setBiomarkers(bm); setPanelScore(score); setTrendPoints(trend); setActionItems(actions);
       const historyEntries = await Promise.all(
         bm.map(async (b) => {
-          const history = await getBiomarkerHistory(userId, b.name);
-          return [b.name, history] as [string, BiomarkerHistoryPoint[]];
+          const h = await getBiomarkerHistory(userId, b.name);
+          return [b.name, h] as [string, BiomarkerHistoryPoint[]];
         })
       );
-      setBiomarkerHistories(Object.fromEntries(historyEntries));
+      setHistories(Object.fromEntries(historyEntries));
     } catch {
       setError("Failed to load panel data.");
     } finally {
@@ -488,10 +332,7 @@ export default function BloodworkDetailPage({ params }: { params: Promise<{ id: 
     }
   }, [panelId]);
 
-  useEffect(() => {
-    if (!user) return;
-    loadData(user.id);
-  }, [user, loadData]);
+  useEffect(() => { if (user) loadData(user.id); }, [user, loadData]);
 
   const handleAddSupplement = async (action: ActionItem) => {
     if (!user || !action.supplement_suggestion) return;
@@ -508,11 +349,7 @@ export default function BloodworkDetailPage({ params }: { params: Promise<{ id: 
         recommendation_reason: action.reasoning,
       });
       setAddedSupps((prev) => new Set(prev).add(key));
-    } catch {
-      // silent
-    } finally {
-      setAddingSupp(null);
-    }
+    } catch {} finally { setAddingSupp(null); }
   };
 
   const handleSaveProtocol = async () => {
@@ -529,406 +366,329 @@ export default function BloodworkDetailPage({ params }: { params: Promise<{ id: 
         content,
         metadata: { panel_id: panel.id, panel_name: panel.name, action_count: actionItems.length },
       });
-      setProtocolSaved(true);
-      setShowProtocolForm(false);
-    } catch {
-      // silent
-    } finally {
-      setProtocolSaving(false);
-    }
+      setProtocolSaved(true); setShowProtocolForm(false);
+    } catch {} finally { setProtocolSaving(false); }
   };
 
   const handleDelete = async () => {
     setDeleting(true);
+    try { await deletePanelAndBiomarkers(panelId); router.push("/bloodwork"); }
+    catch { setDeleting(false); setDeleteConfirm(false); }
+  };
+
+  const handleShare = async () => {
     try {
-      await deletePanelAndBiomarkers(panelId);
-      router.push("/bloodwork");
+      await navigator.clipboard.writeText(window.location.href);
+      setShareToast("Link copied");
+      setTimeout(() => setShareToast(""), 1800);
     } catch {
-      setDeleting(false);
-      setDeleteConfirm(false);
+      setShareToast("Could not copy");
+      setTimeout(() => setShareToast(""), 1800);
     }
   };
 
-  const userName = user?.user_metadata?.name || user?.email?.split("@")[0] || "User";
-  const userInitial = userName.charAt(0).toUpperCase();
+  const ShareButton = (
+    <button
+      onClick={handleShare}
+      aria-label="Share"
+      style={{
+        width: 38, height: 38, borderRadius: 11,
+        background: SURFACE, border: `0.5px solid ${BORDER}`,
+        display: "flex", alignItems: "center", justifyContent: "center",
+        cursor: "pointer", color: TEXT,
+      }}
+    >
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+        <path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/>
+      </svg>
+    </button>
+  );
+
+  if (authLoading || loading) {
+    return <NuraPageShell rightAction={ShareButton}><div style={{ padding: "60px 0", textAlign: "center", color: TEXT_TER, fontSize: 13 }}>Loading…</div></NuraPageShell>;
+  }
+  if (error || !panel) {
+    return (
+      <NuraPageShell rightAction={ShareButton}>
+        <div style={{ padding: "60px 0", textAlign: "center" }}>
+          <p style={{ color: RED, fontSize: 14, marginBottom: 16 }}>{error ?? "Panel not found"}</p>
+          <button onClick={() => router.push("/bloodwork")} style={{ background: "none", border: "none", color: SAGE, fontSize: 13, cursor: "pointer" }}>
+            ← Back to bloodwork
+          </button>
+        </div>
+      </NuraPageShell>
+    );
+  }
 
   const filteredBiomarkers = filter === "alert"
     ? biomarkers.filter((b) => b.status === "low" || b.status === "high" || b.status === "critical")
     : biomarkers;
-
   const isFirstPanel = trendPoints.length <= 1;
 
-  if (authLoading || loading) {
-    return (
-      <div style={{ minHeight: "100vh", background: colors.bg, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: FONTS.mono, color: colors.textFaint, fontSize: 12, letterSpacing: "1.5px" }}>
-        LOADING...
-      </div>
-    );
-  }
-
-  if (error || !panel) {
-    return (
-      <div style={{ minHeight: "100vh", background: colors.bg, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12, padding: 20 }}>
-        <AlertTriangle size={24} color="#FF4C5C" />
-        <div style={{ fontFamily: FONTS.mono, fontSize: 11, color: "#FF4C5C", letterSpacing: "1px" }}>{error ?? "PANEL NOT FOUND"}</div>
-        <button onClick={() => router.push("/bloodwork")} style={{ fontFamily: FONTS.mono, fontSize: 10, color: colors.mint, background: "none", border: "none", cursor: "pointer", letterSpacing: "1px" }}>
-          ← BACK TO BLOODWORK
-        </button>
-      </div>
-    );
-  }
-
   return (
-    <div style={{ minHeight: "100vh", background: colors.bg, fontFamily: FONTS.sans }}>
-      <style>{`
-        @keyframes live-pulse { 0%, 100% { opacity: 0.5; transform: scale(1); } 50% { opacity: 1; transform: scale(1.4); } }
-        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
-        ::-webkit-scrollbar { width: 0; }
-      `}</style>
-
-      {/* Custom topbar for detail page */}
-      <div
-        style={{
-          position: "sticky", top: 0, zIndex: 100,
-          display: "flex", alignItems: "center", justifyContent: "space-between",
-          padding: "0 16px", height: 56,
-          background: colors.bgTopbar,
-          backdropFilter: "blur(20px)",
-          borderBottom: `1px solid ${colors.border}`,
-        }}
-      >
-        <button
-          onClick={() => router.push("/bloodwork")}
-          style={{ width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", background: "none", border: "none", cursor: "pointer", color: colors.textMuted, borderRadius: 8, padding: 0 }}
-        >
-          <ChevronLeft size={22} />
-        </button>
-        <div style={{ fontFamily: FONTS.serif, fontSize: 17, color: colors.text, maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+    <NuraPageShell rightAction={ShareButton} maxWidth={720}>
+      {/* Title */}
+      <div style={{ marginBottom: 22 }}>
+        <h1 style={{
+          fontFamily: SERIF, fontWeight: 500, color: TEXT,
+          margin: "0 0 6px", lineHeight: 1.15, letterSpacing: "-0.5px",
+          fontSize: "clamp(28px, 4.5vw, 40px)",
+          overflow: "hidden", textOverflow: "ellipsis",
+        }}>
           {panel.name}
-        </div>
-        <div style={{ position: "relative" }}>
-          <button
-            onClick={() => setMenuOpen((v) => !v)}
-            style={{ width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", background: "none", border: "none", cursor: "pointer", color: colors.textMuted, borderRadius: 8, padding: 0 }}
-          >
-            <MoreVertical size={18} />
-          </button>
-          {menuOpen && (
-            <div
-              style={{ position: "absolute", right: 0, top: 40, background: colors.bgSidebar, border: `1px solid ${colors.border}`, borderRadius: 10, padding: "4px 0", zIndex: 200, minWidth: 140, boxShadow: "0 8px 24px rgba(0,0,0,0.3)" }}
-              onClick={() => setMenuOpen(false)}
-            >
-              <button
-                onClick={() => { setMenuOpen(false); setDeleteConfirm(true); }}
-                style={{ width: "100%", padding: "10px 16px", background: "none", border: "none", cursor: "pointer", fontFamily: FONTS.mono, fontSize: 10, fontWeight: 600, letterSpacing: "1px", color: "#FF4C5C", textAlign: "left" }}
-              >
-                DELETE PANEL
-              </button>
-            </div>
-          )}
-        </div>
+        </h1>
+        <p style={{ fontFamily: SANS, fontSize: 13, color: TEXT_SEC, margin: 0 }}>
+          {fmtDate(panel.collected_date)} · {biomarkers.length} biomarkers
+        </p>
       </div>
-      {menuOpen && <div style={{ position: "fixed", inset: 0, zIndex: 150 }} onClick={() => setMenuOpen(false)} />}
 
-      <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} userName={userName} userInitial={userInitial} />
-      <div style={{ display: "none" }}><Topbar onMenuClick={() => setSidebarOpen(true)} /></div>
-
-      <div style={{ padding: "20px 20px 80px", maxWidth: 480, margin: "0 auto" }}>
-
-        {/* Subtitle */}
-        <div style={{ marginBottom: 20 }}>
-          <MonoLabel color={colors.textFaint}>
-            {formatDate(panel.collected_date)} · {biomarkers.length} BIOMARKERS
-          </MonoLabel>
+      {/* Score */}
+      {panelScore && panelScore.total > 0 && (
+        <div style={{
+          background: SURFACE, border: `0.5px solid ${BORDER}`, borderRadius: 14,
+          padding: 20, marginBottom: 16,
+          display: "flex", gap: 18, alignItems: "center", flexWrap: "wrap" as const,
+        }}>
+          <HealthDonut score={panelScore} size={96} />
+          <div style={{ flex: 1, minWidth: 180, display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+            <ScoreTile count={panelScore.optimalCount} label="Optimal" color={SAGE} />
+            <ScoreTile count={panelScore.watchCount} label="Watch" color={AMBER} />
+            <ScoreTile count={panelScore.alertCount} label="Alert" color={RED} />
+          </div>
         </div>
+      )}
 
-        {/* ── Panel score hero ── */}
-        {panelScore && panelScore.total > 0 && (
-          <div
-            style={{
-              position: "relative",
-              padding: "16px",
-              background: `linear-gradient(135deg, ${colors.mintBgMedium}, ${colors.mintBgSubtle})`,
-              border: `1px solid ${colors.mintBorder}`,
-              borderRadius: 14,
-              marginBottom: 14,
-            }}
-          >
-            <CornerBrackets />
-            <MonoLabel color={colors.mint}>PANEL SCORE</MonoLabel>
-            <div style={{ display: "flex", gap: 14, alignItems: "center", marginTop: 12 }}>
-              <HealthDonut score={panelScore} size={88} />
-              <MetricTiles score={panelScore} />
-            </div>
+      {/* Trend */}
+      {trendPoints.length >= 2 && (
+        <div style={{
+          background: SURFACE, border: `0.5px solid ${BORDER}`, borderRadius: 14,
+          padding: 18, marginBottom: 16,
+        }}>
+          <TrendChart points={trendPoints} />
+        </div>
+      )}
+
+      {/* Action plan */}
+      {actionItems.length > 0 && (
+        <div style={{
+          background: SURFACE, border: `0.5px solid ${BORDER}`, borderRadius: 14,
+          padding: 18, marginBottom: 16,
+        }}>
+          <div style={{ marginBottom: 14 }}>
+            <SectionLabel>NŪRA&apos;s action plan</SectionLabel>
           </div>
-        )}
 
-        {/* ── Trend chart ── */}
-        {trendPoints.length >= 2 && (
-          <div
-            style={{
-              position: "relative",
-              padding: "16px",
-              background: colors.mintBgSubtle,
-              border: `1px solid ${colors.border}`,
-              borderRadius: 14,
-              marginBottom: 14,
-            }}
-          >
-            <CornerBrackets />
-            <TrendChart points={trendPoints} />
-          </div>
-        )}
-
-        {/* ── NŪRA Action Plan ── */}
-        {actionItems.length > 0 && (
-          <div
-            style={{
-              position: "relative",
-              padding: "14px 16px",
-              background: `linear-gradient(135deg, ${colors.mintBgMedium}, ${colors.mintBgSubtle})`,
-              border: `1px solid ${colors.mintBorder}`,
-              borderRadius: 14,
-              marginBottom: 14,
-            }}
-          >
-            <CornerBrackets />
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-              <div style={{ width: 6, height: 6, borderRadius: "50%", background: colors.mint, animation: "live-pulse 2s ease-in-out infinite", flexShrink: 0 }} />
-              <MonoLabel color={colors.mint}>NŪRA&apos;S ACTION PLAN</MonoLabel>
+          {actionItems.map((action, idx) => (
+            <div key={action.title} style={{
+              display: "flex", gap: 12,
+              paddingBottom: idx < actionItems.length - 1 ? 14 : 0,
+              marginBottom: idx < actionItems.length - 1 ? 14 : 0,
+              borderBottom: idx < actionItems.length - 1 ? `0.5px solid ${BORDER}` : "none",
+            }}>
+              <div style={{
+                width: 22, height: 22, borderRadius: "50%", flexShrink: 0, marginTop: 1,
+                background: `rgba(${SAGE_RGB},0.18)`, border: `0.5px solid rgba(${SAGE_RGB},0.4)`,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontFamily: SANS, fontSize: 11, fontWeight: 600, color: SAGE,
+              }}>{idx + 1}</div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontFamily: SANS, fontSize: 13.5, fontWeight: 500, color: TEXT, marginBottom: 4 }}>{action.title}</div>
+                <div style={{ fontFamily: SANS, fontSize: 12.5, color: TEXT_SEC, lineHeight: 1.6 }}>{action.reasoning}</div>
+                {action.action_type === "add_supplement" && action.supplement_suggestion && (
+                  <button
+                    onClick={() => handleAddSupplement(action)}
+                    disabled={!!addingSupp || addedSupps.has(action.title)}
+                    style={{
+                      marginTop: 8, padding: "5px 11px", borderRadius: 8,
+                      background: addedSupps.has(action.title) ? "transparent" : `rgba(${SAGE_RGB},0.12)`,
+                      border: `0.5px solid ${addedSupps.has(action.title) ? BORDER : `rgba(${SAGE_RGB},0.4)`}`,
+                      color: addedSupps.has(action.title) ? TEXT_TER : SAGE,
+                      fontFamily: SANS, fontSize: 11, fontWeight: 500, cursor: addedSupps.has(action.title) ? "default" : "pointer",
+                      opacity: addingSupp === action.title ? 0.5 : 1,
+                    }}
+                  >
+                    {addedSupps.has(action.title) ? "✓ Added" : "+ Add to stack"}
+                  </button>
+                )}
+              </div>
             </div>
+          ))}
 
-            {actionItems.map((action, idx) => (
-              <div
-                key={action.title}
+          {/* Save protocol */}
+          <div style={{ marginTop: 16, paddingTop: 14, borderTop: `0.5px solid ${BORDER}` }}>
+            {protocolSaved ? (
+              <div style={{ textAlign: "center", padding: "6px 0", fontSize: 11, color: SAGE, fontWeight: 500, letterSpacing: "0.5px" }}>
+                ✓ Saved as protocol
+              </div>
+            ) : showProtocolForm ? (
+              <div>
+                <div style={{ fontFamily: SANS, fontSize: 10, color: TEXT_TER, letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: 8 }}>
+                  Protocol title
+                </div>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <input
+                    value={protocolTitle}
+                    onChange={(e) => setProtocolTitle(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter") handleSaveProtocol(); if (e.key === "Escape") setShowProtocolForm(false); }}
+                    autoFocus
+                    style={{
+                      flex: 1, padding: "9px 12px", borderRadius: 9,
+                      background: SURFACE, border: `0.5px solid ${BORDER}`,
+                      color: TEXT, fontFamily: SANS, fontSize: 13, outline: "none",
+                    }}
+                  />
+                  <button onClick={handleSaveProtocol} disabled={protocolSaving || !protocolTitle.trim()} style={{
+                    padding: "9px 16px", borderRadius: 9, border: "none",
+                    background: SAGE, color: SAGE_ON,
+                    fontFamily: SANS, fontSize: 12, fontWeight: 500, cursor: "pointer",
+                    opacity: protocolSaving ? 0.5 : 1, whiteSpace: "nowrap",
+                  }}>
+                    {protocolSaving ? "…" : "Save"}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                onClick={() => {
+                  setProtocolTitle(`${panel.name} Protocol — ${fmtDate(panel.collected_date)}`);
+                  setShowProtocolForm(true);
+                }}
                 style={{
-                  display: "flex",
-                  gap: 12,
-                  paddingBottom: idx < actionItems.length - 1 ? 12 : 0,
-                  marginBottom: idx < actionItems.length - 1 ? 12 : 0,
-                  borderBottom: idx < actionItems.length - 1 ? `1px solid ${colors.borderFaint}` : "none",
+                  width: "100%", padding: "10px 0", borderRadius: 10,
+                  background: "transparent", border: `0.5px solid rgba(${SAGE_RGB},0.35)`,
+                  color: SAGE, fontFamily: SANS, fontSize: 12, fontWeight: 500, cursor: "pointer",
                 }}
               >
-                <div
-                  style={{
-                    width: 22,
-                    height: 22,
-                    borderRadius: "50%",
-                    background: `${colors.mint}25`,
-                    border: `1.5px solid ${colors.mintBorder}`,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    flexShrink: 0,
-                    marginTop: 1,
-                  }}
-                >
-                  <span style={{ fontFamily: FONTS.mono, fontSize: 9, fontWeight: 700, color: colors.mint }}>{idx + 1}</span>
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontFamily: FONTS.sans, fontSize: 13, fontWeight: 600, color: colors.text, marginBottom: 3 }}>
-                    {action.title}
-                  </div>
-                  <div style={{ fontFamily: FONTS.sans, fontSize: 12, color: colors.textMuted, lineHeight: 1.6 }}>
-                    {action.reasoning}
-                  </div>
-                  {action.action_type === "add_supplement" && action.supplement_suggestion && (
-                    <button
-                      onClick={() => handleAddSupplement(action)}
-                      disabled={!!addingSupp || addedSupps.has(action.title)}
-                      style={{
-                        marginTop: 8,
-                        padding: "5px 12px",
-                        background: addedSupps.has(action.title) ? colors.mintBgSubtle : `${colors.mint}25`,
-                        border: `1px solid ${addedSupps.has(action.title) ? colors.border : colors.mintBorder}`,
-                        borderRadius: 7,
-                        fontFamily: FONTS.mono,
-                        fontSize: 8.5,
-                        fontWeight: 700,
-                        color: addedSupps.has(action.title) ? colors.textFaint : colors.mint,
-                        letterSpacing: "1px",
-                        cursor: addedSupps.has(action.title) ? "default" : "pointer",
-                        opacity: addingSupp === action.title ? 0.5 : 1,
-                      }}
-                    >
-                      {addedSupps.has(action.title) ? "✓ ADDED" : "+ ADD"}
-                    </button>
-                  )}
-                </div>
-              </div>
-            ))}
-
-            {panel.insight && actionItems.length === 0 && (
-              <p style={{ fontFamily: FONTS.sans, fontSize: 13, color: colors.textMuted, margin: 0, lineHeight: 1.7 }}>
-                {panel.insight}
-              </p>
+                + Save as protocol
+              </button>
             )}
-
-            {/* Save Protocol button */}
-            <div style={{ marginTop: 14, paddingTop: 12, borderTop: `1px solid ${colors.borderFaint}` }}>
-              {protocolSaved ? (
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "9px 0" }}>
-                  <BookmarkCheck size={13} color={colors.mint} />
-                  <span style={{ fontFamily: FONTS.mono, fontSize: 9, fontWeight: 700, letterSpacing: "1px", color: colors.mint }}>
-                    SAVED AS PROTOCOL
-                  </span>
-                </div>
-              ) : showProtocolForm ? (
-                <div>
-                  <div style={{ fontFamily: FONTS.mono, fontSize: 8.5, color: colors.textFaint, letterSpacing: "1px", marginBottom: 6 }}>
-                    PROTOCOL TITLE
-                  </div>
-                  <div style={{ display: "flex", gap: 6 }}>
-                    <input
-                      value={protocolTitle}
-                      onChange={(e) => setProtocolTitle(e.target.value)}
-                      onKeyDown={(e) => { if (e.key === "Enter") handleSaveProtocol(); if (e.key === "Escape") setShowProtocolForm(false); }}
-                      autoFocus
-                      style={{ flex: 1, padding: "7px 10px", background: colors.mintBgMedium, border: `1px solid ${colors.mintBorder}`, borderRadius: 7, fontFamily: FONTS.sans, fontSize: 12.5, color: colors.text, outline: "none" }}
-                    />
-                    <button
-                      onClick={handleSaveProtocol}
-                      disabled={protocolSaving || !protocolTitle.trim()}
-                      style={{ padding: "7px 14px", background: `linear-gradient(135deg, ${colors.mint}, ${colors.mintDeep})`, border: "none", borderRadius: 7, fontFamily: FONTS.mono, fontSize: 8.5, fontWeight: 700, color: colors.textOnAccent, cursor: "pointer", letterSpacing: "0.8px", opacity: protocolSaving ? 0.5 : 1, whiteSpace: "nowrap" }}
-                    >
-                      {protocolSaving ? "..." : "SAVE"}
-                    </button>
-                    <button
-                      onClick={() => setShowProtocolForm(false)}
-                      style={{ width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center", background: colors.mintBgSubtle, border: `1px solid ${colors.border}`, borderRadius: 7, cursor: "pointer", color: colors.textFaint, padding: 0, flexShrink: 0 }}
-                    >
-                      <span style={{ fontSize: 14, lineHeight: 1 }}>×</span>
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <button
-                  onClick={() => {
-                    setProtocolTitle(`${panel.name} Protocol — ${formatDate(panel.collected_date)}`);
-                    setShowProtocolForm(true);
-                  }}
-                  style={{
-                    width: "100%", padding: "9px 0",
-                    background: "transparent",
-                    border: `1px solid ${colors.mintBorder}`,
-                    borderRadius: 8,
-                    fontFamily: FONTS.mono, fontSize: 9, fontWeight: 700,
-                    letterSpacing: "1px", color: colors.mint,
-                    cursor: "pointer",
-                  }}
-                >
-                  + SAVE AS PROTOCOL
-                </button>
-              )}
-            </div>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* Panel insight (if not covered by actions) */}
-        {panel.insight && actionItems.length > 0 && (
-          <div
-            style={{
-              position: "relative",
-              padding: "14px 16px",
-              background: `linear-gradient(135deg, ${colors.mintBgMedium}, ${colors.mintBgSubtle})`,
-              border: `1px solid ${colors.mintBorder}`,
-              borderRadius: 14,
-              marginBottom: 14,
-            }}
-          >
-            <CornerBrackets />
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-              <div style={{ width: 6, height: 6, borderRadius: "50%", background: colors.mint, animation: "live-pulse 2s ease-in-out infinite", flexShrink: 0 }} />
-              <MonoLabel color={colors.mint}>NŪRA&apos;S READ</MonoLabel>
-            </div>
-            <p style={{ fontFamily: FONTS.sans, fontSize: 13, color: colors.textMuted, margin: 0, lineHeight: 1.7 }}>
-              {panel.insight}
-            </p>
-          </div>
-        )}
+      {/* Panel insight (if no action items) */}
+      {panel.insight && actionItems.length === 0 && (
+        <div style={{
+          background: SURFACE, border: `0.5px solid ${BORDER}`, borderRadius: 14,
+          padding: 18, marginBottom: 16,
+          borderLeft: `2px solid ${SAGE}`,
+        }}>
+          <div style={{ marginBottom: 8 }}><SectionLabel>NŪRA&apos;s read</SectionLabel></div>
+          <p style={{ fontFamily: SANS, fontSize: 13.5, color: TEXT, margin: 0, lineHeight: 1.6 }}>{panel.insight}</p>
+        </div>
+      )}
 
-        {/* ── Biomarkers ── */}
-        <div>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <MonoLabel color={colors.textMuted}>BIOMARKERS</MonoLabel>
-              <div style={{ width: 20, height: 16, background: colors.mintBgSubtle, border: `1px solid ${colors.border}`, borderRadius: 3, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <MonoLabel color={colors.textFaint}>{filteredBiomarkers.length}</MonoLabel>
-              </div>
-            </div>
-            <div style={{ display: "flex", gap: 6 }}>
-              {(["all", "alert"] as const).map((f) => (
-                <button
-                  key={f}
-                  onClick={() => setFilter(f)}
-                  style={{
-                    padding: "4px 10px",
-                    background: filter === f ? (f === "alert" ? "rgba(255,76,92,0.15)" : colors.mintBgMedium) : "transparent",
-                    border: `1px solid ${filter === f ? (f === "alert" ? "rgba(255,76,92,0.4)" : colors.mintBorder) : colors.borderFaint}`,
-                    borderRadius: 6,
-                    fontFamily: FONTS.mono,
-                    fontSize: 8.5,
-                    fontWeight: 700,
-                    color: filter === f ? (f === "alert" ? "#FF4C5C" : colors.mint) : colors.textFaint,
-                    letterSpacing: "1px",
-                    cursor: "pointer",
-                  }}
-                >
-                  {f.toUpperCase()}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {isFirstPanel && biomarkers.length > 0 && (
-            <div style={{ padding: "8px 12px", background: colors.mintBgSubtle, border: `1px dashed ${colors.mintBorder}`, borderRadius: 8, marginBottom: 12 }}>
-              <MonoLabel color={colors.textGhost} size={8}>FIRST PANEL — SPARKLINES POPULATE AS YOU ADD MORE PANELS</MonoLabel>
-            </div>
-          )}
-
-          {filteredBiomarkers.length === 0 ? (
-            <div style={{ fontFamily: FONTS.mono, fontSize: 10, color: colors.textFaint, letterSpacing: "1.2px", textAlign: "center", padding: "24px 0" }}>
-              {filter === "alert" ? "NO ALERT BIOMARKERS" : "NO BIOMARKERS"}
-            </div>
-          ) : (
-            filteredBiomarkers.map((b) => (
-              <BiomarkerCard
-                key={b.id}
-                biomarker={b}
-                history={biomarkerHistories[b.name] ?? []}
-                isFirst={isFirstPanel}
-              />
-            ))
-          )}
+      {/* Biomarkers */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+        <SectionLabel>Biomarkers · {filteredBiomarkers.length}</SectionLabel>
+        <div style={{ display: "flex", gap: 6 }}>
+          {(["all", "alert"] as const).map((f) => (
+            <button
+              key={f}
+              onClick={() => setFilter(f)}
+              style={{
+                padding: "5px 11px", borderRadius: 7,
+                background: filter === f ? (f === "alert" ? `rgba(212,87,77,0.15)` : `rgba(${SAGE_RGB},0.15)`) : "transparent",
+                border: `0.5px solid ${filter === f ? (f === "alert" ? `rgba(212,87,77,0.4)` : `rgba(${SAGE_RGB},0.4)`) : BORDER}`,
+                color: filter === f ? (f === "alert" ? RED : SAGE) : TEXT_TER,
+                fontFamily: SANS, fontSize: 11, fontWeight: 500, cursor: "pointer",
+                textTransform: "capitalize",
+              }}
+            >
+              {f}
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* Delete confirm modal */}
+      {isFirstPanel && biomarkers.length > 0 && (
+        <div style={{
+          padding: "8px 12px", marginBottom: 12, borderRadius: 8,
+          background: SURFACE, border: `0.5px dashed ${BORDER}`,
+          fontFamily: SANS, fontSize: 11, color: TEXT_TER,
+        }}>
+          First panel — sparklines populate as you add more
+        </div>
+      )}
+
+      {filteredBiomarkers.length === 0 ? (
+        <div style={{ padding: "32px 0", textAlign: "center", color: TEXT_TER, fontSize: 13 }}>
+          {filter === "alert" ? "No alert biomarkers" : "No biomarkers"}
+        </div>
+      ) : (
+        filteredBiomarkers.map((b) => (
+          <BiomarkerCard key={b.id} b={b} history={histories[b.name] ?? []} isFirst={isFirstPanel} />
+        ))
+      )}
+
+      {/* Delete (subtle, at bottom) */}
+      <div style={{ marginTop: 24, textAlign: "center" }}>
+        <button onClick={() => setDeleteConfirm(true)} style={{
+          background: "none", border: "none", color: TEXT_TER,
+          fontFamily: SANS, fontSize: 11, cursor: "pointer", letterSpacing: "0.5px",
+        }}>
+          Delete this panel
+        </button>
+      </div>
+
+      {/* Share toast */}
+      {shareToast && (
+        <div style={{
+          position: "fixed", bottom: 30, left: "50%", transform: "translateX(-50%)",
+          background: "rgba(20,20,21,0.95)", border: `0.5px solid rgba(${SAGE_RGB},0.3)`,
+          color: TEXT, padding: "8px 14px", borderRadius: 20, fontSize: 12, zIndex: 80,
+        }}>
+          {shareToast}
+        </div>
+      )}
+
+      {/* Delete confirm */}
       {deleteConfirm && (
-        <div
-          onClick={() => !deleting && setDeleteConfirm(false)}
-          style={{ position: "fixed", inset: 0, background: colors.overlay, zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, backdropFilter: "blur(6px)" }}
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            style={{ background: colors.bgSidebar, border: "1px solid rgba(255,76,92,0.4)", borderRadius: 16, padding: "24px 20px", maxWidth: 320, width: "100%" }}
-          >
-            <h3 style={{ fontFamily: FONTS.serif, fontSize: 20, color: colors.text, margin: "0 0 8px", fontWeight: 400 }}>Delete panel?</h3>
-            <p style={{ fontFamily: FONTS.sans, fontSize: 13, color: colors.textMuted, margin: "0 0 20px", lineHeight: 1.6 }}>
+        <div onClick={() => !deleting && setDeleteConfirm(false)} style={{
+          position: "fixed", inset: 0, zIndex: 200, background: "rgba(0,0,0,0.6)",
+          backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20,
+        }}>
+          <div onClick={(e) => e.stopPropagation()} style={{
+            background: "#0d0d0e", border: `1px solid rgba(212,87,77,0.4)`,
+            borderRadius: 14, padding: "22px 20px", maxWidth: 320, width: "100%",
+          }}>
+            <h3 style={{ fontFamily: SERIF, fontSize: 22, color: TEXT, margin: "0 0 8px", fontWeight: 500 }}>Delete panel?</h3>
+            <p style={{ fontFamily: SANS, fontSize: 13, color: TEXT_SEC, margin: "0 0 20px", lineHeight: 1.6 }}>
               This panel and all extracted biomarkers will be permanently removed.
             </p>
             <div style={{ display: "flex", gap: 10 }}>
-              <button onClick={() => setDeleteConfirm(false)} disabled={deleting} style={{ flex: 1, padding: 11, background: colors.mintBgSubtle, border: `1px solid ${colors.border}`, borderRadius: 10, fontFamily: FONTS.mono, fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", color: colors.textMuted, cursor: "pointer" }}>
-                CANCEL
+              <button onClick={() => setDeleteConfirm(false)} disabled={deleting} style={{
+                flex: 1, padding: "11px 0", borderRadius: 10,
+                background: SURFACE, border: `0.5px solid ${BORDER}`,
+                color: TEXT, fontFamily: SANS, fontSize: 13, fontWeight: 500, cursor: "pointer",
+              }}>
+                Cancel
               </button>
-              <button onClick={handleDelete} disabled={deleting} style={{ flex: 1, padding: 11, background: "rgba(255,76,92,0.08)", border: "1px solid rgba(255,76,92,0.4)", borderRadius: 10, fontFamily: FONTS.mono, fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", color: "#FF4C5C", cursor: deleting ? "not-allowed" : "pointer", opacity: deleting ? 0.6 : 1 }}>
-                {deleting ? "DELETING..." : "DELETE"}
+              <button onClick={handleDelete} disabled={deleting} style={{
+                flex: 1, padding: "11px 0", borderRadius: 10,
+                background: "rgba(212,87,77,0.12)", border: `1px solid rgba(212,87,77,0.4)`,
+                color: RED, fontFamily: SANS, fontSize: 13, fontWeight: 500,
+                cursor: deleting ? "not-allowed" : "pointer", opacity: deleting ? 0.6 : 1,
+              }}>
+                {deleting ? "Deleting…" : "Delete"}
               </button>
             </div>
           </div>
         </div>
       )}
+    </NuraPageShell>
+  );
+}
+
+function ScoreTile({ count, label, color }: { count: number; label: string; color: string }) {
+  return (
+    <div style={{
+      background: "rgba(235,230,216,0.03)", border: `0.5px solid ${BORDER}`, borderRadius: 10,
+      padding: "10px 6px", textAlign: "center",
+    }}>
+      <div style={{ fontFamily: SANS, fontSize: 18, fontWeight: 500, color, lineHeight: 1 }}>{count}</div>
+      <div style={{ fontFamily: SANS, fontSize: 10, color: TEXT_SEC, marginTop: 4 }}>{label}</div>
     </div>
   );
 }

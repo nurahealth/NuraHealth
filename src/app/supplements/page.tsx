@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, MoreVertical, Check, X, BookmarkCheck } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import type { User } from "@supabase/supabase-js";
 import {
@@ -17,78 +16,51 @@ import {
   type Supplement,
 } from "@/lib/supplements";
 import { saveItem } from "@/lib/saved";
-import { useTheme } from "@/components/ThemeProvider";
-import { FONTS } from "@/lib/theme";
-import Topbar from "@/components/Topbar";
-import Sidebar from "@/components/Sidebar";
+import NuraPageShell from "@/components/NuraPageShell";
 
-interface FormState {
-  name: string;
-  dose: string;
-  timing: string;
-  frequency: string;
-  notes: string;
-}
+// ── Tokens ────────────────────────────────────────────────────────────────────
+const TEXT = "#f0ebde";
+const TEXT_SEC = "rgba(235,230,216,0.55)";
+const TEXT_TER = "rgba(235,230,216,0.4)";
+const BORDER = "rgba(235,230,216,0.09)";
+const SURFACE = "rgba(235,230,216,0.04)";
+const SAGE = "#9bb0a5";
+const SAGE_HOV = "#abc0b5";
+const SAGE_ON = "#0d0d0e";
+const SAGE_RGB = "155,176,165";
+const RED = "#d4574d";
+const SANS = "'Inter', system-ui, sans-serif";
+const SERIF = "'DM Serif Display', Georgia, serif";
 
-const EMPTY_FORM: FormState = {
-  name: "",
-  dose: "",
-  timing: "",
-  frequency: "daily",
-  notes: "",
-};
-
-type Filter = "all" | "daily" | "weekly" | "recommended";
-
-function CornerBrackets({ size = 8, color }: { size?: number; color?: string }) {
-  const { colors } = useTheme();
-  const c = color ?? colors.mint;
-  return (
-    <>
-      <div style={{ position: "absolute", top: 6, left: 6, width: size, height: size, borderTop: `1.5px solid ${c}`, borderLeft: `1.5px solid ${c}` }} />
-      <div style={{ position: "absolute", bottom: 6, right: 6, width: size, height: size, borderBottom: `1.5px solid ${c}`, borderRight: `1.5px solid ${c}` }} />
-    </>
-  );
-}
+interface FormState { name: string; dose: string; timing: string; frequency: string; notes: string }
+const EMPTY_FORM: FormState = { name: "", dose: "", timing: "", frequency: "daily", notes: "" };
 
 const FREQ_LABELS: Record<string, string> = {
-  daily: "DAILY",
-  every_other_day: "EOD",
-  weekly: "WEEKLY",
-  as_needed: "AS NEEDED",
+  daily: "Daily", every_other_day: "EOD", weekly: "Weekly", as_needed: "As needed",
 };
 
-function formatFreq(f: string): string {
-  return FREQ_LABELS[f] ?? f.toUpperCase().replace(/_/g, " ");
-}
-
-function getDetailLine(s: Supplement, streak: number): string {
+const detailLine = (s: Supplement, streak: number): string => {
   const parts: string[] = [];
   if (s.dose) parts.push(s.dose);
-  if (s.timing) parts.push(s.timing.toUpperCase());
-  parts.push(formatFreq(s.frequency));
-  if (s.frequency === "daily" && streak > 0) parts.push(`${streak}D`);
+  if (s.timing) parts.push(s.timing);
+  parts.push(FREQ_LABELS[s.frequency] ?? s.frequency);
+  if (s.frequency === "daily" && streak > 0) parts.push(`${streak}d streak`);
   return parts.join(" · ");
-}
+};
 
 export default function SupplementsPage() {
   const router = useRouter();
-  const { colors } = useTheme();
-
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const [supplements, setSupplements] = useState<Supplement[]>([]);
   const [todaysLogs, setTodaysLogs] = useState<string[]>([]);
   const [streaks, setStreaks] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
-  const [fetchError, setFetchError] = useState<string | null>(null);
-
-  const [filter, setFilter] = useState<Filter>("all");
   const [pendingIds, setPendingIds] = useState<Set<string>>(new Set());
 
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [expandedWhy, setExpandedWhy] = useState<Set<string>>(new Set());
 
   const [showModal, setShowModal] = useState(false);
   const [modalAnimated, setModalAnimated] = useState(false);
@@ -101,7 +73,6 @@ export default function SupplementsPage() {
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  // Stack save state
   const [stackSaved, setStackSaved] = useState(false);
   const [stackSaving, setStackSaving] = useState(false);
   const [showStackForm, setShowStackForm] = useState(false);
@@ -124,113 +95,75 @@ export default function SupplementsPage() {
         setTodaysLogs(logs);
         setLoading(false);
       })
-      .catch(() => {
-        setFetchError("Failed to load supplements. Please refresh.");
-        setLoading(false);
-      });
+      .catch(() => setLoading(false));
   }, [user]);
 
   useEffect(() => {
     const daily = supplements.filter((s) => s.frequency === "daily");
     if (daily.length === 0) return;
-    Promise.all(
-      daily.map((s) =>
-        getSupplementStreak(s.id).then((streak) => ({ id: s.id, streak }))
-      )
-    )
+    Promise.all(daily.map((s) => getSupplementStreak(s.id).then((streak) => ({ id: s.id, streak }))))
       .then((results) => {
         const map: Record<string, number> = {};
         results.forEach(({ id, streak }) => { map[id] = streak; });
         setStreaks(map);
-      })
-      .catch(() => {});
+      }).catch(() => {});
   }, [supplements]);
 
-  // Animate modal in after mount
   useEffect(() => {
     if (showModal) {
       const raf = requestAnimationFrame(() => setModalAnimated(true));
       return () => cancelAnimationFrame(raf);
-    } else {
-      setModalAnimated(false);
-    }
+    } else { setModalAnimated(false); }
   }, [showModal]);
 
-  const handleCheck = async (supplementId: string, isLogged: boolean) => {
-    if (!user || pendingIds.has(supplementId)) return;
-    setPendingIds((prev) => new Set(prev).add(supplementId));
-    setTodaysLogs((prev) =>
-      isLogged ? prev.filter((id) => id !== supplementId) : [...prev, supplementId]
-    );
+  const handleCheck = async (id: string, isLogged: boolean) => {
+    if (!user || pendingIds.has(id)) return;
+    setPendingIds((prev) => new Set(prev).add(id));
+    setTodaysLogs((prev) => isLogged ? prev.filter((x) => x !== id) : [...prev, id]);
     try {
-      if (isLogged) await unlogSupplementTaken(user.id, supplementId);
-      else await logSupplementTaken(user.id, supplementId);
+      if (isLogged) await unlogSupplementTaken(user.id, id);
+      else await logSupplementTaken(user.id, id);
     } catch {
-      // Revert optimistic update
-      setTodaysLogs((prev) =>
-        isLogged ? [...prev, supplementId] : prev.filter((id) => id !== supplementId)
-      );
+      setTodaysLogs((prev) => isLogged ? [...prev, id] : prev.filter((x) => x !== id));
     } finally {
-      setPendingIds((prev) => {
-        const next = new Set(prev);
-        next.delete(supplementId);
-        return next;
-      });
+      setPendingIds((prev) => { const next = new Set(prev); next.delete(id); return next; });
     }
   };
 
   const openAddModal = () => {
-    setForm(EMPTY_FORM);
-    setFormError("");
-    setEditTarget(null);
-    setModalMode("add");
-    setShowModal(true);
+    setForm(EMPTY_FORM); setFormError(""); setEditTarget(null);
+    setModalMode("add"); setShowModal(true);
   };
 
   const openEditModal = (s: Supplement) => {
     setForm({
-      name: s.name,
-      dose: s.dose ?? "",
-      timing: s.timing ?? "",
-      frequency: s.frequency,
-      notes: s.notes ?? "",
+      name: s.name, dose: s.dose ?? "", timing: s.timing ?? "",
+      frequency: s.frequency, notes: s.notes ?? "",
     });
-    setFormError("");
-    setEditTarget(s);
-    setModalMode("edit");
-    setOpenMenuId(null);
-    setShowModal(true);
+    setFormError(""); setEditTarget(s); setModalMode("edit");
+    setOpenMenuId(null); setShowModal(true);
   };
 
   const closeModal = () => {
-    setShowModal(false);
-    setEditTarget(null);
-    setForm(EMPTY_FORM);
-    setFormError("");
+    setShowModal(false); setEditTarget(null);
+    setForm(EMPTY_FORM); setFormError("");
   };
 
   const handleSubmit = async () => {
     if (!form.name.trim()) { setFormError("Name is required"); return; }
     if (!user) return;
-    setSubmitting(true);
-    setFormError("");
+    setSubmitting(true); setFormError("");
     try {
       if (modalMode === "add") {
         const created = await addSupplement(user.id, {
-          name: form.name,
-          dose: form.dose || undefined,
-          timing: form.timing || undefined,
-          frequency: form.frequency,
-          notes: form.notes || undefined,
+          name: form.name, dose: form.dose || undefined, timing: form.timing || undefined,
+          frequency: form.frequency, notes: form.notes || undefined,
         });
         setSupplements((prev) => [created, ...prev]);
       } else if (editTarget) {
         const updated = await updateSupplement(editTarget.id, {
-          name: form.name,
-          dose: form.dose || null,
-          timing: form.timing || null,
-          frequency: form.frequency,
-          notes: form.notes || null,
+          name: form.name, dose: form.dose || null, timing: form.timing || null,
+          frequency: form.frequency, notes: form.notes || null,
         });
         setSupplements((prev) => prev.map((s) => (s.id === updated.id ? updated : s)));
       }
@@ -248,12 +181,9 @@ export default function SupplementsPage() {
     try {
       await deleteSupplement(deleteTarget);
       setSupplements((prev) => prev.filter((s) => s.id !== deleteTarget));
-      setTodaysLogs((prev) => prev.filter((id) => id !== deleteTarget));
+      setTodaysLogs((prev) => prev.filter((x) => x !== deleteTarget));
       setDeleteTarget(null);
-    } catch {
-      setDeleting(false);
-    }
-    setDeleting(false);
+    } catch {} finally { setDeleting(false); }
   };
 
   const handleSaveStack = async () => {
@@ -270,445 +200,153 @@ export default function SupplementsPage() {
         content,
         metadata: { supplement_count: supplements.length },
       });
-      setStackSaved(true);
-      setShowStackForm(false);
-    } catch {
-      // silent
-    } finally {
-      setStackSaving(false);
-    }
+      setStackSaved(true); setShowStackForm(false);
+    } catch {} finally { setStackSaving(false); }
   };
 
-  const allCount = supplements.length;
-  const dailyCount = supplements.filter((s) => s.frequency === "daily").length;
-  const weeklyCount = supplements.filter((s) => s.frequency === "weekly").length;
-  const recommendedCount = supplements.filter((s) => s.recommended_by_nura).length;
-  const takenTodayCount = todaysLogs.filter((id) =>
-    supplements.some((s) => s.id === id)
-  ).length;
+  if (authLoading) return <NuraPageShell><div /></NuraPageShell>;
 
-  const filtered = supplements.filter((s) => {
-    if (filter === "daily") return s.frequency === "daily";
-    if (filter === "weekly") return s.frequency === "weekly";
-    if (filter === "recommended") return s.recommended_by_nura;
-    return true;
-  });
+  const stackItems = supplements.filter((s) => !s.recommended_by_nura);
+  const recommended = supplements.filter((s) => s.recommended_by_nura);
 
-  const deleteTargetName = supplements.find((s) => s.id === deleteTarget)?.name ?? "this supplement";
-  const userName = user?.user_metadata?.name || user?.email?.split("@")[0] || "USER";
-  const userInitial = userName.charAt(0).toUpperCase();
-
-  if (authLoading) {
-    return (
-      <div style={{ minHeight: "100vh", background: colors.bg, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: FONTS.mono, color: colors.textFaint, fontSize: 12, letterSpacing: "1.5px" }}>
-        LOADING...
-      </div>
-    );
-  }
-
-  const inputStyle: React.CSSProperties = {
-    width: "100%",
-    padding: "10px 12px",
-    background: colors.mintBgSubtle,
-    border: `1px solid ${colors.border}`,
-    borderRadius: 8,
-    fontFamily: FONTS.sans,
-    fontSize: 14,
-    color: colors.text,
-    outline: "none",
-    boxSizing: "border-box",
-  };
-
-  const labelStyle: React.CSSProperties = {
-    display: "block",
-    fontFamily: FONTS.mono,
-    fontSize: 9.5,
-    fontWeight: 600,
-    letterSpacing: "1.2px",
-    textTransform: "uppercase",
-    color: colors.textFaint,
-    marginBottom: 6,
-  };
+  const targetName = supplements.find((s) => s.id === deleteTarget)?.name ?? "this supplement";
 
   return (
-    <div style={{ minHeight: "100vh", background: colors.bg, fontFamily: FONTS.sans }}>
-      <style>{`
-        @keyframes supp-pulse { 0%,100%{opacity:0.6;transform:scale(1)} 50%{opacity:1;transform:scale(1.5)} }
-        @keyframes check-glow { 0%,100%{box-shadow:0 0 0 0 ${colors.mint}50} 50%{box-shadow:0 0 0 5px ${colors.mint}00} }
-        * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
-        ::-webkit-scrollbar { width: 0; }
-        input::placeholder, textarea::placeholder { color: ${colors.textGhost}; }
-        select option { background: ${colors.bgSidebar}; color: ${colors.text}; }
-      `}</style>
+    <NuraPageShell maxWidth={600}>
+      <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
 
-      <Topbar onMenuClick={() => setSidebarOpen(true)} />
-      <Sidebar
-        open={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-        userName={userName}
-        userInitial={userInitial}
-      />
-
-      {/* Sticky filter chips */}
-      <div
-        style={{
-          position: "sticky",
-          top: 56,
-          zIndex: 50,
-          background: colors.bg,
-          borderBottom: `1px solid ${colors.borderFaint}`,
-          padding: "10px 20px",
-          display: "flex",
-          gap: 8,
-          overflowX: "auto",
-        }}
-      >
-        {[
-          { key: "all" as Filter, label: `All · ${allCount}` },
-          { key: "daily" as Filter, label: `Daily · ${dailyCount}` },
-          { key: "weekly" as Filter, label: `Weekly · ${weeklyCount}` },
-          ...(recommendedCount > 0
-            ? [{ key: "recommended" as Filter, label: `Recommended · ${recommendedCount}` }]
-            : []),
-        ].map((chip) => {
-          const active = filter === chip.key;
-          return (
-            <button
-              key={chip.key}
-              onClick={() => setFilter(chip.key)}
-              style={{
-                flexShrink: 0,
-                fontFamily: FONTS.mono,
-                fontSize: 10,
-                fontWeight: 600,
-                letterSpacing: "0.08em",
-                textTransform: "uppercase",
-                padding: "5px 11px",
-                borderRadius: 20,
-                border: `1px solid ${active ? colors.mintBorderStrong : colors.border}`,
-                background: active ? colors.mintBgMedium : "transparent",
-                color: active ? colors.mint : colors.textFaint,
-                cursor: "pointer",
-                transition: "all 0.15s",
-                whiteSpace: "nowrap",
-              }}
-            >
-              {chip.label}
-            </button>
-          );
-        })}
+      {/* HERO */}
+      <div style={{ marginBottom: 22 }}>
+        <h1 style={{
+          fontFamily: SERIF, fontWeight: 500, color: TEXT,
+          margin: "0 0 6px", lineHeight: 1.15, letterSpacing: "-0.5px",
+          fontSize: "clamp(32px, 5vw, 44px)",
+        }}>
+          Supplements
+        </h1>
+        <p style={{ fontFamily: SANS, fontSize: 13, color: TEXT_SEC, margin: 0 }}>Your stack.</p>
       </div>
 
-      {/* Main content */}
-      <div style={{ padding: "20px 20px 100px", maxWidth: 480, margin: "0 auto" }}>
+      {/* ADD BUTTON */}
+      <button
+        onClick={openAddModal}
+        onMouseEnter={(e) => { e.currentTarget.style.background = SAGE_HOV; }}
+        onMouseLeave={(e) => { e.currentTarget.style.background = SAGE; }}
+        style={{
+          width: "100%", padding: "12px 14px", borderRadius: 11, border: "none",
+          background: SAGE, color: SAGE_ON,
+          fontFamily: SANS, fontSize: 14, fontWeight: 500, cursor: "pointer",
+          display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+          marginBottom: 22, transition: "background 200ms ease",
+        }}
+      >
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M12 5v14M5 12h14"/>
+        </svg>
+        Add supplement
+      </button>
 
-        {/* Page header */}
-        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 20 }}>
-          <div>
-            <h1 style={{ fontFamily: FONTS.serif, fontSize: 26, fontWeight: 400, color: colors.text, margin: "0 0 5px" }}>
-              Your Stack
-            </h1>
-            <span style={{ fontFamily: FONTS.mono, fontSize: 10, fontWeight: 600, letterSpacing: "1.2px", textTransform: "uppercase", color: colors.textFaint }}>
-              {allCount} ACTIVE · {takenTodayCount}/{allCount} TAKEN TODAY
-            </span>
-          </div>
-          <button
-            onClick={openAddModal}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 5,
-              padding: "8px 14px",
-              background: `linear-gradient(135deg, ${colors.mint}, ${colors.mintDeep})`,
-              border: "none",
-              borderRadius: 20,
-              fontFamily: FONTS.mono,
-              fontSize: 11,
-              fontWeight: 700,
-              letterSpacing: "0.08em",
-              color: colors.textOnAccent,
-              cursor: "pointer",
-              flexShrink: 0,
-            }}
-          >
-            <Plus size={12} strokeWidth={2.5} />
-            ADD
-          </button>
+      {loading ? (
+        <div style={{ padding: "32px 0", textAlign: "center", color: TEXT_TER, fontSize: 13 }}>Loading…</div>
+      ) : supplements.length === 0 ? (
+        <div style={{
+          padding: "48px 24px", textAlign: "center", borderRadius: 14,
+          background: SURFACE, border: `0.5px dashed ${BORDER}`,
+        }}>
+          <h2 style={{ fontFamily: SERIF, fontSize: 22, fontWeight: 500, color: TEXT, margin: "0 0 6px" }}>No supplements yet</h2>
+          <p style={{ fontFamily: SANS, fontSize: 13, color: TEXT_SEC, margin: 0 }}>
+            Add what you take daily.
+          </p>
         </div>
-
-        {/* Error */}
-        {fetchError && (
-          <div style={{ fontFamily: FONTS.mono, fontSize: 10, color: colors.danger, letterSpacing: "0.06em", textAlign: "center", padding: "12px 0" }}>
-            {fetchError}
-          </div>
-        )}
-
-        {/* Loading */}
-        {loading ? (
-          <div style={{ fontFamily: FONTS.mono, fontSize: 11, color: colors.textFaint, letterSpacing: "1.4px", textAlign: "center", padding: "60px 0" }}>
-            LOADING...
-          </div>
-        ) : filtered.length === 0 ? (
-          /* Empty state */
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", padding: "60px 20px 40px" }}>
-            <div
-              style={{
-                width: 64,
-                height: 64,
-                borderRadius: 16,
-                border: `1.5px solid ${colors.mintBorder}`,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                marginBottom: 20,
-                background: colors.mintBgSubtle,
-              }}
-            >
-              <Plus size={26} color={colors.mint} strokeWidth={1.5} />
-            </div>
-            <h2 style={{ fontFamily: FONTS.serif, fontSize: 22, fontWeight: 400, color: colors.text, margin: "0 0 8px" }}>
-              No supplements yet
-            </h2>
-            <p style={{ fontFamily: FONTS.mono, fontSize: 10, fontWeight: 600, letterSpacing: "1.2px", textTransform: "uppercase", color: colors.textFaint, margin: "0 0 28px" }}>
-              ADD WHAT YOU TAKE DAILY
-            </p>
-            <button
-              onClick={openAddModal}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-                padding: "12px 24px",
-                background: `linear-gradient(135deg, ${colors.mint}, ${colors.mintDeep})`,
-                border: "none",
-                borderRadius: 24,
-                fontFamily: FONTS.mono,
-                fontSize: 12,
-                fontWeight: 700,
-                letterSpacing: "0.08em",
-                color: colors.textOnAccent,
-                cursor: "pointer",
-              }}
-            >
-              <Plus size={14} strokeWidth={2.5} />
-              Add Supplement
-            </button>
-          </div>
-        ) : (
-          /* Supplement list */
-          <>
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            {filtered.map((s) => {
-              const isLogged = todaysLogs.includes(s.id);
-              const isPending = pendingIds.has(s.id);
-              const menuOpen = openMenuId === s.id;
-              const streak = streaks[s.id] ?? 0;
-              const detailLine = getDetailLine(s, streak);
-
-              return (
-                <div
-                  key={s.id}
-                  style={{
-                    position: "relative",
-                    background: `linear-gradient(135deg, ${colors.mintBgSubtle}, ${colors.mintBgSubtle})`,
-                    border: `1px solid ${isLogged ? colors.mintBorder : colors.borderFaint}`,
-                    borderRadius: 12,
-                    padding: "12px 14px",
-                    transition: "border-color 0.2s",
-                  }}
-                >
-                  <CornerBrackets />
-
-                  {/* NURA recommendation badge */}
-                  {s.recommended_by_nura && (
-                    <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 9 }}>
-                      <div
-                        style={{
-                          width: 6,
-                          height: 6,
-                          borderRadius: "50%",
-                          background: colors.mint,
-                          animation: "supp-pulse 2s ease-in-out infinite",
-                          flexShrink: 0,
-                        }}
-                      />
-                      <span
-                        style={{
-                          fontFamily: FONTS.mono,
-                          fontSize: 9,
-                          fontWeight: 600,
-                          letterSpacing: "1.1px",
-                          textTransform: "uppercase",
-                          color: colors.mint,
-                        }}
-                      >
-                        RECOMMENDED BY NŪRA
-                      </span>
-                    </div>
-                  )}
-
-                  {/* Main row */}
-                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                    {/* Checkbox */}
-                    <button
-                      onClick={() => handleCheck(s.id, isLogged)}
-                      disabled={isPending}
-                      style={{
-                        width: 22,
-                        height: 22,
-                        borderRadius: 5,
-                        border: `1.5px solid ${isLogged ? colors.mint : colors.textGhost}`,
-                        background: isLogged ? `${colors.mint}22` : "transparent",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        cursor: isPending ? "not-allowed" : "pointer",
-                        flexShrink: 0,
-                        padding: 0,
-                        opacity: isPending ? 0.5 : 1,
-                        boxShadow: isLogged ? `0 0 8px ${colors.mint}50` : "none",
-                        transition: "all 0.15s",
-                        animation: isLogged ? "check-glow 1.5s ease-out" : "none",
-                      }}
-                    >
-                      {isLogged && <Check size={13} color={colors.mint} strokeWidth={2.5} />}
-                    </button>
-
-                    {/* Name + detail line */}
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div
-                        style={{
-                          fontFamily: FONTS.sans,
-                          fontSize: 13.5,
-                          color: isLogged ? colors.textDim : colors.text,
-                          fontWeight: 500,
-                          textDecoration: isLogged ? "line-through" : "none",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        {s.name}
-                      </div>
-                      {detailLine && (
-                        <div
-                          style={{
-                            fontFamily: FONTS.mono,
-                            fontSize: 9.5,
-                            color: colors.textFaint,
-                            letterSpacing: "0.05em",
-                            marginTop: 3,
-                          }}
-                        >
-                          {detailLine}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Three-dot menu trigger */}
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setOpenMenuId(menuOpen ? null : s.id);
-                      }}
-                      style={{
-                        width: 28,
-                        height: 28,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        background: "none",
-                        border: "none",
-                        cursor: "pointer",
-                        color: colors.textFaint,
-                        borderRadius: 6,
-                        flexShrink: 0,
-                        padding: 0,
-                      }}
-                    >
-                      <MoreVertical size={15} />
-                    </button>
-                  </div>
-
-                  {/* Dropdown menu */}
-                  {menuOpen && (
-                    <div
-                      onClick={(e) => e.stopPropagation()}
-                      style={{
-                        position: "absolute",
-                        right: 10,
-                        top: "calc(100% + 4px)",
-                        background: colors.bgSidebar,
-                        border: `1px solid ${colors.border}`,
-                        borderRadius: 10,
-                        padding: "6px 0",
-                        minWidth: 188,
-                        zIndex: 60,
-                        boxShadow: `0 8px 24px rgba(0,0,0,0.25)`,
-                      }}
-                    >
-                      <button
-                        onClick={() => openEditModal(s)}
-                        style={{ width: "100%", padding: "9px 16px", background: "none", border: "none", cursor: "pointer", fontFamily: FONTS.sans, fontSize: 13.5, color: colors.textMuted, textAlign: "left", display: "block" }}
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => setOpenMenuId(null)}
-                        style={{ width: "100%", padding: "9px 16px", background: "none", border: "none", cursor: "pointer", fontFamily: FONTS.sans, fontSize: 13.5, color: colors.textMuted, textAlign: "left", display: "block" }}
-                      >
-                        {/* TODO: implement pause logic */}
-                        Pause for Today
-                      </button>
-                      <div style={{ height: 1, background: colors.borderFaint, margin: "4px 0" }} />
-                      <button
-                        onClick={() => { setDeleteTarget(s.id); setOpenMenuId(null); }}
-                        style={{ width: "100%", padding: "9px 16px", background: "none", border: "none", cursor: "pointer", fontFamily: FONTS.sans, fontSize: 13.5, color: colors.danger, textAlign: "left", display: "block" }}
-                      >
-                        Delete from Stack
-                      </button>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+      ) : (
+        <>
+          {/* MY STACK */}
+          <SectionLabel>My stack · {stackItems.length}</SectionLabel>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 24 }}>
+            {stackItems.map((s) => (
+              <SuppCard
+                key={s.id}
+                s={s}
+                isLogged={todaysLogs.includes(s.id)}
+                pending={pendingIds.has(s.id)}
+                streak={streaks[s.id] ?? 0}
+                menuOpen={openMenuId === s.id}
+                onCheck={() => handleCheck(s.id, todaysLogs.includes(s.id))}
+                onMenuToggle={() => setOpenMenuId(openMenuId === s.id ? null : s.id)}
+                onEdit={() => openEditModal(s)}
+                onDelete={() => { setDeleteTarget(s.id); setOpenMenuId(null); }}
+              />
+            ))}
+            {stackItems.length === 0 && (
+              <div style={{ padding: "16px", borderRadius: 12, background: SURFACE, border: `0.5px solid ${BORDER}`, color: TEXT_TER, fontSize: 13, textAlign: "center" }}>
+                Nothing in your stack yet.
+              </div>
+            )}
           </div>
 
-          {/* Save Stack */}
+          {/* RECOMMENDED BY NŪRA */}
+          {recommended.length > 0 && (
+            <>
+              <SectionLabel>Recommended by NŪRA · {recommended.length}</SectionLabel>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 24 }}>
+                {recommended.map((s) => (
+                  <SuppCard
+                    key={s.id}
+                    s={s}
+                    isLogged={todaysLogs.includes(s.id)}
+                    pending={pendingIds.has(s.id)}
+                    streak={streaks[s.id] ?? 0}
+                    menuOpen={openMenuId === s.id}
+                    expanded={expandedWhy.has(s.id)}
+                    isRecommended
+                    onCheck={() => handleCheck(s.id, todaysLogs.includes(s.id))}
+                    onMenuToggle={() => setOpenMenuId(openMenuId === s.id ? null : s.id)}
+                    onEdit={() => openEditModal(s)}
+                    onDelete={() => { setDeleteTarget(s.id); setOpenMenuId(null); }}
+                    onToggleWhy={() => {
+                      setExpandedWhy((prev) => {
+                        const next = new Set(prev);
+                        if (next.has(s.id)) next.delete(s.id); else next.add(s.id);
+                        return next;
+                      });
+                    }}
+                  />
+                ))}
+              </div>
+            </>
+          )}
+
+          {/* Save stack */}
           {supplements.length >= 2 && (
-            <div style={{ marginTop: 16 }}>
+            <div style={{ marginTop: 8 }}>
               {stackSaved ? (
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "10px 0" }}>
-                  <BookmarkCheck size={13} color={colors.mint} />
-                  <span style={{ fontFamily: FONTS.mono, fontSize: 9, fontWeight: 700, letterSpacing: "1px", color: colors.mint }}>
-                    STACK SAVED
-                  </span>
+                <div style={{ textAlign: "center", padding: "10px 0", fontSize: 11, color: SAGE, letterSpacing: "0.5px" }}>
+                  ✓ Stack saved
                 </div>
               ) : showStackForm ? (
-                <div style={{ padding: "12px 14px", background: colors.mintBgSubtle, border: `1px solid ${colors.mintBorder}`, borderRadius: 10 }}>
-                  <div style={{ fontFamily: FONTS.mono, fontSize: 8.5, color: colors.textFaint, letterSpacing: "1px", marginBottom: 8 }}>
-                    STACK SNAPSHOT TITLE
+                <div style={{ padding: 14, borderRadius: 12, background: SURFACE, border: `0.5px solid ${BORDER}` }}>
+                  <div style={{ fontFamily: SANS, fontSize: 10, color: TEXT_TER, letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: 8 }}>
+                    Snapshot title
                   </div>
-                  <div style={{ display: "flex", gap: 6 }}>
+                  <div style={{ display: "flex", gap: 8 }}>
                     <input
                       value={stackTitle}
                       onChange={(e) => setStackTitle(e.target.value)}
                       onKeyDown={(e) => { if (e.key === "Enter") handleSaveStack(); if (e.key === "Escape") setShowStackForm(false); }}
                       autoFocus
-                      style={{ flex: 1, padding: "7px 10px", background: colors.mintBgMedium, border: `1px solid ${colors.mintBorder}`, borderRadius: 7, fontFamily: FONTS.sans, fontSize: 13, color: colors.text, outline: "none" }}
+                      style={{
+                        flex: 1, padding: "9px 12px", borderRadius: 9,
+                        background: "rgba(235,230,216,0.06)", border: `0.5px solid ${BORDER}`,
+                        color: TEXT, fontFamily: SANS, fontSize: 13, outline: "none",
+                      }}
                     />
-                    <button
-                      onClick={handleSaveStack}
-                      disabled={stackSaving || !stackTitle.trim()}
-                      style={{ padding: "7px 14px", background: `linear-gradient(135deg, ${colors.mint}, ${colors.mintDeep})`, border: "none", borderRadius: 7, fontFamily: FONTS.mono, fontSize: 8.5, fontWeight: 700, color: colors.textOnAccent, cursor: "pointer", letterSpacing: "0.8px", opacity: stackSaving ? 0.5 : 1, whiteSpace: "nowrap" }}
-                    >
-                      {stackSaving ? "..." : "SAVE"}
-                    </button>
-                    <button
-                      onClick={() => setShowStackForm(false)}
-                      style={{ width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center", background: colors.mintBgSubtle, border: `1px solid ${colors.border}`, borderRadius: 7, cursor: "pointer", color: colors.textFaint, padding: 0, flexShrink: 0 }}
-                    >
-                      <X size={13} />
+                    <button onClick={handleSaveStack} disabled={stackSaving || !stackTitle.trim()} style={{
+                      padding: "9px 16px", borderRadius: 9, border: "none",
+                      background: SAGE, color: SAGE_ON,
+                      fontFamily: SANS, fontSize: 12, fontWeight: 500, cursor: "pointer",
+                      opacity: stackSaving ? 0.5 : 1, whiteSpace: "nowrap",
+                    }}>
+                      {stackSaving ? "…" : "Save"}
                     </button>
                   </div>
                 </div>
@@ -720,290 +358,359 @@ export default function SupplementsPage() {
                     setShowStackForm(true);
                   }}
                   style={{
-                    width: "100%", padding: "10px 0",
-                    background: "transparent",
-                    border: `1px solid ${colors.mintBorder}`,
-                    borderRadius: 10,
-                    fontFamily: FONTS.mono, fontSize: 9.5, fontWeight: 700,
-                    letterSpacing: "1px", color: colors.mint,
-                    cursor: "pointer",
+                    width: "100%", padding: "10px 0", borderRadius: 10,
+                    background: "transparent", border: `0.5px solid rgba(${SAGE_RGB},0.35)`,
+                    color: SAGE, fontFamily: SANS, fontSize: 12, fontWeight: 500, cursor: "pointer",
                   }}
                 >
-                  + SAVE CURRENT STACK
+                  + Save current stack
                 </button>
               )}
             </div>
           )}
-          </>
-        )}
-      </div>
+        </>
+      )}
 
-      {/* Menu close backdrop */}
-      {openMenuId && (
-        <div
-          onClick={() => setOpenMenuId(null)}
-          style={{ position: "fixed", inset: 0, zIndex: 55 }}
+      {/* Backdrop for closing menu */}
+      {openMenuId && <div onClick={() => setOpenMenuId(null)} style={{ position: "fixed", inset: 0, zIndex: 55 }} />}
+
+      {/* Add/Edit modal */}
+      {showModal && (
+        <SuppModal
+          mode={modalMode}
+          form={form}
+          setForm={setForm}
+          formError={formError}
+          submitting={submitting}
+          animated={modalAnimated}
+          onClose={closeModal}
+          onSubmit={handleSubmit}
         />
       )}
 
-      {/* Add / Edit modal */}
-      {showModal && (
-        <div
-          onClick={closeModal}
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: colors.overlay,
-            zIndex: 300,
-            display: "flex",
-            alignItems: "flex-end",
-            backdropFilter: "blur(6px)",
-          }}
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              width: "100%",
-              maxWidth: 480,
-              margin: "0 auto",
-              background: colors.bgSidebar,
-              borderRadius: "20px 20px 0 0",
-              border: `1px solid ${colors.mintBorder}`,
-              borderBottom: "none",
-              maxHeight: "92vh",
-              overflowY: "auto",
-              transform: modalAnimated ? "translateY(0)" : "translateY(100%)",
-              transition: "transform 0.35s cubic-bezier(0.4,0,0.2,1)",
-              paddingBottom: 32,
-            }}
-          >
-            {/* Drag handle */}
-            <div style={{ display: "flex", justifyContent: "center", padding: "12px 0 0" }}>
-              <div style={{ width: 36, height: 4, borderRadius: 2, background: colors.border }} />
-            </div>
-
-            {/* Modal header */}
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 20px 0" }}>
-              <span style={{ fontFamily: FONTS.serif, fontSize: 20, color: colors.text }}>
-                {modalMode === "add" ? "Add Supplement" : "Edit Supplement"}
-              </span>
-              <button
-                onClick={closeModal}
-                style={{ width: 30, height: 30, display: "flex", alignItems: "center", justifyContent: "center", background: colors.mintBgSubtle, border: `1px solid ${colors.border}`, borderRadius: 8, cursor: "pointer", color: colors.textMuted, padding: 0 }}
-              >
-                <X size={14} />
-              </button>
-            </div>
-
-            {/* Form body */}
-            <div style={{ padding: "20px 20px 0" }}>
-
-              {/* NAME */}
-              <div style={{ marginBottom: 16 }}>
-                <label style={labelStyle}>
-                  NAME <span style={{ color: colors.danger }}>*</span>
-                </label>
-                <input
-                  type="text"
-                  value={form.name}
-                  onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-                  placeholder="e.g. Magnesium Glycinate"
-                  style={{
-                    ...inputStyle,
-                    border: `1px solid ${formError && !form.name.trim() ? colors.danger : colors.border}`,
-                  }}
-                />
-              </div>
-
-              {/* DOSE */}
-              <div style={{ marginBottom: 16 }}>
-                <label style={labelStyle}>DOSE</label>
-                <input
-                  type="text"
-                  value={form.dose}
-                  onChange={(e) => setForm((f) => ({ ...f, dose: e.target.value }))}
-                  placeholder="e.g. 400mg"
-                  style={inputStyle}
-                />
-              </div>
-
-              {/* TIMING */}
-              <div style={{ marginBottom: 16 }}>
-                <label style={labelStyle}>TIMING</label>
-                <select
-                  value={form.timing}
-                  onChange={(e) => setForm((f) => ({ ...f, timing: e.target.value }))}
-                  style={{ ...inputStyle, appearance: "none", color: form.timing ? colors.text : colors.textFaint }}
-                >
-                  <option value="">Select timing...</option>
-                  {["AM", "PM", "With food", "Empty stomach", "Anytime"].map((t) => (
-                    <option key={t} value={t}>{t}</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* FREQUENCY chips */}
-              <div style={{ marginBottom: 16 }}>
-                <label style={labelStyle}>FREQUENCY</label>
-                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                  {[
-                    { value: "daily", label: "Daily" },
-                    { value: "every_other_day", label: "EOD" },
-                    { value: "weekly", label: "Weekly" },
-                    { value: "as_needed", label: "As needed" },
-                  ].map((opt) => {
-                    const active = form.frequency === opt.value;
-                    return (
-                      <button
-                        key={opt.value}
-                        type="button"
-                        onClick={() => setForm((f) => ({ ...f, frequency: opt.value }))}
-                        style={{
-                          padding: "6px 14px",
-                          borderRadius: 20,
-                          border: `1px solid ${active ? colors.mintBorderStrong : colors.border}`,
-                          background: active ? colors.mintBgMedium : "transparent",
-                          fontFamily: FONTS.mono,
-                          fontSize: 10,
-                          fontWeight: 600,
-                          letterSpacing: "0.06em",
-                          color: active ? colors.mint : colors.textFaint,
-                          cursor: "pointer",
-                          transition: "all 0.15s",
-                        }}
-                      >
-                        {opt.label}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* NOTES */}
-              <div style={{ marginBottom: 20 }}>
-                <label style={labelStyle}>NOTES</label>
-                <textarea
-                  value={form.notes}
-                  onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
-                  placeholder="Optional notes..."
-                  rows={3}
-                  style={{ ...inputStyle, resize: "none" }}
-                />
-              </div>
-
-              {/* Form error */}
-              {formError && (
-                <div style={{ fontFamily: FONTS.mono, fontSize: 10, color: colors.danger, letterSpacing: "0.06em", marginBottom: 12 }}>
-                  {formError}
-                </div>
-              )}
-
-              {/* Submit */}
-              <button
-                onClick={handleSubmit}
-                disabled={submitting}
-                style={{
-                  width: "100%",
-                  padding: "14px",
-                  background: submitting
-                    ? colors.mintBgMedium
-                    : `linear-gradient(135deg, ${colors.mint}, ${colors.mintDeep})`,
-                  border: "none",
-                  borderRadius: 12,
-                  fontFamily: FONTS.mono,
-                  fontSize: 12,
-                  fontWeight: 700,
-                  letterSpacing: "1px",
-                  textTransform: "uppercase",
-                  color: submitting ? colors.textFaint : colors.textOnAccent,
-                  cursor: submitting ? "not-allowed" : "pointer",
-                  transition: "all 0.2s",
-                }}
-              >
-                {submitting ? "SAVING..." : modalMode === "add" ? "ADD TO STACK" : "SAVE CHANGES"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Delete confirm dialog */}
+      {/* Delete confirm */}
       {deleteTarget && (
-        <div
-          onClick={() => !deleting && setDeleteTarget(null)}
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: colors.overlay,
-            zIndex: 400,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: 20,
-            backdropFilter: "blur(6px)",
-          }}
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              background: colors.bgSidebar,
-              border: `1px solid ${colors.dangerBorder}`,
-              borderRadius: 16,
-              padding: "24px 20px",
-              maxWidth: 320,
-              width: "100%",
-            }}
-          >
-            <h3 style={{ fontFamily: FONTS.serif, fontSize: 20, color: colors.text, margin: "0 0 8px", fontWeight: 400 }}>
-              Remove supplement?
-            </h3>
-            <p style={{ fontFamily: FONTS.sans, fontSize: 13, color: colors.textMuted, margin: "0 0 20px", lineHeight: 1.6 }}>
-              <strong style={{ color: colors.text }}>{deleteTargetName}</strong> and all its logs will be permanently removed from your stack.
+        <div onClick={() => !deleting && setDeleteTarget(null)} style={{
+          position: "fixed", inset: 0, zIndex: 400, background: "rgba(0,0,0,0.6)",
+          backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20,
+        }}>
+          <div onClick={(e) => e.stopPropagation()} style={{
+            background: "#0d0d0e", border: `1px solid rgba(212,87,77,0.4)`,
+            borderRadius: 14, padding: "22px 20px", maxWidth: 320, width: "100%",
+          }}>
+            <h3 style={{ fontFamily: SERIF, fontSize: 22, color: TEXT, margin: "0 0 8px", fontWeight: 500 }}>Remove supplement?</h3>
+            <p style={{ fontFamily: SANS, fontSize: 13, color: TEXT_SEC, margin: "0 0 20px", lineHeight: 1.6 }}>
+              <strong style={{ color: TEXT }}>{targetName}</strong> and all its logs will be permanently removed.
             </p>
             <div style={{ display: "flex", gap: 10 }}>
-              <button
-                onClick={() => setDeleteTarget(null)}
-                disabled={deleting}
-                style={{
-                  flex: 1,
-                  padding: 11,
-                  background: colors.mintBgSubtle,
-                  border: `1px solid ${colors.border}`,
-                  borderRadius: 10,
-                  fontFamily: FONTS.mono,
-                  fontSize: 11,
-                  fontWeight: 600,
-                  letterSpacing: "0.08em",
-                  color: colors.textMuted,
-                  cursor: "pointer",
-                }}
-              >
-                CANCEL
+              <button onClick={() => setDeleteTarget(null)} disabled={deleting} style={{
+                flex: 1, padding: "11px 0", borderRadius: 10,
+                background: SURFACE, border: `0.5px solid ${BORDER}`,
+                color: TEXT, fontFamily: SANS, fontSize: 13, fontWeight: 500, cursor: "pointer",
+              }}>
+                Cancel
               </button>
-              <button
-                onClick={handleDelete}
-                disabled={deleting}
-                style={{
-                  flex: 1,
-                  padding: 11,
-                  background: colors.dangerBg,
-                  border: `1px solid ${colors.dangerBorder}`,
-                  borderRadius: 10,
-                  fontFamily: FONTS.mono,
-                  fontSize: 11,
-                  fontWeight: 600,
-                  letterSpacing: "0.08em",
-                  color: colors.danger,
-                  cursor: deleting ? "not-allowed" : "pointer",
-                  opacity: deleting ? 0.6 : 1,
-                }}
-              >
-                {deleting ? "REMOVING..." : "REMOVE"}
+              <button onClick={handleDelete} disabled={deleting} style={{
+                flex: 1, padding: "11px 0", borderRadius: 10,
+                background: "rgba(212,87,77,0.12)", border: `1px solid rgba(212,87,77,0.4)`,
+                color: RED, fontFamily: SANS, fontSize: 13, fontWeight: 500,
+                cursor: deleting ? "not-allowed" : "pointer", opacity: deleting ? 0.6 : 1,
+              }}>
+                {deleting ? "Removing…" : "Remove"}
               </button>
             </div>
           </div>
         </div>
       )}
+    </NuraPageShell>
+  );
+}
+
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <div style={{
+      fontFamily: SANS, fontSize: 10, fontWeight: 600, letterSpacing: "1.5px",
+      color: TEXT_TER, textTransform: "uppercase", marginBottom: 10,
+    }}>{children}</div>
+  );
+}
+
+// ── Supplement card ──────────────────────────────────────────────────────────
+function SuppCard({
+  s, isLogged, pending, streak, menuOpen,
+  isRecommended = false, expanded = false,
+  onCheck, onMenuToggle, onEdit, onDelete, onToggleWhy,
+}: {
+  s: Supplement; isLogged: boolean; pending: boolean; streak: number; menuOpen: boolean;
+  isRecommended?: boolean; expanded?: boolean;
+  onCheck: () => void; onMenuToggle: () => void;
+  onEdit: () => void; onDelete: () => void; onToggleWhy?: () => void;
+}) {
+  return (
+    <div style={{
+      position: "relative", padding: "14px 16px", borderRadius: 14,
+      background: SURFACE, border: `0.5px solid ${BORDER}`,
+      borderLeft: isRecommended ? `2px solid ${SAGE}` : `0.5px solid ${BORDER}`,
+    }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        {/* Check button */}
+        <button
+          onClick={onCheck}
+          disabled={pending}
+          aria-label={isLogged ? "Mark as not taken" : "Mark as taken"}
+          style={{
+            width: 28, height: 28, borderRadius: 8, padding: 0, flexShrink: 0,
+            background: isLogged ? SAGE : "transparent",
+            border: `1.5px solid ${isLogged ? SAGE : "rgba(235,230,216,0.2)"}`,
+            cursor: pending ? "not-allowed" : "pointer",
+            opacity: pending ? 0.5 : 1,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            color: SAGE_ON, transition: "all 160ms",
+          }}
+        >
+          {isLogged && (
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M5 13l4 4L19 7"/>
+            </svg>
+          )}
+        </button>
+
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{
+            fontFamily: SANS, fontSize: 14, fontWeight: 500,
+            color: isLogged ? TEXT_SEC : TEXT,
+            textDecoration: isLogged ? "line-through" : "none",
+            overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+          }}>
+            {s.name}
+          </div>
+          <div style={{ fontFamily: SANS, fontSize: 11, color: TEXT_TER, marginTop: 3 }}>
+            {detailLine(s, streak)}
+          </div>
+        </div>
+
+        <button
+          onClick={(e) => { e.stopPropagation(); onMenuToggle(); }}
+          aria-label="Menu"
+          style={{
+            width: 28, height: 28, padding: 0, flexShrink: 0, borderRadius: 7,
+            background: "transparent", border: "none", cursor: "pointer", color: TEXT_TER,
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}
+        >
+          <span style={{ fontSize: 16, lineHeight: 1 }}>⋮</span>
+        </button>
+      </div>
+
+      {/* Why expandable for recommended */}
+      {isRecommended && s.recommendation_reason && onToggleWhy && (
+        <div style={{ marginTop: 10, paddingTop: 10, borderTop: `0.5px solid ${BORDER}` }}>
+          <button
+            onClick={onToggleWhy}
+            style={{
+              background: "none", border: "none", cursor: "pointer", padding: 0,
+              fontFamily: SANS, fontSize: 11, color: SAGE, fontWeight: 500, letterSpacing: "0.3px",
+              display: "flex", alignItems: "center", gap: 4,
+            }}
+          >
+            Why
+            <span style={{
+              display: "inline-block",
+              transition: "transform 200ms",
+              transform: expanded ? "rotate(180deg)" : "rotate(0deg)",
+            }}>
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M6 9l6 6 6-6"/>
+              </svg>
+            </span>
+          </button>
+          {expanded && (
+            <p style={{ fontFamily: SANS, fontSize: 12, color: TEXT_SEC, lineHeight: 1.6, margin: "8px 0 0" }}>
+              {s.recommendation_reason}
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* Dropdown menu */}
+      {menuOpen && (
+        <div onClick={(e) => e.stopPropagation()} style={{
+          position: "absolute", right: 10, top: "calc(100% + 4px)",
+          background: "#0d0d0e", border: `0.5px solid ${BORDER}`,
+          borderRadius: 10, padding: "6px 0", minWidth: 160, zIndex: 60,
+          boxShadow: "0 8px 24px rgba(0,0,0,0.5)",
+        }}>
+          <button onClick={onEdit} style={{
+            width: "100%", padding: "9px 14px", background: "none", border: "none", cursor: "pointer",
+            fontFamily: SANS, fontSize: 13, color: TEXT, textAlign: "left",
+          }}>
+            Edit
+          </button>
+          <div style={{ height: 0.5, background: BORDER, margin: "4px 0" }} />
+          <button onClick={onDelete} style={{
+            width: "100%", padding: "9px 14px", background: "none", border: "none", cursor: "pointer",
+            fontFamily: SANS, fontSize: 13, color: RED, textAlign: "left",
+          }}>
+            Delete
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Add/Edit Modal ────────────────────────────────────────────────────────────
+function SuppModal({
+  mode, form, setForm, formError, submitting, animated, onClose, onSubmit,
+}: {
+  mode: "add" | "edit"; form: FormState; setForm: React.Dispatch<React.SetStateAction<FormState>>;
+  formError: string; submitting: boolean; animated: boolean;
+  onClose: () => void; onSubmit: () => void;
+}) {
+  const inputStyle: React.CSSProperties = {
+    width: "100%", padding: "11px 12px", borderRadius: 10,
+    background: "rgba(235,230,216,0.06)", border: `0.5px solid ${BORDER}`,
+    color: TEXT, fontFamily: SANS, fontSize: 14, outline: "none",
+    boxSizing: "border-box",
+  };
+  const labelStyle: React.CSSProperties = {
+    display: "block", fontFamily: SANS, fontSize: 10, fontWeight: 600,
+    letterSpacing: "1.5px", textTransform: "uppercase", color: TEXT_TER, marginBottom: 6,
+  };
+
+  return (
+    <div onClick={onClose} style={{
+      position: "fixed", inset: 0, zIndex: 300, background: "rgba(0,0,0,0.6)",
+      backdropFilter: "blur(6px)", display: "flex", alignItems: "flex-end",
+    }}>
+      <div onClick={(e) => e.stopPropagation()} style={{
+        width: "100%", maxWidth: 600, margin: "0 auto",
+        background: "#0d0d0e", borderRadius: "18px 18px 0 0",
+        border: `0.5px solid ${BORDER}`, borderBottom: "none",
+        maxHeight: "92vh", overflowY: "auto",
+        transform: animated ? "translateY(0)" : "translateY(100%)",
+        transition: "transform 350ms cubic-bezier(0.32,0.72,0.34,1.01)",
+        paddingBottom: 32,
+      }}>
+        <div style={{ display: "flex", justifyContent: "center", padding: "12px 0 0" }}>
+          <div style={{ width: 36, height: 4, borderRadius: 2, background: BORDER }} />
+        </div>
+
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 22px 0" }}>
+          <span style={{ fontFamily: SERIF, fontSize: 22, color: TEXT, fontWeight: 500 }}>
+            {mode === "add" ? "Add supplement" : "Edit supplement"}
+          </span>
+          <button onClick={onClose} aria-label="Close" style={{
+            width: 32, height: 32, borderRadius: 9,
+            background: SURFACE, border: `0.5px solid ${BORDER}`, cursor: "pointer",
+            display: "flex", alignItems: "center", justifyContent: "center", color: TEXT_SEC, padding: 0,
+          }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M18 6L6 18M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+
+        <div style={{ padding: "20px 22px 0" }}>
+          <div style={{ marginBottom: 16 }}>
+            <label style={labelStyle}>Name <span style={{ color: RED }}>*</span></label>
+            <input
+              type="text" value={form.name}
+              onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+              placeholder="e.g. Magnesium Glycinate"
+              style={inputStyle}
+            />
+          </div>
+
+          <div style={{ marginBottom: 16 }}>
+            <label style={labelStyle}>Dose</label>
+            <input
+              type="text" value={form.dose}
+              onChange={(e) => setForm((f) => ({ ...f, dose: e.target.value }))}
+              placeholder="e.g. 400mg"
+              style={inputStyle}
+            />
+          </div>
+
+          <div style={{ marginBottom: 16 }}>
+            <label style={labelStyle}>Timing</label>
+            <select
+              value={form.timing}
+              onChange={(e) => setForm((f) => ({ ...f, timing: e.target.value }))}
+              style={{ ...inputStyle, appearance: "none", color: form.timing ? TEXT : TEXT_TER }}
+            >
+              <option value="">Select timing…</option>
+              {["AM", "PM", "With food", "Empty stomach", "Anytime"].map((t) => (
+                <option key={t} value={t}>{t}</option>
+              ))}
+            </select>
+          </div>
+
+          <div style={{ marginBottom: 16 }}>
+            <label style={labelStyle}>Frequency</label>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              {[
+                { value: "daily", label: "Daily" },
+                { value: "every_other_day", label: "EOD" },
+                { value: "weekly", label: "Weekly" },
+                { value: "as_needed", label: "As needed" },
+              ].map((opt) => {
+                const active = form.frequency === opt.value;
+                return (
+                  <button
+                    key={opt.value} type="button"
+                    onClick={() => setForm((f) => ({ ...f, frequency: opt.value }))}
+                    style={{
+                      padding: "7px 14px", borderRadius: 20,
+                      background: active ? `rgba(${SAGE_RGB},0.15)` : "transparent",
+                      border: `0.5px solid ${active ? `rgba(${SAGE_RGB},0.4)` : BORDER}`,
+                      color: active ? SAGE : TEXT_SEC,
+                      fontFamily: SANS, fontSize: 12, fontWeight: 500, cursor: "pointer",
+                      transition: "all 160ms",
+                    }}
+                  >
+                    {opt.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div style={{ marginBottom: 20 }}>
+            <label style={labelStyle}>Notes</label>
+            <textarea
+              value={form.notes}
+              onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
+              placeholder="Optional notes…"
+              rows={3}
+              style={{ ...inputStyle, resize: "none" }}
+            />
+          </div>
+
+          {formError && (
+            <div style={{
+              padding: "9px 12px", borderRadius: 9, marginBottom: 12,
+              background: "rgba(212,87,77,0.08)", border: `1px solid rgba(212,87,77,0.3)`,
+              color: RED, fontFamily: SANS, fontSize: 12,
+            }}>{formError}</div>
+          )}
+
+          <button
+            onClick={onSubmit}
+            disabled={submitting}
+            onMouseEnter={(e) => { if (!submitting) e.currentTarget.style.background = SAGE_HOV; }}
+            onMouseLeave={(e) => { if (!submitting) e.currentTarget.style.background = SAGE; }}
+            style={{
+              width: "100%", padding: "13px", borderRadius: 12, border: "none",
+              background: submitting ? `rgba(${SAGE_RGB},0.4)` : SAGE,
+              color: SAGE_ON, fontFamily: SANS, fontSize: 14, fontWeight: 500,
+              cursor: submitting ? "not-allowed" : "pointer", transition: "background 200ms",
+            }}
+          >
+            {submitting ? "Saving…" : mode === "add" ? "Add to stack" : "Save changes"}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
