@@ -1,227 +1,173 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import type { User } from "@supabase/supabase-js";
-import { Zap, Watch, Activity, Heart, MapPin, Bike, Smartphone } from "lucide-react";
-import { FONTS } from "@/lib/theme";
-import { useTheme } from "@/components/ThemeProvider";
-import Topbar from "@/components/Topbar";
-import Sidebar from "@/components/Sidebar";
-import BottomNav from "@/components/BottomNav";
+import { useSidebar } from "@/lib/sidebarStore";
 
-function CornerBrackets({ size = 10, color }: { size?: number; color?: string }) {
-  const { colors } = useTheme();
-  const c = color ?? colors.mint;
-  const s = `${size}px`;
-  const t = "2px";
+// ── Design tokens ─────────────────────────────────────────────────────────────
+const BG = "#0d0d0e";
+const TEXT = "#f0ebde";
+const TEXT_SEC = "rgba(235,230,216,0.55)";
+const BORDER = "rgba(235,230,216,0.09)";
+const SURFACE = "rgba(235,230,216,0.04)";
+const SAGE = "#9bb0a5";
+const SAGE_RGB = "155,176,165";
+const SANS = "'Inter', system-ui, sans-serif";
+const SERIF = "'DM Serif Display', Georgia, serif";
+
+// ── Plexus canvas (subtle, 30% opacity backdrop) ─────────────────────────────
+function PlexusBg() {
+  const ref = useRef<HTMLCanvasElement>(null);
+  useEffect(() => {
+    const canvas = ref.current;
+    if (!canvas) return;
+    let W = window.innerWidth, H = window.innerHeight;
+    const dpr = window.devicePixelRatio || 1;
+    const resize = () => {
+      W = window.innerWidth; H = window.innerHeight;
+      canvas.width = W * dpr; canvas.height = H * dpr;
+      canvas.style.width = `${W}px`; canvas.style.height = `${H}px`;
+      const c = canvas.getContext("2d"); if (c) c.setTransform(dpr, 0, 0, dpr, 0, 0);
+    };
+    resize();
+    window.addEventListener("resize", resize);
+    const ctx = canvas.getContext("2d")!;
+    const particles = Array.from({ length: 22 }, () => ({
+      x: Math.random() * W, y: Math.random() * H,
+      vx: (Math.random() - 0.5) * 0.14,
+      vy: -(0.06 + Math.random() * 0.14),
+      r: 0.6 + Math.random() * 1.2,
+    }));
+    let raf = 0;
+    const draw = () => {
+      ctx.clearRect(0, 0, W, H);
+      for (let i = 0; i < particles.length; i++) {
+        const p = particles[i];
+        p.x += p.vx; p.y += p.vy;
+        if (p.y < -10) { p.y = H + 10; p.x = Math.random() * W; }
+        if (p.x < -10) p.x = W + 10;
+        if (p.x > W + 10) p.x = -10;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${SAGE_RGB},0.38)`;
+        ctx.fill();
+        for (let j = i + 1; j < particles.length; j++) {
+          const q = particles[j];
+          const dx = p.x - q.x, dy = p.y - q.y;
+          const d = Math.sqrt(dx * dx + dy * dy);
+          if (d < 110) {
+            ctx.beginPath();
+            ctx.moveTo(p.x, p.y); ctx.lineTo(q.x, q.y);
+            ctx.strokeStyle = `rgba(${SAGE_RGB},${(1 - d / 110) * 0.12})`;
+            ctx.lineWidth = 0.5; ctx.stroke();
+          }
+        }
+      }
+      raf = requestAnimationFrame(draw);
+    };
+    draw();
+    return () => { cancelAnimationFrame(raf); window.removeEventListener("resize", resize); };
+  }, []);
   return (
-    <>
-      <div style={{ position: "absolute", top: 6, left: 6, width: s, height: s, borderTop: `${t} solid ${c}`, borderLeft: `${t} solid ${c}` }} />
-      <div style={{ position: "absolute", bottom: 6, right: 6, width: s, height: s, borderBottom: `${t} solid ${c}`, borderRight: `${t} solid ${c}` }} />
-    </>
+    <canvas ref={ref} style={{ position: "fixed", inset: 0, zIndex: 0, pointerEvents: "none", opacity: 0.3 }} />
   );
 }
-
-function MonoLabel({ children, color }: { children: React.ReactNode; color?: string }) {
-  const { colors } = useTheme();
-  return (
-    <span style={{ fontFamily: FONTS.mono, fontSize: 9, fontWeight: 600, letterSpacing: "1.4px", textTransform: "uppercase", color: color ?? colors.textFaint }}>
-      {children}
-    </span>
-  );
-}
-
-const CONNECTED = [
-  { name: "Oura Ring", Icon: Activity, description: "Sleep · HRV · Recovery", connected: true },
-  { name: "Apple Health", Icon: Heart, description: "Steps · Activity · Vitals", connected: true },
-];
-
-const AVAILABLE = [
-  { name: "Apple Watch", Icon: Watch, description: "HEART RATE · ECG · WORKOUTS" },
-  { name: "Whoop", Icon: Activity, description: "STRAIN · RECOVERY · SLEEP" },
-  { name: "Fitbit", Icon: Zap, description: "STEPS · SLEEP · STRESS" },
-  { name: "Garmin", Icon: MapPin, description: "GPS · VO2 MAX · TRAINING" },
-  { name: "Strava", Icon: Bike, description: "ACTIVITIES · SEGMENTS · POWER" },
-  { name: "Google Health", Icon: Smartphone, description: "HEALTH CONNECT · UNIFIED DATA" },
-];
 
 export default function IntegrationsPage() {
   const router = useRouter();
-  const { colors } = useTheme();
-  const [user, setUser] = useState<User | null>(null);
-  const [authLoading, setAuthLoading] = useState(true);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const openSidebar = useSidebar((s) => s.open);
 
+  const [initial, setInitial] = useState("?");
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) router.push("/auth");
-      else { setUser(user); setAuthLoading(false); }
+      if (!user) { router.push("/auth"); return; }
+      const meta = user.user_metadata as { name?: string; full_name?: string } | undefined;
+      const ch = (meta?.name ?? meta?.full_name ?? user.email ?? "?").trim().charAt(0).toUpperCase();
+      setInitial(ch);
     });
   }, [router]);
 
-  if (authLoading) {
-    return (
-      <div style={{ minHeight: "100vh", background: colors.bg, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: FONTS.mono, color: colors.textFaint, fontSize: 12, letterSpacing: "1.5px" }}>
-        LOADING...
-      </div>
-    );
-  }
-
-  const userName = user?.user_metadata?.name || user?.email?.split("@")[0] || "User";
-  const userInitial = userName.charAt(0).toUpperCase();
-
   return (
-    <div style={{ minHeight: "100vh", background: colors.bg, fontFamily: FONTS.sans }}>
+    <div style={{ minHeight: "100dvh", background: BG, position: "relative", overflow: "hidden", fontFamily: SANS, display: "flex", flexDirection: "column" }}>
       <style>{`
-        @keyframes live-pulse { 0%, 100% { opacity: 0.5; transform: scale(1); } 50% { opacity: 1; transform: scale(1.4); } }
-        * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
-        ::-webkit-scrollbar { width: 0; }
-        html, body { margin: 0; padding: 0; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        html, body { margin: 0; padding: 0; background: ${BG}; }
       `}</style>
 
-      <Topbar onMenuClick={() => setSidebarOpen(true)} />
-      <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} userName={userName} userInitial={userInitial} />
+      <PlexusBg />
 
-      <div style={{ padding: "20px 20px 100px", maxWidth: 480, margin: "0 auto" }}>
-        {/* Header */}
-        <div style={{ marginBottom: 24 }}>
-          <h1 style={{ fontFamily: FONTS.serif, fontSize: 26, fontWeight: 400, color: colors.text, margin: "0 0 4px" }}>
+      {/* Header */}
+      <header style={{
+        position: "relative", zIndex: 3, flexShrink: 0,
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        padding: "max(env(safe-area-inset-top), 16px) 18px 0",
+      }}>
+        <button
+          onClick={openSidebar}
+          aria-label="Menu"
+          style={{
+            width: 40, height: 40, borderRadius: 12,
+            background: SURFACE, border: `0.5px solid ${BORDER}`,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            cursor: "pointer", color: TEXT_SEC,
+          }}
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M4 6h16M4 12h16M4 18h16"/>
+          </svg>
+        </button>
+
+        <span style={{ fontFamily: SERIF, fontSize: 19, fontWeight: 500, color: SAGE, letterSpacing: "0.3px" }}>
+          nūra
+        </span>
+
+        <button
+          onClick={() => router.push("/settings")}
+          aria-label="Profile"
+          style={{
+            width: 40, height: 40, borderRadius: "50%",
+            background: `rgba(${SAGE_RGB},0.18)`, border: `0.5px solid rgba(${SAGE_RGB},0.35)`,
+            color: SAGE, fontFamily: SANS, fontSize: 14, fontWeight: 500,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            cursor: "pointer",
+          }}
+        >
+          {initial}
+        </button>
+      </header>
+
+      {/* Centered content */}
+      <main style={{
+        position: "relative", zIndex: 2, flex: 1,
+        display: "flex", flexDirection: "column",
+        justifyContent: "center", alignItems: "center",
+        padding: "32px 24px",
+        textAlign: "center",
+      }}>
+        <div style={{ maxWidth: 420 }}>
+          {/* ti-device-watch sage icon */}
+          <div style={{
+            width: 64, height: 64, borderRadius: 18, margin: "0 auto 22px",
+            background: `rgba(${SAGE_RGB},0.1)`, border: `0.5px solid rgba(${SAGE_RGB},0.3)`,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            color: SAGE,
+          }}>
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="6" y="6" width="12" height="12" rx="3"/>
+              <path d="M9 4l1-2h4l1 2M9 20l1 2h4l1-2"/>
+            </svg>
+          </div>
+
+          <h1 style={{ fontFamily: SERIF, fontSize: 40, fontWeight: 500, color: TEXT, margin: "0 0 14px", lineHeight: 1.15, letterSpacing: "-0.5px" }}>
             Integrations
           </h1>
-          <MonoLabel color={colors.textFaint}>CONNECT YOUR DEVICES & APPS</MonoLabel>
-        </div>
 
-        {/* Connected section */}
-        <div style={{ marginBottom: 24 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-            <MonoLabel color={colors.mint}>CONNECTED</MonoLabel>
-            <div style={{ width: 20, height: 16, background: colors.mintBgMedium, border: `1px solid ${colors.mintBorder}`, borderRadius: 4, display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <MonoLabel color={colors.mint}>{CONNECTED.length}</MonoLabel>
-            </div>
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            {CONNECTED.map((item) => {
-              const Icon = item.Icon;
-              return (
-                <div
-                  key={item.name}
-                  style={{
-                    position: "relative",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 14,
-                    padding: "16px",
-                    background: `linear-gradient(135deg, ${colors.mintBgSubtle}, ${colors.mintBgSubtle})`,
-                    border: `1px solid ${colors.mintBorder}`,
-                    borderRadius: 12,
-                  }}
-                >
-                  <CornerBrackets size={8} />
-                  <div
-                    style={{
-                      width: 44,
-                      height: 44,
-                      borderRadius: 10,
-                      background: colors.mintBgMedium,
-                      border: `1px solid ${colors.mintBorder}`,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      flexShrink: 0,
-                    }}
-                  >
-                    <Icon size={20} color={colors.mint} />
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontFamily: FONTS.sans, fontSize: 14, fontWeight: 600, color: colors.text, marginBottom: 3 }}>
-                      {item.name}
-                    </div>
-                    <MonoLabel color={colors.textFaint}>{item.description}</MonoLabel>
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                    <div style={{ width: 6, height: 6, borderRadius: "50%", background: colors.mint, animation: "live-pulse 2s ease-in-out infinite" }} />
-                    <MonoLabel color={colors.mint}>LIVE</MonoLabel>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+          <p style={{ fontSize: 14, color: TEXT_SEC, lineHeight: 1.65, margin: 0 }}>
+            Connect Oura, Apple Health, Fitbit, Whoop and more — coming soon.
+          </p>
         </div>
-
-        {/* Available section */}
-        <div>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-            <MonoLabel color={colors.textMuted}>AVAILABLE</MonoLabel>
-            <div style={{ width: 20, height: 16, background: colors.mintBgSubtle, border: `1px solid ${colors.border}`, borderRadius: 4, display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <MonoLabel color={colors.textFaint}>{AVAILABLE.length}</MonoLabel>
-            </div>
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            {AVAILABLE.map((item) => {
-              const Icon = item.Icon;
-              return (
-                <div
-                  key={item.name}
-                  style={{
-                    position: "relative",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 14,
-                    padding: "14px 16px",
-                    background: colors.mintBgSubtle,
-                    border: `1px solid ${colors.border}`,
-                    borderRadius: 12,
-                  }}
-                >
-                  <div
-                    style={{
-                      width: 40,
-                      height: 40,
-                      borderRadius: 10,
-                      background: colors.mintBgSubtle,
-                      border: `1px solid ${colors.border}`,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      flexShrink: 0,
-                    }}
-                  >
-                    <Icon size={18} color={colors.textDim} />
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontFamily: FONTS.sans, fontSize: 13.5, fontWeight: 500, color: colors.textMuted, marginBottom: 3 }}>
-                      {item.name}
-                    </div>
-                    <MonoLabel color={colors.textGhost}>{item.description}</MonoLabel>
-                  </div>
-                  <button
-                    style={{
-                      padding: "6px 12px",
-                      background: "transparent",
-                      border: `1px solid ${colors.mintBorder}`,
-                      borderRadius: 6,
-                      fontFamily: FONTS.mono,
-                      fontSize: 9,
-                      fontWeight: 700,
-                      color: colors.mint,
-                      letterSpacing: "1px",
-                      cursor: "pointer",
-                      textTransform: "uppercase",
-                      flexShrink: 0,
-                    }}
-                  >
-                    CONNECT
-                  </button>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-
-      <BottomNav />
+      </main>
     </div>
   );
 }
