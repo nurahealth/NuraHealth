@@ -3,14 +3,14 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-const BG = "#0d0d0e";
-const TEXT = "#f0ebde";
-const TEXT_SEC = "rgba(235,230,216,0.55)";
-const TEXT_TER = "rgba(235,230,216,0.4)";
-const BORDER = "rgba(235,230,216,0.09)";
-const SAGE = "#9bb0a5";
-const SAGE_HOV = "#abc0b5";
-const SAGE_ON = "#0d0d0e";
+const BG = "var(--nura-bg)";
+const TEXT = "var(--nura-text-primary)";
+const TEXT_SEC = "var(--nura-text-secondary)";
+const TEXT_TER = "var(--nura-text-tertiary)";
+const BORDER = "var(--nura-border)";
+const SAGE = "var(--nura-sage)";
+const SAGE_HOV = "var(--nura-sage-hover)";
+const SAGE_ON = "var(--nura-bg)";
 const SANS = "'Inter', system-ui, sans-serif";
 const MONO = "'JetBrains Mono', monospace";
 
@@ -31,7 +31,7 @@ export default function UpgradeCancelPage() {
 
       <div style={{ maxWidth: 360, width: "100%", animation: "fade-up 400ms ease both" }}>
         {/* Icon */}
-        <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 64, height: 64, borderRadius: "50%", background: "rgba(235,230,216,0.04)", border: `1px solid ${BORDER}`, marginBottom: 24 }}>
+        <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 64, height: 64, borderRadius: "50%", background: "var(--nura-surface)", border: `1px solid ${BORDER}`, marginBottom: 24 }}>
           <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke={TEXT_TER} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
             <circle cx="12" cy="12" r="10"/>
             <line x1="15" y1="9" x2="9" y2="15"/>

@@ -5,17 +5,18 @@ import { useRouter } from "next/navigation";
 import ReactMarkdown from "react-markdown";
 import { supabase } from "@/lib/supabase";
 import { useSidebar } from "@/lib/sidebarStore";
+import { useThemeStore } from "@/lib/themeStore";
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
-const BG = "#0d0d0e";
-const TEXT = "#f0ebde";
-const TEXT_SEC = "rgba(235,230,216,0.55)";
-const TEXT_TER = "rgba(235,230,216,0.4)";
-const BORDER = "rgba(235,230,216,0.09)";
-const SURFACE = "rgba(235,230,216,0.04)";
-const SAGE = "#9bb0a5";
-const SAGE_HOV = "#abc0b5";
-const SAGE_ON = "#0d0d0e";
+const BG = "var(--nura-bg)";
+const TEXT = "var(--nura-text-primary)";
+const TEXT_SEC = "var(--nura-text-secondary)";
+const TEXT_TER = "var(--nura-text-tertiary)";
+const BORDER = "var(--nura-border)";
+const SURFACE = "var(--nura-surface)";
+const SAGE = "var(--nura-sage)";
+const SAGE_HOV = "var(--nura-sage-hover)";
+const SAGE_ON = "var(--nura-bg)";
 const SAGE_RGB = "155,176,165";
 const SANS = "'Inter', system-ui, sans-serif";
 const SERIF = "'DM Serif Display', Georgia, serif";
@@ -30,9 +31,14 @@ interface ChatMessage {
 // ── Subtle plexus canvas (smaller, slower for chat backdrop) ─────────────────
 function ChatPlexus() {
   const ref = useRef<HTMLCanvasElement>(null);
+  const theme = useThemeStore((s) => s.theme);
   useEffect(() => {
     const canvas = ref.current;
     if (!canvas) return;
+
+    const sageRgb = theme === "light" ? "125,147,133" : "155,176,165";
+    const particleAlpha = theme === "light" ? 0.52 : 0.32;
+    const linkAlphaMax = theme === "light" ? 0.18 : 0.10;
 
     let W = window.innerWidth, H = window.innerHeight;
     const dpr = window.devicePixelRatio || 1;
@@ -65,7 +71,7 @@ function ChatPlexus() {
         if (p.y < 0 || p.y > H) p.vy *= -1;
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(${SAGE_RGB},0.32)`;
+        ctx.fillStyle = `rgba(${sageRgb},${particleAlpha})`;
         ctx.fill();
         for (let j = i + 1; j < particles.length; j++) {
           const q = particles[j];
@@ -74,7 +80,7 @@ function ChatPlexus() {
           if (d < 130) {
             ctx.beginPath();
             ctx.moveTo(p.x, p.y); ctx.lineTo(q.x, q.y);
-            ctx.strokeStyle = `rgba(${SAGE_RGB},${(1 - d / 130) * 0.1})`;
+            ctx.strokeStyle = `rgba(${sageRgb},${(1 - d / 130) * linkAlphaMax})`;
             ctx.lineWidth = 0.5; ctx.stroke();
           }
         }
@@ -83,7 +89,7 @@ function ChatPlexus() {
     };
     draw();
     return () => { cancelAnimationFrame(raf); window.removeEventListener("resize", resize); };
-  }, []);
+  }, [theme]);
   return (
     <canvas ref={ref} style={{ position: "fixed", inset: 0, zIndex: 0, pointerEvents: "none", opacity: 0.35 }} />
   );
@@ -129,8 +135,8 @@ function ActionBtn({ icon, onClick, active, label }: {
       onMouseLeave={() => setHov(false)}
       style={{
         width: 30, height: 30, borderRadius: 8, border: "none",
-        background: hov ? `rgba(${SAGE_RGB},0.08)` : "transparent",
-        color: active ? SAGE : hov ? SAGE : "rgba(235,230,216,0.45)",
+        background: hov ? `rgba(var(--nura-sage-rgb),0.08)` : "transparent",
+        color: active ? SAGE : hov ? SAGE : "rgba(var(--nura-fg-rgb),0.45)",
         display: "flex", alignItems: "center", justifyContent: "center",
         cursor: "pointer", transition: "all 160ms",
       }}
@@ -161,7 +167,7 @@ const MD = {
     </li>
   ),
   code: ({ children }: { children?: React.ReactNode }) => (
-    <code style={{ background: `rgba(${SAGE_RGB},0.15)`, color: SAGE, padding: "1px 5px", borderRadius: 3, fontSize: "0.85em", fontFamily: "'JetBrains Mono', monospace" }}>{children}</code>
+    <code style={{ background: "var(--nura-surface-elevated)", color: SAGE, padding: "1px 5px", borderRadius: 3, fontSize: "0.85em", fontFamily: "'JetBrains Mono', monospace" }}>{children}</code>
   ),
   a: ({ href, children }: { href?: string; children?: React.ReactNode }) => (
     <a href={href} target="_blank" rel="noopener noreferrer" style={{ color: SAGE, textDecoration: "none" }}
@@ -335,7 +341,7 @@ export default function ChatSessionPage({ params }: { params: Promise<{ sessionI
         display: "flex", alignItems: "center", justifyContent: "space-between",
         padding: "max(env(safe-area-inset-top), 8px) 22px 18px",
         background: "rgba(13,13,14,0.82)", backdropFilter: "blur(10px)",
-        borderBottom: `0.5px solid rgba(235,230,216,0.06)`,
+        borderBottom: `0.5px solid rgba(var(--nura-bg-tint-rgb),0.06)`,
       }}>
         <button
           onClick={openSidebar}
@@ -359,8 +365,8 @@ export default function ChatSessionPage({ params }: { params: Promise<{ sessionI
           aria-label="Bookmark conversation"
           style={{
             width: 38, height: 38, borderRadius: 11,
-            background: chatBookmarked ? `rgba(${SAGE_RGB},0.12)` : SURFACE,
-            border: `0.5px solid ${chatBookmarked ? `rgba(${SAGE_RGB},0.35)` : BORDER}`,
+            background: chatBookmarked ? `rgba(var(--nura-sage-rgb),0.12)` : SURFACE,
+            border: `0.5px solid ${chatBookmarked ? `rgba(var(--nura-sage-rgb),0.35)` : BORDER}`,
             display: "flex", alignItems: "center", justifyContent: "center",
             cursor: "pointer", color: chatBookmarked ? SAGE : TEXT_SEC,
           }}
@@ -395,12 +401,12 @@ export default function ChatSessionPage({ params }: { params: Promise<{ sessionI
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                   <div style={{
                     width: 18, height: 18, borderRadius: "50%",
-                    background: `rgba(${SAGE_RGB},0.18)`, border: `0.5px solid rgba(${SAGE_RGB},0.4)`,
+                    background: `rgba(var(--nura-sage-rgb),0.18)`, border: `0.5px solid rgba(var(--nura-sage-rgb),0.4)`,
                     display: "flex", alignItems: "center", justifyContent: "center",
                   }}>
                     <div style={{ width: 6, height: 6, borderRadius: "50%", background: SAGE }} />
                   </div>
-                  <span style={{ fontSize: 10, fontWeight: 500, letterSpacing: "1.2px", color: `rgba(${SAGE_RGB},0.85)`, textTransform: "uppercase" }}>
+                  <span style={{ fontSize: 10, fontWeight: 500, letterSpacing: "1.2px", color: `rgba(var(--nura-sage-rgb),0.85)`, textTransform: "uppercase" }}>
                     NŪRA
                   </span>
                 </div>
@@ -443,10 +449,10 @@ export default function ChatSessionPage({ params }: { params: Promise<{ sessionI
           {sending && (
             <div style={{ alignSelf: "flex-start", maxWidth: "88%", display: "flex", flexDirection: "column", gap: 6, animation: "msg-in 240ms ease both" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <div style={{ width: 18, height: 18, borderRadius: "50%", background: `rgba(${SAGE_RGB},0.18)`, border: `0.5px solid rgba(${SAGE_RGB},0.4)`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <div style={{ width: 18, height: 18, borderRadius: "50%", background: `rgba(var(--nura-sage-rgb),0.18)`, border: `0.5px solid rgba(var(--nura-sage-rgb),0.4)`, display: "flex", alignItems: "center", justifyContent: "center" }}>
                   <div style={{ width: 6, height: 6, borderRadius: "50%", background: SAGE }} />
                 </div>
-                <span style={{ fontSize: 10, fontWeight: 500, letterSpacing: "1.2px", color: `rgba(${SAGE_RGB},0.85)`, textTransform: "uppercase" }}>NŪRA</span>
+                <span style={{ fontSize: 10, fontWeight: 500, letterSpacing: "1.2px", color: `rgba(var(--nura-sage-rgb),0.85)`, textTransform: "uppercase" }}>NŪRA</span>
               </div>
               <div style={{
                 background: SURFACE, border: `0.5px solid ${BORDER}`,
@@ -480,7 +486,7 @@ export default function ChatSessionPage({ params }: { params: Promise<{ sessionI
       {toast && (
         <div style={{
           position: "fixed", bottom: 110, left: "50%", transform: "translateX(-50%)",
-          background: "rgba(20,20,21,0.95)", border: `0.5px solid rgba(${SAGE_RGB},0.3)`,
+          background: "rgba(20,20,21,0.95)", border: `0.5px solid rgba(var(--nura-sage-rgb),0.3)`,
           color: TEXT, padding: "8px 14px", borderRadius: 20, fontSize: 12,
           zIndex: 60, animation: "toast-in 220ms ease both",
         }}>
@@ -498,8 +504,8 @@ export default function ChatSessionPage({ params }: { params: Promise<{ sessionI
         <div style={{ maxWidth: 720, margin: "0 auto" }}>
           <div style={{
             display: "flex", alignItems: "center", gap: 2,
-            background: focused ? "rgba(235,230,216,0.06)" : SURFACE,
-            border: `0.5px solid ${focused ? `rgba(${SAGE_RGB},0.5)` : "rgba(235,230,216,0.12)"}`,
+            background: focused ? "var(--nura-surface-elevated)" : SURFACE,
+            border: `0.5px solid ${focused ? `rgba(var(--nura-sage-rgb),0.5)` : "rgba(var(--nura-bg-tint-rgb),0.12)"}`,
             borderRadius: 14, padding: 6,
             transition: "background 200ms, border-color 200ms",
           }}>
@@ -510,7 +516,7 @@ export default function ChatSessionPage({ params }: { params: Promise<{ sessionI
               aria-label="Attach"
               style={{
                 width: 38, height: 38, borderRadius: 9, border: "none",
-                background: hovAttach ? `rgba(${SAGE_RGB},0.08)` : "transparent",
+                background: hovAttach ? `rgba(var(--nura-sage-rgb),0.08)` : "transparent",
                 color: hovAttach ? SAGE : TEXT_SEC,
                 display: "flex", alignItems: "center", justifyContent: "center",
                 cursor: "pointer", flexShrink: 0, transition: "all 200ms",
@@ -541,7 +547,7 @@ export default function ChatSessionPage({ params }: { params: Promise<{ sessionI
               aria-label={recording ? "Stop recording" : "Voice input"}
               style={{
                 width: 38, height: 38, borderRadius: 9, border: "none",
-                background: recording ? "rgba(255,76,92,0.12)" : hovMic ? `rgba(${SAGE_RGB},0.08)` : "transparent",
+                background: recording ? "rgba(255,76,92,0.12)" : hovMic ? `rgba(var(--nura-sage-rgb),0.08)` : "transparent",
                 color: recording ? "#ff4c5c" : hovMic ? SAGE : TEXT_SEC,
                 display: "flex", alignItems: "center", justifyContent: "center",
                 cursor: "pointer", flexShrink: 0, transition: "all 200ms",
@@ -559,7 +565,7 @@ export default function ChatSessionPage({ params }: { params: Promise<{ sessionI
               aria-label="Send"
               style={{
                 width: 38, height: 38, borderRadius: 11, border: "none",
-                background: (sending || !value.trim()) ? `rgba(${SAGE_RGB},0.4)` : hovSend ? SAGE_HOV : SAGE,
+                background: (sending || !value.trim()) ? `rgba(var(--nura-sage-rgb),0.4)` : hovSend ? SAGE_HOV : SAGE,
                 color: SAGE_ON,
                 display: "flex", alignItems: "center", justifyContent: "center",
                 cursor: (sending || !value.trim()) ? "not-allowed" : "pointer",
@@ -570,7 +576,7 @@ export default function ChatSessionPage({ params }: { params: Promise<{ sessionI
             </button>
           </div>
 
-          <p style={{ textAlign: "center", margin: "8px 0 0", fontSize: 9.5, color: "rgba(235,230,216,0.32)" }}>
+          <p style={{ textAlign: "center", margin: "8px 0 0", fontSize: 9.5, color: "rgba(var(--nura-fg-rgb),0.32)" }}>
             NŪRA provides wellness information, not medical advice.
           </p>
         </div>

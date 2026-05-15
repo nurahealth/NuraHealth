@@ -8,6 +8,14 @@ export const metadata: Metadata = {
   description: "Unfiltered AI wellness platform",
 };
 
+// Pre-hydration script — sets data-theme before React renders to prevent FOUC.
+const THEME_INIT_SCRIPT = `
+try {
+  var t = localStorage.getItem('nura-theme');
+  if (t === 'light') document.documentElement.setAttribute('data-theme', 'light');
+} catch(e) {}
+`;
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -16,6 +24,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
@@ -23,7 +32,7 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body style={{ margin: 0, padding: 0, background: "#000814", minHeight: "100vh" }}>
+      <body style={{ margin: 0, padding: 0, minHeight: "100vh" }}>
         <ThemeProvider>
           {children}
           <AppSidebar />

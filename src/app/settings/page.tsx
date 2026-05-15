@@ -5,19 +5,19 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import type { User } from "@supabase/supabase-js";
 import NuraPageShell from "@/components/NuraPageShell";
-import { useDarkMode } from "@/lib/sidebarStore";
+import { useThemeStore } from "@/lib/themeStore";
 
 // ── Tokens ────────────────────────────────────────────────────────────────────
-const TEXT = "#f0ebde";
-const TEXT_SEC = "rgba(235,230,216,0.55)";
-const TEXT_TER = "rgba(235,230,216,0.4)";
-const BORDER = "rgba(235,230,216,0.09)";
-const SURFACE = "rgba(235,230,216,0.04)";
-const SAGE = "#9bb0a5";
-const SAGE_HOV = "#abc0b5";
-const SAGE_ON = "#0d0d0e";
+const TEXT = "var(--nura-text-primary)";
+const TEXT_SEC = "var(--nura-text-secondary)";
+const TEXT_TER = "var(--nura-text-tertiary)";
+const BORDER = "var(--nura-border)";
+const SURFACE = "var(--nura-surface)";
+const SAGE = "var(--nura-sage)";
+const SAGE_HOV = "var(--nura-sage-hover)";
+const SAGE_ON = "var(--nura-bg)";
 const SAGE_RGB = "155,176,165";
-const RED = "#d4574d";
+const RED = "var(--nura-danger)";
 const SANS = "'Inter', system-ui, sans-serif";
 const SERIF = "'DM Serif Display', Georgia, serif";
 
@@ -66,8 +66,8 @@ const GOAL_LABELS: Record<string, string> = {
 // ── Page ──────────────────────────────────────────────────────────────────────
 export default function SettingsPage() {
   const router = useRouter();
-  const darkOn = useDarkMode((s) => s.enabled);
-  const toggleDark = useDarkMode((s) => s.toggle);
+  const theme = useThemeStore((s) => s.theme);
+  const setTheme = useThemeStore((s) => s.setTheme);
 
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
@@ -164,7 +164,7 @@ export default function SettingsPage() {
         <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 14 }}>
           <div style={{
             width: 56, height: 56, borderRadius: "50%", flexShrink: 0,
-            background: `rgba(${SAGE_RGB},0.18)`, border: `0.5px solid rgba(${SAGE_RGB},0.4)`,
+            background: `rgba(var(--nura-sage-rgb),0.18)`, border: `0.5px solid rgba(var(--nura-sage-rgb),0.4)`,
             display: "flex", alignItems: "center", justifyContent: "center",
             fontFamily: SANS, fontSize: 18, fontWeight: 500, color: SAGE,
           }}>
@@ -198,8 +198,8 @@ export default function SettingsPage() {
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
           <span style={{
             padding: "3px 9px", borderRadius: 5,
-            background: isPro ? `rgba(${SAGE_RGB},0.16)` : "rgba(235,230,216,0.06)",
-            border: `0.5px solid ${isPro ? `rgba(${SAGE_RGB},0.4)` : BORDER}`,
+            background: isPro ? `rgba(var(--nura-sage-rgb),0.16)` : "var(--nura-surface-elevated)",
+            border: `0.5px solid ${isPro ? `rgba(var(--nura-sage-rgb),0.4)` : BORDER}`,
             fontFamily: SANS, fontSize: 10, fontWeight: 700, letterSpacing: "0.8px",
             color: isPro ? SAGE : TEXT_TER, textTransform: "uppercase",
           }}>
@@ -216,7 +216,7 @@ export default function SettingsPage() {
           </div>
         )}
         {subStatus?.cancel_at_period_end && (
-          <div style={{ fontFamily: SANS, fontSize: 13, color: "#d4a574", marginBottom: 16, lineHeight: 1.5 }}>
+          <div style={{ fontFamily: SANS, fontSize: 13, color: "var(--nura-watch)", marginBottom: 16, lineHeight: 1.5 }}>
             Cancels at end of billing period
           </div>
         )}
@@ -243,17 +243,10 @@ export default function SettingsPage() {
       {/* APPEARANCE CARD */}
       <Card>
         <CardLabel>Appearance</CardLabel>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 11 }}>
-            <span style={{ color: TEXT_SEC, display: "flex", lineHeight: 0 }}>
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z"/>
-              </svg>
-            </span>
-            <span style={{ fontFamily: SANS, fontSize: 14, color: TEXT }}>Dark mode</span>
-          </div>
-          <Toggle on={darkOn} onClick={toggleDark} />
+        <div style={{ marginBottom: 8, fontFamily: SANS, fontSize: 13, color: TEXT_SEC }}>
+          Theme
         </div>
+        <ThemeSegmented value={theme} onChange={setTheme} />
       </Card>
 
       {/* PROFILE DATA CARD */}
@@ -340,7 +333,7 @@ function SageButton({ label, onClick, disabled }: { label: string; onClick: () =
       onMouseLeave={(e) => { if (!disabled) e.currentTarget.style.background = SAGE; }}
       style={{
         padding: "10px 18px", borderRadius: 11, border: "none",
-        background: disabled ? `rgba(${SAGE_RGB},0.4)` : SAGE,
+        background: disabled ? `rgba(var(--nura-sage-rgb),0.4)` : SAGE,
         color: SAGE_ON, fontFamily: SANS, fontSize: 13, fontWeight: 500,
         cursor: disabled ? "not-allowed" : "pointer", transition: "background 200ms",
       }}
@@ -350,24 +343,44 @@ function SageButton({ label, onClick, disabled }: { label: string; onClick: () =
   );
 }
 
-function Toggle({ on, onClick }: { on: boolean; onClick: () => void }) {
+function ThemeSegmented({ value, onChange }: { value: "dark" | "light"; onChange: (t: "dark" | "light") => void }) {
+  const options: { id: "dark" | "light"; label: string }[] = [
+    { id: "dark", label: "Dark" },
+    { id: "light", label: "Light" },
+  ];
+  const idx = Math.max(0, options.findIndex((o) => o.id === value));
+  const pct = (idx / options.length) * 100;
+  const w = 100 / options.length;
   return (
-    <button
-      onClick={onClick}
-      aria-pressed={on}
-      style={{
-        width: 36, height: 20, borderRadius: 10, padding: 0, border: "none",
-        background: on ? SAGE : "rgba(235,230,216,0.12)",
-        position: "relative", flexShrink: 0, cursor: "pointer",
-        transition: "background 200ms",
-      }}
-    >
-      <span style={{
-        position: "absolute", top: 2, left: on ? 18 : 2,
-        width: 16, height: 16, borderRadius: "50%", background: "#fff",
+    <div style={{
+      position: "relative", display: "flex",
+      background: SURFACE, border: `1px solid ${BORDER}`,
+      borderRadius: 12, overflow: "hidden",
+    }}>
+      <div style={{
+        position: "absolute", top: 3, bottom: 3,
+        width: `calc(${w}% - 6px)`,
+        left: `calc(${pct}% + 3px)`,
+        background: SAGE, borderRadius: 9,
         transition: "left 200ms cubic-bezier(0.4,0,0.2,1)",
+        pointerEvents: "none",
       }} />
-    </button>
+      {options.map((opt) => (
+        <button key={opt.id}
+          onClick={() => onChange(opt.id)}
+          aria-pressed={value === opt.id}
+          style={{
+            flex: 1, padding: "11px 4px", background: "none", border: "none",
+            color: value === opt.id ? SAGE_ON : TEXT_SEC,
+            fontSize: 13, fontFamily: SANS, fontWeight: 500, cursor: "pointer",
+            position: "relative", zIndex: 1,
+            transition: "color 200ms cubic-bezier(0.4,0,0.2,1)",
+          }}
+        >
+          {opt.label}
+        </button>
+      ))}
+    </div>
   );
 }
 

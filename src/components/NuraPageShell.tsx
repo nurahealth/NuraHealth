@@ -3,8 +3,8 @@
 import NuraHeader from "./NuraHeader";
 import NuraPlexus from "./NuraPlexus";
 
-const BG = "#0d0d0e";
-const TEXT = "#f0ebde";
+const BG = "var(--nura-bg)";
+const TEXT = "var(--nura-text-primary)";
 const SANS = "'Inter', system-ui, sans-serif";
 
 interface Props {

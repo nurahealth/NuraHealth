@@ -4,13 +4,13 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 
-const BG = "#0d0d0e";
-const TEXT = "#f0ebde";
-const TEXT_SEC = "rgba(235,230,216,0.55)";
-const TEXT_TER = "rgba(235,230,216,0.4)";
-const BORDER = "rgba(235,230,216,0.09)";
-const SAGE = "#9bb0a5";
-const SAGE_ON = "#0d0d0e";
+const BG = "var(--nura-bg)";
+const TEXT = "var(--nura-text-primary)";
+const TEXT_SEC = "var(--nura-text-secondary)";
+const TEXT_TER = "var(--nura-text-tertiary)";
+const BORDER = "var(--nura-border)";
+const SAGE = "var(--nura-sage)";
+const SAGE_ON = "var(--nura-bg)";
 const SAGE_RGB = "155,176,165";
 const SANS = "'Inter', system-ui, sans-serif";
 const MONO = "'JetBrains Mono', monospace";
@@ -102,8 +102,8 @@ function SuccessContent() {
         {/* ── Syncing ── */}
         {syncState === "syncing" && (
           <div style={{ animation: "fade-up 400ms ease both" }}>
-            <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 64, height: 64, borderRadius: "50%", background: `rgba(${SAGE_RGB},0.1)`, border: `1px solid rgba(${SAGE_RGB},0.2)`, marginBottom: 24 }}>
-              <div style={{ width: 28, height: 28, borderRadius: "50%", border: `2.5px solid rgba(${SAGE_RGB},0.2)`, borderTopColor: SAGE, animation: "spin 0.9s linear infinite" }} />
+            <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 64, height: 64, borderRadius: "50%", background: `rgba(var(--nura-sage-rgb),0.1)`, border: `1px solid rgba(var(--nura-sage-rgb),0.2)`, marginBottom: 24 }}>
+              <div style={{ width: 28, height: 28, borderRadius: "50%", border: `2.5px solid rgba(var(--nura-sage-rgb),0.2)`, borderTopColor: SAGE, animation: "spin 0.9s linear infinite" }} />
             </div>
             <h1 style={{ fontSize: 24, fontWeight: 600, color: TEXT, margin: "0 0 8px", letterSpacing: "-0.3px" }}>
               Just a moment...
@@ -127,7 +127,7 @@ function SuccessContent() {
             <p style={{ fontSize: 13, color: TEXT_SEC, margin: "0 0 20px", lineHeight: 1.6 }}>
               We couldn&apos;t activate your subscription automatically. Please contact support.
             </p>
-            <div style={{ background: "rgba(235,230,216,0.04)", border: `1px solid ${BORDER}`, borderRadius: 10, padding: "12px 14px", marginBottom: 24, textAlign: "left" }}>
+            <div style={{ background: "var(--nura-surface)", border: `1px solid ${BORDER}`, borderRadius: 10, padding: "12px 14px", marginBottom: 24, textAlign: "left" }}>
               <div style={{ fontFamily: MONO, fontSize: 8, color: TEXT_TER, letterSpacing: "1px", marginBottom: 4 }}>REFERENCE</div>
               <div style={{ fontFamily: MONO, fontSize: 10, color: TEXT_SEC, wordBreak: "break-all" }}>{subscriptionId || sessionId}</div>
               {syncError && <div style={{ fontFamily: MONO, fontSize: 8, color: "#ff4c5c", marginTop: 6 }}>{syncError}</div>}
@@ -154,7 +154,7 @@ function SuccessContent() {
 
             {/* Trial pill */}
             {isTrial && (
-              <div style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 12px", borderRadius: 20, background: `rgba(${SAGE_RGB},0.12)`, border: `1px solid rgba(${SAGE_RGB},0.3)`, marginBottom: 14 }}>
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 12px", borderRadius: 20, background: `rgba(var(--nura-sage-rgb),0.12)`, border: `1px solid rgba(var(--nura-sage-rgb),0.3)`, marginBottom: 14 }}>
                 <div style={{ width: 5, height: 5, borderRadius: "50%", background: SAGE }} />
                 <span style={{ fontFamily: MONO, fontSize: 8, fontWeight: 700, letterSpacing: "1.5px", color: SAGE }}>FREE TRIAL ACTIVE · 3 DAYS</span>
               </div>
@@ -170,14 +170,14 @@ function SuccessContent() {
             </p>
 
             {/* Benefits */}
-            <div style={{ background: "rgba(235,230,216,0.03)", border: `1px solid ${BORDER}`, borderRadius: 14, padding: "18px", marginBottom: 24, textAlign: "left" }}>
+            <div style={{ background: "rgba(var(--nura-bg-tint-rgb),0.03)", border: `1px solid ${BORDER}`, borderRadius: 14, padding: "18px", marginBottom: 24, textAlign: "left" }}>
               <div style={{ fontFamily: MONO, fontSize: 8, fontWeight: 700, letterSpacing: "2px", color: TEXT_TER, marginBottom: 14 }}>
                 {isTrial ? "WHAT UNLOCKS NOW" : "WHAT YOU GET"}
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {PRO_BENEFITS.map((b) => (
                   <div key={b} style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                    <div style={{ width: 20, height: 20, borderRadius: "50%", background: `rgba(${SAGE_RGB},0.12)`, border: `1px solid rgba(${SAGE_RGB},0.25)`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <div style={{ width: 20, height: 20, borderRadius: "50%", background: `rgba(var(--nura-sage-rgb),0.12)`, border: `1px solid rgba(var(--nura-sage-rgb),0.25)`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                       <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke={SAGE} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M2 6l3 3 5-5"/>
                       </svg>
@@ -204,7 +204,7 @@ function SuccessContent() {
 function ctaStyle(disabled: boolean): React.CSSProperties {
   return {
     width: "100%", padding: "14px", borderRadius: 12, border: "none",
-    background: disabled ? `rgba(${SAGE_RGB},0.5)` : SAGE,
+    background: disabled ? `rgba(var(--nura-sage-rgb),0.5)` : SAGE,
     color: SAGE_ON, fontFamily: MONO, fontSize: 11, fontWeight: 700,
     letterSpacing: "1.5px", cursor: disabled ? "not-allowed" : "pointer",
     display: "flex", alignItems: "center", justifyContent: "center", gap: 10,

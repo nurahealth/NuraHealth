@@ -23,16 +23,16 @@ import {
 import NuraPageShell from "@/components/NuraPageShell";
 
 // ── Tokens ────────────────────────────────────────────────────────────────────
-const TEXT = "#f0ebde";
-const TEXT_SEC = "rgba(235,230,216,0.55)";
-const TEXT_TER = "rgba(235,230,216,0.4)";
-const BORDER = "rgba(235,230,216,0.09)";
-const SURFACE = "rgba(235,230,216,0.04)";
-const SAGE = "#9bb0a5";
-const SAGE_ON = "#0d0d0e";
+const TEXT = "var(--nura-text-primary)";
+const TEXT_SEC = "var(--nura-text-secondary)";
+const TEXT_TER = "var(--nura-text-tertiary)";
+const BORDER = "var(--nura-border)";
+const SURFACE = "var(--nura-surface)";
+const SAGE = "var(--nura-sage)";
+const SAGE_ON = "var(--nura-bg)";
 const SAGE_RGB = "155,176,165";
-const AMBER = "#d4a574";
-const RED = "#d4574d";
+const AMBER = "var(--nura-watch)";
+const RED = "var(--nura-danger)";
 const SANS = "'Inter', system-ui, sans-serif";
 const SERIF = "'DM Serif Display', Georgia, serif";
 
@@ -66,7 +66,7 @@ function HealthDonut({ score, size = 96 }: { score: HealthScore; size?: number }
   return (
     <div style={{ position: "relative", width: size, height: size, flexShrink: 0 }}>
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-        <circle cx={cx} cy={cy} r={r} fill="none" stroke="rgba(235,230,216,0.08)" strokeWidth={8} />
+        <circle cx={cx} cy={cy} r={r} fill="none" stroke="rgba(var(--nura-bg-tint-rgb),0.08)" strokeWidth={8} />
         {alertPct > 0 && (
           <circle cx={cx} cy={cy} r={r} fill="none" stroke={RED} strokeWidth={8}
             strokeDasharray={`${alertPct * circ} ${circ - alertPct * circ}`} strokeDashoffset={alertOffset}
@@ -190,7 +190,7 @@ function RangeBar({ b }: { b: Biomarker }) {
         }} />
         <div style={{
           position: "absolute", left: `${clamp(optStart)}%`, width: `${clamp(optEnd) - clamp(optStart)}%`, height: "100%",
-          background: `rgba(${SAGE_RGB},0.55)`,
+          background: `rgba(var(--nura-sage-rgb),0.55)`,
         }} />
         <div style={{
           position: "absolute", left: `${clamp(optEnd)}%`, width: `${clamp(high) - clamp(optEnd)}%`, height: "100%",
@@ -200,7 +200,7 @@ function RangeBar({ b }: { b: Biomarker }) {
           position: "absolute", top: "50%", left: `${clamp(value)}%`,
           transform: "translate(-50%, -50%)",
           width: 9, height: 9, borderRadius: "50%",
-          background: sc, border: "1.5px solid #0d0d0e", boxShadow: `0 0 4px ${sc}`,
+          background: sc, border: "1.5px solid var(--nura-bg)", boxShadow: `0 0 4px ${sc}`,
         }} />
       </div>
       <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6, fontSize: 9, color: TEXT_TER }}>
@@ -488,7 +488,7 @@ export default function BloodworkDetailPage({ params }: { params: Promise<{ id: 
             }}>
               <div style={{
                 width: 22, height: 22, borderRadius: "50%", flexShrink: 0, marginTop: 1,
-                background: `rgba(${SAGE_RGB},0.18)`, border: `0.5px solid rgba(${SAGE_RGB},0.4)`,
+                background: `rgba(var(--nura-sage-rgb),0.18)`, border: `0.5px solid rgba(var(--nura-sage-rgb),0.4)`,
                 display: "flex", alignItems: "center", justifyContent: "center",
                 fontFamily: SANS, fontSize: 11, fontWeight: 600, color: SAGE,
               }}>{idx + 1}</div>
@@ -501,8 +501,8 @@ export default function BloodworkDetailPage({ params }: { params: Promise<{ id: 
                     disabled={!!addingSupp || addedSupps.has(action.title)}
                     style={{
                       marginTop: 8, padding: "5px 11px", borderRadius: 8,
-                      background: addedSupps.has(action.title) ? "transparent" : `rgba(${SAGE_RGB},0.12)`,
-                      border: `0.5px solid ${addedSupps.has(action.title) ? BORDER : `rgba(${SAGE_RGB},0.4)`}`,
+                      background: addedSupps.has(action.title) ? "transparent" : `rgba(var(--nura-sage-rgb),0.12)`,
+                      border: `0.5px solid ${addedSupps.has(action.title) ? BORDER : `rgba(var(--nura-sage-rgb),0.4)`}`,
                       color: addedSupps.has(action.title) ? TEXT_TER : SAGE,
                       fontFamily: SANS, fontSize: 11, fontWeight: 500, cursor: addedSupps.has(action.title) ? "default" : "pointer",
                       opacity: addingSupp === action.title ? 0.5 : 1,
@@ -556,7 +556,7 @@ export default function BloodworkDetailPage({ params }: { params: Promise<{ id: 
                 }}
                 style={{
                   width: "100%", padding: "10px 0", borderRadius: 10,
-                  background: "transparent", border: `0.5px solid rgba(${SAGE_RGB},0.35)`,
+                  background: "transparent", border: `0.5px solid rgba(var(--nura-sage-rgb),0.35)`,
                   color: SAGE, fontFamily: SANS, fontSize: 12, fontWeight: 500, cursor: "pointer",
                 }}
               >
@@ -589,8 +589,8 @@ export default function BloodworkDetailPage({ params }: { params: Promise<{ id: 
               onClick={() => setFilter(f)}
               style={{
                 padding: "5px 11px", borderRadius: 7,
-                background: filter === f ? (f === "alert" ? `rgba(212,87,77,0.15)` : `rgba(${SAGE_RGB},0.15)`) : "transparent",
-                border: `0.5px solid ${filter === f ? (f === "alert" ? `rgba(212,87,77,0.4)` : `rgba(${SAGE_RGB},0.4)`) : BORDER}`,
+                background: filter === f ? (f === "alert" ? `rgba(212,87,77,0.15)` : `rgba(var(--nura-sage-rgb),0.15)`) : "transparent",
+                border: `0.5px solid ${filter === f ? (f === "alert" ? `rgba(212,87,77,0.4)` : `rgba(var(--nura-sage-rgb),0.4)`) : BORDER}`,
                 color: filter === f ? (f === "alert" ? RED : SAGE) : TEXT_TER,
                 fontFamily: SANS, fontSize: 11, fontWeight: 500, cursor: "pointer",
                 textTransform: "capitalize",
@@ -636,7 +636,7 @@ export default function BloodworkDetailPage({ params }: { params: Promise<{ id: 
       {shareToast && (
         <div style={{
           position: "fixed", bottom: 30, left: "50%", transform: "translateX(-50%)",
-          background: "rgba(20,20,21,0.95)", border: `0.5px solid rgba(${SAGE_RGB},0.3)`,
+          background: "rgba(20,20,21,0.95)", border: `0.5px solid rgba(var(--nura-sage-rgb),0.3)`,
           color: TEXT, padding: "8px 14px", borderRadius: 20, fontSize: 12, zIndex: 80,
         }}>
           {shareToast}
@@ -650,7 +650,7 @@ export default function BloodworkDetailPage({ params }: { params: Promise<{ id: 
           backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20,
         }}>
           <div onClick={(e) => e.stopPropagation()} style={{
-            background: "#0d0d0e", border: `1px solid rgba(212,87,77,0.4)`,
+            background: "var(--nura-bg)", border: `1px solid rgba(212,87,77,0.4)`,
             borderRadius: 14, padding: "22px 20px", maxWidth: 320, width: "100%",
           }}>
             <h3 style={{ fontFamily: SERIF, fontSize: 22, color: TEXT, margin: "0 0 8px", fontWeight: 500 }}>Delete panel?</h3>
@@ -684,7 +684,7 @@ export default function BloodworkDetailPage({ params }: { params: Promise<{ id: 
 function ScoreTile({ count, label, color }: { count: number; label: string; color: string }) {
   return (
     <div style={{
-      background: "rgba(235,230,216,0.03)", border: `0.5px solid ${BORDER}`, borderRadius: 10,
+      background: "rgba(var(--nura-bg-tint-rgb),0.03)", border: `0.5px solid ${BORDER}`, borderRadius: 10,
       padding: "10px 6px", textAlign: "center",
     }}>
       <div style={{ fontFamily: SANS, fontSize: 18, fontWeight: 500, color, lineHeight: 1 }}>{count}</div>

@@ -5,10 +5,10 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { useSidebar } from "@/lib/sidebarStore";
 
-const TEXT = "#f0ebde";
-const BORDER = "rgba(235,230,216,0.09)";
-const SURFACE = "rgba(235,230,216,0.04)";
-const SAGE = "#9bb0a5";
+const TEXT = "var(--nura-text-primary)";
+const BORDER = "var(--nura-border)";
+const SURFACE = "var(--nura-surface)";
+const SAGE = "var(--nura-sage)";
 const SAGE_RGB = "155,176,165";
 const SANS = "'Inter', system-ui, sans-serif";
 const SERIF = "'DM Serif Display', Georgia, serif";
@@ -43,8 +43,8 @@ function DefaultProfile() {
       aria-label="Profile"
       style={{
         width: 40, height: 40, borderRadius: "50%",
-        background: `rgba(${SAGE_RGB},0.18)`,
-        border: `0.5px solid rgba(${SAGE_RGB},0.4)`,
+        background: `rgba(var(--nura-sage-rgb),0.18)`,
+        border: `0.5px solid rgba(var(--nura-sage-rgb),0.4)`,
         color: SAGE, fontFamily: SANS, fontSize: 14, fontWeight: 500,
         display: "flex", alignItems: "center", justifyContent: "center",
         cursor: "pointer",
@@ -63,7 +63,7 @@ export default function NuraHeader({ rightAction, title }: Props) {
       flexShrink: 0, position: "relative", zIndex: 3,
       display: "flex", alignItems: "center", justifyContent: "space-between",
       padding: "max(env(safe-area-inset-top), 8px) 22px 18px",
-      borderBottom: `0.5px solid rgba(235,230,216,0.06)`,
+      borderBottom: `0.5px solid rgba(var(--nura-bg-tint-rgb),0.06)`,
     }}>
       <button
         onClick={openSidebar}

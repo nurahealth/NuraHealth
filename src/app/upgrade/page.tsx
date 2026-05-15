@@ -4,14 +4,14 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
-const BG = "#0d0d0e";
-const TEXT = "#f0ebde";
-const TEXT_SEC = "rgba(235,230,216,0.55)";
-const TEXT_TER = "rgba(235,230,216,0.4)";
-const BORDER = "rgba(235,230,216,0.09)";
-const SAGE = "#9bb0a5";
-const SAGE_HOV = "#abc0b5";
-const SAGE_ON = "#0d0d0e";
+const BG = "var(--nura-bg)";
+const TEXT = "var(--nura-text-primary)";
+const TEXT_SEC = "var(--nura-text-secondary)";
+const TEXT_TER = "var(--nura-text-tertiary)";
+const BORDER = "var(--nura-border)";
+const SAGE = "var(--nura-sage)";
+const SAGE_HOV = "var(--nura-sage-hover)";
+const SAGE_ON = "var(--nura-bg)";
 const SAGE_RGB = "155,176,165";
 const SANS = "'Inter', system-ui, sans-serif";
 const MONO = "'JetBrains Mono', monospace";
@@ -62,8 +62,8 @@ export default function UpgradePage() {
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         html, body { margin: 0; padding: 0; }
         @keyframes pulse-ring {
-          0%, 100% { box-shadow: 0 0 0 0 rgba(${SAGE_RGB},0.25); }
-          50%       { box-shadow: 0 0 0 8px rgba(${SAGE_RGB},0); }
+          0%, 100% { box-shadow: 0 0 0 0 rgba(var(--nura-sage-rgb),0.25); }
+          50%       { box-shadow: 0 0 0 8px rgba(var(--nura-sage-rgb),0); }
         }
       `}</style>
 
@@ -71,12 +71,12 @@ export default function UpgradePage() {
 
         {/* Logo wordmark */}
         <div style={{ textAlign: "center", marginBottom: 40 }}>
-          <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 64, height: 64, borderRadius: "50%", background: BG, border: `0.5px solid rgba(${SAGE_RGB},0.45)`, marginBottom: 20, animation: "pulse-ring 2.8s ease-in-out infinite" }}>
+          <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 64, height: 64, borderRadius: "50%", background: BG, border: `0.5px solid rgba(var(--nura-sage-rgb),0.45)`, marginBottom: 20, animation: "pulse-ring 2.8s ease-in-out infinite" }}>
             <span style={{ fontFamily: SANS, fontWeight: 700, fontSize: 16, color: "#fff" }}>nūra</span>
           </div>
 
           {/* Trial badge */}
-          <div style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "5px 14px", borderRadius: 20, background: `rgba(${SAGE_RGB},0.12)`, border: `1px solid rgba(${SAGE_RGB},0.3)`, marginBottom: 16 }}>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "5px 14px", borderRadius: 20, background: `rgba(var(--nura-sage-rgb),0.12)`, border: `1px solid rgba(var(--nura-sage-rgb),0.3)`, marginBottom: 16 }}>
             <div style={{ width: 6, height: 6, borderRadius: "50%", background: SAGE }} />
             <span style={{ fontFamily: MONO, fontSize: 9, fontWeight: 700, letterSpacing: "1.5px", color: SAGE }}>3-DAY FREE TRIAL</span>
           </div>
@@ -95,11 +95,11 @@ export default function UpgradePage() {
             <div key={f.text} style={{
               display: "flex", alignItems: "center", gap: 14,
               padding: "13px 16px", borderRadius: 12,
-              background: "rgba(235,230,216,0.03)", border: `1px solid ${BORDER}`,
+              background: "rgba(var(--nura-bg-tint-rgb),0.03)", border: `1px solid ${BORDER}`,
             }}>
               <div style={{
                 width: 22, height: 22, borderRadius: "50%", flexShrink: 0,
-                background: `rgba(${SAGE_RGB},0.12)`, border: `1px solid rgba(${SAGE_RGB},0.25)`,
+                background: `rgba(var(--nura-sage-rgb),0.12)`, border: `1px solid rgba(var(--nura-sage-rgb),0.25)`,
                 display: "flex", alignItems: "center", justifyContent: "center",
                 fontSize: 9, color: SAGE,
               }}>
@@ -113,7 +113,7 @@ export default function UpgradePage() {
         {/* Trial callout */}
         <div style={{
           padding: "14px 16px", borderRadius: 12, marginBottom: 20,
-          background: `rgba(${SAGE_RGB},0.07)`, border: `1px solid rgba(${SAGE_RGB},0.2)`,
+          background: `rgba(var(--nura-sage-rgb),0.07)`, border: `1px solid rgba(var(--nura-sage-rgb),0.2)`,
         }}>
           <div style={{ fontSize: 12, color: TEXT_SEC, lineHeight: 1.6 }}>
             <span style={{ color: SAGE, fontWeight: 600 }}>Free for 3 days.</span>
@@ -136,7 +136,7 @@ export default function UpgradePage() {
           onMouseLeave={() => setHovCta(false)}
           style={{
             width: "100%", padding: "15px", borderRadius: 14, border: "none",
-            background: loading ? `rgba(${SAGE_RGB},0.5)` : hovCta ? SAGE_HOV : SAGE,
+            background: loading ? `rgba(var(--nura-sage-rgb),0.5)` : hovCta ? SAGE_HOV : SAGE,
             color: SAGE_ON, fontFamily: MONO, fontSize: 12, fontWeight: 700,
             letterSpacing: "1.5px", cursor: loading ? "not-allowed" : "pointer",
             display: "flex", alignItems: "center", justifyContent: "center", gap: 10,

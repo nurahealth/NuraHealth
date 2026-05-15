@@ -4,13 +4,13 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSidebar } from "@/lib/sidebarStore";
 
-const BG = "#0d0d0e";
-const TEXT = "#f0ebde";
-const TEXT_SEC = "rgba(235,230,216,0.55)";
-const TEXT_TER = "rgba(235,230,216,0.4)";
-const BORDER = "rgba(235,230,216,0.09)";
-const SURFACE = "rgba(235,230,216,0.04)";
-const SAGE = "#9bb0a5";
+const BG = "var(--nura-bg)";
+const TEXT = "var(--nura-text-primary)";
+const TEXT_SEC = "var(--nura-text-secondary)";
+const TEXT_TER = "var(--nura-text-tertiary)";
+const BORDER = "var(--nura-border)";
+const SURFACE = "var(--nura-surface)";
+const SAGE = "var(--nura-sage)";
 const SAGE_RGB = "155,176,165";
 const SANS = "'Inter', system-ui, sans-serif";
 const SERIF = "'DM Serif Display', Georgia, serif";
@@ -122,8 +122,8 @@ export default function ChatsListPage() {
                   transition: "background 160ms, border-color 160ms",
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = "rgba(235,230,216,0.06)";
-                  e.currentTarget.style.borderColor = `rgba(${SAGE_RGB},0.3)`;
+                  e.currentTarget.style.background = "var(--nura-surface-elevated)";
+                  e.currentTarget.style.borderColor = `rgba(var(--nura-sage-rgb),0.3)`;
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.background = SURFACE;

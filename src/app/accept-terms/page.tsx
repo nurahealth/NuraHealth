@@ -6,13 +6,13 @@ import { supabase } from "@/lib/supabase";
 import NuraPlexus from "@/components/NuraPlexus";
 
 // ── Tokens ────────────────────────────────────────────────────────────────────
-const BG = "#0d0d0e";
-const TEXT = "#f0ebde";
-const TEXT_SEC = "rgba(235,230,216,0.55)";
-const SAGE = "#9bb0a5";
-const SAGE_HOV = "#abc0b5";
-const SAGE_ON = "#0d0d0e";
-const RED = "#d4574d";
+const BG = "var(--nura-bg)";
+const TEXT = "var(--nura-text-primary)";
+const TEXT_SEC = "var(--nura-text-secondary)";
+const SAGE = "var(--nura-sage)";
+const SAGE_HOV = "var(--nura-sage-hover)";
+const SAGE_ON = "var(--nura-bg)";
+const RED = "var(--nura-danger)";
 const SANS = "'Inter', system-ui, sans-serif";
 const SERIF = "'DM Serif Display', Georgia, serif";
 
@@ -40,7 +40,7 @@ function Checkbox({
         width: 18, height: 18, borderRadius: 5, flexShrink: 0,
         marginTop: 1,
         background: checked ? SAGE : "transparent",
-        border: `0.5px solid ${checked ? SAGE : "rgba(235,230,216,0.25)"}`,
+        border: `0.5px solid ${checked ? SAGE : "rgba(var(--nura-fg-rgb),0.25)"}`,
         display: "flex", alignItems: "center", justifyContent: "center",
         transition: "background 160ms, border-color 160ms",
       }}>
@@ -52,7 +52,7 @@ function Checkbox({
       </div>
       <span style={{
         fontFamily: SANS, fontSize: 12.5, lineHeight: 1.5,
-        color: "rgba(235,230,216,0.75)",
+        color: "rgba(var(--nura-fg-rgb),0.75)",
       }}>
         {children}
       </span>
@@ -260,7 +260,7 @@ export default function AcceptTermsPage() {
         {/* Footer */}
         <p style={{
           marginTop: 32, textAlign: "center",
-          fontFamily: SANS, fontSize: 10, color: "rgba(235,230,216,0.32)",
+          fontFamily: SANS, fontSize: 10, color: "rgba(var(--nura-fg-rgb),0.32)",
           letterSpacing: "1px", textTransform: "uppercase",
         }}>
           Wellness information · not medical advice

@@ -4,18 +4,19 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { useSidebar } from "@/lib/sidebarStore";
+import { useThemeStore } from "@/lib/themeStore";
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
-const BG = "#0d0d0e";
-const TEXT = "#f0ebde";
-const TEXT_SEC = "rgba(235,230,216,0.55)";
-const TEXT_TER = "rgba(235,230,216,0.4)";
-const BORDER = "rgba(235,230,216,0.09)";
-const SURFACE = "rgba(235,230,216,0.04)";
-const SURFACE_HOV = "rgba(235,230,216,0.08)";
-const SAGE = "#9bb0a5";
-const SAGE_HOV = "#abc0b5";
-const SAGE_ON = "#0d0d0e";
+const BG = "var(--nura-bg)";
+const TEXT = "var(--nura-text-primary)";
+const TEXT_SEC = "var(--nura-text-secondary)";
+const TEXT_TER = "var(--nura-text-tertiary)";
+const BORDER = "var(--nura-border)";
+const SURFACE = "var(--nura-surface)";
+const SURFACE_HOV = "rgba(var(--nura-bg-tint-rgb),0.08)";
+const SAGE = "var(--nura-sage)";
+const SAGE_HOV = "var(--nura-sage-hover)";
+const SAGE_ON = "var(--nura-bg)";
 const SAGE_RGB = "155,176,165";
 const SANS = "'Inter', system-ui, sans-serif";
 const SERIF = "'DM Serif Display', Georgia, serif";
@@ -53,10 +54,15 @@ const CHIPS: { icon: React.ReactNode; text: string }[] = [
 // ── Plexus canvas (pollen drift) ──────────────────────────────────────────────
 function PlexusCanvas() {
   const ref = useRef<HTMLCanvasElement>(null);
+  const theme = useThemeStore((s) => s.theme);
 
   useEffect(() => {
     const canvas = ref.current;
     if (!canvas) return;
+
+    const sageRgb = theme === "light" ? "125,147,133" : "155,176,165";
+    const particleAlpha = theme === "light" ? 0.62 : 0.42;
+    const linkAlphaMax = theme === "light" ? 0.20 : 0.14;
 
     let W = window.innerWidth;
     let H = window.innerHeight;
@@ -98,7 +104,7 @@ function PlexusCanvas() {
 
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(${SAGE_RGB},0.42)`;
+        ctx.fillStyle = `rgba(${sageRgb},${particleAlpha})`;
         ctx.fill();
 
         for (let j = i + 1; j < particles.length; j++) {
@@ -110,7 +116,7 @@ function PlexusCanvas() {
             ctx.beginPath();
             ctx.moveTo(p.x, p.y);
             ctx.lineTo(q.x, q.y);
-            ctx.strokeStyle = `rgba(${SAGE_RGB},${(1 - d / 105) * 0.14})`;
+            ctx.strokeStyle = `rgba(${sageRgb},${(1 - d / 105) * linkAlphaMax})`;
             ctx.lineWidth = 0.5;
             ctx.stroke();
           }
@@ -124,7 +130,7 @@ function PlexusCanvas() {
       cancelAnimationFrame(raf);
       window.removeEventListener("resize", resize);
     };
-  }, []);
+  }, [theme]);
 
   return (
     <canvas ref={ref} style={{ position: "fixed", inset: 0, zIndex: 0, pointerEvents: "none" }} />
@@ -159,7 +165,7 @@ function ChipRow({ icon, text, onClick }: { icon: React.ReactNode; text: string;
         display: "flex", alignItems: "center", gap: 10,
         width: "100%", textAlign: "left",
         background: hov ? SURFACE_HOV : SURFACE,
-        border: `0.5px solid ${hov ? `rgba(${SAGE_RGB},0.3)` : BORDER}`,
+        border: `0.5px solid ${hov ? `rgba(var(--nura-sage-rgb),0.3)` : BORDER}`,
         color: TEXT, fontFamily: SANS, fontSize: 13,
         padding: "11px 16px", borderRadius: 8, cursor: "pointer",
         transition: "background 180ms, border-color 180ms",
@@ -350,7 +356,7 @@ export default function Home() {
           aria-label="Profile"
           style={{
             width: 40, height: 40, borderRadius: "50%",
-            background: `rgba(${SAGE_RGB},0.18)`, border: `0.5px solid rgba(${SAGE_RGB},0.35)`,
+            background: `rgba(var(--nura-sage-rgb),0.18)`, border: `0.5px solid rgba(var(--nura-sage-rgb),0.35)`,
             color: SAGE, fontFamily: SANS, fontSize: 14, fontWeight: 500,
             display: "flex", alignItems: "center", justifyContent: "center",
             cursor: "pointer",
@@ -386,8 +392,8 @@ export default function Home() {
         <div style={{ display: "flex", flexDirection: "column", gap: 8, width: "100%" }}>
           <div style={{
             display: "flex", alignItems: "center", gap: 2,
-            background: focused ? "rgba(235,230,216,0.06)" : SURFACE,
-            border: `0.5px solid ${focused ? `rgba(${SAGE_RGB},0.5)` : "rgba(235,230,216,0.12)"}`,
+            background: focused ? "var(--nura-surface-elevated)" : SURFACE,
+            border: `0.5px solid ${focused ? `rgba(var(--nura-sage-rgb),0.5)` : "rgba(var(--nura-bg-tint-rgb),0.12)"}`,
             borderRadius: 14, padding: "6px 6px 6px 8px",
             transition: "background 200ms, border-color 200ms",
           }}>
@@ -398,7 +404,7 @@ export default function Home() {
               aria-label="Attach photo"
               style={{
                 width: 38, height: 38, borderRadius: 9, border: "none",
-                background: hovAttach ? `rgba(${SAGE_RGB},0.08)` : "transparent",
+                background: hovAttach ? `rgba(var(--nura-sage-rgb),0.08)` : "transparent",
                 color: hovAttach ? SAGE : TEXT_SEC,
                 display: "flex", alignItems: "center", justifyContent: "center",
                 cursor: "pointer", flexShrink: 0, transition: "all 200ms",
@@ -426,7 +432,7 @@ export default function Home() {
               />
               <div style={{
                 position: "absolute", left: 0, top: "50%", transform: "translateY(-50%)",
-                fontSize: 14, color: "rgba(235,230,216,0.35)", fontFamily: SANS,
+                fontSize: 14, color: "rgba(var(--nura-fg-rgb),0.35)", fontFamily: SANS,
                 pointerEvents: "none", whiteSpace: "nowrap", overflow: "hidden",
                 maxWidth: "100%",
                 opacity: phHidden ? 0 : 1,
@@ -443,7 +449,7 @@ export default function Home() {
               aria-label={recording ? "Stop recording" : "Voice input"}
               style={{
                 width: 38, height: 38, borderRadius: 9, border: "none",
-                background: recording ? "rgba(255,76,92,0.12)" : hovMic ? `rgba(${SAGE_RGB},0.08)` : "transparent",
+                background: recording ? "rgba(255,76,92,0.12)" : hovMic ? `rgba(var(--nura-sage-rgb),0.08)` : "transparent",
                 color: recording ? "#ff4c5c" : hovMic ? SAGE : TEXT_SEC,
                 display: "flex", alignItems: "center", justifyContent: "center",
                 cursor: "pointer", flexShrink: 0, transition: "all 200ms",
@@ -473,7 +479,7 @@ export default function Home() {
               aria-label="Send"
               style={{
                 width: 40, height: 40, borderRadius: 11, border: "none",
-                background: sending ? `rgba(${SAGE_RGB},0.4)` : hovSend ? SAGE_HOV : SAGE,
+                background: sending ? `rgba(var(--nura-sage-rgb),0.4)` : hovSend ? SAGE_HOV : SAGE,
                 color: SAGE_ON,
                 display: "flex", alignItems: "center", justifyContent: "center",
                 cursor: sending ? "not-allowed" : "pointer", flexShrink: 0, marginLeft: 2,

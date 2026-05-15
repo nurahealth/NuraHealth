@@ -15,15 +15,15 @@ import {
 import NuraPageShell from "@/components/NuraPageShell";
 
 // ── Tokens ────────────────────────────────────────────────────────────────────
-const TEXT = "#f0ebde";
-const TEXT_SEC = "rgba(235,230,216,0.55)";
-const TEXT_TER = "rgba(235,230,216,0.4)";
-const BORDER = "rgba(235,230,216,0.09)";
-const SURFACE = "rgba(235,230,216,0.04)";
-const SAGE = "#9bb0a5";
-const SAGE_ON = "#0d0d0e";
+const TEXT = "var(--nura-text-primary)";
+const TEXT_SEC = "var(--nura-text-secondary)";
+const TEXT_TER = "var(--nura-text-tertiary)";
+const BORDER = "var(--nura-border)";
+const SURFACE = "var(--nura-surface)";
+const SAGE = "var(--nura-sage)";
+const SAGE_ON = "var(--nura-bg)";
 const SAGE_RGB = "155,176,165";
-const RED = "#d4574d";
+const RED = "var(--nura-danger)";
 const SANS = "'Inter', system-ui, sans-serif";
 const SERIF = "'DM Serif Display', Georgia, serif";
 
@@ -165,7 +165,7 @@ export default function SavedPage() {
         }}>
           <div style={{
             width: 48, height: 48, borderRadius: 12, margin: "0 auto 18px",
-            background: `rgba(${SAGE_RGB},0.1)`, border: `0.5px solid rgba(${SAGE_RGB},0.3)`,
+            background: `rgba(var(--nura-sage-rgb),0.1)`, border: `0.5px solid rgba(var(--nura-sage-rgb),0.3)`,
             display: "flex", alignItems: "center", justifyContent: "center", color: SAGE,
           }}>
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -187,7 +187,7 @@ export default function SavedPage() {
                 onClick={() => !isExpanded && setExpandedId(item.id)}
                 style={{
                   position: "relative", padding: "14px 16px", borderRadius: 14,
-                  background: SURFACE, border: `0.5px solid ${isExpanded ? `rgba(${SAGE_RGB},0.3)` : BORDER}`,
+                  background: SURFACE, border: `0.5px solid ${isExpanded ? `rgba(var(--nura-sage-rgb),0.3)` : BORDER}`,
                   cursor: isExpanded ? "default" : "pointer",
                   transition: "border-color 160ms",
                 }}
@@ -196,7 +196,7 @@ export default function SavedPage() {
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
                   <span style={{
                     padding: "3px 8px", borderRadius: 4,
-                    background: `rgba(${SAGE_RGB},0.14)`,
+                    background: `rgba(var(--nura-sage-rgb),0.14)`,
                     fontFamily: SANS, fontSize: 9, fontWeight: 600, letterSpacing: "0.8px",
                     color: SAGE, textTransform: "uppercase",
                   }}>
@@ -232,7 +232,7 @@ export default function SavedPage() {
                     {item.content && (
                       <div style={{
                         fontFamily: SANS, fontSize: 12.5, color: TEXT, lineHeight: 1.65,
-                        background: "rgba(235,230,216,0.02)", border: `0.5px solid ${BORDER}`,
+                        background: "rgba(var(--nura-bg-tint-rgb),0.02)", border: `0.5px solid ${BORDER}`,
                         borderRadius: 10, padding: "12px 14px",
                         whiteSpace: "pre-wrap", wordBreak: "break-word",
                         maxHeight: 280, overflowY: "auto",

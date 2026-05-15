@@ -6,13 +6,13 @@ import { supabase } from "@/lib/supabase";
 import { useSidebar } from "@/lib/sidebarStore";
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
-const BG = "#0d0d0e";
-const TEXT = "#f0ebde";
-const TEXT_SEC = "rgba(235,230,216,0.55)";
-const TEXT_TER = "rgba(235,230,216,0.4)";
-const BORDER = "rgba(235,230,216,0.09)";
-const SURFACE = "rgba(235,230,216,0.04)";
-const SAGE = "#9bb0a5";
+const BG = "var(--nura-bg)";
+const TEXT = "var(--nura-text-primary)";
+const TEXT_SEC = "var(--nura-text-secondary)";
+const TEXT_TER = "var(--nura-text-tertiary)";
+const BORDER = "var(--nura-border)";
+const SURFACE = "var(--nura-surface)";
+const SAGE = "var(--nura-sage)";
 const SAGE_RGB = "155,176,165";
 const SANS = "'Inter', system-ui, sans-serif";
 
@@ -77,7 +77,7 @@ const NAV_ITEMS: NavItem[] = [
 function NavRow({ item, active, onClick }: { item: NavItem; active: boolean; onClick: () => void }) {
   const [hov, setHov] = useState(false);
   const isHighlighted = hov || active;
-  const iconColor = active || hov ? SAGE : "rgba(235,230,216,0.55)";
+  const iconColor = active || hov ? SAGE : "var(--nura-text-secondary)";
   return (
     <button
       onClick={onClick}
@@ -86,9 +86,9 @@ function NavRow({ item, active, onClick }: { item: NavItem; active: boolean; onC
       style={{
         display: "flex", alignItems: "center", gap: 11,
         width: "100%", padding: 10, borderRadius: 9,
-        background: active ? `rgba(${SAGE_RGB},0.1)` : hov ? "rgba(235,230,216,0.04)" : "transparent",
-        border: active ? `0.5px solid rgba(${SAGE_RGB},0.28)` : "0.5px solid transparent",
-        color: isHighlighted ? TEXT : "rgba(235,230,216,0.85)",
+        background: active ? `rgba(var(--nura-sage-rgb),0.1)` : hov ? "var(--nura-surface)" : "transparent",
+        border: active ? `0.5px solid rgba(var(--nura-sage-rgb),0.28)` : "0.5px solid transparent",
+        color: isHighlighted ? TEXT : "rgba(var(--nura-fg-rgb),0.85)",
         fontFamily: SANS, fontSize: 14, fontWeight: active ? 500 : 400,
         cursor: "pointer", textAlign: "left",
         transition: "background 160ms, border-color 160ms, color 160ms",
@@ -113,13 +113,13 @@ function RecentChatRow({ id, title, updated_at, onClick }: { id: string; title: 
       style={{
         display: "flex", alignItems: "center", gap: 11,
         width: "100%", padding: "9px 10px", borderRadius: 9,
-        background: hov ? "rgba(235,230,216,0.04)" : "transparent",
+        background: hov ? "var(--nura-surface)" : "transparent",
         border: "0.5px solid transparent",
         color: TEXT, fontFamily: SANS, fontSize: 12, cursor: "pointer", textAlign: "left",
         transition: "background 160ms",
       }}
     >
-      <span style={{ color: hov ? SAGE : "rgba(235,230,216,0.45)", display: "flex", lineHeight: 0, flexShrink: 0 }}>
+      <span style={{ color: hov ? SAGE : "rgba(var(--nura-fg-rgb),0.45)", display: "flex", lineHeight: 0, flexShrink: 0 }}>
         <Icons.message />
       </span>
       <span style={{ flex: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
@@ -214,7 +214,7 @@ export default function AppSidebar() {
         style={{
           position: "fixed", top: 0, left: 0, bottom: 0, zIndex: 50,
           width: "min(295px, 85vw)",
-          background: BG, borderRight: `0.5px solid rgba(235,230,216,0.08)`,
+          background: BG, borderRight: `0.5px solid rgba(var(--nura-bg-tint-rgb),0.08)`,
           transform: isOpen ? "translateX(0)" : "translateX(-100%)",
           transition: "transform 350ms cubic-bezier(0.32,0.72,0.34,1.01)",
           overflowY: "auto", overflowX: "hidden",
@@ -248,8 +248,8 @@ export default function AppSidebar() {
           <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
             <div style={{
               width: 46, height: 46, borderRadius: "50%", flexShrink: 0,
-              background: `rgba(${SAGE_RGB},0.18)`,
-              border: `0.5px solid rgba(${SAGE_RGB},0.4)`,
+              background: `rgba(var(--nura-sage-rgb),0.18)`,
+              border: `0.5px solid rgba(var(--nura-sage-rgb),0.4)`,
               color: SAGE, fontSize: 16, fontWeight: 500,
               display: "flex", alignItems: "center", justifyContent: "center",
             }}>
@@ -263,7 +263,7 @@ export default function AppSidebar() {
                 {subBadge && (
                   <span style={{
                     fontSize: 8, fontWeight: 700, letterSpacing: "0.6px",
-                    color: SAGE, background: `rgba(${SAGE_RGB},0.16)`, border: `0.5px solid rgba(${SAGE_RGB},0.3)`,
+                    color: SAGE, background: `rgba(var(--nura-sage-rgb),0.16)`, border: `0.5px solid rgba(var(--nura-sage-rgb),0.3)`,
                     padding: "2px 6px", borderRadius: 4, whiteSpace: "nowrap", flexShrink: 0,
                   }}>{subBadge}</span>
                 )}
@@ -280,8 +280,8 @@ export default function AppSidebar() {
             style={{
               width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
               padding: "10px 14px", borderRadius: 11,
-              background: `rgba(${SAGE_RGB},0.12)`,
-              border: `0.5px solid rgba(${SAGE_RGB},0.4)`,
+              background: `rgba(var(--nura-sage-rgb),0.12)`,
+              border: `0.5px solid rgba(var(--nura-sage-rgb),0.4)`,
               color: SAGE, fontFamily: SANS, fontSize: 13, fontWeight: 500,
               cursor: "pointer", marginBottom: 18,
             }}
@@ -304,7 +304,7 @@ export default function AppSidebar() {
         </nav>
 
         {/* DIVIDER */}
-        <div style={{ height: 0.5, background: "rgba(235,230,216,0.08)", margin: "14px 22px" }} />
+        <div style={{ height: 0.5, background: "rgba(var(--nura-bg-tint-rgb),0.08)", margin: "14px 22px" }} />
 
         {/* RECENT CHATS */}
         <div style={{ padding: "0 14px" }}>
@@ -366,7 +366,7 @@ export default function AppSidebar() {
         <div style={{
           marginTop: "auto",
           padding: "14px 22px 22px",
-          borderTop: "0.5px solid rgba(235,230,216,0.06)",
+          borderTop: "0.5px solid rgba(var(--nura-bg-tint-rgb),0.06)",
           display: "flex", flexDirection: "column", gap: 1,
         }}>
           <BottomRow icon={<Icons.settings />} label="Settings" onClick={() => navigate("/settings")} />
@@ -390,7 +390,7 @@ function BottomRow({ icon, label, onClick, muted, right }: {
       style={{
         display: "flex", alignItems: "center", gap: 11,
         width: "100%", padding: "8px 4px", borderRadius: 8,
-        background: hov ? "rgba(235,230,216,0.04)" : "transparent",
+        background: hov ? "var(--nura-surface)" : "transparent",
         border: "none", color: muted ? TEXT_SEC : TEXT,
         fontFamily: SANS, fontSize: 13, cursor: "pointer", textAlign: "left",
         transition: "background 160ms",

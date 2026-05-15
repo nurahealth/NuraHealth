@@ -1,8 +1,51 @@
 @import "tailwindcss";
 
+/* ───────────────────────────────────────────────────────────────────────────
+   NŪRA theme system — dark default, light via [data-theme="light"]
+   ─────────────────────────────────────────────────────────────────────── */
 :root {
+  /* Dark (default) */
+  --nura-bg: #0d0d0e;
+  --nura-surface: rgba(235, 230, 216, 0.04);
+  --nura-surface-elevated: rgba(235, 230, 216, 0.06);
+  --nura-text-primary: #f0ebde;
+  --nura-text-secondary: rgba(235, 230, 216, 0.55);
+  --nura-text-tertiary: rgba(235, 230, 216, 0.40);
+  --nura-border: rgba(235, 230, 216, 0.09);
+  --nura-border-strong: rgba(235, 230, 216, 0.18);
+  --nura-sage: #9bb0a5;
+  --nura-sage-hover: #abc0b5;
+  --nura-sage-bg-on: #0d0d0e;
+  --nura-sage-rgb: 155, 176, 165;
+  --nura-fg-rgb: 235, 230, 216;        /* ink for text tints (mid+ opacities) */
+  --nura-bg-tint-rgb: 235, 230, 216;   /* tint for surfaces/borders (low opacities) */
+  --nura-danger: #d4574d;
+  --nura-watch: #d4a574;
+
+  /* Legacy tokens kept for tailwind theme — unused by new theme system */
   --background: #ffffff;
   --foreground: #171717;
+
+  transition: background-color 200ms ease, color 200ms ease;
+}
+
+[data-theme="light"] {
+  --nura-bg: #f4f1e6;
+  --nura-surface: rgba(125, 147, 133, 0.05);
+  --nura-surface-elevated: rgba(125, 147, 133, 0.08);
+  --nura-text-primary: #1a1f1a;
+  --nura-text-secondary: rgba(26, 31, 26, 0.62);
+  --nura-text-tertiary: rgba(26, 31, 26, 0.42);
+  --nura-border: rgba(125, 147, 133, 0.22);
+  --nura-border-strong: rgba(125, 147, 133, 0.40);
+  --nura-sage: #7d9385;
+  --nura-sage-hover: #6a8175;
+  --nura-sage-bg-on: #faf8f3;
+  --nura-sage-rgb: 125, 147, 133;
+  --nura-fg-rgb: 26, 31, 26;
+  --nura-bg-tint-rgb: 125, 147, 133;
+  --nura-danger: #c14a40;
+  --nura-watch: #b8884e;
 }
 
 @theme inline {
@@ -12,15 +55,11 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html, body {
+  background: var(--nura-bg);
+  color: var(--nura-text-primary);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }

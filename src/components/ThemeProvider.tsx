@@ -1,46 +1,38 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect } from "react";
+import { useEffect } from "react";
 import { NURA_DARK, NURA_LIGHT, type NuraPalette } from "@/lib/theme";
+import { useThemeStore, type Theme } from "@/lib/themeStore";
 
-type Mode = "dark" | "light";
+export function ThemeProvider({ children }: { children: React.ReactNode }) {
+  const theme = useThemeStore((s) => s.theme);
 
-interface ThemeContextValue {
-  mode: Mode;
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    const root = document.documentElement;
+    if (theme === "light") root.setAttribute("data-theme", "light");
+    else root.removeAttribute("data-theme");
+  }, [theme]);
+
+  return <>{children}</>;
+}
+
+/**
+ * Back-compat hook for legacy components that still expect the
+ * { mode, colors, toggle } shape from the original ThemeProvider.
+ * New code should use `useThemeStore` directly.
+ */
+interface LegacyThemeContextValue {
+  mode: Theme;
   colors: NuraPalette;
   toggle: () => void;
 }
-
-const ThemeContext = createContext<ThemeContextValue>({
-  mode: "dark",
-  colors: NURA_DARK,
-  toggle: () => {},
-});
-
-function readStoredMode(): Mode {
-  if (typeof window === "undefined") return "dark";
-  const stored = localStorage.getItem("nura-theme");
-  return stored === "light" || stored === "dark" ? stored : "dark";
-}
-
-export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [mode, setMode] = useState<Mode>(readStoredMode);
-
-  useEffect(() => {
-    localStorage.setItem("nura-theme", mode);
-    document.body.style.background = mode === "dark" ? NURA_DARK.bg : NURA_LIGHT.bg;
-  }, [mode]);
-
-  const toggle = () => setMode((m) => (m === "dark" ? "light" : "dark"));
-  const colors: NuraPalette = mode === "dark" ? NURA_DARK : NURA_LIGHT;
-
-  return (
-    <ThemeContext.Provider value={{ mode, colors, toggle }}>
-      {children}
-    </ThemeContext.Provider>
-  );
-}
-
-export function useTheme() {
-  return useContext(ThemeContext);
+export function useTheme(): LegacyThemeContextValue {
+  const theme = useThemeStore((s) => s.theme);
+  const toggle = useThemeStore((s) => s.toggleTheme);
+  return {
+    mode: theme,
+    colors: theme === "dark" ? NURA_DARK : NURA_LIGHT,
+    toggle,
+  };
 }

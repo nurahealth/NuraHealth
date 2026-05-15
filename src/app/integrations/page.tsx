@@ -4,15 +4,15 @@ import { useState, useEffect, useRef } from "react";
 import NuraPageShell from "@/components/NuraPageShell";
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
-const TEXT = "#f0ebde";
-const TEXT_SEC = "rgba(235,230,216,0.55)";
-const TEXT_TER = "rgba(235,230,216,0.4)";
-const BORDER = "rgba(235,230,216,0.09)";
-const SURFACE = "rgba(235,230,216,0.04)";
-const SURFACE_HOV = "rgba(235,230,216,0.08)";
-const SAGE = "#9bb0a5";
-const SAGE_HOV = "#abc0b5";
-const SAGE_ON = "#0d0d0e";
+const TEXT = "var(--nura-text-primary)";
+const TEXT_SEC = "var(--nura-text-secondary)";
+const TEXT_TER = "var(--nura-text-tertiary)";
+const BORDER = "var(--nura-border)";
+const SURFACE = "var(--nura-surface)";
+const SURFACE_HOV = "rgba(var(--nura-bg-tint-rgb),0.08)";
+const SAGE = "var(--nura-sage)";
+const SAGE_HOV = "var(--nura-sage-hover)";
+const SAGE_ON = "var(--nura-bg)";
 const SAGE_RGB = "155,176,165";
 const SANS = "'Inter', system-ui, sans-serif";
 const SERIF = "'DM Serif Display', Georgia, serif";
@@ -142,8 +142,8 @@ export default function IntegrationsPage() {
         <div className="ig-featured">
           <div style={{
             width: 80, height: 80, borderRadius: 14, flexShrink: 0,
-            background: `rgba(${SAGE_RGB},0.12)`,
-            border: `0.5px solid rgba(${SAGE_RGB},0.35)`,
+            background: `rgba(var(--nura-sage-rgb),0.12)`,
+            border: `0.5px solid rgba(var(--nura-sage-rgb),0.35)`,
             color: SAGE,
             display: "flex", alignItems: "center", justifyContent: "center",
           }}>
@@ -215,7 +215,7 @@ function ProviderCard({ provider, onClick }: { provider: Provider; onClick: () =
       style={{
         textAlign: "left",
         background: hov ? SURFACE_HOV : SURFACE,
-        border: `0.5px solid ${hov ? `rgba(${SAGE_RGB},0.25)` : BORDER}`,
+        border: `0.5px solid ${hov ? `rgba(var(--nura-sage-rgb),0.25)` : BORDER}`,
         borderRadius: 14, padding: 16, cursor: "pointer",
         fontFamily: SANS, display: "flex", flexDirection: "column", gap: 12,
         transition: "background 180ms, border-color 180ms",
@@ -223,8 +223,8 @@ function ProviderCard({ provider, onClick }: { provider: Provider; onClick: () =
     >
       <div style={{
         width: 40, height: 40, borderRadius: 10,
-        background: `rgba(${SAGE_RGB},0.12)`,
-        border: `0.5px solid rgba(${SAGE_RGB},0.3)`,
+        background: `rgba(var(--nura-sage-rgb),0.12)`,
+        border: `0.5px solid rgba(var(--nura-sage-rgb),0.3)`,
         color: SAGE,
         display: "flex", alignItems: "center", justifyContent: "center",
       }}>
@@ -243,7 +243,7 @@ function ProviderCard({ provider, onClick }: { provider: Provider; onClick: () =
       <span style={{
         alignSelf: "flex-start",
         padding: "3px 8px", borderRadius: 4,
-        background: `rgba(${SAGE_RGB},0.12)`,
+        background: `rgba(var(--nura-sage-rgb),0.12)`,
         fontFamily: SANS, fontSize: 9, fontWeight: 600, letterSpacing: "0.8px",
         color: SAGE, textTransform: "uppercase",
       }}>
@@ -300,8 +300,8 @@ function ConnectModal({ device, onClose }: { device: Provider; onClose: () => vo
           position: "relative",
           maxWidth: 460, width: "100%",
           padding: 28, borderRadius: 16,
-          background: "#0d0d0e",
-          border: "0.5px solid rgba(235,230,216,0.15)",
+          background: "var(--nura-bg)",
+          border: "0.5px solid rgba(var(--nura-bg-tint-rgb),0.15)",
           fontFamily: SANS,
           animation: "ig-pop-in 240ms cubic-bezier(0.32,0.72,0.34,1.01) both",
         }}
@@ -324,8 +324,8 @@ function ConnectModal({ device, onClose }: { device: Provider; onClose: () => vo
         {/* Icon */}
         <div style={{
           width: 64, height: 64, borderRadius: 14, margin: "0 auto 16px",
-          background: `rgba(${SAGE_RGB},0.12)`,
-          border: `0.5px solid rgba(${SAGE_RGB},0.4)`,
+          background: `rgba(var(--nura-sage-rgb),0.12)`,
+          border: `0.5px solid rgba(var(--nura-sage-rgb),0.4)`,
           color: SAGE,
           display: "flex", alignItems: "center", justifyContent: "center",
         }}>
@@ -363,7 +363,7 @@ function ConnectModal({ device, onClose }: { device: Provider; onClose: () => vo
             padding: "12px 14px",
             borderRadius: 12,
             background: SURFACE,
-            border: `0.5px solid ${emailFocused ? `rgba(${SAGE_RGB},0.5)` : BORDER}`,
+            border: `0.5px solid ${emailFocused ? `rgba(var(--nura-sage-rgb),0.5)` : BORDER}`,
             fontFamily: SANS, fontSize: 14, color: TEXT,
             outline: "none", marginBottom: 12,
             transition: "border-color 200ms ease",
@@ -379,8 +379,8 @@ function ConnectModal({ device, onClose }: { device: Provider; onClose: () => vo
           style={{
             width: "100%", height: 44, borderRadius: 11, border: "none",
             background: submitted
-              ? `rgba(${SAGE_RGB},0.18)`
-              : (!email.trim() ? `rgba(${SAGE_RGB},0.4)` : hovCta ? SAGE_HOV : SAGE),
+              ? `rgba(var(--nura-sage-rgb),0.18)`
+              : (!email.trim() ? `rgba(var(--nura-sage-rgb),0.4)` : hovCta ? SAGE_HOV : SAGE),
             color: submitted ? SAGE : SAGE_ON,
             fontFamily: SANS, fontSize: 13.5, fontWeight: 500,
             cursor: submitted || !email.trim() ? "not-allowed" : "pointer",

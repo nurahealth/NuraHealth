@@ -7,5 +7,5 @@ import { useRouter } from "next/navigation";
 export default function ChatIndex() {
   const router = useRouter();
   useEffect(() => { router.replace("/"); }, [router]);
-  return <div style={{ minHeight: "100dvh", background: "#0d0d0e" }} />;
+  return <div style={{ minHeight: "100dvh", background: "var(--nura-bg)" }} />;
 }

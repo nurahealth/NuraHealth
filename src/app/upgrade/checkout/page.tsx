@@ -5,88 +5,104 @@ import { useRouter } from "next/navigation";
 import { loadStripe, type StripeElementsOptions } from "@stripe/stripe-js";
 import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { supabase } from "@/lib/supabase";
+import { useThemeStore, type Theme } from "@/lib/themeStore";
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
 // ── Design tokens ──────────────────────────────────────────────────────────────
-const BG = "#0d0d0e";
-const TEXT = "#f0ebde";
-const TEXT_SEC = "rgba(235,230,216,0.55)";
-const TEXT_TER = "rgba(235,230,216,0.4)";
-const BORDER = "rgba(235,230,216,0.09)";
-const SAGE = "#9bb0a5";
-const SAGE_HOV = "#abc0b5";
-const SAGE_ON = "#0d0d0e";
+const BG = "var(--nura-bg)";
+const TEXT = "var(--nura-text-primary)";
+const TEXT_SEC = "var(--nura-text-secondary)";
+const TEXT_TER = "var(--nura-text-tertiary)";
+const BORDER = "var(--nura-border)";
+const SAGE = "var(--nura-sage)";
+const SAGE_HOV = "var(--nura-sage-hover)";
+const SAGE_ON = "var(--nura-bg)";
 const SAGE_RGB = "155,176,165";
 const SANS = "'Inter', system-ui, sans-serif";
 const MONO = "'JetBrains Mono', monospace";
 
-// Stripe Elements appearance — dark sage theme
-const ELEMENTS_APPEARANCE: StripeElementsOptions["appearance"] = {
-  theme: "night",
-  variables: {
-    colorPrimary: SAGE,
-    colorBackground: "#111214",
-    colorText: TEXT,
-    colorDanger: "#ff4c5c",
-    colorTextSecondary: TEXT_SEC,
-    colorTextPlaceholder: "rgba(235,230,216,0.28)",
-    fontFamily: SANS,
-    borderRadius: "10px",
-    spacingUnit: "4px",
-  },
-  rules: {
-    ".Input": {
-      backgroundColor: "rgba(235,230,216,0.04)",
-      border: `1.5px solid ${BORDER}`,
-      color: TEXT,
-      boxShadow: "none",
+// Stripe Elements appearance — Stripe iframes can't read parent CSS variables,
+// so we resolve concrete colors per theme.
+function buildAppearance(theme: Theme): StripeElementsOptions["appearance"] {
+  const isLight = theme === "light";
+  const sage = isLight ? "#7d9385" : "#9bb0a5";
+  const sageRgb = isLight ? "125,147,133" : "155,176,165";
+  const bg = isLight ? "#f4f1e6" : "#0d0d0e";
+  const surface = isLight ? "#ecead8" : "#111214";
+  const surfaceElevated = isLight ? "#e4e1cb" : "#1a1a1c";
+  const text = isLight ? "#1a1f1a" : "#f0ebde";
+  const textSec = isLight ? "rgba(26,31,26,0.62)" : "rgba(235,230,216,0.55)";
+  const textTer = isLight ? "rgba(26,31,26,0.42)" : "rgba(235,230,216,0.40)";
+  const border = isLight ? "rgba(125,147,133,0.22)" : "rgba(235,230,216,0.09)";
+  const placeholder = isLight ? "rgba(26,31,26,0.36)" : "rgba(235,230,216,0.28)";
+
+  return {
+    theme: isLight ? "stripe" : "night",
+    variables: {
+      colorPrimary: sage,
+      colorBackground: surface,
+      colorText: text,
+      colorDanger: "#ff4c5c",
+      colorTextSecondary: textSec,
+      colorTextPlaceholder: placeholder,
+      fontFamily: SANS,
+      borderRadius: "10px",
+      spacingUnit: "4px",
     },
-    ".Input:focus": {
-      border: `1.5px solid rgba(${SAGE_RGB},0.5)`,
-      boxShadow: "none",
-      outline: "none",
+    rules: {
+      ".Input": {
+        backgroundColor: surface,
+        border: `1.5px solid ${border}`,
+        color: text,
+        boxShadow: "none",
+      },
+      ".Input:focus": {
+        border: `1.5px solid rgba(${sageRgb},0.5)`,
+        boxShadow: "none",
+        outline: "none",
+      },
+      ".Input--invalid": {
+        border: "1.5px solid rgba(255,76,92,0.6)",
+        boxShadow: "none",
+      },
+      ".Label": {
+        color: textTer,
+        fontSize: "10px",
+        letterSpacing: "1px",
+        textTransform: "uppercase",
+        fontFamily: MONO,
+        fontWeight: "600",
+      },
+      ".Tab": {
+        backgroundColor: surface,
+        border: `1px solid ${border}`,
+        color: textSec,
+        boxShadow: "none",
+      },
+      ".Tab:hover": {
+        backgroundColor: surfaceElevated,
+        color: text,
+      },
+      ".Tab--selected": {
+        backgroundColor: `rgba(${sageRgb},0.1)`,
+        border: `1px solid rgba(${sageRgb},0.35)`,
+        color: sage,
+        boxShadow: "none",
+      },
+      ".Tab--selected:focus": {
+        boxShadow: "none",
+      },
+      ".Error": {
+        color: "#ff4c5c",
+        fontSize: "12px",
+      },
+      ".Block": {
+        backgroundColor: "transparent",
+      },
     },
-    ".Input--invalid": {
-      border: "1.5px solid rgba(255,76,92,0.6)",
-      boxShadow: "none",
-    },
-    ".Label": {
-      color: TEXT_TER,
-      fontSize: "10px",
-      letterSpacing: "1px",
-      textTransform: "uppercase",
-      fontFamily: MONO,
-      fontWeight: "600",
-    },
-    ".Tab": {
-      backgroundColor: "rgba(235,230,216,0.03)",
-      border: `1px solid ${BORDER}`,
-      color: TEXT_SEC,
-      boxShadow: "none",
-    },
-    ".Tab:hover": {
-      backgroundColor: "rgba(235,230,216,0.06)",
-      color: TEXT,
-    },
-    ".Tab--selected": {
-      backgroundColor: `rgba(${SAGE_RGB},0.1)`,
-      border: `1px solid rgba(${SAGE_RGB},0.35)`,
-      color: SAGE,
-      boxShadow: "none",
-    },
-    ".Tab--selected:focus": {
-      boxShadow: "none",
-    },
-    ".Error": {
-      color: "#ff4c5c",
-      fontSize: "12px",
-    },
-    ".Block": {
-      backgroundColor: "transparent",
-    },
-  },
-};
+  };
+}
 
 // ── Skeleton ───────────────────────────────────────────────────────────────────
 function Skeleton() {
@@ -99,8 +115,8 @@ function Skeleton() {
         }
       `}</style>
       {[56, 56, 56, 48].map((h, i) => (
-        <div key={i} style={{ height: h, borderRadius: 10, background: "rgba(235,230,216,0.04)", position: "relative", overflow: "hidden", marginBottom: 12 }}>
-          <div style={{ position: "absolute", inset: 0, background: `linear-gradient(90deg, transparent, rgba(${SAGE_RGB},0.07), transparent)`, animation: `sk-shimmer 1.5s ease ${i * 0.12}s infinite` }} />
+        <div key={i} style={{ height: h, borderRadius: 10, background: "var(--nura-surface)", position: "relative", overflow: "hidden", marginBottom: 12 }}>
+          <div style={{ position: "absolute", inset: 0, background: `linear-gradient(90deg, transparent, rgba(var(--nura-sage-rgb),0.07), transparent)`, animation: `sk-shimmer 1.5s ease ${i * 0.12}s infinite` }} />
         </div>
       ))}
     </div>
@@ -170,7 +186,7 @@ function PaymentForm({ subscriptionId }: { subscriptionId: string }) {
         onMouseLeave={() => setHovBtn(false)}
         style={{
           marginTop: 20, width: "100%", padding: "14px", borderRadius: 12, border: "none",
-          background: (!stripe || processing || !ready) ? `rgba(${SAGE_RGB},0.45)` : hovBtn ? SAGE_HOV : SAGE,
+          background: (!stripe || processing || !ready) ? `rgba(var(--nura-sage-rgb),0.45)` : hovBtn ? SAGE_HOV : SAGE,
           color: SAGE_ON, fontFamily: MONO, fontSize: 11, fontWeight: 700,
           letterSpacing: "1.5px", cursor: (!stripe || processing || !ready) ? "not-allowed" : "pointer",
           display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
@@ -202,6 +218,7 @@ function PaymentForm({ subscriptionId }: { subscriptionId: string }) {
 // ── Outer page (fetches secret, owns layout) ───────────────────────────────────
 export default function CheckoutPage() {
   const router = useRouter();
+  const theme = useThemeStore((s) => s.theme);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [subscriptionId, setSubscriptionId] = useState<string>("");
   const [error, setError] = useState("");
@@ -233,7 +250,7 @@ export default function CheckoutPage() {
   }, [router]);
 
   const elementsOptions: StripeElementsOptions = clientSecret
-    ? { clientSecret, appearance: ELEMENTS_APPEARANCE }
+    ? { clientSecret, appearance: buildAppearance(theme) }
     : {};
 
   return (
@@ -264,7 +281,7 @@ export default function CheckoutPage() {
       <div style={{ maxWidth: 480, margin: "0 auto", padding: "28px 20px 64px", animation: "fade-up 350ms ease both" }}>
 
         {/* ── Order summary ── */}
-        <div style={{ background: "rgba(235,230,216,0.03)", border: `0.5px solid rgba(${SAGE_RGB},0.2)`, borderRadius: 16, padding: "20px", marginBottom: 24 }}>
+        <div style={{ background: "rgba(var(--nura-bg-tint-rgb),0.03)", border: `0.5px solid rgba(var(--nura-sage-rgb),0.2)`, borderRadius: 16, padding: "20px", marginBottom: 24 }}>
           <div style={{ fontFamily: MONO, fontSize: 10, fontWeight: 700, letterSpacing: "1.5px", color: SAGE, marginBottom: 14 }}>
             ORDER SUMMARY
           </div>
@@ -274,7 +291,7 @@ export default function CheckoutPage() {
             Unlimited AI conversations, personalized protocols, full knowledge base
           </div>
 
-          <div style={{ borderTop: `0.5px solid rgba(235,230,216,0.1)`, paddingTop: 14, display: "flex", flexDirection: "column", gap: 10 }}>
+          <div style={{ borderTop: `0.5px solid rgba(var(--nura-fg-rgb),0.1)`, paddingTop: 14, display: "flex", flexDirection: "column", gap: 10 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <span style={{ fontSize: 13, color: TEXT_SEC }}>Today</span>
               <span style={{ fontSize: 14, fontWeight: 600, color: TEXT }}>$0.00</span>

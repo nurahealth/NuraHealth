@@ -6,16 +6,16 @@ import { supabase } from "@/lib/supabase";
 import NuraPlexus from "@/components/NuraPlexus";
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
-const BG = "#0d0d0e";
-const TEXT = "#f0ebde";
-const TEXT_SEC = "rgba(235,230,216,0.55)";
-const BORDER = "rgba(235,230,216,0.12)";
-const SURFACE = "rgba(235,230,216,0.04)";
-const SAGE = "#9bb0a5";
-const SAGE_HOV = "#abc0b5";
-const SAGE_ON = "#0d0d0e";
+const BG = "var(--nura-bg)";
+const TEXT = "var(--nura-text-primary)";
+const TEXT_SEC = "var(--nura-text-secondary)";
+const BORDER = "rgba(var(--nura-bg-tint-rgb),0.12)";
+const SURFACE = "var(--nura-surface)";
+const SAGE = "var(--nura-sage)";
+const SAGE_HOV = "var(--nura-sage-hover)";
+const SAGE_ON = "var(--nura-bg)";
 const SAGE_RGB = "155,176,165";
-const RED = "#d4574d";
+const RED = "var(--nura-danger)";
 const SANS = "'Inter', system-ui, sans-serif";
 const SERIF = "'DM Serif Display', Georgia, serif";
 
@@ -72,7 +72,7 @@ function ConsentCheckbox({
         width: 18, height: 18, borderRadius: 5, flexShrink: 0,
         marginTop: 1,
         background: checked ? SAGE : "transparent",
-        border: `0.5px solid ${checked ? SAGE : "rgba(235,230,216,0.25)"}`,
+        border: `0.5px solid ${checked ? SAGE : "rgba(var(--nura-fg-rgb),0.25)"}`,
         display: "flex", alignItems: "center", justifyContent: "center",
         transition: "background 160ms, border-color 160ms",
       }}>
@@ -84,7 +84,7 @@ function ConsentCheckbox({
       </div>
       <span style={{
         fontFamily: SANS, fontSize: 12.5, lineHeight: 1.5,
-        color: "rgba(235,230,216,0.75)",
+        color: "rgba(var(--nura-fg-rgb),0.75)",
       }}>
         {children}
       </span>
@@ -225,7 +225,7 @@ function AuthContent() {
           to   { opacity: 1; transform: translate(-50%, 0); }
         }
         .auth-cta:active { transform: scale(0.98); }
-        input::placeholder { color: rgba(235,230,216,0.35) !important; }
+        input::placeholder { color: rgba(var(--nura-fg-rgb),0.35) !important; }
       `}</style>
 
       <NuraPlexus opacity={0.3} />
@@ -267,8 +267,8 @@ function AuthContent() {
             autoComplete="email"
             style={{
               width: "100%", padding: "14px 16px", borderRadius: 12,
-              background: emailFocused ? "rgba(235,230,216,0.06)" : SURFACE,
-              border: `0.5px solid ${emailFocused ? `rgba(${SAGE_RGB},0.5)` : BORDER}`,
+              background: emailFocused ? "var(--nura-surface-elevated)" : SURFACE,
+              border: `0.5px solid ${emailFocused ? `rgba(var(--nura-sage-rgb),0.5)` : BORDER}`,
               fontFamily: SANS, fontSize: 14, color: TEXT, outline: "none",
               transition: "background 180ms, border-color 180ms",
               marginBottom: 10,
@@ -286,8 +286,8 @@ function AuthContent() {
             autoComplete={isSignup ? "new-password" : "current-password"}
             style={{
               width: "100%", padding: "14px 16px", borderRadius: 12,
-              background: passwordFocused ? "rgba(235,230,216,0.06)" : SURFACE,
-              border: `0.5px solid ${passwordFocused ? `rgba(${SAGE_RGB},0.5)` : BORDER}`,
+              background: passwordFocused ? "var(--nura-surface-elevated)" : SURFACE,
+              border: `0.5px solid ${passwordFocused ? `rgba(var(--nura-sage-rgb),0.5)` : BORDER}`,
               fontFamily: SANS, fontSize: 14, color: TEXT, outline: "none",
               transition: "background 180ms, border-color 180ms",
               marginBottom: 14,
@@ -322,7 +322,7 @@ function AuthContent() {
           {message && (
             <div style={{
               padding: "10px 14px", borderRadius: 10, marginBottom: 12,
-              background: `rgba(${SAGE_RGB},0.08)`, border: `0.5px solid rgba(${SAGE_RGB},0.35)`,
+              background: `rgba(var(--nura-sage-rgb),0.08)`, border: `0.5px solid rgba(var(--nura-sage-rgb),0.35)`,
               fontFamily: SANS, fontSize: 12.5, color: SAGE, lineHeight: 1.5,
             }}>
               {message}
@@ -360,7 +360,7 @@ function AuthContent() {
           <div style={{ flex: 1, height: 0.5, background: BORDER }} />
           <span style={{
             fontFamily: SANS, fontSize: 10, fontWeight: 600, letterSpacing: "2px",
-            color: `rgba(${SAGE_RGB},0.55)`, textTransform: "uppercase",
+            color: `rgba(var(--nura-sage-rgb),0.55)`, textTransform: "uppercase",
           }}>
             OR
           </span>
@@ -376,7 +376,7 @@ function AuthContent() {
           onMouseLeave={(e) => { if (!anyLoading) e.currentTarget.style.background = "transparent"; }}
           style={{
             width: "100%", height: 48, borderRadius: 11,
-            background: "transparent", border: `0.5px solid rgba(235,230,216,0.15)`,
+            background: "transparent", border: `0.5px solid rgba(var(--nura-bg-tint-rgb),0.15)`,
             color: TEXT, fontFamily: SANS, fontSize: 14, fontWeight: 500,
             cursor: anyLoading ? "not-allowed" : "pointer", opacity: googleLoading ? 0.8 : 1,
             display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
@@ -394,7 +394,7 @@ function AuthContent() {
           className="auth-cta"
           style={{
             width: "100%", height: 48, borderRadius: 11, marginTop: 8,
-            background: "transparent", border: `0.5px solid rgba(235,230,216,0.15)`,
+            background: "transparent", border: `0.5px solid rgba(var(--nura-bg-tint-rgb),0.15)`,
             color: TEXT, fontFamily: SANS, fontSize: 14, fontWeight: 500,
             cursor: anyLoading ? "not-allowed" : "pointer", opacity: 0.6,
             display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
@@ -405,7 +405,7 @@ function AuthContent() {
           Continue with Apple
           <span style={{
             padding: "4px 6px", borderRadius: 4,
-            background: `rgba(${SAGE_RGB},0.14)`,
+            background: `rgba(var(--nura-sage-rgb),0.14)`,
             fontFamily: SANS, fontSize: 9, fontWeight: 600, letterSpacing: "1px",
             color: SAGE, textTransform: "uppercase",
           }}>
@@ -437,7 +437,7 @@ function AuthContent() {
 
         <p style={{
           marginTop: 28, textAlign: "center",
-          fontFamily: SANS, fontSize: 10, color: "rgba(235,230,216,0.32)",
+          fontFamily: SANS, fontSize: 10, color: "rgba(var(--nura-fg-rgb),0.32)",
           letterSpacing: "1px", textTransform: "uppercase",
         }}>
           Wellness information · not medical advice
@@ -449,7 +449,7 @@ function AuthContent() {
         <div style={{
           position: "fixed", bottom: 32, left: "50%",
           background: "rgba(20,20,21,0.95)",
-          border: `0.5px solid rgba(${SAGE_RGB},0.3)`,
+          border: `0.5px solid rgba(var(--nura-sage-rgb),0.3)`,
           color: TEXT, fontFamily: SANS, fontSize: 12.5,
           padding: "10px 16px", borderRadius: 22,
           zIndex: 80, whiteSpace: "nowrap",

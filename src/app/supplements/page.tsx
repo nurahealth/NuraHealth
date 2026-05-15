@@ -19,16 +19,16 @@ import { saveItem } from "@/lib/saved";
 import NuraPageShell from "@/components/NuraPageShell";
 
 // ── Tokens ────────────────────────────────────────────────────────────────────
-const TEXT = "#f0ebde";
-const TEXT_SEC = "rgba(235,230,216,0.55)";
-const TEXT_TER = "rgba(235,230,216,0.4)";
-const BORDER = "rgba(235,230,216,0.09)";
-const SURFACE = "rgba(235,230,216,0.04)";
-const SAGE = "#9bb0a5";
-const SAGE_HOV = "#abc0b5";
-const SAGE_ON = "#0d0d0e";
+const TEXT = "var(--nura-text-primary)";
+const TEXT_SEC = "var(--nura-text-secondary)";
+const TEXT_TER = "var(--nura-text-tertiary)";
+const BORDER = "var(--nura-border)";
+const SURFACE = "var(--nura-surface)";
+const SAGE = "var(--nura-sage)";
+const SAGE_HOV = "var(--nura-sage-hover)";
+const SAGE_ON = "var(--nura-bg)";
 const SAGE_RGB = "155,176,165";
-const RED = "#d4574d";
+const RED = "var(--nura-danger)";
 const SANS = "'Inter', system-ui, sans-serif";
 const SERIF = "'DM Serif Display', Georgia, serif";
 
@@ -336,7 +336,7 @@ export default function SupplementsPage() {
                       autoFocus
                       style={{
                         flex: 1, padding: "9px 12px", borderRadius: 9,
-                        background: "rgba(235,230,216,0.06)", border: `0.5px solid ${BORDER}`,
+                        background: "var(--nura-surface-elevated)", border: `0.5px solid ${BORDER}`,
                         color: TEXT, fontFamily: SANS, fontSize: 13, outline: "none",
                       }}
                     />
@@ -359,7 +359,7 @@ export default function SupplementsPage() {
                   }}
                   style={{
                     width: "100%", padding: "10px 0", borderRadius: 10,
-                    background: "transparent", border: `0.5px solid rgba(${SAGE_RGB},0.35)`,
+                    background: "transparent", border: `0.5px solid rgba(var(--nura-sage-rgb),0.35)`,
                     color: SAGE, fontFamily: SANS, fontSize: 12, fontWeight: 500, cursor: "pointer",
                   }}
                 >
@@ -395,7 +395,7 @@ export default function SupplementsPage() {
           backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20,
         }}>
           <div onClick={(e) => e.stopPropagation()} style={{
-            background: "#0d0d0e", border: `1px solid rgba(212,87,77,0.4)`,
+            background: "var(--nura-bg)", border: `1px solid rgba(212,87,77,0.4)`,
             borderRadius: 14, padding: "22px 20px", maxWidth: 320, width: "100%",
           }}>
             <h3 style={{ fontFamily: SERIF, fontSize: 22, color: TEXT, margin: "0 0 8px", fontWeight: 500 }}>Remove supplement?</h3>
@@ -461,7 +461,7 @@ function SuppCard({
           style={{
             width: 28, height: 28, borderRadius: 8, padding: 0, flexShrink: 0,
             background: isLogged ? SAGE : "transparent",
-            border: `1.5px solid ${isLogged ? SAGE : "rgba(235,230,216,0.2)"}`,
+            border: `1.5px solid ${isLogged ? SAGE : "rgba(var(--nura-fg-rgb),0.2)"}`,
             cursor: pending ? "not-allowed" : "pointer",
             opacity: pending ? 0.5 : 1,
             display: "flex", alignItems: "center", justifyContent: "center",
@@ -536,7 +536,7 @@ function SuppCard({
       {menuOpen && (
         <div onClick={(e) => e.stopPropagation()} style={{
           position: "absolute", right: 10, top: "calc(100% + 4px)",
-          background: "#0d0d0e", border: `0.5px solid ${BORDER}`,
+          background: "var(--nura-bg)", border: `0.5px solid ${BORDER}`,
           borderRadius: 10, padding: "6px 0", minWidth: 160, zIndex: 60,
           boxShadow: "0 8px 24px rgba(0,0,0,0.5)",
         }}>
@@ -569,7 +569,7 @@ function SuppModal({
 }) {
   const inputStyle: React.CSSProperties = {
     width: "100%", padding: "11px 12px", borderRadius: 10,
-    background: "rgba(235,230,216,0.06)", border: `0.5px solid ${BORDER}`,
+    background: "var(--nura-surface-elevated)", border: `0.5px solid ${BORDER}`,
     color: TEXT, fontFamily: SANS, fontSize: 14, outline: "none",
     boxSizing: "border-box",
   };
@@ -585,7 +585,7 @@ function SuppModal({
     }}>
       <div onClick={(e) => e.stopPropagation()} style={{
         width: "100%", maxWidth: 600, margin: "0 auto",
-        background: "#0d0d0e", borderRadius: "18px 18px 0 0",
+        background: "var(--nura-bg)", borderRadius: "18px 18px 0 0",
         border: `0.5px solid ${BORDER}`, borderBottom: "none",
         maxHeight: "92vh", overflowY: "auto",
         transform: animated ? "translateY(0)" : "translateY(100%)",
@@ -662,8 +662,8 @@ function SuppModal({
                     onClick={() => setForm((f) => ({ ...f, frequency: opt.value }))}
                     style={{
                       padding: "7px 14px", borderRadius: 20,
-                      background: active ? `rgba(${SAGE_RGB},0.15)` : "transparent",
-                      border: `0.5px solid ${active ? `rgba(${SAGE_RGB},0.4)` : BORDER}`,
+                      background: active ? `rgba(var(--nura-sage-rgb),0.15)` : "transparent",
+                      border: `0.5px solid ${active ? `rgba(var(--nura-sage-rgb),0.4)` : BORDER}`,
                       color: active ? SAGE : TEXT_SEC,
                       fontFamily: SANS, fontSize: 12, fontWeight: 500, cursor: "pointer",
                       transition: "all 160ms",
@@ -702,7 +702,7 @@ function SuppModal({
             onMouseLeave={(e) => { if (!submitting) e.currentTarget.style.background = SAGE; }}
             style={{
               width: "100%", padding: "13px", borderRadius: 12, border: "none",
-              background: submitting ? `rgba(${SAGE_RGB},0.4)` : SAGE,
+              background: submitting ? `rgba(var(--nura-sage-rgb),0.4)` : SAGE,
               color: SAGE_ON, fontFamily: SANS, fontSize: 14, fontWeight: 500,
               cursor: submitting ? "not-allowed" : "pointer", transition: "background 200ms",
             }}

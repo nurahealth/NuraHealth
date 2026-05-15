@@ -2,11 +2,11 @@
 
 import NuraPageShell from "@/components/NuraPageShell";
 
-const TEXT = "#f0ebde";
-const TEXT_BODY = "rgba(235,230,216,0.85)";
-const TEXT_SEC = "rgba(235,230,216,0.55)";
-const SAGE = "#9bb0a5";
-const RED = "#d4574d";
+const TEXT = "var(--nura-text-primary)";
+const TEXT_BODY = "rgba(var(--nura-fg-rgb),0.85)";
+const TEXT_SEC = "var(--nura-text-secondary)";
+const SAGE = "var(--nura-sage)";
+const RED = "var(--nura-danger)";
 const SANS = "'Inter', system-ui, sans-serif";
 const SERIF = "'DM Serif Display', Georgia, serif";
 

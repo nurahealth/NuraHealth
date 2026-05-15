@@ -2,17 +2,18 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
+import { useThemeStore } from '@/lib/themeStore';
 import { saveOnboarding, type OnboardingData } from './actions';
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
-const BG = '#0d0d0e';
-const TEXT = '#f0ebde';
-const TEXT_SEC = 'rgba(235,230,216,0.55)';
-const TEXT_TER = 'rgba(235,230,216,0.4)';
-const BORDER = 'rgba(235,230,216,0.09)';
-const SAGE = '#9bb0a5';
-const SAGE_HOV = '#abc0b5';
-const SAGE_ON = '#0d0d0e';
+const BG = 'var(--nura-bg)';
+const TEXT = 'var(--nura-text-primary)';
+const TEXT_SEC = 'var(--nura-text-secondary)';
+const TEXT_TER = 'var(--nura-text-tertiary)';
+const BORDER = 'var(--nura-border)';
+const SAGE = 'var(--nura-sage)';
+const SAGE_HOV = 'var(--nura-sage-hover)';
+const SAGE_ON = 'var(--nura-bg)';
 const SAGE_RGB = '155,176,165';
 const SANS = "'Inter', system-ui, sans-serif";
 const MONO = "'JetBrains Mono', monospace";
@@ -57,8 +58,8 @@ const GLOBAL_CSS = `
   * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
   html, body { margin: 0; padding: 0; }
   ::-webkit-scrollbar { width: 0; }
-  input::placeholder { color: rgba(235,230,216,0.3) !important; }
-  textarea::placeholder { color: rgba(235,230,216,0.3) !important; }
+  input::placeholder { color: rgba(var(--nura-fg-rgb),0.3) !important; }
+  textarea::placeholder { color: rgba(var(--nura-fg-rgb),0.3) !important; }
   button:active { transform: scale(0.97) !important; }
 `;
 
@@ -236,11 +237,11 @@ function TextInput({ value, onChange, placeholder, type = 'text', min, max }: {
       min={min} max={max}
       style={{
         width: '100%', padding: '13px 16px',
-        background: 'rgba(235,230,216,0.04)', border: `1.5px solid ${BORDER}`,
+        background: 'var(--nura-surface)', border: `1.5px solid ${BORDER}`,
         borderRadius: 12, fontSize: 15, fontFamily: SANS, color: TEXT,
         outline: 'none', transition: 'border-color 200ms',
       }}
-      onFocus={e => { e.currentTarget.style.borderColor = `rgba(${SAGE_RGB},0.45)`; }}
+      onFocus={e => { e.currentTarget.style.borderColor = `rgba(var(--nura-sage-rgb),0.45)`; }}
       onBlur={e => { e.currentTarget.style.borderColor = BORDER; }}
     />
   );
@@ -256,7 +257,7 @@ function SegmentedControl({ options, value, onChange, fontSize = 12 }: {
   return (
     <div style={{
       position: 'relative', display: 'flex',
-      background: 'rgba(235,230,216,0.04)', border: `1px solid ${BORDER}`,
+      background: 'var(--nura-surface)', border: `1px solid ${BORDER}`,
       borderRadius: 12, overflow: 'hidden',
     }}>
       <div style={{
@@ -291,7 +292,7 @@ function GridSegmented({ options, value, onChange, columns = 3 }: {
         return (
           <button key={opt} onClick={() => onChange(selected ? '' : opt)} style={{
             padding: '10px 8px', borderRadius: 10, cursor: 'pointer',
-            background: selected ? SAGE : 'rgba(235,230,216,0.04)',
+            background: selected ? SAGE : 'var(--nura-surface)',
             border: `1px solid ${selected ? SAGE : BORDER}`,
             color: selected ? SAGE_ON : TEXT_SEC,
             fontSize: 12, fontFamily: SANS, fontWeight: 500, lineHeight: 1.25,
@@ -309,7 +310,7 @@ function ChipToggle({ label, selected, onToggle }: {
   return (
     <button onClick={onToggle} style={{
       padding: '7px 14px',
-      background: selected ? SAGE : 'rgba(235,230,216,0.05)',
+      background: selected ? SAGE : 'rgba(var(--nura-bg-tint-rgb),0.05)',
       border: `1px solid ${selected ? SAGE : BORDER}`,
       borderRadius: 20, fontSize: 13, fontFamily: SANS, fontWeight: 500,
       color: selected ? SAGE_ON : TEXT_SEC, cursor: 'pointer',
@@ -324,8 +325,8 @@ function RemovableChip({ label, onRemove }: { label: string; onRemove: () => voi
     <span style={{
       display: 'inline-flex', alignItems: 'center', gap: 6,
       padding: '5px 6px 5px 12px', borderRadius: 18,
-      border: `1px solid rgba(${SAGE_RGB},0.45)`,
-      background: `rgba(${SAGE_RGB},0.10)`,
+      border: `1px solid rgba(var(--nura-sage-rgb),0.45)`,
+      background: `rgba(var(--nura-sage-rgb),0.10)`,
       fontSize: 12, fontFamily: SANS, color: SAGE, fontWeight: 500,
     }}>
       {label}
@@ -381,11 +382,11 @@ function TagInput({ tags, onAdd, onRemove, placeholder }: {
         placeholder={placeholder}
         style={{
           width: '100%', padding: '13px 16px',
-          background: 'rgba(235,230,216,0.04)', border: `1.5px solid ${BORDER}`,
+          background: 'var(--nura-surface)', border: `1.5px solid ${BORDER}`,
           borderRadius: 12, fontSize: 15, fontFamily: SANS, color: TEXT,
           outline: 'none', transition: 'border-color 200ms',
         }}
-        onFocus={e => { e.currentTarget.style.borderColor = `rgba(${SAGE_RGB},0.45)`; }}
+        onFocus={e => { e.currentTarget.style.borderColor = `rgba(var(--nura-sage-rgb),0.45)`; }}
         onBlur={e => { e.currentTarget.style.borderColor = BORDER; commit(); }}
       />
       {tags.length > 0 && (
@@ -404,8 +405,8 @@ function GoalCard({ goal, selected, onSelect, shaking }: {
   return (
     <div onClick={onSelect} style={{
       position: 'relative', padding: '16px 12px', borderRadius: 14, cursor: 'pointer',
-      border: `1.5px solid ${selected ? `rgba(${SAGE_RGB},0.5)` : BORDER}`,
-      background: selected ? `rgba(${SAGE_RGB},0.08)` : 'rgba(235,230,216,0.02)',
+      border: `1.5px solid ${selected ? `rgba(var(--nura-sage-rgb),0.5)` : BORDER}`,
+      background: selected ? `rgba(var(--nura-sage-rgb),0.08)` : 'rgba(var(--nura-bg-tint-rgb),0.02)',
       transform: shaking ? undefined : baseTransform,
       transition: shaking ? 'none' : 'all 200ms ease',
       animation: shaking ? 'shake 300ms ease' : 'none',
@@ -442,13 +443,13 @@ function ProgressBar({ step }: { step: number }) {
         return (
           <div key={i} style={{
             flex: 1, height: 3, borderRadius: 99, overflow: 'hidden',
-            background: done ? SAGE : curr ? `rgba(${SAGE_RGB},0.45)` : 'rgba(235,230,216,0.07)',
+            background: done ? SAGE : curr ? `rgba(var(--nura-sage-rgb),0.45)` : 'rgba(var(--nura-bg-tint-rgb),0.07)',
             position: 'relative',
           }}>
             {curr && (
               <div style={{
                 position: 'absolute', inset: 0,
-                background: `linear-gradient(90deg, transparent, rgba(${SAGE_RGB},0.5), transparent)`,
+                background: `linear-gradient(90deg, transparent, rgba(var(--nura-sage-rgb),0.5), transparent)`,
                 animation: 'shimmer 1.8s ease-in-out infinite',
               }} />
             )}
@@ -462,10 +463,14 @@ function ProgressBar({ step }: { step: number }) {
 // ─── Canvas (step 1 background) ───────────────────────────────────────────────
 function WelcomeCanvas() {
   const ref = useRef<HTMLCanvasElement>(null);
+  const theme = useThemeStore((s) => s.theme);
 
   useEffect(() => {
     const canvas = ref.current;
     if (!canvas) return;
+
+    const sageRgb = theme === 'light' ? '125,147,133' : '155,176,165';
+    const boost = theme === 'light' ? 1.5 : 1;
 
     const dpr = window.devicePixelRatio || 1;
     const W = canvas.offsetWidth;
@@ -497,7 +502,7 @@ function WelcomeCanvas() {
         if (p.y < 0 || p.y > H) p.vy *= -1;
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(${SAGE_RGB},0.38)`;
+        ctx.fillStyle = `rgba(${sageRgb},${0.38 * boost})`;
         ctx.fill();
         for (let j = i + 1; j < particles.length; j++) {
           const q = particles[j];
@@ -506,7 +511,7 @@ function WelcomeCanvas() {
           if (d < 95) {
             ctx.beginPath();
             ctx.moveTo(p.x, p.y); ctx.lineTo(q.x, q.y);
-            ctx.strokeStyle = `rgba(${SAGE_RGB},${(1 - d / 95) * 0.16})`;
+            ctx.strokeStyle = `rgba(${sageRgb},${(1 - d / 95) * 0.16 * boost})`;
             ctx.lineWidth = 0.5; ctx.stroke();
           }
         }
@@ -531,10 +536,10 @@ function WelcomeCanvas() {
       for (let i = 0; i < N - 1; i++) {
         ctx.beginPath();
         ctx.moveTo(s1[i][0], s1[i][1]); ctx.lineTo(s1[i + 1][0], s1[i + 1][1]);
-        ctx.strokeStyle = `rgba(${SAGE_RGB},0.22)`; ctx.stroke();
+        ctx.strokeStyle = `rgba(${sageRgb},${0.22 * boost})`; ctx.stroke();
         ctx.beginPath();
         ctx.moveTo(s2[i][0], s2[i][1]); ctx.lineTo(s2[i + 1][0], s2[i + 1][1]);
-        ctx.strokeStyle = `rgba(${SAGE_RGB},0.22)`; ctx.stroke();
+        ctx.strokeStyle = `rgba(${sageRgb},${0.22 * boost})`; ctx.stroke();
       }
 
       ctx.lineWidth = 0.7;
@@ -542,15 +547,15 @@ function WelcomeCanvas() {
         const [x1, y1] = s1[i]; const [x2, y2] = s2[i];
         const sep = Math.abs(x1 - x2);
         ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2);
-        ctx.strokeStyle = `rgba(${SAGE_RGB},${(sep / (2 * amp)) * 0.4})`; ctx.stroke();
+        ctx.strokeStyle = `rgba(${sageRgb},${(sep / (2 * amp)) * 0.4 * boost})`; ctx.stroke();
       }
 
       for (let i = 0; i < N; i++) {
         const [x1, y1, d1] = s1[i]; const [x2, y2, d2] = s2[i];
         ctx.beginPath(); ctx.arc(x1, y1, 3, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(${SAGE_RGB},${0.35 + d1 * 0.55})`; ctx.fill();
+        ctx.fillStyle = `rgba(${sageRgb},${(0.35 + d1 * 0.55) * boost})`; ctx.fill();
         ctx.beginPath(); ctx.arc(x2, y2, 3, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(${SAGE_RGB},${0.35 + d2 * 0.55})`; ctx.fill();
+        ctx.fillStyle = `rgba(${sageRgb},${(0.35 + d2 * 0.55) * boost})`; ctx.fill();
       }
 
       t += 0.016;
@@ -559,7 +564,7 @@ function WelcomeCanvas() {
 
     draw();
     return () => cancelAnimationFrame(raf);
-  }, []);
+  }, [theme]);
 
   return (
     <canvas ref={ref} style={{
@@ -731,8 +736,8 @@ function Step3Health({ state, update, toggleCondition, addCondition, removeCondi
           {age !== null ? (
             <div style={{
               padding: '13px 16px', borderRadius: 12,
-              background: `rgba(${SAGE_RGB},0.08)`,
-              border: `1px solid rgba(${SAGE_RGB},0.25)`,
+              background: `rgba(var(--nura-sage-rgb),0.08)`,
+              border: `1px solid rgba(var(--nura-sage-rgb),0.25)`,
               fontSize: 15, fontFamily: SANS, color: TEXT,
             }}>
               You&apos;re {age} years old
@@ -740,7 +745,7 @@ function Step3Health({ state, update, toggleCondition, addCondition, removeCondi
           ) : (
             <div style={{
               padding: '13px 16px', borderRadius: 12,
-              background: 'rgba(235,230,216,0.04)',
+              background: 'var(--nura-surface)',
               border: `1.5px solid ${BORDER}`,
               fontSize: 14, fontFamily: SANS, color: TEXT_TER, fontStyle: 'italic',
             }}>
@@ -833,11 +838,11 @@ function AddOtherInput({ onAdd, placeholder }: { onAdd: (v: string) => void; pla
       placeholder={placeholder}
       style={{
         width: '100%', padding: '11px 14px',
-        background: 'rgba(235,230,216,0.04)', border: `1.5px solid ${BORDER}`,
+        background: 'var(--nura-surface)', border: `1.5px solid ${BORDER}`,
         borderRadius: 12, fontSize: 13, fontFamily: SANS, color: TEXT,
         outline: 'none', transition: 'border-color 200ms',
       }}
-      onFocus={e => { e.currentTarget.style.borderColor = `rgba(${SAGE_RGB},0.45)`; }}
+      onFocus={e => { e.currentTarget.style.borderColor = `rgba(var(--nura-sage-rgb),0.45)`; }}
     />
   );
 }
@@ -870,9 +875,9 @@ function Step4Goals({ goals, onToggle, animKey }: {
         <span style={{
           fontSize: 11, fontFamily: MONO, letterSpacing: '0.5px',
           padding: '4px 10px', borderRadius: 20,
-          background: goals.length === 3 ? `rgba(${SAGE_RGB},0.18)` : 'rgba(235,230,216,0.06)',
+          background: goals.length === 3 ? `rgba(var(--nura-sage-rgb),0.18)` : 'var(--nura-surface-elevated)',
           color: goals.length === 3 ? SAGE : TEXT_TER,
-          border: `1px solid ${goals.length === 3 ? `rgba(${SAGE_RGB},0.35)` : BORDER}`,
+          border: `1px solid ${goals.length === 3 ? `rgba(var(--nura-sage-rgb),0.35)` : BORDER}`,
           transition: 'all 250ms ease', whiteSpace: 'nowrap', flexShrink: 0,
         }}>
           {goals.length} / 3
@@ -915,12 +920,12 @@ function Step5Symptoms({ state, update, toggleChip, animKey }: {
         placeholder="Tell me what's been off lately..."
         style={{
           width: '100%', minHeight: 110, padding: '13px 16px',
-          background: 'rgba(235,230,216,0.04)', border: `1.5px solid ${BORDER}`,
+          background: 'var(--nura-surface)', border: `1.5px solid ${BORDER}`,
           borderRadius: 12, fontSize: 14, fontFamily: SANS, color: TEXT,
           outline: 'none', resize: 'none', lineHeight: 1.6,
           transition: 'border-color 200ms',
         }}
-        onFocus={e => { e.currentTarget.style.borderColor = `rgba(${SAGE_RGB},0.45)`; }}
+        onFocus={e => { e.currentTarget.style.borderColor = `rgba(var(--nura-sage-rgb),0.45)`; }}
         onBlur={e => { e.currentTarget.style.borderColor = BORDER; }}
       />
     </div>
@@ -1009,7 +1014,7 @@ function Step7Done({ state, animKey }: { state: FormState; animKey: number }) {
 
       {displayGoals.length > 0 && (
         <div style={{
-          width: '100%', background: 'rgba(235,230,216,0.04)', border: `1px solid ${BORDER}`,
+          width: '100%', background: 'var(--nura-surface)', border: `1px solid ${BORDER}`,
           borderRadius: 16, padding: '20px', marginBottom: 24, textAlign: 'left',
         }}>
           <div style={{ fontSize: 10, fontFamily: MONO, letterSpacing: '2px', color: SAGE, textTransform: 'uppercase', marginBottom: 12 }}>
@@ -1021,7 +1026,7 @@ function Step7Done({ state, animKey }: { state: FormState; animKey: number }) {
               <span key={g}>
                 <span style={{
                   display: 'inline-block', padding: '2px 10px', borderRadius: 20,
-                  background: `rgba(${SAGE_RGB},0.15)`, border: `1px solid rgba(${SAGE_RGB},0.3)`,
+                  background: `rgba(var(--nura-sage-rgb),0.15)`, border: `1px solid rgba(var(--nura-sage-rgb),0.3)`,
                   color: SAGE, fontSize: 12, fontWeight: 500, margin: '0 2px',
                 }}>{g}</span>
                 {i < displayGoals.length - 1 ? ', ' : ''}
@@ -1292,7 +1297,7 @@ export default function OnboardingPage() {
             <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
               <button onClick={back} style={{
                 width: 44, height: 44, borderRadius: 12, flexShrink: 0,
-                background: 'rgba(235,230,216,0.06)', border: `1px solid ${BORDER}`,
+                background: 'var(--nura-surface-elevated)', border: `1px solid ${BORDER}`,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 cursor: 'pointer', color: TEXT_SEC,
               }}>

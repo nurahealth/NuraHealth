@@ -22,15 +22,15 @@ import {
 import NuraPageShell from "@/components/NuraPageShell";
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
-const TEXT = "#f0ebde";
-const TEXT_SEC = "rgba(235,230,216,0.55)";
-const TEXT_TER = "rgba(235,230,216,0.4)";
-const BORDER = "rgba(235,230,216,0.09)";
-const SURFACE = "rgba(235,230,216,0.04)";
-const SAGE = "#9bb0a5";
+const TEXT = "var(--nura-text-primary)";
+const TEXT_SEC = "var(--nura-text-secondary)";
+const TEXT_TER = "var(--nura-text-tertiary)";
+const BORDER = "var(--nura-border)";
+const SURFACE = "var(--nura-surface)";
+const SAGE = "var(--nura-sage)";
 const SAGE_RGB = "155,176,165";
-const AMBER = "#d4a574";
-const RED = "#d4574d";
+const AMBER = "var(--nura-watch)";
+const RED = "var(--nura-danger)";
 const SANS = "'Inter', system-ui, sans-serif";
 const SERIF = "'DM Serif Display', Georgia, serif";
 
@@ -155,7 +155,7 @@ export default function DashboardPage() {
                 <span style={{
                   fontFamily: SERIF, fontWeight: 400,
                   fontSize: "clamp(24px, 3vw, 28px)",
-                  color: `rgba(${SAGE_RGB},0.5)`,
+                  color: `rgba(var(--nura-sage-rgb),0.5)`,
                 }}>
                   /100
                 </span>
@@ -215,8 +215,8 @@ export default function DashboardPage() {
                       key={p.id}
                       onClick={() => router.push(`/bloodwork/${p.id}`)}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.background = "rgba(235,230,216,0.06)";
-                        e.currentTarget.style.borderColor = `rgba(${SAGE_RGB},0.25)`;
+                        e.currentTarget.style.background = "var(--nura-surface-elevated)";
+                        e.currentTarget.style.borderColor = `rgba(var(--nura-sage-rgb),0.25)`;
                       }}
                       onMouseLeave={(e) => {
                         e.currentTarget.style.background = SURFACE;
@@ -327,7 +327,7 @@ function MarkerTile({ marker, onClick }: { marker: EnrichedMarker; onClick: () =
         padding: 14, cursor: hasData ? "pointer" : "default",
         transition: "border-color 160ms",
       }}
-      onMouseEnter={hasData ? (e) => { e.currentTarget.style.borderColor = `rgba(${SAGE_RGB},0.25)`; } : undefined}
+      onMouseEnter={hasData ? (e) => { e.currentTarget.style.borderColor = `rgba(var(--nura-sage-rgb),0.25)`; } : undefined}
       onMouseLeave={hasData ? (e) => { e.currentTarget.style.borderColor = BORDER; } : undefined}
     >
       <div style={{
@@ -391,18 +391,18 @@ function MarkerRangeBar({ marker }: { marker: EnrichedMarker }) {
 
   return (
     <div style={{ position: "relative", height: 4, borderRadius: 2, marginTop: 10, overflow: "visible" }}>
-      <div style={{ position: "absolute", inset: 0, background: "rgba(235,230,216,0.07)", borderRadius: 2 }} />
+      <div style={{ position: "absolute", inset: 0, background: "rgba(var(--nura-bg-tint-rgb),0.07)", borderRadius: 2 }} />
       <div style={{
         position: "absolute", top: 0, bottom: 0,
         left: `${clamp(optStart)}%`,
         width: `${Math.max(0, clamp(optEnd) - clamp(optStart))}%`,
-        background: `rgba(${SAGE_RGB},0.4)`,
+        background: `rgba(var(--nura-sage-rgb),0.4)`,
       }} />
       <div style={{
         position: "absolute", top: "50%", left: `${clamp(b.value)}%`,
         transform: "translate(-50%, -50%)",
         width: 8, height: 8, borderRadius: "50%",
-        background: sc, border: "1.5px solid #0d0d0e",
+        background: sc, border: "1.5px solid var(--nura-bg)",
         boxShadow: `0 0 4px ${sc}`,
       }} />
     </div>
@@ -423,7 +423,7 @@ function EmptySectionPrompt({
   return (
     <div style={{
       width: "100%", padding: "20px 22px", borderRadius: 14,
-      background: "rgba(235,230,216,0.02)", border: `0.5px dashed ${BORDER}`,
+      background: "rgba(var(--nura-bg-tint-rgb),0.02)", border: `0.5px dashed ${BORDER}`,
       display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14, flexWrap: "wrap" as const,
     }}>
       <span style={{ fontFamily: SANS, fontSize: 13.5, color: TEXT_SEC, lineHeight: 1.5 }}>
@@ -459,7 +459,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 function ScoreTile({ count, label, color }: { count: number; label: string; color: string }) {
   return (
     <div style={{
-      background: "rgba(235,230,216,0.03)", border: `0.5px solid ${BORDER}`, borderRadius: 10,
+      background: "rgba(var(--nura-bg-tint-rgb),0.03)", border: `0.5px solid ${BORDER}`, borderRadius: 10,
       padding: "10px 8px", textAlign: "center",
     }}>
       <div style={{ fontFamily: SANS, fontSize: 20, fontWeight: 500, color, lineHeight: 1 }}>{count}</div>
