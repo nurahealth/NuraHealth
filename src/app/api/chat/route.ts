@@ -26,18 +26,93 @@ Communication style:
 
 You educate and suggest natural approaches. You do not diagnose or prescribe. Your goal is to empower users with knowledge about their health sovereignty.`;
 
+function parseDobForAge(dob: string): number | null {
+  const m = dob.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (!m) return null;
+  const month = parseInt(m[1], 10);
+  const day = parseInt(m[2], 10);
+  const year = parseInt(m[3], 10);
+  if (month < 1 || month > 12 || day < 1 || day > 31 || year < 1900) return null;
+  const d = new Date(year, month - 1, day);
+  if (d.getFullYear() !== year || d.getMonth() !== month - 1 || d.getDate() !== day) return null;
+  const now = new Date();
+  let age = now.getFullYear() - d.getFullYear();
+  const md = now.getMonth() - d.getMonth();
+  if (md < 0 || (md === 0 && now.getDate() < d.getDate())) age--;
+  return age >= 0 && age <= 130 ? age : null;
+}
+
+function cmToFtInStr(cm: number): string {
+  const total = cm / 2.54;
+  const ft = Math.floor(total / 12);
+  const inches = Math.round(total - ft * 12);
+  return `${ft}'${inches}"`;
+}
+
+function buildDemographics(data: Record<string, unknown>): string | null {
+  const sex = typeof data.sex === "string" ? data.sex : "";
+  const dob = typeof data.dob === "string" ? data.dob : "";
+  const age = dob ? parseDobForAge(dob) : null;
+  const heightCm = typeof data.height_cm === "number" ? data.height_cm : null;
+  const weightKg = typeof data.weight_kg === "number" ? data.weight_kg : null;
+
+  const bits: string[] = [];
+  if (age !== null) bits.push(`Age ${age}`);
+  if (sex) bits.push(sex);
+  if (weightKg !== null) {
+    const lbs = Math.round(weightKg * 2.20462 * 10) / 10;
+    bits.push(`${weightKg}kg (${lbs}lbs)`);
+  }
+  if (heightCm !== null) {
+    bits.push(`${heightCm}cm (${cmToFtInStr(heightCm)})`);
+  }
+  return bits.length ? bits.join(", ") : null;
+}
+
 function onboardingSlice(data: Record<string, unknown> | null): string {
   if (!data) return "";
   const parts: string[] = [];
   const v = (k: string) => (data[k] != null ? String(data[k]) : "");
   if (v("name")) parts.push(`Name: ${v("name")}`);
-  if (v("sex")) parts.push(`Sex: ${v("sex")}`);
-  if (v("dob")) parts.push(`DOB: ${v("dob")}`);
+
+  const demo = buildDemographics(data);
+  if (demo) parts.push(`Demographics: ${demo}`);
+  else {
+    if (v("sex")) parts.push(`Sex: ${v("sex")}`);
+    if (v("dob")) parts.push(`DOB: ${v("dob")}`);
+  }
+
+  if (v("activity_level")) parts.push(`Activity level: ${v("activity_level")}`);
+
+  const pregnancy = v("pregnancy_status");
+  if (pregnancy && pregnancy !== "Prefer not to say") {
+    parts.push(`Pregnancy status: ${pregnancy}`);
+  }
+
+  if (Array.isArray(data.conditions)) {
+    const cs = (data.conditions as unknown[]).filter((x): x is string => typeof x === "string" && x.length > 0);
+    const meaningful = cs.filter(c => c !== "None of these");
+    if (meaningful.length > 0) parts.push(`Conditions: ${meaningful.join(", ")}`);
+  }
+
+  if (Array.isArray(data.medications)) {
+    const meds = (data.medications as unknown[]).filter((x): x is string => typeof x === "string" && x.length > 0);
+    if (meds.length > 0) {
+      parts.push(`Medications: ${meds.join(", ")} — IMPORTANT: check for interactions with any supplement or herb suggestions`);
+    }
+  }
+
+  if (Array.isArray(data.allergies)) {
+    const allergies = (data.allergies as unknown[]).filter((x): x is string => typeof x === "string" && x.length > 0);
+    if (allergies.length > 0) {
+      parts.push(`Allergies: ${allergies.join(", ")} — DO NOT recommend anything containing these`);
+    }
+  }
+
   if (Array.isArray(data.goals) && data.goals.length) parts.push(`Goals: ${(data.goals as string[]).join(", ")}`);
   if (Array.isArray(data.symptom_chips) && data.symptom_chips.length) parts.push(`Symptoms: ${(data.symptom_chips as string[]).join(", ")}`);
   if (v("symptoms_text")) parts.push(`Notes: ${v("symptoms_text")}`);
   if (v("diet")) parts.push(`Diet: ${v("diet")}`);
-  if (v("exercise")) parts.push(`Exercise: ${v("exercise")}`);
   if (v("sleep")) parts.push(`Sleep: ${v("sleep")}`);
   if (v("stress")) parts.push(`Stress: ${v("stress")}`);
   return parts.length

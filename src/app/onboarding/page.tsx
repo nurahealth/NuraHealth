@@ -17,6 +17,8 @@ const SAGE_RGB = '155,176,165';
 const SANS = "'Inter', system-ui, sans-serif";
 const MONO = "'JetBrains Mono', monospace";
 
+const TOTAL_STEPS = 7;
+
 // ─── CSS keyframes (injected once) ───────────────────────────────────────────
 const GLOBAL_CSS = `
   @keyframes heartbeat {
@@ -60,6 +62,45 @@ const GLOBAL_CSS = `
   button:active { transform: scale(0.97) !important; }
 `;
 
+// ─── Unit conversion ──────────────────────────────────────────────────────────
+function ftInToCm(ft: number, inches: number): number {
+  return Math.round((ft * 30.48 + inches * 2.54) * 10) / 10;
+}
+function lbsToKg(lbs: number): number {
+  return Math.round(lbs * 0.453592 * 10) / 10;
+}
+function cmToFtIn(cm: number): { ft: number; in: number } {
+  const totalInches = cm / 2.54;
+  const ft = Math.floor(totalInches / 12);
+  const inches = Math.round(totalInches - ft * 12);
+  return { ft, in: inches };
+}
+function kgToLbs(kg: number): number {
+  return Math.round(kg * 2.20462 * 10) / 10;
+}
+
+// ─── DOB parsing + age ────────────────────────────────────────────────────────
+function parseDob(dob: string): Date | null {
+  const m = dob.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (!m) return null;
+  const month = parseInt(m[1], 10);
+  const day = parseInt(m[2], 10);
+  const year = parseInt(m[3], 10);
+  if (month < 1 || month > 12 || day < 1 || day > 31 || year < 1900) return null;
+  const d = new Date(year, month - 1, day);
+  if (d.getFullYear() !== year || d.getMonth() !== month - 1 || d.getDate() !== day) return null;
+  return d;
+}
+function calculateAge(dob: string): number | null {
+  const d = parseDob(dob);
+  if (!d) return null;
+  const now = new Date();
+  let age = now.getFullYear() - d.getFullYear();
+  const mDiff = now.getMonth() - d.getMonth();
+  if (mDiff < 0 || (mDiff === 0 && now.getDate() < d.getDate())) age--;
+  return age >= 0 && age <= 130 ? age : null;
+}
+
 // ─── SVG Icons ────────────────────────────────────────────────────────────────
 function Icon({ children, color = 'currentColor' }: { children: React.ReactNode; color?: string }) {
   return (
@@ -100,9 +141,51 @@ const SYMPTOM_CHIPS = [
   'Headaches', 'Mood swings', 'Cravings',
 ];
 const DIET_OPTIONS   = ['Whole foods', 'Standard', 'Keto', 'Vegetarian', 'Carnivore'];
-const EXERCISE_OPTS  = ['Sedentary', 'Light', 'Moderate', 'Heavy'];
 const SLEEP_OPTS     = ['<5h', '5-6h', '6-7h', '7-8h', '8+h'];
 const STRESS_OPTS    = ['Low', 'Moderate', 'High', 'Very high'];
+
+const UNIT_OPTIONS = ['Imperial · ft / lbs', 'Metric · cm / kg'];
+
+const ACTIVITY_OPTIONS = ['Sedentary', 'Lightly active', 'Moderately active', 'Very active', 'Athlete'];
+const PREGNANCY_OPTIONS = ['Not pregnant', 'Pregnant', 'Trying to conceive', 'Breastfeeding', 'Prefer not to say'];
+const NONE_CONDITION = 'None of these';
+const CONDITION_CHIPS = [
+  'Diabetes / pre-diabetes',
+  "Thyroid (Hashimoto's, hypo/hyper)",
+  'Heart disease',
+  'Kidney disease',
+  'Liver disease',
+  'Autoimmune',
+  'Cancer history',
+  'GI / IBS / SIBO',
+  'Hormonal imbalance',
+  'Mental health (anxiety/depression)',
+  NONE_CONDITION,
+];
+
+// ─── Local form state (superset of persisted OnboardingData) ─────────────────
+interface FormState {
+  unitSystem: 'imperial' | 'metric';
+  name: string;
+  dob: string;
+  sex: string;
+  height_ft: string;
+  height_in: string;
+  height_cm: string;
+  weight_lbs: string;
+  weight_kg: string;
+  goals: string[];
+  symptoms_text: string;
+  symptom_chips: string[];
+  diet: string;
+  sleep: string;
+  stress: string;
+  activity_level: string;
+  pregnancy_status: string;
+  conditions: string[];
+  medications: string[];
+  allergies: string[];
+}
 
 // ─── Shared sub-components ────────────────────────────────────────────────────
 function StepQuestion({ text, active }: { text: string; active: boolean }) {
@@ -145,11 +228,12 @@ function FieldLabel({ children }: { children: React.ReactNode }) {
   return <div style={{ fontSize: 11, fontFamily: MONO, letterSpacing: '1.2px', color: TEXT_TER, textTransform: 'uppercase', marginBottom: 6 }}>{children}</div>;
 }
 
-function TextInput({ value, onChange, placeholder, type = 'text' }: {
-  value: string; onChange: (v: string) => void; placeholder?: string; type?: string;
+function TextInput({ value, onChange, placeholder, type = 'text', min, max }: {
+  value: string; onChange: (v: string) => void; placeholder?: string; type?: string; min?: number; max?: number;
 }) {
   return (
     <input type={type} value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder}
+      min={min} max={max}
       style={{
         width: '100%', padding: '13px 16px',
         background: 'rgba(235,230,216,0.04)', border: `1.5px solid ${BORDER}`,
@@ -162,8 +246,8 @@ function TextInput({ value, onChange, placeholder, type = 'text' }: {
   );
 }
 
-function SegmentedControl({ options, value, onChange }: {
-  options: string[]; value: string; onChange: (v: string) => void;
+function SegmentedControl({ options, value, onChange, fontSize = 12 }: {
+  options: string[]; value: string; onChange: (v: string) => void; fontSize?: number;
 }) {
   const idx = Math.max(0, options.indexOf(value));
   const pct = (idx / options.length) * 100;
@@ -187,11 +271,34 @@ function SegmentedControl({ options, value, onChange }: {
         <button key={opt} onClick={() => onChange(opt)} style={{
           flex: 1, padding: '11px 4px', background: 'none', border: 'none',
           color: value === opt ? SAGE_ON : TEXT_SEC,
-          fontSize: 12, fontFamily: SANS, fontWeight: 500, cursor: 'pointer',
-          position: 'relative', zIndex: 1,
+          fontSize, fontFamily: SANS, fontWeight: 500, cursor: 'pointer',
+          position: 'relative', zIndex: 1, lineHeight: 1.2,
           transition: 'color 200ms cubic-bezier(0.4,0,0.2,1)',
         }}>{opt}</button>
       ))}
+    </div>
+  );
+}
+
+// 2-row segmented grid for >4 options that don't fit a single sliding-thumb row
+function GridSegmented({ options, value, onChange, columns = 3 }: {
+  options: string[]; value: string; onChange: (v: string) => void; columns?: number;
+}) {
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: `repeat(${columns}, 1fr)`, gap: 6 }}>
+      {options.map(opt => {
+        const selected = value === opt;
+        return (
+          <button key={opt} onClick={() => onChange(selected ? '' : opt)} style={{
+            padding: '10px 8px', borderRadius: 10, cursor: 'pointer',
+            background: selected ? SAGE : 'rgba(235,230,216,0.04)',
+            border: `1px solid ${selected ? SAGE : BORDER}`,
+            color: selected ? SAGE_ON : TEXT_SEC,
+            fontSize: 12, fontFamily: SANS, fontWeight: 500, lineHeight: 1.25,
+            transition: 'all 200ms cubic-bezier(0.4,0,0.2,1)',
+          }}>{opt}</button>
+        );
+      })}
     </div>
   );
 }
@@ -209,6 +316,84 @@ function ChipToggle({ label, selected, onToggle }: {
       transform: selected ? 'scale(1.06)' : 'none',
       transition: 'all 150ms ease', whiteSpace: 'nowrap',
     }}>{label}</button>
+  );
+}
+
+function RemovableChip({ label, onRemove }: { label: string; onRemove: () => void }) {
+  return (
+    <span style={{
+      display: 'inline-flex', alignItems: 'center', gap: 6,
+      padding: '5px 6px 5px 12px', borderRadius: 18,
+      border: `1px solid rgba(${SAGE_RGB},0.45)`,
+      background: `rgba(${SAGE_RGB},0.10)`,
+      fontSize: 12, fontFamily: SANS, color: SAGE, fontWeight: 500,
+    }}>
+      {label}
+      <button onClick={onRemove} aria-label={`Remove ${label}`} style={{
+        background: 'none', border: 'none', cursor: 'pointer',
+        color: SAGE, padding: 2, display: 'inline-flex',
+      }}>
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+          <path d="M6 6l12 12M18 6l-12 12"/>
+        </svg>
+      </button>
+    </span>
+  );
+}
+
+function TagInput({ tags, onAdd, onRemove, placeholder }: {
+  tags: string[];
+  onAdd: (tag: string) => void;
+  onRemove: (idx: number) => void;
+  placeholder?: string;
+}) {
+  const [draft, setDraft] = useState('');
+
+  const commit = () => {
+    const v = draft.trim().replace(/,+$/, '').trim();
+    if (v && !tags.some(t => t.toLowerCase() === v.toLowerCase())) onAdd(v);
+    setDraft('');
+  };
+
+  return (
+    <div>
+      <input
+        type="text"
+        value={draft}
+        onChange={e => {
+          const v = e.target.value;
+          if (v.includes(',')) {
+            const t = v.replace(/,/g, '').trim();
+            if (t && !tags.some(x => x.toLowerCase() === t.toLowerCase())) onAdd(t);
+            setDraft('');
+          } else {
+            setDraft(v);
+          }
+        }}
+        onKeyDown={e => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            commit();
+          } else if (e.key === 'Backspace' && draft === '' && tags.length > 0) {
+            onRemove(tags.length - 1);
+          }
+        }}
+        placeholder={placeholder}
+        style={{
+          width: '100%', padding: '13px 16px',
+          background: 'rgba(235,230,216,0.04)', border: `1.5px solid ${BORDER}`,
+          borderRadius: 12, fontSize: 15, fontFamily: SANS, color: TEXT,
+          outline: 'none', transition: 'border-color 200ms',
+        }}
+        onFocus={e => { e.currentTarget.style.borderColor = `rgba(${SAGE_RGB},0.45)`; }}
+        onBlur={e => { e.currentTarget.style.borderColor = BORDER; commit(); }}
+      />
+      {tags.length > 0 && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 10 }}>
+          {tags.map((t, i) => <RemovableChip key={`${t}-${i}`} label={t} onRemove={() => onRemove(i)} />)}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -251,7 +436,7 @@ function GoalCard({ goal, selected, onSelect, shaking }: {
 function ProgressBar({ step }: { step: number }) {
   return (
     <div style={{ display: 'flex', gap: 4, marginBottom: 20 }}>
-      {Array.from({ length: 6 }, (_, i) => {
+      {Array.from({ length: TOTAL_STEPS }, (_, i) => {
         const done = i + 1 < step;
         const curr = i + 1 === step;
         return (
@@ -290,7 +475,6 @@ function WelcomeCanvas() {
     const ctx = canvas.getContext('2d')!;
     ctx.scale(dpr, dpr);
 
-    // init plexus particles
     const particles = Array.from({ length: 28 }, () => {
       const a = Math.random() * Math.PI * 2;
       return {
@@ -306,7 +490,6 @@ function WelcomeCanvas() {
     const draw = () => {
       ctx.clearRect(0, 0, W, H);
 
-      // — plexus —
       for (let i = 0; i < particles.length; i++) {
         const p = particles[i];
         p.x += p.vx; p.y += p.vy;
@@ -329,7 +512,6 @@ function WelcomeCanvas() {
         }
       }
 
-      // — double helix —
       const N = 22, helH = 260, amp = 62, freq = 2.4 * Math.PI;
       const cx = W / 2, cy = H / 2, top = cy - helH / 2;
       const s1: [number, number, number][] = [];
@@ -345,7 +527,6 @@ function WelcomeCanvas() {
         s1.push([x1, y, d1]); s2.push([x2, y, d2]);
       }
 
-      // strands
       ctx.lineWidth = 1;
       for (let i = 0; i < N - 1; i++) {
         ctx.beginPath();
@@ -356,7 +537,6 @@ function WelcomeCanvas() {
         ctx.strokeStyle = `rgba(${SAGE_RGB},0.22)`; ctx.stroke();
       }
 
-      // rung lines every other dot
       ctx.lineWidth = 0.7;
       for (let i = 0; i < N; i += 2) {
         const [x1, y1] = s1[i]; const [x2, y2] = s2[i];
@@ -365,7 +545,6 @@ function WelcomeCanvas() {
         ctx.strokeStyle = `rgba(${SAGE_RGB},${(sep / (2 * amp)) * 0.4})`; ctx.stroke();
       }
 
-      // dots
       for (let i = 0; i < N; i++) {
         const [x1, y1, d1] = s1[i]; const [x2, y2, d2] = s2[i];
         ctx.beginPath(); ctx.arc(x1, y1, 3, 0, Math.PI * 2);
@@ -390,8 +569,8 @@ function WelcomeCanvas() {
   );
 }
 
-// ─── Step components ──────────────────────────────────────────────────────────
-function Step1({ onNext, animKey }: { onNext: () => void; animKey: number }) {
+// ─── Step 1: Welcome ──────────────────────────────────────────────────────────
+function Step1Welcome({ onNext, animKey }: { onNext: () => void; animKey: number }) {
   const [hover, setHover] = useState(false);
   return (
     <div key={animKey} style={{
@@ -402,7 +581,6 @@ function Step1({ onNext, animKey }: { onNext: () => void; animKey: number }) {
     }}>
       <WelcomeCanvas />
       <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', width: '100%' }}>
-        {/* Logo */}
         <div style={{ position: 'relative', width: 88, height: 88, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 32 }}>
           <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', border: '1px solid rgba(155,176,165,0.25)', animation: 'ripple 2.8s ease-out infinite' }} />
           <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', border: '1px solid rgba(155,176,165,0.15)', animation: 'ripple 2.8s ease-out 1.4s infinite' }} />
@@ -415,15 +593,12 @@ function Step1({ onNext, animKey }: { onNext: () => void; animKey: number }) {
             <span style={{ fontFamily: SANS, fontWeight: 700, fontSize: 19, color: '#ffffff' }}>nūra</span>
           </div>
         </div>
-        {/* Title */}
         <h1 style={{ fontSize: 30, fontWeight: 500, color: TEXT, fontFamily: SANS, margin: '0 0 12px', letterSpacing: '-0.6px', lineHeight: 1.2 }}>
           Hi, I&apos;m NŪRA
         </h1>
-        {/* Sub */}
         <p style={{ fontSize: 14, color: TEXT_SEC, maxWidth: 270, margin: '0 auto 36px', lineHeight: 1.65, fontFamily: SANS }}>
           Your AI companion for natural wellness. Let me get to know you — takes 90 seconds.
         </p>
-        {/* CTA */}
         <button
           onClick={onNext}
           onMouseEnter={() => setHover(true)}
@@ -441,7 +616,6 @@ function Step1({ onNext, animKey }: { onNext: () => void; animKey: number }) {
             <path d="M5 12h14M13 6l6 6-6 6"/>
           </svg>
         </button>
-        {/* Sign in */}
         <div style={{ marginTop: 20, fontSize: 13, color: TEXT_TER, fontFamily: SANS }}>
           Already a member?{' '}
           <a href="/auth" style={{ color: SAGE, textDecoration: 'none', fontWeight: 500 }}>Sign in</a>
@@ -451,9 +625,16 @@ function Step1({ onNext, animKey }: { onNext: () => void; animKey: number }) {
   );
 }
 
-function Step2({ state, update, animKey }: {
-  state: OnboardingData; update: (k: keyof OnboardingData, v: string) => void; animKey: number;
+// ─── Step 2: Basics ──────────────────────────────────────────────────────────
+function Step2Basics({ state, update, animKey }: {
+  state: FormState; update: (k: keyof FormState, v: string) => void; animKey: number;
 }) {
+  const isMetric = state.unitSystem === 'metric';
+  const onUnit = (label: string) => {
+    update('unitSystem', label.startsWith('Metric') ? 'metric' : 'imperial');
+  };
+  const unitLabel = isMetric ? UNIT_OPTIONS[1] : UNIT_OPTIONS[0];
+
   return (
     <div key={animKey} style={{
       minWidth: '100%', padding: '8px 0 24px',
@@ -463,6 +644,10 @@ function Step2({ state, update, animKey }: {
       <Hint text="A few details so I can personalize for you." />
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+        <div>
+          <FieldLabel>Units</FieldLabel>
+          <SegmentedControl options={UNIT_OPTIONS} value={unitLabel} onChange={onUnit} fontSize={11} />
+        </div>
         <div>
           <FieldLabel>Preferred name</FieldLabel>
           <TextInput value={state.name} onChange={v => update('name', v)} placeholder="What should I call you?" />
@@ -475,29 +660,190 @@ function Step2({ state, update, animKey }: {
           <FieldLabel>Biological sex</FieldLabel>
           <SegmentedControl options={['Male', 'Female', 'Other']} value={state.sex} onChange={v => update('sex', v)} />
         </div>
-        <div style={{ display: 'flex', gap: 12 }}>
-          <div style={{ flex: 1 }}>
-            <FieldLabel>Height</FieldLabel>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <div style={{ flex: 1 }}>
-                <TextInput value={state.height_ft} onChange={v => update('height_ft', v)} placeholder="ft" type="number" />
-              </div>
-              <div style={{ flex: 1 }}>
-                <TextInput value={state.height_in} onChange={v => update('height_in', v)} placeholder="in" type="number" />
+
+        {!isMetric ? (
+          <div style={{ display: 'flex', gap: 12 }}>
+            <div style={{ flex: 1 }}>
+              <FieldLabel>Height</FieldLabel>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <div style={{ flex: 1 }}>
+                  <TextInput value={state.height_ft} onChange={v => update('height_ft', v)} placeholder="ft" type="number" min={3} max={8} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <TextInput value={state.height_in} onChange={v => update('height_in', v)} placeholder="in" type="number" min={0} max={11} />
+                </div>
               </div>
             </div>
+            <div style={{ flex: 1 }}>
+              <FieldLabel>Weight (lbs)</FieldLabel>
+              <TextInput value={state.weight_lbs} onChange={v => update('weight_lbs', v)} placeholder="150" type="number" min={50} max={700} />
+            </div>
           </div>
-          <div style={{ flex: 1 }}>
-            <FieldLabel>Weight (lbs)</FieldLabel>
-            <TextInput value={state.weight} onChange={v => update('weight', v)} placeholder="lbs" type="number" />
+        ) : (
+          <div style={{ display: 'flex', gap: 12 }}>
+            <div style={{ flex: 1 }}>
+              <FieldLabel>Height (cm)</FieldLabel>
+              <TextInput value={state.height_cm} onChange={v => update('height_cm', v)} placeholder="175" type="number" min={90} max={250} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <FieldLabel>Weight (kg)</FieldLabel>
+              <TextInput value={state.weight_kg} onChange={v => update('weight_kg', v)} placeholder="68" type="number" min={22} max={320} />
+            </div>
           </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Step 3: Health profile (NEW) ─────────────────────────────────────────────
+function Step3Health({ state, update, toggleCondition, addCondition, removeCondition, addMedication, removeMedication, addAllergy, removeAllergy, animKey }: {
+  state: FormState;
+  update: (k: keyof FormState, v: string) => void;
+  toggleCondition: (c: string) => void;
+  addCondition: (c: string) => void;
+  removeCondition: (idx: number) => void;
+  addMedication: (m: string) => void;
+  removeMedication: (idx: number) => void;
+  addAllergy: (a: string) => void;
+  removeAllergy: (idx: number) => void;
+  animKey: number;
+}) {
+  const age = calculateAge(state.dob);
+  const sexLower = (state.sex || '').toLowerCase();
+  const showPregnancy = sexLower === 'female' && age !== null && age >= 13 && age <= 55;
+
+  const presetSelected = new Set(state.conditions.filter(c => CONDITION_CHIPS.includes(c)));
+  const customConditions = state.conditions.filter(c => !CONDITION_CHIPS.includes(c));
+
+  return (
+    <div key={animKey} style={{
+      minWidth: '100%', padding: '8px 0 24px',
+      animation: 'step-in 450ms ease 200ms both',
+    }}>
+      <StepQuestion text="Let's keep things safe." active />
+      <Hint text="This helps NŪRA personalize protocols safely. All fields skippable." />
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
+        {/* AGE confirmation */}
+        <div>
+          <FieldLabel>Age</FieldLabel>
+          {age !== null ? (
+            <div style={{
+              padding: '13px 16px', borderRadius: 12,
+              background: `rgba(${SAGE_RGB},0.08)`,
+              border: `1px solid rgba(${SAGE_RGB},0.25)`,
+              fontSize: 15, fontFamily: SANS, color: TEXT,
+            }}>
+              You&apos;re {age} years old
+            </div>
+          ) : (
+            <div style={{
+              padding: '13px 16px', borderRadius: 12,
+              background: 'rgba(235,230,216,0.04)',
+              border: `1.5px solid ${BORDER}`,
+              fontSize: 14, fontFamily: SANS, color: TEXT_TER, fontStyle: 'italic',
+            }}>
+              Enter date of birth in Basics first
+            </div>
+          )}
+        </div>
+
+        {/* Activity level */}
+        <div>
+          <FieldLabel>Activity level</FieldLabel>
+          <SegmentedControl options={ACTIVITY_OPTIONS} value={state.activity_level} onChange={v => update('activity_level', v)} fontSize={10} />
+        </div>
+
+        {/* Pregnancy status (conditional) */}
+        {showPregnancy && (
+          <div>
+            <FieldLabel>Pregnancy status</FieldLabel>
+            <GridSegmented options={PREGNANCY_OPTIONS} value={state.pregnancy_status} onChange={v => update('pregnancy_status', v)} columns={3} />
+          </div>
+        )}
+
+        {/* Conditions */}
+        <div>
+          <FieldLabel>Any of these conditions?</FieldLabel>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
+            {CONDITION_CHIPS.map(c => (
+              <ChipToggle key={c} label={c}
+                selected={presetSelected.has(c)}
+                onToggle={() => toggleCondition(c)} />
+            ))}
+          </div>
+          {customConditions.length > 0 && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 10 }}>
+              {customConditions.map((c) => {
+                const idx = state.conditions.indexOf(c);
+                return <RemovableChip key={c} label={c} onRemove={() => removeCondition(idx)} />;
+              })}
+            </div>
+          )}
+          <AddOtherInput onAdd={addCondition} placeholder="Add other condition..." />
+        </div>
+
+        {/* Medications */}
+        <div>
+          <FieldLabel>Current medications</FieldLabel>
+          <TagInput
+            tags={state.medications}
+            onAdd={addMedication}
+            onRemove={removeMedication}
+            placeholder="Type a medication and press Enter"
+          />
+          <p style={{ fontSize: 12, color: TEXT_TER, margin: '8px 0 0', lineHeight: 1.5, fontFamily: SANS }}>
+            List anything prescription or over-the-counter you take regularly. This helps NŪRA flag supplement interactions.
+          </p>
+        </div>
+
+        {/* Allergies */}
+        <div>
+          <FieldLabel>Allergies</FieldLabel>
+          <TagInput
+            tags={state.allergies}
+            onAdd={addAllergy}
+            onRemove={removeAllergy}
+            placeholder="Type an allergy and press Enter"
+          />
+          <p style={{ fontSize: 12, color: TEXT_TER, margin: '8px 0 0', lineHeight: 1.5, fontFamily: SANS }}>
+            Foods, supplements, medications, or environmental.
+          </p>
         </div>
       </div>
     </div>
   );
 }
 
-function Step3({ goals, onToggle, animKey }: {
+function AddOtherInput({ onAdd, placeholder }: { onAdd: (v: string) => void; placeholder: string }) {
+  const [draft, setDraft] = useState('');
+  const commit = () => {
+    const v = draft.trim();
+    if (v) onAdd(v);
+    setDraft('');
+  };
+  return (
+    <input
+      type="text"
+      value={draft}
+      onChange={e => setDraft(e.target.value)}
+      onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); commit(); } }}
+      onBlur={commit}
+      placeholder={placeholder}
+      style={{
+        width: '100%', padding: '11px 14px',
+        background: 'rgba(235,230,216,0.04)', border: `1.5px solid ${BORDER}`,
+        borderRadius: 12, fontSize: 13, fontFamily: SANS, color: TEXT,
+        outline: 'none', transition: 'border-color 200ms',
+      }}
+      onFocus={e => { e.currentTarget.style.borderColor = `rgba(${SAGE_RGB},0.45)`; }}
+    />
+  );
+}
+
+// ─── Step 4: Goals ────────────────────────────────────────────────────────────
+function Step4Goals({ goals, onToggle, animKey }: {
   goals: string[]; onToggle: (id: string) => void; animKey: number;
 }) {
   const [shake, setShake] = useState<string | null>(null);
@@ -542,9 +888,10 @@ function Step3({ goals, onToggle, animKey }: {
   );
 }
 
-function Step4({ state, update, toggleChip, animKey }: {
-  state: OnboardingData;
-  update: (k: keyof OnboardingData, v: string) => void;
+// ─── Step 5: Symptoms ─────────────────────────────────────────────────────────
+function Step5Symptoms({ state, update, toggleChip, animKey }: {
+  state: FormState;
+  update: (k: keyof FormState, v: string) => void;
   toggleChip: (chip: string) => void;
   animKey: number;
 }) {
@@ -580,8 +927,9 @@ function Step4({ state, update, toggleChip, animKey }: {
   );
 }
 
-function Step5({ state, update, animKey }: {
-  state: OnboardingData; update: (k: keyof OnboardingData, v: string) => void; animKey: number;
+// ─── Step 6: Lifestyle ────────────────────────────────────────────────────────
+function Step6Lifestyle({ state, update, animKey }: {
+  state: FormState; update: (k: keyof FormState, v: string) => void; animKey: number;
 }) {
   return (
     <div key={animKey} style={{
@@ -603,10 +951,6 @@ function Step5({ state, update, animKey }: {
           </div>
         </div>
         <div>
-          <FieldLabel>Exercise level</FieldLabel>
-          <SegmentedControl options={EXERCISE_OPTS} value={state.exercise} onChange={v => update('exercise', v)} />
-        </div>
-        <div>
           <FieldLabel>Sleep duration</FieldLabel>
           <SegmentedControl options={SLEEP_OPTS} value={state.sleep} onChange={v => update('sleep', v)} />
         </div>
@@ -619,11 +963,22 @@ function Step5({ state, update, animKey }: {
   );
 }
 
-function Step6({ state, animKey }: {
-  state: OnboardingData; animKey: number;
-}) {
+// ─── Step 7: Done ─────────────────────────────────────────────────────────────
+function Step7Done({ state, animKey }: { state: FormState; animKey: number }) {
   const displayGoals = state.goals.map(id => GOALS.find(g => g.id === id)?.label ?? id);
   const name = state.name || 'there';
+
+  const activity = state.activity_level
+    ? state.activity_level.charAt(0).toLowerCase() + state.activity_level.slice(1)
+    : '';
+  const realConditions = state.conditions.filter(c => c !== NONE_CONDITION);
+  const conditionsCount = realConditions.length;
+  const medsCount = state.medications.length;
+
+  const summaryBits: string[] = [];
+  if (activity) summaryBits.push(`${activity} activity level`);
+  summaryBits.push(`tracking ${conditionsCount} condition${conditionsCount === 1 ? '' : 's'} and ${medsCount} medication${medsCount === 1 ? '' : 's'}`);
+  const summary = summaryBits.length ? `Got it — ${summaryBits.join(', ')}. Let's begin.` : null;
 
   return (
     <div key={animKey} style={{
@@ -631,7 +986,6 @@ function Step6({ state, animKey }: {
       display: 'flex', flexDirection: 'column', alignItems: 'center',
       textAlign: 'center', animation: 'step-in 450ms ease 200ms both',
     }}>
-      {/* Bounce-in check circle */}
       <div style={{
         width: 64, height: 64, borderRadius: '50%', background: SAGE,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -647,9 +1001,11 @@ function Step6({ state, animKey }: {
       <h2 style={{ fontSize: 26, fontWeight: 600, color: TEXT, fontFamily: SANS, margin: '0 0 10px', letterSpacing: '-0.4px' }}>
         You&apos;re all set, {name}.
       </h2>
-      <p style={{ fontSize: 14, color: TEXT_SEC, fontFamily: SANS, margin: '0 0 28px', lineHeight: 1.6 }}>
-        Your personalized protocol is ready.
-      </p>
+      {summary && (
+        <p style={{ fontSize: 14, color: TEXT_SEC, fontFamily: SANS, margin: '0 0 28px', lineHeight: 1.6, maxWidth: 360 }}>
+          {summary}
+        </p>
+      )}
 
       {displayGoals.length > 0 && (
         <div style={{
@@ -682,14 +1038,30 @@ function Step6({ state, animKey }: {
 // ─── Main onboarding page ─────────────────────────────────────────────────────
 export default function OnboardingPage() {
   const [step, setStep] = useState(1);
-  const [animKeys, setAnimKeys] = useState([1, 1, 1, 1, 1, 1]);
+  const [animKeys, setAnimKeys] = useState(() => Array.from({ length: TOTAL_STEPS }, () => 1));
   const [submitting, setSubmitting] = useState(false);
   const [hovCta, setHovCta] = useState(false);
-  const [state, setState] = useState<OnboardingData>({
-    name: '', dob: '', sex: 'Female', height_ft: '5', height_in: '7',
-    weight: '', goals: [], symptoms_text: '', symptom_chips: [],
-    diet: '', exercise: 'Moderate', sleep: '7-8h', stress: 'Moderate',
+  const [state, setState] = useState<FormState>({
+    unitSystem: 'imperial',
+    name: '', dob: '', sex: 'Female',
+    height_ft: '5', height_in: '7', height_cm: '170',
+    weight_lbs: '', weight_kg: '',
+    goals: [], symptoms_text: '', symptom_chips: [],
+    diet: '', sleep: '7-8h', stress: 'Moderate',
+    activity_level: 'Moderately active',
+    pregnancy_status: '',
+    conditions: [], medications: [], allergies: [],
   });
+
+  // Auto-detect metric for non-US locales (mount only)
+  useEffect(() => {
+    if (typeof navigator !== 'undefined') {
+      const lang = navigator.language || '';
+      if (lang && lang.toLowerCase() !== 'en-us') {
+        setState(prev => ({ ...prev, unitSystem: 'metric' }));
+      }
+    }
+  }, []);
 
   // Prefill name from user profile
   useEffect(() => {
@@ -704,8 +1076,33 @@ export default function OnboardingPage() {
     });
   }, []);
 
-  const update = useCallback((k: keyof OnboardingData, v: string) => {
-    setState(prev => ({ ...prev, [k]: v }));
+  const update = useCallback((k: keyof FormState, v: string) => {
+    setState(prev => {
+      if (k === 'unitSystem' && v !== prev.unitSystem) {
+        const target = v as 'imperial' | 'metric';
+        const carry: Partial<FormState> = {};
+        if (target === 'metric') {
+          const ft = parseFloat(prev.height_ft);
+          const inches = parseFloat(prev.height_in);
+          if (!isNaN(ft) || !isNaN(inches)) {
+            carry.height_cm = String(ftInToCm(isNaN(ft) ? 0 : ft, isNaN(inches) ? 0 : inches));
+          }
+          const lbs = parseFloat(prev.weight_lbs);
+          if (!isNaN(lbs)) carry.weight_kg = String(lbsToKg(lbs));
+        } else {
+          const cm = parseFloat(prev.height_cm);
+          if (!isNaN(cm)) {
+            const { ft, in: inches } = cmToFtIn(cm);
+            carry.height_ft = String(ft);
+            carry.height_in = String(inches);
+          }
+          const kg = parseFloat(prev.weight_kg);
+          if (!isNaN(kg)) carry.weight_lbs = String(kgToLbs(kg));
+        }
+        return { ...prev, ...carry, unitSystem: target };
+      }
+      return { ...prev, [k]: v };
+    });
   }, []);
 
   const toggleGoal = useCallback((id: string) => {
@@ -726,18 +1123,96 @@ export default function OnboardingPage() {
     }));
   }, []);
 
+  const toggleCondition = useCallback((c: string) => {
+    setState(prev => {
+      const has = prev.conditions.includes(c);
+      if (c === NONE_CONDITION) {
+        return { ...prev, conditions: has ? [] : [NONE_CONDITION] };
+      }
+      if (has) {
+        return { ...prev, conditions: prev.conditions.filter(x => x !== c) };
+      }
+      return { ...prev, conditions: [...prev.conditions.filter(x => x !== NONE_CONDITION), c] };
+    });
+  }, []);
+
+  const addCondition = useCallback((c: string) => {
+    setState(prev => {
+      const trimmed = c.trim();
+      if (!trimmed || prev.conditions.some(x => x.toLowerCase() === trimmed.toLowerCase())) return prev;
+      return { ...prev, conditions: [...prev.conditions.filter(x => x !== NONE_CONDITION), trimmed] };
+    });
+  }, []);
+
+  const removeCondition = useCallback((idx: number) => {
+    setState(prev => ({ ...prev, conditions: prev.conditions.filter((_, i) => i !== idx) }));
+  }, []);
+
+  const addMedication = useCallback((m: string) => {
+    setState(prev => ({ ...prev, medications: [...prev.medications, m] }));
+  }, []);
+  const removeMedication = useCallback((idx: number) => {
+    setState(prev => ({ ...prev, medications: prev.medications.filter((_, i) => i !== idx) }));
+  }, []);
+  const addAllergy = useCallback((a: string) => {
+    setState(prev => ({ ...prev, allergies: [...prev.allergies, a] }));
+  }, []);
+  const removeAllergy = useCallback((idx: number) => {
+    setState(prev => ({ ...prev, allergies: prev.allergies.filter((_, i) => i !== idx) }));
+  }, []);
+
   const goTo = useCallback((n: number) => {
     setStep(n);
     setAnimKeys(prev => { const next = [...prev]; next[n - 1]++; return next; });
   }, []);
 
-  const next = useCallback(() => { if (step < 6) goTo(step + 1); }, [step, goTo]);
+  const next = useCallback(() => { if (step < TOTAL_STEPS) goTo(step + 1); }, [step, goTo]);
   const back = useCallback(() => { if (step > 1) goTo(step - 1); }, [step, goTo]);
+
+  const buildPayload = useCallback((): OnboardingData => {
+    let height_cm: number | null = null;
+    let weight_kg: number | null = null;
+
+    if (state.unitSystem === 'imperial') {
+      const ft = parseFloat(state.height_ft);
+      const inches = parseFloat(state.height_in);
+      if (!isNaN(ft) || !isNaN(inches)) {
+        height_cm = ftInToCm(isNaN(ft) ? 0 : ft, isNaN(inches) ? 0 : inches);
+      }
+      const lbs = parseFloat(state.weight_lbs);
+      if (!isNaN(lbs)) weight_kg = lbsToKg(lbs);
+    } else {
+      const cm = parseFloat(state.height_cm);
+      if (!isNaN(cm)) height_cm = Math.round(cm * 10) / 10;
+      const kg = parseFloat(state.weight_kg);
+      if (!isNaN(kg)) weight_kg = Math.round(kg * 10) / 10;
+    }
+
+    return {
+      name: state.name,
+      dob: state.dob,
+      sex: state.sex,
+      height_cm,
+      weight_kg,
+      unit_preference: state.unitSystem,
+      goals: state.goals,
+      symptoms_text: state.symptoms_text,
+      symptom_chips: state.symptom_chips,
+      diet: state.diet,
+      sleep: state.sleep,
+      stress: state.stress,
+      activity_level: state.activity_level,
+      pregnancy_status: state.pregnancy_status ? state.pregnancy_status : null,
+      conditions: state.conditions,
+      medications: state.medications,
+      allergies: state.allergies,
+    };
+  }, [state]);
 
   const handleSubmit = async () => {
     setSubmitting(true);
     try {
-      await saveOnboarding(state);
+      await saveOnboarding(buildPayload());
     } catch {
       // redirect() in server actions throws — navigation handled by framework
     }
@@ -756,7 +1231,7 @@ export default function OnboardingPage() {
     minHeight: '100%', overflowY: 'auto',
   };
 
-  const stepLabel = String(step).padStart(2, '0') + ' / 06';
+  const stepLabel = String(step).padStart(2, '0') + ' / ' + String(TOTAL_STEPS).padStart(2, '0');
 
   return (
     <div style={{ minHeight: '100dvh', background: BG, fontFamily: SANS, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
@@ -777,31 +1252,44 @@ export default function OnboardingPage() {
         <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
           <div style={trackStyle}>
             <div style={slideStyle}>
-              <Step1 onNext={next} animKey={animKeys[0]} />
+              <Step1Welcome onNext={next} animKey={animKeys[0]} />
             </div>
             <div style={slideStyle}>
-              <Step2 state={state} update={update} animKey={animKeys[1]} />
+              <Step2Basics state={state} update={update} animKey={animKeys[1]} />
             </div>
             <div style={slideStyle}>
-              <Step3 goals={state.goals} onToggle={toggleGoal} animKey={animKeys[2]} />
+              <Step3Health
+                state={state}
+                update={update}
+                toggleCondition={toggleCondition}
+                addCondition={addCondition}
+                removeCondition={removeCondition}
+                addMedication={addMedication}
+                removeMedication={removeMedication}
+                addAllergy={addAllergy}
+                removeAllergy={removeAllergy}
+                animKey={animKeys[2]}
+              />
             </div>
             <div style={slideStyle}>
-              <Step4 state={state} update={update} toggleChip={toggleChip} animKey={animKeys[3]} />
+              <Step4Goals goals={state.goals} onToggle={toggleGoal} animKey={animKeys[3]} />
             </div>
             <div style={slideStyle}>
-              <Step5 state={state} update={update} animKey={animKeys[4]} />
+              <Step5Symptoms state={state} update={update} toggleChip={toggleChip} animKey={animKeys[4]} />
             </div>
             <div style={slideStyle}>
-              <Step6 state={state} animKey={animKeys[5]} />
+              <Step6Lifestyle state={state} update={update} animKey={animKeys[5]} />
+            </div>
+            <div style={slideStyle}>
+              <Step7Done state={state} animKey={animKeys[6]} />
             </div>
           </div>
         </div>
 
-        {/* Bottom controls (steps 2-6) */}
+        {/* Bottom controls (steps 2-TOTAL_STEPS) */}
         {step > 1 && (
           <div style={{ flexShrink: 0, paddingBottom: 40 }}>
             <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-              {/* Back */}
               <button onClick={back} style={{
                 width: 44, height: 44, borderRadius: 12, flexShrink: 0,
                 background: 'rgba(235,230,216,0.06)', border: `1px solid ${BORDER}`,
@@ -813,8 +1301,7 @@ export default function OnboardingPage() {
                 </svg>
               </button>
 
-              {/* CTA */}
-              {step < 6 ? (
+              {step < TOTAL_STEPS ? (
                 <button
                   onClick={next}
                   onMouseEnter={() => setHovCta(true)}
@@ -857,8 +1344,8 @@ export default function OnboardingPage() {
               )}
             </div>
 
-            {/* Skip (steps 2-5) */}
-            {step >= 2 && step <= 5 && (
+            {/* Skip (steps 2 through second-to-last) */}
+            {step >= 2 && step < TOTAL_STEPS && (
               <button onClick={next} style={{
                 display: 'block', width: '100%', marginTop: 14,
                 background: 'none', border: 'none', cursor: 'pointer',

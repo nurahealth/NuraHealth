@@ -8,16 +8,20 @@ export interface OnboardingData {
   name: string;
   dob: string;
   sex: string;
-  height_ft: string;
-  height_in: string;
-  weight: string;
+  height_cm: number | null;
+  weight_kg: number | null;
+  unit_preference: 'imperial' | 'metric';
   goals: string[];
   symptoms_text: string;
   symptom_chips: string[];
   diet: string;
-  exercise: string;
   sleep: string;
   stress: string;
+  activity_level: string;
+  pregnancy_status: string | null;
+  conditions: string[];
+  medications: string[];
+  allergies: string[];
 }
 
 export async function saveOnboarding(data: OnboardingData) {
