@@ -24,18 +24,22 @@ export interface OnboardingData {
   allergies: string[];
 }
 
-export async function saveOnboarding(data: OnboardingData) {
+export async function saveOnboarding(data: OnboardingData, isEdit: boolean = false) {
   const supabase = await createSupabaseServerClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/auth');
 
-  await supabaseAdmin.from('profiles').update({
+  const update: Record<string, unknown> = {
     onboarding_data: data,
     onboarded: true,
-    onboarding_completed_at: new Date().toISOString(),
-  }).eq('id', user.id);
+  };
+  if (!isEdit) {
+    update.onboarding_completed_at = new Date().toISOString();
+  }
 
-  redirect('/');
+  await supabaseAdmin.from('profiles').update(update).eq('id', user.id);
+
+  redirect(isEdit ? '/settings' : '/');
 }
 
 export async function resetOnboarding() {

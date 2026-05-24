@@ -3,8 +3,10 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import type { User } from "@supabase/supabase-js";
 import { useSidebar } from "@/lib/sidebarStore";
 import { useThemeStore } from "@/lib/themeStore";
+import Avatar from "@/components/Avatar";
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
 const BG = "var(--nura-bg)";
@@ -185,7 +187,7 @@ export default function Home() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [authChecked, setAuthChecked] = useState(false);
-  const [initial, setInitial] = useState("");
+  const [user, setUser] = useState<User | null>(null);
   const [value, setValue] = useState("");
   const [focused, setFocused] = useState(false);
   const [hovAttach, setHovAttach] = useState(false);
@@ -201,15 +203,7 @@ export default function Home() {
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) { router.push("/auth"); return; }
-      const meta = user.user_metadata as { name?: string; full_name?: string } | undefined;
-      const fromMeta = meta?.name ?? meta?.full_name ?? "";
-      if (fromMeta) setInitial(fromMeta.trim().charAt(0).toUpperCase());
-      supabase.from("profiles").select("full_name").eq("id", user.id).single()
-        .then(({ data }) => {
-          const fn = (data?.full_name as string | null | undefined) ?? "";
-          if (fn) setInitial(fn.trim().charAt(0).toUpperCase());
-          else if (!fromMeta) setInitial((user.email ?? "?").trim().charAt(0).toUpperCase());
-        });
+      setUser(user);
       setAuthChecked(true);
     });
   }, [router]);
@@ -356,13 +350,11 @@ export default function Home() {
           aria-label="Profile"
           style={{
             width: 40, height: 40, borderRadius: "50%",
-            background: `rgba(var(--nura-sage-rgb),0.18)`, border: `0.5px solid rgba(var(--nura-sage-rgb),0.35)`,
-            color: SAGE, fontFamily: SANS, fontSize: 14, fontWeight: 500,
-            display: "flex", alignItems: "center", justifyContent: "center",
-            cursor: "pointer",
+            padding: 0, border: "none", background: "transparent",
+            cursor: "pointer", overflow: "hidden",
           }}
         >
-          {initial || "?"}
+          <Avatar user={user} size={40} />
         </button>
       </header>
 

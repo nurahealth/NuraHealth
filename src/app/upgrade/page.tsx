@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
@@ -30,6 +30,34 @@ export default function UpgradePage() {
   const [portalLoading, setPortalLoading] = useState(false);
   const [portalError, setPortalError] = useState("");
   const [hovCta, setHovCta] = useState(false);
+  const [proCheck, setProCheck] = useState<"checking" | "free" | "redirecting">("checking");
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (cancelled) return;
+      if (!user) { setProCheck("free"); return; }
+      try {
+        const res = await fetch(`/api/subscription/status?userId=${user.id}`);
+        const data = await res.json() as { status?: string | null };
+        if (cancelled) return;
+        if (data.status === "active" || data.status === "trialing") {
+          setProCheck("redirecting");
+          router.replace("/settings");
+          return;
+        }
+      } catch {
+        // fall through — show upgrade UI on error
+      }
+      if (!cancelled) setProCheck("free");
+    })();
+    return () => { cancelled = true; };
+  }, [router]);
+
+  if (proCheck !== "free") {
+    return <div style={{ minHeight: "100dvh", background: BG }} />;
+  }
 
   const handleUpgrade = () => {
     setLoading(true);

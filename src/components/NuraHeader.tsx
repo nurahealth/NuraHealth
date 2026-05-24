@@ -3,7 +3,9 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import type { User } from "@supabase/supabase-js";
 import { useSidebar } from "@/lib/sidebarStore";
+import Avatar from "@/components/Avatar";
 
 const TEXT = "var(--nura-text-primary)";
 const BORDER = "var(--nura-border)";
@@ -20,20 +22,11 @@ interface Props {
 
 function DefaultProfile() {
   const router = useRouter();
-  const [initial, setInitial] = useState("?");
+  const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) return;
-      const meta = user.user_metadata as { name?: string; full_name?: string } | undefined;
-      const fromMeta = meta?.name ?? meta?.full_name ?? "";
-      if (fromMeta) setInitial(fromMeta.trim().charAt(0).toUpperCase());
-      else setInitial((user.email ?? "?").trim().charAt(0).toUpperCase());
-      supabase.from("profiles").select("full_name").eq("id", user.id).maybeSingle()
-        .then(({ data }) => {
-          const fn = (data?.full_name as string | null | undefined) ?? "";
-          if (fn) setInitial(fn.trim().charAt(0).toUpperCase());
-        });
+      if (user) setUser(user);
     });
   }, []);
 
@@ -43,14 +36,11 @@ function DefaultProfile() {
       aria-label="Profile"
       style={{
         width: 40, height: 40, borderRadius: "50%",
-        background: `rgba(var(--nura-sage-rgb),0.18)`,
-        border: `0.5px solid rgba(var(--nura-sage-rgb),0.4)`,
-        color: SAGE, fontFamily: SANS, fontSize: 14, fontWeight: 500,
-        display: "flex", alignItems: "center", justifyContent: "center",
-        cursor: "pointer",
+        padding: 0, border: "none", background: "transparent",
+        cursor: "pointer", overflow: "hidden",
       }}
     >
-      {initial}
+      <Avatar user={user} size={40} />
     </button>
   );
 }

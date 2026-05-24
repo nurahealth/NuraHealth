@@ -65,12 +65,13 @@ export async function proxy(request: NextRequest) {
 
   const onboarded = profile?.onboarded === true;
   const onOnboarding = pathname === '/onboarding';
+  const editing = request.nextUrl.searchParams.get('edit') === 'true';
 
   if (!onboarded && !onOnboarding) {
     return NextResponse.redirect(new URL('/onboarding', request.url));
   }
 
-  if (onboarded && onOnboarding) {
+  if (onboarded && onOnboarding && !editing) {
     return NextResponse.redirect(new URL('/', request.url));
   }
 

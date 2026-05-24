@@ -580,23 +580,22 @@ function SuppModal({
 
   return (
     <div onClick={onClose} style={{
-      position: "fixed", inset: 0, zIndex: 300, background: "rgba(0,0,0,0.6)",
-      backdropFilter: "blur(6px)", display: "flex", alignItems: "flex-end",
+      position: "fixed", inset: 0, zIndex: 50, background: "rgba(0,0,0,0.7)",
+      backdropFilter: "blur(6px)",
+      display: "flex", alignItems: "center", justifyContent: "center",
+      padding: 20,
     }}>
       <div onClick={(e) => e.stopPropagation()} style={{
-        width: "100%", maxWidth: 600, margin: "0 auto",
-        background: "var(--nura-bg)", borderRadius: "18px 18px 0 0",
-        border: `0.5px solid ${BORDER}`, borderBottom: "none",
+        width: "100%", maxWidth: 460, margin: "auto",
+        background: "var(--nura-bg)", borderRadius: 16,
+        border: `0.5px solid ${BORDER}`,
         maxHeight: "92vh", overflowY: "auto",
-        transform: animated ? "translateY(0)" : "translateY(100%)",
-        transition: "transform 350ms cubic-bezier(0.32,0.72,0.34,1.01)",
-        paddingBottom: 32,
+        opacity: animated ? 1 : 0,
+        transform: animated ? "scale(1)" : "scale(0.98)",
+        transition: "opacity 200ms ease, transform 200ms ease",
+        paddingBottom: 22,
       }}>
-        <div style={{ display: "flex", justifyContent: "center", padding: "12px 0 0" }}>
-          <div style={{ width: 36, height: 4, borderRadius: 2, background: BORDER }} />
-        </div>
-
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 22px 0" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "20px 22px 0" }}>
           <span style={{ fontFamily: SERIF, fontSize: 22, color: TEXT, fontWeight: 500 }}>
             {mode === "add" ? "Add supplement" : "Edit supplement"}
           </span>

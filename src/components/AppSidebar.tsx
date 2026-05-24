@@ -3,7 +3,9 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import type { User } from "@supabase/supabase-js";
 import { useSidebar } from "@/lib/sidebarStore";
+import Avatar from "@/components/Avatar";
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
 const BG = "var(--nura-bg)";
@@ -137,6 +139,7 @@ export default function AppSidebar() {
   const isOpen = useSidebar((s) => s.isOpen);
   const close = useSidebar((s) => s.close);
   const [profile, setProfile] = useState<{ name: string; email: string; status: string | null }>({ name: "", email: "", status: null });
+  const [user, setUser] = useState<User | null>(null);
   const [chats, setChats] = useState<ChatSessionRow[]>([]);
   const [chatsExpanded, setChatsExpanded] = useState(true);
 
@@ -146,17 +149,18 @@ export default function AppSidebar() {
     let cancelled = false;
 
     (async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user || cancelled) return;
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (!authUser || cancelled) return;
+      setUser(authUser);
 
-      const email = user.email ?? "";
-      const meta = (user.user_metadata ?? {}) as { name?: string; full_name?: string };
+      const email = authUser.email ?? "";
+      const meta = (authUser.user_metadata ?? {}) as { name?: string; full_name?: string };
       const baseName = meta.name ?? meta.full_name ?? "";
 
       const [{ data: prof }, { data: sub }, { data: sessions }] = await Promise.all([
-        supabase.from("profiles").select("full_name").eq("id", user.id).maybeSingle(),
-        supabase.from("subscriptions").select("status").eq("user_id", user.id).maybeSingle(),
-        supabase.from("chat_sessions").select("id, title, updated_at").eq("user_id", user.id).order("updated_at", { ascending: false }).limit(5),
+        supabase.from("profiles").select("full_name").eq("id", authUser.id).maybeSingle(),
+        supabase.from("subscriptions").select("status").eq("user_id", authUser.id).maybeSingle(),
+        supabase.from("chat_sessions").select("id, title, updated_at").eq("user_id", authUser.id).order("updated_at", { ascending: false }).limit(5),
       ]);
 
       if (cancelled) return;
@@ -191,7 +195,6 @@ export default function AppSidebar() {
     router.push("/auth");
   };
 
-  const initial = (profile.name || profile.email || "?").trim().charAt(0).toUpperCase();
   const subBadge = profile.status === "trialing" ? "PRO · TRIAL" : profile.status === "active" ? "PRO" : null;
 
   return (
@@ -246,15 +249,7 @@ export default function AppSidebar() {
 
           {/* Profile row */}
           <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
-            <div style={{
-              width: 46, height: 46, borderRadius: "50%", flexShrink: 0,
-              background: `rgba(var(--nura-sage-rgb),0.18)`,
-              border: `0.5px solid rgba(var(--nura-sage-rgb),0.4)`,
-              color: SAGE, fontSize: 16, fontWeight: 500,
-              display: "flex", alignItems: "center", justifyContent: "center",
-            }}>
-              {initial}
-            </div>
+            <Avatar user={user} size={46} />
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                 <span style={{ fontSize: 14, fontWeight: 500, color: TEXT, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>

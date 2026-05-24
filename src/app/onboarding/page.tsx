@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { useThemeStore } from '@/lib/themeStore';
 import { saveOnboarding, type OnboardingData } from './actions';
@@ -851,17 +852,6 @@ function AddOtherInput({ onAdd, placeholder }: { onAdd: (v: string) => void; pla
 function Step4Goals({ goals, onToggle, animKey }: {
   goals: string[]; onToggle: (id: string) => void; animKey: number;
 }) {
-  const [shake, setShake] = useState<string | null>(null);
-
-  const handleToggle = useCallback((id: string) => {
-    if (!goals.includes(id) && goals.length >= 3) {
-      setShake(id);
-      setTimeout(() => setShake(null), 350);
-      return;
-    }
-    onToggle(id);
-  }, [goals, onToggle]);
-
   return (
     <div key={animKey} style={{
       minWidth: '100%', padding: '8px 0 24px',
@@ -871,22 +861,24 @@ function Step4Goals({ goals, onToggle, animKey }: {
         What do you want to focus on?
       </div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-        <span style={{ fontSize: 14, color: TEXT_SEC, fontFamily: SANS }}>Pick up to 3 — what matters most right now.</span>
-        <span style={{
-          fontSize: 11, fontFamily: MONO, letterSpacing: '0.5px',
-          padding: '4px 10px', borderRadius: 20,
-          background: goals.length === 3 ? `rgba(var(--nura-sage-rgb),0.18)` : 'var(--nura-surface-elevated)',
-          color: goals.length === 3 ? SAGE : TEXT_TER,
-          border: `1px solid ${goals.length === 3 ? `rgba(var(--nura-sage-rgb),0.35)` : BORDER}`,
-          transition: 'all 250ms ease', whiteSpace: 'nowrap', flexShrink: 0,
-        }}>
-          {goals.length} / 3
-        </span>
+        <span style={{ fontSize: 14, color: TEXT_SEC, fontFamily: SANS }}>Select all that apply.</span>
+        {goals.length > 0 && (
+          <span style={{
+            fontSize: 11, fontFamily: MONO, letterSpacing: '0.5px',
+            padding: '4px 10px', borderRadius: 20,
+            background: `rgba(var(--nura-sage-rgb),0.18)`,
+            color: SAGE,
+            border: `1px solid rgba(var(--nura-sage-rgb),0.35)`,
+            transition: 'all 250ms ease', whiteSpace: 'nowrap', flexShrink: 0,
+          }}>
+            {goals.length} selected
+          </span>
+        )}
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
         {GOALS.map(g => (
           <GoalCard key={g.id} goal={g} selected={goals.includes(g.id)}
-            onSelect={() => handleToggle(g.id)} shaking={shake === g.id} />
+            onSelect={() => onToggle(g.id)} shaking={false} />
         ))}
       </div>
     </div>
@@ -1042,6 +1034,8 @@ function Step7Done({ state, animKey }: { state: FormState; animKey: number }) {
 
 // ─── Main onboarding page ─────────────────────────────────────────────────────
 export default function OnboardingPage() {
+  const searchParams = useSearchParams();
+  const isEdit = searchParams.get('edit') === 'true';
   const [step, setStep] = useState(1);
   const [animKeys, setAnimKeys] = useState(() => Array.from({ length: TOTAL_STEPS }, () => 1));
   const [submitting, setSubmitting] = useState(false);
@@ -1057,6 +1051,62 @@ export default function OnboardingPage() {
     pregnancy_status: '',
     conditions: [], medications: [], allergies: [],
   });
+
+  // Edit mode: skip welcome step
+  useEffect(() => {
+    if (isEdit) setStep(2);
+  }, [isEdit]);
+
+  // Edit mode: load existing onboarding data and pre-fill all fields
+  useEffect(() => {
+    if (!isEdit) return;
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
+      if (!user) return;
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('onboarding_data')
+        .eq('id', user.id)
+        .maybeSingle();
+      const od = profile?.onboarding_data as OnboardingData | null;
+      if (!od) return;
+
+      const unitSystem: 'imperial' | 'metric' = od.unit_preference === 'metric' ? 'metric' : 'imperial';
+      let height_ft = '', height_in = '', height_cm = '';
+      if (od.height_cm != null) {
+        height_cm = String(od.height_cm);
+        const { ft, in: inches } = cmToFtIn(od.height_cm);
+        height_ft = String(ft); height_in = String(inches);
+      }
+      let weight_lbs = '', weight_kg = '';
+      if (od.weight_kg != null) {
+        weight_kg = String(od.weight_kg);
+        weight_lbs = String(kgToLbs(od.weight_kg));
+      }
+
+      setState({
+        unitSystem,
+        name: od.name ?? '',
+        dob: od.dob ?? '',
+        sex: od.sex || 'Female',
+        height_ft: height_ft || '5',
+        height_in: height_in || '7',
+        height_cm: height_cm || '170',
+        weight_lbs,
+        weight_kg,
+        goals: od.goals ?? [],
+        symptoms_text: od.symptoms_text ?? '',
+        symptom_chips: od.symptom_chips ?? [],
+        diet: od.diet ?? '',
+        sleep: od.sleep || '7-8h',
+        stress: od.stress || 'Moderate',
+        activity_level: od.activity_level || 'Moderately active',
+        pregnancy_status: od.pregnancy_status ?? '',
+        conditions: od.conditions ?? [],
+        medications: od.medications ?? [],
+        allergies: od.allergies ?? [],
+      });
+    });
+  }, [isEdit]);
 
   // Auto-detect metric for non-US locales (mount only)
   useEffect(() => {
@@ -1217,7 +1267,7 @@ export default function OnboardingPage() {
   const handleSubmit = async () => {
     setSubmitting(true);
     try {
-      await saveOnboarding(buildPayload());
+      await saveOnboarding(buildPayload(), isEdit);
     } catch {
       // redirect() in server actions throws — navigation handled by framework
     }
@@ -1245,6 +1295,16 @@ export default function OnboardingPage() {
       <div style={{ width: '100%', maxWidth: 480, flex: 1, display: 'flex', flexDirection: 'column', padding: '0 20px' }}>
         {/* Top bar */}
         <div style={{ paddingTop: 20, paddingBottom: 0, flexShrink: 0 }}>
+          {isEdit && (
+            <div style={{
+              padding: '10px 14px', marginBottom: 14, borderRadius: 10,
+              background: `rgba(var(--nura-sage-rgb),0.10)`,
+              border: `0.5px solid rgba(var(--nura-sage-rgb),0.35)`,
+              fontFamily: SANS, fontSize: 12, color: SAGE, lineHeight: 1.5,
+            }}>
+              Editing your profile — changes save when you complete the flow
+            </div>
+          )}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
             <span style={{ fontSize: 10, fontFamily: MONO, letterSpacing: '2px', color: TEXT_TER }}>
               {stepLabel}
