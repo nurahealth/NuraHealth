@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { useThemeStore } from '@/lib/themeStore';
@@ -1033,7 +1033,7 @@ function Step7Done({ state, animKey }: { state: FormState; animKey: number }) {
 }
 
 // ─── Main onboarding page ─────────────────────────────────────────────────────
-export default function OnboardingPage() {
+function OnboardingContent() {
   const searchParams = useSearchParams();
   const isEdit = searchParams.get('edit') === 'true';
   const [step, setStep] = useState(1);
@@ -1424,5 +1424,13 @@ export default function OnboardingPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function OnboardingPage() {
+  return (
+    <Suspense fallback={null}>
+      <OnboardingContent />
+    </Suspense>
   );
 }
