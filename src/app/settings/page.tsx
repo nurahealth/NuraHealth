@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import type { User } from "@supabase/supabase-js";
 import NuraPageShell from "@/components/NuraPageShell";
@@ -76,7 +77,6 @@ export default function SettingsPage() {
   const [profileName, setProfileName] = useState<string>("");
   const [onboardingData, setOnboardingData] = useState<OnboardingData | null>(null);
   const [subStatus, setSubStatus] = useState<SubStatus | null>(null);
-  const [portalLoading, setPortalLoading] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [securityOpen, setSecurityOpen] = useState(false);
 
@@ -105,24 +105,6 @@ export default function SettingsPage() {
     });
   }, [router]);
 
-  const handlePortal = async () => {
-    if (!user) return;
-    setPortalLoading(true);
-    try {
-      const res = await fetch("/api/stripe/portal", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: user.id }),
-      });
-      const data = (await res.json()) as { url?: string };
-      if (data.url) window.location.href = data.url;
-    } catch {
-      // silent
-    } finally {
-      setPortalLoading(false);
-    }
-  };
-
   const handleLogout = async () => {
     await supabase.auth.signOut();
     router.push("/auth");
@@ -135,15 +117,32 @@ export default function SettingsPage() {
   const displayName = profileName || user?.user_metadata?.name || user?.email?.split("@")[0] || "Friend";
   const displayEmail = user?.email || "";
 
-  // Subscription badge
+  // Subscription state
   const status = subStatus?.status ?? null;
   const isTrial = status === "trialing";
   const isActive = status === "active";
+  const isPastDue = status === "past_due";
+  const isCanceling = !!subStatus?.cancel_at_period_end;
   const isPro = isTrial || isActive;
-  const planBadge = isTrial ? "PRO · TRIAL" : isActive ? "PRO" : "FREE";
+  const planBadge = isTrial
+    ? "NŪRA Pro · Trial"
+    : isActive
+    ? "NŪRA Pro · Active"
+    : "Free";
 
   const renewLabel = fmtLongDate(subStatus?.current_period_end ?? null);
-  const renewPrefix = isTrial ? "Trial ends" : isActive ? "Renews on" : null;
+  let statusLine: string | null = null;
+  let statusLineColor = TEXT_SEC;
+  if (isPastDue) {
+    statusLine = "Payment required";
+    statusLineColor = RED;
+  } else if (isCanceling && renewLabel) {
+    statusLine = `Ends ${renewLabel}`;
+  } else if (isTrial && renewLabel) {
+    statusLine = `Trial ends ${renewLabel}`;
+  } else if (isActive && renewLabel) {
+    statusLine = `Renews ${renewLabel}`;
+  }
 
   return (
     <NuraPageShell maxWidth={680}>
@@ -225,46 +224,73 @@ export default function SettingsPage() {
         <SecurityModal user={user} onClose={() => setSecurityOpen(false)} />
       )}
 
+      {/* PAST DUE BANNER */}
+      {isPastDue && (
+        <div style={{
+          background: "rgba(212,87,77,0.08)",
+          border: `0.5px solid rgba(212,87,77,0.4)`,
+          borderRadius: 14, padding: 14, marginBottom: 14,
+          display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap",
+        }}>
+          <div style={{ flex: 1, minWidth: 200 }}>
+            <div style={{ fontFamily: SANS, fontSize: 13, fontWeight: 500, color: TEXT, marginBottom: 2 }}>
+              Your last payment failed
+            </div>
+            <div style={{ fontFamily: SANS, fontSize: 12, color: TEXT_SEC, lineHeight: 1.5 }}>
+              Update your payment method to keep your subscription active.
+            </div>
+          </div>
+          <Link
+            href="/billing"
+            style={{
+              padding: "8px 14px", borderRadius: 10, background: SAGE,
+              color: SAGE_ON, fontFamily: SANS, fontSize: 12, fontWeight: 500,
+              textDecoration: "none",
+            }}
+          >
+            Update payment method
+          </Link>
+        </div>
+      )}
+
       {/* SUBSCRIPTION CARD */}
       <Card>
         <CardLabel>Subscription</CardLabel>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-          <span style={{
-            padding: "3px 9px", borderRadius: 5,
-            background: isPro ? `rgba(var(--nura-sage-rgb),0.16)` : "var(--nura-surface-elevated)",
-            border: `0.5px solid ${isPro ? `rgba(var(--nura-sage-rgb),0.4)` : BORDER}`,
-            fontFamily: SANS, fontSize: 10, fontWeight: 700, letterSpacing: "0.8px",
-            color: isPro ? SAGE : TEXT_TER, textTransform: "uppercase",
-          }}>
-            {planBadge}
-          </span>
+        <div style={{
+          fontFamily: SANS, fontSize: 15, fontWeight: 500, color: TEXT,
+          marginBottom: statusLine || !isPro ? 6 : 14,
+        }}>
+          {planBadge}
         </div>
 
-        {isPro && renewLabel && renewPrefix && (
+        {statusLine && (
           <div style={{
-            fontFamily: SANS, fontSize: 13, color: TEXT_SEC,
-            marginBottom: subStatus?.cancel_at_period_end ? 6 : 16, lineHeight: 1.5,
+            fontFamily: SANS, fontSize: 13, color: statusLineColor,
+            marginBottom: 14, lineHeight: 1.5,
           }}>
-            {renewPrefix} {renewLabel}
+            {statusLine}
           </div>
         )}
-        {subStatus?.cancel_at_period_end && (
-          <div style={{ fontFamily: SANS, fontSize: 13, color: "var(--nura-watch)", marginBottom: 16, lineHeight: 1.5 }}>
-            Cancels at end of billing period
-          </div>
-        )}
+
         {!isPro && (
-          <div style={{ fontFamily: SANS, fontSize: 13, color: TEXT_SEC, lineHeight: 1.6, margin: "0 0 16px" }}>
+          <div style={{ fontFamily: SANS, fontSize: 13, color: TEXT_SEC, lineHeight: 1.6, margin: "0 0 14px" }}>
             Unlock unlimited NŪRA conversations, bloodwork analysis, and the full knowledge base — $9.99/month.
           </div>
         )}
 
         {isPro ? (
-          <SageButton
-            label={portalLoading ? "Loading…" : "Manage subscription"}
-            onClick={handlePortal}
-            disabled={portalLoading}
-          />
+          <Link
+            href="/billing"
+            style={{
+              background: "none", border: "none", padding: 0,
+              fontFamily: SANS, fontSize: 13, fontWeight: 500, color: SAGE,
+              display: "inline-flex", alignItems: "center", gap: 4,
+              textDecoration: "none",
+            }}
+          >
+            Manage billing
+            <ArrowRight />
+          </Link>
         ) : (
           <SageButton
             label="Upgrade to Pro"

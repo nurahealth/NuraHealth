@@ -5,6 +5,7 @@ export interface Subscription {
   user_id: string;
   stripe_customer_id: string | null;
   stripe_subscription_id: string | null;
+  stripe_price_id: string | null;
   status: string | null;
   plan: string | null;
   current_period_start: string | null;

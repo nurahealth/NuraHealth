@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, FormEvent } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useState, useEffect, FormEvent } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { loadStripe, type StripeElementsOptions } from "@stripe/stripe-js";
 import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { supabase } from "@/lib/supabase";
@@ -124,7 +124,7 @@ function Skeleton() {
 }
 
 // ── Inner payment form (must be inside <Elements>) ─────────────────────────────
-function PaymentForm({ subscriptionId }: { subscriptionId: string }) {
+function PaymentForm({ subscriptionId, mode }: { subscriptionId: string; mode: "trial" | "now" }) {
   const stripe = useStripe();
   const elements = useElements();
   const router = useRouter();
@@ -140,27 +140,52 @@ function PaymentForm({ subscriptionId }: { subscriptionId: string }) {
     setProcessing(true);
     setError("");
 
-    const { error: stripeError, setupIntent } = await stripe.confirmSetup({
-      elements,
-      confirmParams: {
-        return_url: `${window.location.origin}/upgrade/success?subscription_id=${subscriptionId}`,
-      },
-      redirect: "if_required",
-    });
+    const returnUrl = `${window.location.origin}/upgrade/success?subscription_id=${subscriptionId}`;
 
-    if (stripeError) {
-      setError(stripeError.message ?? "Payment setup failed. Please try again.");
-      setProcessing(false);
-      return;
-    }
+    if (mode === "now") {
+      const { error: stripeError, paymentIntent } = await stripe.confirmPayment({
+        elements,
+        confirmParams: { return_url: returnUrl },
+        redirect: "if_required",
+      });
 
-    if (setupIntent?.status === "succeeded") {
-      router.push(`/upgrade/success?subscription_id=${subscriptionId}`);
-      return;
+      if (stripeError) {
+        setError(stripeError.message ?? "Payment failed. Please try again.");
+        setProcessing(false);
+        return;
+      }
+
+      if (paymentIntent?.status === "succeeded") {
+        router.push(`/upgrade/success?subscription_id=${subscriptionId}`);
+        return;
+      }
+    } else {
+      const { error: stripeError, setupIntent } = await stripe.confirmSetup({
+        elements,
+        confirmParams: { return_url: returnUrl },
+        redirect: "if_required",
+      });
+
+      if (stripeError) {
+        setError(stripeError.message ?? "Payment setup failed. Please try again.");
+        setProcessing(false);
+        return;
+      }
+
+      if (setupIntent?.status === "succeeded") {
+        router.push(`/upgrade/success?subscription_id=${subscriptionId}`);
+        return;
+      }
     }
 
     // Redirect happened — browser follows return_url, nothing to do here
   };
+
+  const ctaLabel = mode === "now" ? "SUBSCRIBE NOW" : "START FREE TRIAL";
+  const ctaProcessingLabel = mode === "now" ? "PROCESSING..." : "STARTING TRIAL...";
+  const footerCopy = mode === "now"
+    ? "Charged today: $9.99 · Renews monthly · Cancel anytime"
+    : "No charge for 3 days · $9.99/mo after · Cancel anytime";
 
   return (
     <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 0 }}>
@@ -196,11 +221,11 @@ function PaymentForm({ subscriptionId }: { subscriptionId: string }) {
         {processing ? (
           <>
             <div style={{ width: 14, height: 14, borderRadius: "50%", border: `2px solid rgba(13,13,14,0.3)`, borderTopColor: SAGE_ON, animation: "spin 0.8s linear infinite" }} />
-            STARTING TRIAL...
+            {ctaProcessingLabel}
           </>
         ) : (
           <>
-            START FREE TRIAL
+            {ctaLabel}
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M5 12h14M13 6l6 6-6 6"/>
             </svg>
@@ -209,18 +234,21 @@ function PaymentForm({ subscriptionId }: { subscriptionId: string }) {
       </button>
 
       <p style={{ textAlign: "center", marginTop: 12, fontSize: 11, fontFamily: MONO, color: TEXT_TER, letterSpacing: "0.3px" }}>
-        No charge for 3 days · $9.99/mo after · Cancel anytime
+        {footerCopy}
       </p>
     </form>
   );
 }
 
 // ── Outer page (fetches secret, owns layout) ───────────────────────────────────
-export default function CheckoutPage() {
+function CheckoutContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const skipTrial = searchParams.get("skipTrial") === "1";
   const theme = useThemeStore((s) => s.theme);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [subscriptionId, setSubscriptionId] = useState<string>("");
+  const [mode, setMode] = useState<"trial" | "now">(skipTrial ? "now" : "trial");
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -233,13 +261,16 @@ export default function CheckoutPage() {
         const res = await fetch("/api/stripe/checkout", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userId: user.id }),
+          body: JSON.stringify({ userId: user.id, skipTrial: skipTrial || undefined }),
         });
-        const data = await res.json() as { clientSecret?: string; subscriptionId?: string; error?: string };
+        const data = await res.json() as {
+          clientSecret?: string; subscriptionId?: string; mode?: "trial" | "now"; error?: string;
+        };
         if (!res.ok || !data.clientSecret) throw new Error(data.error ?? "Checkout failed");
         if (!cancelled) {
           setClientSecret(data.clientSecret);
           setSubscriptionId(data.subscriptionId ?? "");
+          if (data.mode) setMode(data.mode);
         }
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : "Something went wrong");
@@ -247,7 +278,7 @@ export default function CheckoutPage() {
     }
     void init();
     return () => { cancelled = true; };
-  }, [router]);
+  }, [router, skipTrial]);
 
   const elementsOptions: StripeElementsOptions = clientSecret
     ? { clientSecret, appearance: buildAppearance(theme) }
@@ -294,16 +325,22 @@ export default function CheckoutPage() {
           <div style={{ borderTop: `0.5px solid rgba(var(--nura-fg-rgb),0.1)`, paddingTop: 14, display: "flex", flexDirection: "column", gap: 10 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <span style={{ fontSize: 13, color: TEXT_SEC }}>Today</span>
-              <span style={{ fontSize: 14, fontWeight: 600, color: TEXT }}>$0.00</span>
+              <span style={{ fontSize: 14, fontWeight: 600, color: TEXT }}>
+                {mode === "now" ? "$9.99" : "$0.00"}
+              </span>
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <span style={{ fontSize: 13, color: TEXT_SEC }}>After 3-day trial</span>
+              <span style={{ fontSize: 13, color: TEXT_SEC }}>
+                {mode === "now" ? "Renews monthly" : "After 3-day trial"}
+              </span>
               <span style={{ fontSize: 14, fontWeight: 600, color: TEXT }}>$9.99/mo</span>
             </div>
           </div>
 
           <p style={{ fontSize: 11, fontFamily: MONO, color: TEXT_TER, margin: "14px 0 0", letterSpacing: "0.3px" }}>
-            You won&apos;t be charged today. Cancel anytime before the trial ends.
+            {mode === "now"
+              ? "You'll be charged $9.99 today. Cancel anytime."
+              : "You won't be charged today. Cancel anytime before the trial ends."}
           </p>
         </div>
 
@@ -321,7 +358,7 @@ export default function CheckoutPage() {
 
           {clientSecret ? (
             <Elements stripe={stripePromise} options={elementsOptions}>
-              <PaymentForm subscriptionId={subscriptionId} />
+              <PaymentForm subscriptionId={subscriptionId} mode={mode} />
             </Elements>
           ) : !error ? (
             <Skeleton />
@@ -340,5 +377,13 @@ export default function CheckoutPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function CheckoutPage() {
+  return (
+    <Suspense fallback={<div style={{ minHeight: "100dvh", background: BG }} />}>
+      <CheckoutContent />
+    </Suspense>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 
 const BG = "var(--nura-bg)";
@@ -26,11 +27,13 @@ const FEATURES = [
 
 export default function UpgradePage() {
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
-  const [portalLoading, setPortalLoading] = useState(false);
-  const [portalError, setPortalError] = useState("");
+  const [trialLoading, setTrialLoading] = useState(false);
+  const [nowLoading, setNowLoading] = useState(false);
   const [hovCta, setHovCta] = useState(false);
+  const [hovSecondary, setHovSecondary] = useState(false);
   const [proCheck, setProCheck] = useState<"checking" | "free" | "redirecting">("checking");
+
+  const anyLoading = trialLoading || nowLoading;
 
   useEffect(() => {
     let cancelled = false;
@@ -59,29 +62,16 @@ export default function UpgradePage() {
     return <div style={{ minHeight: "100dvh", background: BG }} />;
   }
 
-  const handleUpgrade = () => {
-    setLoading(true);
+  const handleStartTrial = () => {
+    if (anyLoading) return;
+    setTrialLoading(true);
     router.push("/upgrade/checkout");
   };
 
-  const handlePortal = async () => {
-    setPortalLoading(true);
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { router.push("/auth"); return; }
-
-      const res = await fetch("/api/stripe/portal", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: user.id }),
-      });
-      const data = await res.json() as { url?: string; error?: string };
-      if (!res.ok || !data.url) throw new Error(data.error ?? "Portal failed");
-      window.location.href = data.url;
-    } catch (e) {
-      setPortalError(e instanceof Error ? e.message : "Something went wrong");
-      setPortalLoading(false);
-    }
+  const handleSubscribeNow = () => {
+    if (anyLoading) return;
+    setNowLoading(true);
+    router.push("/upgrade/checkout?skipTrial=1");
   };
 
   return (
@@ -149,45 +139,62 @@ export default function UpgradePage() {
           </div>
         </div>
 
-        {/* Portal error */}
-        {portalError && (
-          <div style={{ padding: "10px 14px", background: "rgba(255,76,92,0.08)", border: "1px solid rgba(255,76,92,0.3)", borderRadius: 8, marginBottom: 16, fontFamily: MONO, fontSize: 10, color: "#ff4c5c", letterSpacing: "0.5px" }}>
-            {portalError}
-          </div>
-        )}
-
-        {/* CTA */}
+        {/* Primary CTA — START FREE TRIAL */}
         <button
-          onClick={handleUpgrade}
-          disabled={loading}
+          onClick={handleStartTrial}
+          disabled={anyLoading}
           onMouseEnter={() => setHovCta(true)}
           onMouseLeave={() => setHovCta(false)}
           style={{
             width: "100%", padding: "15px", borderRadius: 14, border: "none",
-            background: loading ? `rgba(var(--nura-sage-rgb),0.5)` : hovCta ? SAGE_HOV : SAGE,
+            background: anyLoading ? `rgba(var(--nura-sage-rgb),0.5)` : hovCta ? SAGE_HOV : SAGE,
             color: SAGE_ON, fontFamily: MONO, fontSize: 12, fontWeight: 700,
-            letterSpacing: "1.5px", cursor: loading ? "not-allowed" : "pointer",
+            letterSpacing: "1.5px", cursor: anyLoading ? "not-allowed" : "pointer",
             display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
-            transition: "background 200ms", marginBottom: 14,
+            transition: "background 200ms",
           }}
         >
-          {loading ? "LOADING..." : "START FREE TRIAL"}
-          {!loading && (
+          {trialLoading ? "LOADING..." : "START FREE TRIAL"}
+          {!trialLoading && (
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M5 12h14M13 6l6 6-6 6"/>
             </svg>
           )}
         </button>
 
-        {/* Portal link */}
-        <div style={{ textAlign: "center" }}>
+        {/* Secondary text link — subscribe now */}
+        <div style={{ textAlign: "center", marginTop: 14 }}>
           <button
-            onClick={handlePortal}
-            disabled={portalLoading}
-            style={{ background: "none", border: "none", cursor: portalLoading ? "not-allowed" : "pointer", fontFamily: MONO, fontSize: 9, fontWeight: 600, letterSpacing: "1.2px", color: TEXT_TER, textTransform: "uppercase" }}
+            type="button"
+            onClick={handleSubscribeNow}
+            disabled={anyLoading}
+            onMouseEnter={() => setHovSecondary(true)}
+            onMouseLeave={() => setHovSecondary(false)}
+            style={{
+              background: "none", border: "none", padding: 0,
+              cursor: anyLoading ? "not-allowed" : "pointer",
+              fontFamily: SANS, fontSize: 14,
+              color: hovSecondary ? TEXT_SEC : TEXT_TER,
+              textDecoration: hovSecondary ? "underline" : "none",
+              transition: "color 160ms",
+            }}
           >
-            {portalLoading ? "LOADING..." : "Already Pro? Manage subscription"}
+            {nowLoading ? "Loading…" : "or subscribe now — $9.99/month, no trial"}
           </button>
+        </div>
+
+        {/* Manage subscription link */}
+        <div style={{ textAlign: "center", marginTop: 20 }}>
+          <Link
+            href="/billing"
+            style={{
+              fontFamily: MONO, fontSize: 9, fontWeight: 600,
+              letterSpacing: "1.2px", color: TEXT_TER, textTransform: "uppercase",
+              textDecoration: "none",
+            }}
+          >
+            Already Pro? Manage subscription
+          </Link>
         </div>
       </div>
     </div>
