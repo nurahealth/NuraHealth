@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useState, useEffect, useRef, useCallback } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import type { User } from "@supabase/supabase-js";
 import {
@@ -12,6 +12,7 @@ import {
   type Biomarker,
 } from "@/lib/bloodwork";
 import NuraPageShell from "@/components/NuraPageShell";
+import StoryMode, { StoryModeSkeleton, type Narrative } from "./StoryMode";
 
 // ── Tokens ────────────────────────────────────────────────────────────────────
 const TEXT = "var(--nura-text-primary)";
@@ -44,8 +45,12 @@ function countsByStatus(bm: Biomarker[]) {
   };
 }
 
-export default function BloodworkPage() {
+function BloodworkPageInner() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const viewParam = searchParams.get("view");
+  const view: "labs" | "report" = viewParam === "report" ? "report" : "labs";
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [user, setUser] = useState<User | null>(null);
@@ -58,6 +63,18 @@ export default function BloodworkPage() {
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+
+  // Story Mode state
+  const [narrative, setNarrative] = useState<Narrative | null>(null);
+  const [narrativeId, setNarrativeId] = useState<string | null>(null);
+  const [narrativeLoading, setNarrativeLoading] = useState(false);
+  const [narrativeError, setNarrativeError] = useState<string | null>(null);
+  const [regenerating, setRegenerating] = useState(false);
+
+  const setView = useCallback((next: "labs" | "report") => {
+    const target = next === "report" ? "/bloodwork?view=report" : "/bloodwork?view=labs";
+    router.replace(target, { scroll: false });
+  }, [router]);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user: u } }) => {
@@ -88,6 +105,66 @@ export default function BloodworkPage() {
     if (!user) return;
     loadPanels(user.id);
   }, [user, loadPanels]);
+
+  // Fetch or generate the latest narrative for the most-recent analyzed panel.
+  const ensureNarrative = useCallback(async (panelId: string, forceGenerate: boolean) => {
+    setNarrativeError(null);
+    if (!forceGenerate) {
+      const { data: existing, error } = await supabase
+        .from("bloodwork_narratives")
+        .select("id, narrative, created_at")
+        .eq("panel_id", panelId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (!error && existing) {
+        const row = existing as { id: string; narrative: Narrative };
+        setNarrative(row.narrative);
+        setNarrativeId(row.id);
+        return;
+      }
+    }
+
+    if (forceGenerate) setRegenerating(true);
+    else setNarrativeLoading(true);
+
+    try {
+      const res = await fetch("/api/bloodwork/narrate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ panelId }),
+      });
+      const data = await res.json() as { narrative?: Narrative; narrativeId?: string; error?: string };
+      if (!res.ok || !data.narrative || !data.narrativeId) {
+        throw new Error(data.error ?? "Could not generate narrative");
+      }
+      setNarrative(data.narrative);
+      setNarrativeId(data.narrativeId);
+    } catch (e) {
+      setNarrativeError(e instanceof Error ? e.message : "Could not generate narrative");
+    } finally {
+      setNarrativeLoading(false);
+      setRegenerating(false);
+    }
+  }, []);
+
+  // When panels load and we have at least one analyzed panel, ensure a narrative.
+  useEffect(() => {
+    if (panelsLoading) return;
+    const latest = panels.find((p) => p.status === "analyzed");
+    if (!latest) {
+      setNarrative(null);
+      setNarrativeId(null);
+      return;
+    }
+    void ensureNarrative(latest.id, false);
+  }, [panels, panelsLoading, ensureNarrative]);
+
+  const handleRegenerate = useCallback(async () => {
+    const latest = panels.find((p) => p.status === "analyzed");
+    if (!latest) return;
+    await ensureNarrative(latest.id, true);
+  }, [panels, ensureNarrative]);
 
   const handleFile = async (file: File) => {
     if (!user) return;
@@ -178,6 +255,62 @@ export default function BloodworkPage() {
         </p>
       </div>
 
+      {/* LABS / REPORT TOGGLE */}
+      <div style={{ marginBottom: 32 }}>
+        <div
+          role="tablist"
+          style={{
+            display: "inline-flex", padding: 3, borderRadius: 9999,
+            background: "transparent", border: `0.5px solid ${BORDER}`,
+          }}
+        >
+          <ViewTab label="Labs" active={view === "labs"} onClick={() => setView("labs")} />
+          <ViewTab label="Report" active={view === "report"} onClick={() => setView("report")} />
+        </div>
+      </div>
+
+      {/* REPORT VIEW */}
+      {view === "report" && (
+        <>
+          {!latestPanel ? (
+            <ReportEmpty onGoToLabs={() => setView("labs")} />
+          ) : narrative ? (
+            <StoryMode
+              narrative={narrative}
+              narrativeId={narrativeId ?? ""}
+              panelDate={latestPanel.collected_date}
+              onRegenerate={handleRegenerate}
+              regenerating={regenerating}
+            />
+          ) : narrativeLoading ? (
+            <StoryModeSkeleton />
+          ) : narrativeError ? (
+            <div style={{
+              margin: "32px 0", padding: "14px 16px", borderRadius: 12,
+              background: "rgba(212,87,77,0.08)", border: `0.5px solid rgba(212,87,77,0.3)`,
+              color: RED, fontFamily: SANS, fontSize: 13, lineHeight: 1.6,
+            }}>
+              {narrativeError}
+              <button
+                onClick={handleRegenerate}
+                style={{
+                  marginLeft: 10, padding: "4px 10px", borderRadius: 8,
+                  background: "transparent", border: `0.5px solid rgba(212,87,77,0.4)`,
+                  color: RED, fontFamily: SANS, fontSize: 12, cursor: "pointer",
+                }}
+              >
+                Try again
+              </button>
+            </div>
+          ) : (
+            <StoryModeSkeleton />
+          )}
+        </>
+      )}
+
+      {/* LABS VIEW (default) */}
+      {view === "labs" && (
+        <>
       {/* UPLOAD ZONE */}
       <div
         onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
@@ -388,6 +521,8 @@ export default function BloodworkPage() {
           })}
         </div>
       )}
+        </>
+      )}
 
       {deleteTarget && (
         <DeleteModal
@@ -397,6 +532,74 @@ export default function BloodworkPage() {
         />
       )}
     </NuraPageShell>
+  );
+}
+
+function ReportEmpty({ onGoToLabs }: { onGoToLabs: () => void }) {
+  return (
+    <div style={{
+      display: "flex", flexDirection: "column", alignItems: "center",
+      textAlign: "center", padding: "48px 20px 32px",
+    }}>
+      <h2 style={{
+        fontFamily: SERIF, fontWeight: 500, color: TEXT,
+        fontSize: "clamp(22px, 3.4vw, 28px)", lineHeight: 1.25, letterSpacing: "-0.3px",
+        margin: "0 0 14px",
+      }}>
+        Your report starts with your first lab upload.
+      </h2>
+      <p style={{
+        fontFamily: SANS, fontSize: 16, color: TEXT_SEC, lineHeight: 1.6,
+        maxWidth: 480, margin: "0 0 24px",
+      }}>
+        Upload bloodwork in the Labs tab to generate your personalized health report.
+      </p>
+      <button
+        type="button"
+        onClick={onGoToLabs}
+        onMouseEnter={(e) => { e.currentTarget.style.background = SAGE_HOV; }}
+        onMouseLeave={(e) => { e.currentTarget.style.background = SAGE; }}
+        style={{
+          padding: "11px 20px", borderRadius: 11, border: "none",
+          background: SAGE, color: SAGE_ON,
+          fontFamily: SANS, fontSize: 13, fontWeight: 500, cursor: "pointer",
+          display: "inline-flex", alignItems: "center", gap: 6,
+          transition: "background 200ms",
+        }}
+      >
+        Go to Labs →
+      </button>
+    </div>
+  );
+}
+
+function ViewTab({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      role="tab"
+      aria-selected={active}
+      onClick={onClick}
+      onMouseEnter={(e) => { if (!active) e.currentTarget.style.color = TEXT_SEC; }}
+      onMouseLeave={(e) => { if (!active) e.currentTarget.style.color = TEXT_TER; }}
+      style={{
+        padding: "8px 18px", borderRadius: 9999, border: "none",
+        background: active ? SAGE : "transparent",
+        color: active ? SAGE_ON : TEXT_TER,
+        fontFamily: SANS, fontSize: 13, fontWeight: active ? 500 : 400,
+        cursor: "pointer", transition: "background 160ms, color 160ms",
+      }}
+    >
+      {label}
+    </button>
+  );
+}
+
+export default function BloodworkPage() {
+  return (
+    <Suspense fallback={null}>
+      <BloodworkPageInner />
+    </Suspense>
   );
 }
 

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, use } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import type { User } from "@supabase/supabase-js";
 import { addSupplement } from "@/lib/supplements";
@@ -92,46 +93,293 @@ function HealthDonut({ score, size = 96 }: { score: HealthScore; size?: number }
 }
 
 // ── Trend chart ──────────────────────────────────────────────────────────────
-function TrendChart({ points }: { points: ScoreTrendPoint[] }) {
-  if (points.length < 2) return null;
-  const W = 320, H = 64, pad = 8;
+type TrendRange = "1M" | "3M" | "6M" | "1Y" | "All";
+const TREND_RANGES: { id: TrendRange; days: number | null }[] = [
+  { id: "1M", days: 31 },
+  { id: "3M", days: 92 },
+  { id: "6M", days: 183 },
+  { id: "1Y", days: 366 },
+  { id: "All", days: null },
+];
+
+function filterByRange(points: ScoreTrendPoint[], range: TrendRange): ScoreTrendPoint[] {
+  const def = TREND_RANGES.find((r) => r.id === range);
+  if (!def?.days) return points;
+  const cutoff = Date.now() - def.days * 24 * 60 * 60 * 1000;
+  return points.filter((p) => {
+    if (!p.date) return true;
+    const t = new Date(p.date + "T00:00:00").getTime();
+    return !isNaN(t) && t >= cutoff;
+  });
+}
+
+// Catmull-Rom → cubic Bezier, monotone-friendly tension.
+function smoothPath(pts: Array<{ x: number; y: number }>): string {
+  if (pts.length === 0) return "";
+  if (pts.length === 1) return `M ${pts[0].x} ${pts[0].y}`;
+  const t = 0.2;
+  const parts: string[] = [`M ${pts[0].x} ${pts[0].y}`];
+  for (let i = 0; i < pts.length - 1; i++) {
+    const p0 = pts[i - 1] ?? pts[i];
+    const p1 = pts[i];
+    const p2 = pts[i + 1];
+    const p3 = pts[i + 2] ?? p2;
+    const cp1x = p1.x + (p2.x - p0.x) * t;
+    const cp1y = p1.y + (p2.y - p0.y) * t;
+    const cp2x = p2.x - (p3.x - p1.x) * t;
+    const cp2y = p2.y - (p3.y - p1.y) * t;
+    parts.push(`C ${cp1x.toFixed(2)} ${cp1y.toFixed(2)}, ${cp2x.toFixed(2)} ${cp2y.toFixed(2)}, ${p2.x.toFixed(2)} ${p2.y.toFixed(2)}`);
+  }
+  return parts.join(" ");
+}
+
+function TrendChart({ points: allPoints }: { points: ScoreTrendPoint[] }) {
+  const [range, setRange] = useState<TrendRange>("All");
+  const [hoverIdx, setHoverIdx] = useState<number | null>(null);
+
+  const points = filterByRange(allPoints, range);
+  const hasEnough = points.length >= 2;
+
+  const VIEW_W = 1000;
+  const VIEW_H = 160;
+  const PAD_TOP = 18;
+  const PAD_BOTTOM = 18;
+
   const scores = points.map((p) => p.score);
-  const minV = Math.max(0, Math.min(...scores) - 10);
-  const maxV = Math.min(100, Math.max(...scores) + 10);
-  const range = maxV - minV || 1;
-  const toX = (i: number) => pad + (i / (points.length - 1)) * (W - pad * 2);
-  const toY = (v: number) => H - pad - ((v - minV) / range) * (H - pad * 2);
-  const pts = points.map((p, i) => `${toX(i)},${toY(p.score)}`).join(" ");
-  const lastX = toX(points.length - 1);
-  const lastY = toY(points[points.length - 1].score);
-  const delta = scores[scores.length - 1] - scores[0];
-  const deltaStr = delta > 0 ? `↑ +${delta}` : delta < 0 ? `↓ ${delta}` : "→ stable";
+  const minV = points.length > 0 ? Math.max(0, Math.min(...scores) - 10) : 0;
+  const maxV = points.length > 0 ? Math.min(100, Math.max(...scores) + 10) : 100;
+  const span = maxV - minV || 1;
+
+  const toX = (i: number) => points.length <= 1 ? VIEW_W / 2 : (i / (points.length - 1)) * VIEW_W;
+  const toY = (v: number) => VIEW_H - PAD_BOTTOM - ((v - minV) / span) * (VIEW_H - PAD_TOP - PAD_BOTTOM);
+
+  const pathPts = points.map((p, i) => ({ x: toX(i), y: toY(p.score) }));
+  const linePath = smoothPath(pathPts);
+  const fillPath = pathPts.length >= 2
+    ? `${linePath} L ${pathPts[pathPts.length - 1].x} ${VIEW_H} L ${pathPts[0].x} ${VIEW_H} Z`
+    : "";
+
+  const first = points[0];
+  const last = points[points.length - 1];
+  const delta = hasEnough ? last.score - first.score : 0;
+  const deltaSign = delta > 0 ? "↑" : delta < 0 ? "↓" : "→";
   const deltaColor = delta > 0 ? SAGE : delta < 0 ? RED : TEXT_TER;
+
+  const gridY = [0.25, 0.5, 0.75].map((p) => PAD_TOP + p * (VIEW_H - PAD_TOP - PAD_BOTTOM));
 
   return (
     <div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+      {/* Header: label + delta */}
+      <div style={{
+        display: "flex", justifyContent: "space-between", alignItems: "flex-start",
+        gap: 12, marginBottom: 12, flexWrap: "wrap",
+      }}>
         <SectionLabel>Health score trend</SectionLabel>
-        <span style={{ fontFamily: SANS, fontSize: 11, color: deltaColor, fontWeight: 500 }}>{deltaStr}</span>
+        {hasEnough && (
+          <div style={{ fontFamily: SANS, fontSize: 13, color: TEXT_SEC, lineHeight: 1.4 }}>
+            <span style={{ color: deltaColor, fontWeight: 500 }}>
+              {deltaSign} {delta === 0 ? "stable" : `${delta > 0 ? "+" : ""}${delta} points`}
+            </span>
+            {first.date && (
+              <span style={{ color: TEXT_TER }}>
+                {" "}since {fmtDate(first.date)}
+              </span>
+            )}
+          </div>
+        )}
       </div>
-      <svg width="100%" height={H + 20} viewBox={`0 0 ${W} ${H + 20}`} preserveAspectRatio="none">
-        <defs>
-          <linearGradient id="trend-fill-d" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={SAGE} stopOpacity="0.5" />
-            <stop offset="100%" stopColor={SAGE} stopOpacity="0" />
-          </linearGradient>
-        </defs>
-        <polygon points={`${pad},${H - pad} ${pts} ${toX(points.length - 1)},${H - pad}`} fill="url(#trend-fill-d)" />
-        <polyline points={pts} fill="none" stroke={SAGE} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
-        <circle cx={lastX} cy={lastY} r={4} fill={SAGE} />
-        {points.map((p, i) => (
-          <text key={i} x={toX(i)} y={H + 14} textAnchor="middle"
-            fontFamily={SANS} fontSize="9"
-            fill={i === points.length - 1 ? SAGE : TEXT_TER}>
-            {fmtShort(p.date)}
-          </text>
-        ))}
-      </svg>
+
+      {/* Time-range pills */}
+      <div style={{ display: "flex", gap: 6, marginBottom: 18, flexWrap: "wrap" }}>
+        {TREND_RANGES.map((r) => {
+          const active = r.id === range;
+          return (
+            <button
+              key={r.id}
+              type="button"
+              onClick={() => { setRange(r.id); setHoverIdx(null); }}
+              onMouseEnter={(e) => { if (!active) e.currentTarget.style.color = TEXT_SEC; }}
+              onMouseLeave={(e) => { if (!active) e.currentTarget.style.color = TEXT_TER; }}
+              style={{
+                padding: "6px 12px", borderRadius: 9999,
+                background: active ? SAGE : "transparent",
+                color: active ? SAGE_ON : TEXT_TER,
+                border: `0.5px solid ${active ? "transparent" : BORDER}`,
+                fontFamily: SANS, fontSize: 12, fontWeight: active ? 500 : 400,
+                cursor: "pointer", transition: "background 160ms, color 160ms",
+              }}
+            >
+              {r.id}
+            </button>
+          );
+        })}
+      </div>
+
+      {points.length === 0 ? (
+        <div style={{
+          padding: "32px 0", textAlign: "center", color: TEXT_TER, fontSize: 13, fontFamily: SANS,
+        }}>
+          No data in this range.
+        </div>
+      ) : (
+        <>
+          {/* Chart area */}
+          <div style={{ position: "relative", width: "100%", height: VIEW_H, marginBottom: 10 }}>
+            <svg
+              viewBox={`0 0 ${VIEW_W} ${VIEW_H}`}
+              preserveAspectRatio="none"
+              style={{ width: "100%", height: "100%", display: "block", overflow: "visible" }}
+            >
+              <defs>
+                <linearGradient id="trend-fill-d" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={SAGE} stopOpacity="0.3" />
+                  <stop offset="100%" stopColor={SAGE} stopOpacity="0" />
+                </linearGradient>
+              </defs>
+
+              {/* Faint gridlines */}
+              {gridY.map((y, i) => (
+                <line
+                  key={i}
+                  x1={0} x2={VIEW_W} y1={y} y2={y}
+                  stroke="var(--nura-border)" strokeOpacity={0.3} strokeWidth={1}
+                  vectorEffect="non-scaling-stroke"
+                />
+              ))}
+
+              {hasEnough && fillPath && (
+                <path d={fillPath} fill="url(#trend-fill-d)" />
+              )}
+              {hasEnough && (
+                <path
+                  d={linePath}
+                  fill="none" stroke={SAGE} strokeWidth={2.5}
+                  strokeLinejoin="round" strokeLinecap="round"
+                  vectorEffect="non-scaling-stroke"
+                />
+              )}
+            </svg>
+
+            {/* HTML dots — percentage-positioned so they stay round */}
+            {points.map((p, i) => {
+              const xPct = (pathPts[i].x / VIEW_W) * 100;
+              const yPct = (pathPts[i].y / VIEW_H) * 100;
+              const isHover = hoverIdx === i;
+              return (
+                <button
+                  key={`${p.panelId}-${i}`}
+                  type="button"
+                  onMouseEnter={() => setHoverIdx(i)}
+                  onMouseLeave={() => setHoverIdx(null)}
+                  onFocus={() => setHoverIdx(i)}
+                  onBlur={() => setHoverIdx(null)}
+                  onTouchStart={() => setHoverIdx(i)}
+                  aria-label={`${fmtDate(p.date)}: ${p.score}%`}
+                  style={{
+                    position: "absolute",
+                    left: `${xPct}%`, top: `${yPct}%`,
+                    transform: "translate(-50%, -50%)",
+                    width: 22, height: 22, padding: 0,
+                    background: "transparent", border: "none", cursor: "pointer",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                  }}
+                >
+                  <span style={{
+                    display: "block",
+                    width: isHover ? 12 : 7, height: isHover ? 12 : 7,
+                    borderRadius: "50%",
+                    background: SAGE,
+                    boxShadow: isHover
+                      ? `0 0 0 4px rgba(var(--nura-sage-rgb),0.18), 0 0 0 1px var(--nura-bg)`
+                      : `0 0 0 2px var(--nura-bg)`,
+                    transition: "width 160ms, height 160ms, box-shadow 160ms",
+                  }} />
+                </button>
+              );
+            })}
+
+            {/* Tooltip */}
+            {hoverIdx !== null && points[hoverIdx] && (() => {
+              const xPct = (pathPts[hoverIdx].x / VIEW_W) * 100;
+              const p = points[hoverIdx];
+              const prev = hoverIdx > 0 ? points[hoverIdx - 1] : null;
+              const d = prev ? p.score - prev.score : null;
+              const leftHalf = xPct < 50;
+              return (
+                <div
+                  role="tooltip"
+                  style={{
+                    position: "absolute",
+                    left: `${xPct}%`,
+                    top: `${(pathPts[hoverIdx].y / VIEW_H) * 100}%`,
+                    transform: `translate(${leftHalf ? "12px" : "calc(-100% - 12px)"}, calc(-100% - 12px))`,
+                    background: SURFACE,
+                    border: `0.5px solid ${BORDER}`,
+                    borderRadius: 8,
+                    padding: 10,
+                    fontFamily: SANS,
+                    fontSize: 13,
+                    color: TEXT,
+                    pointerEvents: "none",
+                    whiteSpace: "nowrap",
+                    boxShadow: "0 8px 24px rgba(0,0,0,0.18)",
+                    zIndex: 5,
+                  }}
+                >
+                  <div style={{ fontSize: 12, color: TEXT_TER, marginBottom: 4 }}>
+                    {fmtDate(p.date)}
+                  </div>
+                  <div style={{ fontWeight: 500, color: TEXT, marginBottom: d !== null ? 4 : 0 }}>
+                    Health Score: {p.score}%
+                  </div>
+                  {d !== null && (
+                    <div style={{
+                      fontSize: 12,
+                      color: d > 0 ? SAGE : d < 0 ? RED : TEXT_TER,
+                    }}>
+                      {d > 0 ? "↑" : d < 0 ? "↓" : "→"} {d === 0 ? "no change" : `${d > 0 ? "+" : ""}${d} from previous`}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+          </div>
+
+          {/* X-axis labels — HTML, edge-aware anchoring */}
+          <div style={{ position: "relative", height: 16 }}>
+            {points.map((p, i) => {
+              const xPct = (pathPts[i].x / VIEW_W) * 100;
+              const isFirst = i === 0;
+              const isLast = i === points.length - 1;
+              const transform = isFirst
+                ? "translateX(0)"
+                : isLast
+                ? "translateX(-100%)"
+                : "translateX(-50%)";
+              const textAlign: "left" | "right" | "center" = isFirst ? "left" : isLast ? "right" : "center";
+              const stride = Math.ceil(points.length / 6); // show ~6 labels max
+              if (!isFirst && !isLast && i % stride !== 0) return null;
+              return (
+                <span
+                  key={`label-${p.panelId}-${i}`}
+                  style={{
+                    position: "absolute",
+                    left: `${xPct}%`,
+                    transform,
+                    textAlign,
+                    fontFamily: SANS,
+                    fontSize: 11,
+                    color: isLast ? SAGE : TEXT_TER,
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {fmtShort(p.date)}
+                </span>
+              );
+            })}
+          </div>
+        </>
+      )}
     </div>
   );
 }
@@ -183,10 +431,10 @@ function RangeBar({ b }: { b: Biomarker }) {
 
   return (
     <div style={{ marginTop: 10 }}>
-      <div style={{ position: "relative", height: 5, borderRadius: 3, background: `rgba(212,87,77,0.18)` }}>
+      <div style={{ position: "relative", height: 5, borderRadius: 3, background: `rgba(var(--nura-danger-rgb),0.18)` }}>
         <div style={{
           position: "absolute", left: `${clamp(low)}%`, width: `${clamp(optStart) - clamp(low)}%`, height: "100%",
-          background: `rgba(212,165,116,0.4)`, borderRadius: "3px 0 0 3px",
+          background: `rgba(var(--nura-watch-rgb),0.4)`, borderRadius: "3px 0 0 3px",
         }} />
         <div style={{
           position: "absolute", left: `${clamp(optStart)}%`, width: `${clamp(optEnd) - clamp(optStart)}%`, height: "100%",
@@ -194,7 +442,7 @@ function RangeBar({ b }: { b: Biomarker }) {
         }} />
         <div style={{
           position: "absolute", left: `${clamp(optEnd)}%`, width: `${clamp(high) - clamp(optEnd)}%`, height: "100%",
-          background: `rgba(212,165,116,0.4)`, borderRadius: "0 3px 3px 0",
+          background: `rgba(var(--nura-watch-rgb),0.4)`, borderRadius: "0 3px 3px 0",
         }} />
         <div style={{
           position: "absolute", top: "50%", left: `${clamp(value)}%`,
@@ -428,6 +676,30 @@ export default function BloodworkDetailPage({ params }: { params: Promise<{ id: 
 
   return (
     <NuraPageShell rightAction={ShareButton} maxWidth={720}>
+      {/* Back link */}
+      <div style={{ marginTop: 16, marginBottom: 24 }}>
+        <Link
+          href="/bloodwork"
+          onMouseEnter={(e) => {
+            e.currentTarget.style.color = TEXT_SEC;
+            e.currentTarget.style.textDecoration = "underline";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.color = TEXT_TER;
+            e.currentTarget.style.textDecoration = "none";
+          }}
+          style={{
+            display: "inline-flex", alignItems: "center", gap: 6,
+            minHeight: 44, padding: "10px 4px 10px 0",
+            fontFamily: SANS, fontSize: 13, color: TEXT_TER,
+            textDecoration: "none", whiteSpace: "nowrap",
+            cursor: "pointer",
+          }}
+        >
+          ← Back to bloodwork
+        </Link>
+      </div>
+
       {/* Title */}
       <div style={{ marginBottom: 22 }}>
         <h1 style={{
@@ -589,8 +861,8 @@ export default function BloodworkDetailPage({ params }: { params: Promise<{ id: 
               onClick={() => setFilter(f)}
               style={{
                 padding: "5px 11px", borderRadius: 7,
-                background: filter === f ? (f === "alert" ? `rgba(212,87,77,0.15)` : `rgba(var(--nura-sage-rgb),0.15)`) : "transparent",
-                border: `0.5px solid ${filter === f ? (f === "alert" ? `rgba(212,87,77,0.4)` : `rgba(var(--nura-sage-rgb),0.4)`) : BORDER}`,
+                background: filter === f ? (f === "alert" ? `rgba(var(--nura-danger-rgb),0.15)` : `rgba(var(--nura-sage-rgb),0.15)`) : "transparent",
+                border: `0.5px solid ${filter === f ? (f === "alert" ? `rgba(var(--nura-danger-rgb),0.4)` : `rgba(var(--nura-sage-rgb),0.4)`) : BORDER}`,
                 color: filter === f ? (f === "alert" ? RED : SAGE) : TEXT_TER,
                 fontFamily: SANS, fontSize: 11, fontWeight: 500, cursor: "pointer",
                 textTransform: "capitalize",
@@ -650,7 +922,7 @@ export default function BloodworkDetailPage({ params }: { params: Promise<{ id: 
           backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20,
         }}>
           <div onClick={(e) => e.stopPropagation()} style={{
-            background: "var(--nura-bg)", border: `1px solid rgba(212,87,77,0.4)`,
+            background: "var(--nura-bg)", border: `1px solid rgba(var(--nura-danger-rgb),0.4)`,
             borderRadius: 14, padding: "22px 20px", maxWidth: 320, width: "100%",
           }}>
             <h3 style={{ fontFamily: SERIF, fontSize: 22, color: TEXT, margin: "0 0 8px", fontWeight: 500 }}>Delete panel?</h3>
@@ -667,7 +939,7 @@ export default function BloodworkDetailPage({ params }: { params: Promise<{ id: 
               </button>
               <button onClick={handleDelete} disabled={deleting} style={{
                 flex: 1, padding: "11px 0", borderRadius: 10,
-                background: "rgba(212,87,77,0.12)", border: `1px solid rgba(212,87,77,0.4)`,
+                background: "rgba(var(--nura-danger-rgb),0.12)", border: `1px solid rgba(var(--nura-danger-rgb),0.4)`,
                 color: RED, fontFamily: SANS, fontSize: 13, fontWeight: 500,
                 cursor: deleting ? "not-allowed" : "pointer", opacity: deleting ? 0.6 : 1,
               }}>

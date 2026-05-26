@@ -20,7 +20,9 @@
   --nura-fg-rgb: 235, 230, 216;        /* ink for text tints (mid+ opacities) */
   --nura-bg-tint-rgb: 235, 230, 216;   /* tint for surfaces/borders (low opacities) */
   --nura-danger: #d4574d;
+  --nura-danger-rgb: 212, 87, 77;
   --nura-watch: #d4a574;
+  --nura-watch-rgb: 212, 165, 116;
 
   /* Legacy tokens kept for tailwind theme — unused by new theme system */
   --background: #ffffff;
@@ -44,8 +46,10 @@
   --nura-sage-rgb: 125, 147, 133;
   --nura-fg-rgb: 26, 31, 26;
   --nura-bg-tint-rgb: 125, 147, 133;
-  --nura-danger: #c14a40;
-  --nura-watch: #b8884e;
+  --nura-danger: #d08366;
+  --nura-danger-rgb: 208, 131, 102;
+  --nura-watch: #d6b574;
+  --nura-watch-rgb: 214, 181, 116;
 }
 
 @theme inline {
