@@ -120,6 +120,7 @@ function AuthContent() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [appleLoading, setAppleLoading] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
 
@@ -131,12 +132,9 @@ function AuthContent() {
   const [agreedTerms, setAgreedTerms] = useState(false);
   const [agreedMedical, setAgreedMedical] = useState(false);
 
-  // Apple "coming soon" toast
-  const [toast, setToast] = useState("");
-
   useEffect(() => {
     if (searchParams.get("error") === "oauth_failed") {
-      setError("Google sign-in failed. Please try again or use email.");
+      setError("Sign-in failed. Please try again or use email.");
     }
   }, [searchParams]);
 
@@ -201,12 +199,25 @@ function AuthContent() {
     }
   };
 
-  const handleAppleClick = () => {
-    setToast("Apple sign-in coming soon");
-    setTimeout(() => setToast(""), 2200);
+  const handleAppleSignIn = async () => {
+    setError("");
+    setAppleLoading(true);
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "apple",
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+      if (error) throw error;
+      // Redirect handled by Supabase
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Apple sign-in failed");
+      setAppleLoading(false);
+    }
   };
 
-  const anyLoading = loading || googleLoading;
+  const anyLoading = loading || googleLoading || appleLoading;
   const isSignup = mode === "signup";
 
   return (
@@ -220,10 +231,6 @@ function AuthContent() {
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         html, body { margin: 0; padding: 0; background: ${BG}; }
         @keyframes auth-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        @keyframes auth-toast-in {
-          from { opacity: 0; transform: translate(-50%, 8px); }
-          to   { opacity: 1; transform: translate(-50%, 0); }
-        }
         .auth-cta:active { transform: scale(0.98); }
         input::placeholder { color: rgba(var(--nura-fg-rgb),0.35) !important; }
       `}</style>
@@ -387,30 +394,25 @@ function AuthContent() {
           {googleLoading ? "Connecting…" : "Continue with Google"}
         </button>
 
-        {/* APPLE (coming soon) */}
+        {/* APPLE */}
         <button
-          onClick={handleAppleClick}
+          onClick={handleAppleSignIn}
           disabled={anyLoading}
+          aria-label="Sign in with Apple"
           className="auth-cta"
+          onMouseEnter={(e) => { if (!anyLoading) e.currentTarget.style.background = "#f5f5f7"; }}
+          onMouseLeave={(e) => { if (!anyLoading) e.currentTarget.style.background = "#ffffff"; }}
           style={{
             width: "100%", height: 48, borderRadius: 11, marginTop: 8,
-            background: "transparent", border: `0.5px solid rgba(var(--nura-bg-tint-rgb),0.15)`,
-            color: TEXT, fontFamily: SANS, fontSize: 14, fontWeight: 500,
-            cursor: anyLoading ? "not-allowed" : "pointer", opacity: 0.6,
+            background: "#ffffff", border: "0.5px solid #ffffff",
+            color: "#000000", fontFamily: SANS, fontSize: 14, fontWeight: 500,
+            cursor: anyLoading ? "not-allowed" : "pointer", opacity: appleLoading ? 0.8 : 1,
             display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
-            transition: "transform 80ms",
+            transition: "background 180ms, opacity 180ms, transform 80ms",
           }}
         >
-          <AppleLogo />
-          Continue with Apple
-          <span style={{
-            padding: "4px 6px", borderRadius: 4,
-            background: `rgba(var(--nura-sage-rgb),0.14)`,
-            fontFamily: SANS, fontSize: 9, fontWeight: 600, letterSpacing: "1px",
-            color: SAGE, textTransform: "uppercase",
-          }}>
-            Soon
-          </span>
+          {appleLoading ? <Spinner size={17} color="#000000" /> : <AppleLogo />}
+          {appleLoading ? "Connecting…" : "Sign in with Apple"}
         </button>
 
         {/* FOOTER */}
@@ -444,20 +446,6 @@ function AuthContent() {
         </p>
       </div>
 
-      {/* Toast */}
-      {toast && (
-        <div style={{
-          position: "fixed", bottom: 32, left: "50%",
-          background: "rgba(20,20,21,0.95)",
-          border: `0.5px solid rgba(var(--nura-sage-rgb),0.3)`,
-          color: TEXT, fontFamily: SANS, fontSize: 12.5,
-          padding: "10px 16px", borderRadius: 22,
-          zIndex: 80, whiteSpace: "nowrap",
-          animation: "auth-toast-in 220ms ease both",
-        }}>
-          {toast}
-        </div>
-      )}
     </div>
   );
 }

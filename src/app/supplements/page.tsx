@@ -34,6 +34,22 @@ const MEAL_LABEL: Record<Meal, string> = {
 
 type View = "stack" | "schedule";
 
+interface StatsDay {
+  date: string;
+  day_of_week: string;
+  taken: number;
+  scheduled: number;
+  is_today: boolean;
+  is_future: boolean;
+}
+interface Stats {
+  streak: number;
+  personal_best: number;
+  week_start: string;
+  days: StatsDay[];
+  compliance_pct: number;
+}
+
 // ── Page ──────────────────────────────────────────────────────────────────────
 function SupplementsPageInner() {
   const router = useRouter();
@@ -43,6 +59,7 @@ function SupplementsPageInner() {
   const [authLoading, setAuthLoading] = useState(true);
   const [supplements, setSupplements] = useState<Supplement[]>([]);
   const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState<Stats | null>(null);
   const [modalState, setModalState] = useState<
     | { mode: "closed" }
     | { mode: "add" }
@@ -113,6 +130,17 @@ function SupplementsPageInner() {
     }
   }, []);
 
+  const fetchStats = useCallback(async (date: string) => {
+    try {
+      const res = await fetch(`/api/supplements/stats?today=${date}`);
+      if (!res.ok) return;
+      const data = (await res.json()) as Stats;
+      setStats(data);
+    } catch {
+      // silent
+    }
+  }, []);
+
   const fetchLogs = useCallback(async (date: string) => {
     try {
       const res = await fetch(`/api/supplements/logs?date=${date}`);
@@ -137,7 +165,8 @@ function SupplementsPageInner() {
   useEffect(() => {
     if (!user) return;
     void fetchLogs(today);
-  }, [user, today, fetchLogs]);
+    void fetchStats(today);
+  }, [user, today, fetchLogs, fetchStats]);
 
   const toggleLog = useCallback(async (supplementId: string, mealSlot: Meal | null) => {
     const key = logKey(supplementId, mealSlot);
@@ -162,6 +191,8 @@ function SupplementsPageInner() {
         }),
       });
       if (!res.ok) throw new Error("Toggle failed");
+      // Refresh streak/weekly view after a successful toggle.
+      void fetchStats(today);
     } catch {
       // Rollback on error
       setLogSet((prev) => {
@@ -171,7 +202,7 @@ function SupplementsPageInner() {
         return next;
       });
     }
-  }, [logSet, today]);
+  }, [logSet, today, fetchStats]);
 
   if (authLoading) {
     return <NuraPageShell maxWidth={720}><div /></NuraPageShell>;
@@ -199,7 +230,7 @@ function SupplementsPageInner() {
       `}</style>
 
       {/* HERO */}
-      <div style={{ marginBottom: 22 }}>
+      <div style={{ marginBottom: 20 }}>
         <h1 style={{
           fontFamily: SERIF, fontWeight: 500, color: TEXT,
           margin: "0 0 6px", lineHeight: 1.15, letterSpacing: "-0.5px",
@@ -211,6 +242,12 @@ function SupplementsPageInner() {
           Your daily stack — built on what your body needs
         </p>
       </div>
+
+      {/* STREAK CARD */}
+      <StreakCard stats={stats} />
+
+      {/* WEEKLY COMPLIANCE CARD */}
+      <WeeklyComplianceCard stats={stats} />
 
       {/* STACK / SCHEDULE TOGGLE */}
       <div style={{ marginBottom: stackComplete ? 16 : 32 }}>
@@ -794,6 +831,195 @@ function ScheduleEmpty({
       >
         Go to Stack →
       </button>
+    </div>
+  );
+}
+
+// ── Streak card ───────────────────────────────────────────────────────────────
+const SAGE_BRIGHT = "#7a9a82";
+const SAGE_TEXT = "#9bb8a3";
+
+function StreakCard({ stats }: { stats: Stats | null }) {
+  if (!stats) {
+    return (
+      <div style={{
+        position: "relative", overflow: "hidden",
+        borderRadius: 18,
+        background: "linear-gradient(135deg, rgba(122, 154, 130, 0.18) 0%, rgba(122, 154, 130, 0.08) 100%)",
+        border: "1px solid rgba(122, 154, 130, 0.25)",
+        padding: "18px 20px", marginBottom: 12,
+        height: 78, boxSizing: "border-box",
+      }}>
+        <style>{`@keyframes nura-streak-sk { 0%{transform:translateX(-100%);} 100%{transform:translateX(200%);} }`}</style>
+        <div style={{
+          position: "absolute", inset: 0,
+          background: "linear-gradient(90deg, transparent, rgba(122, 154, 130, 0.12), transparent)",
+          animation: "nura-streak-sk 1.6s ease infinite",
+        }} />
+      </div>
+    );
+  }
+
+  const { streak, personal_best } = stats;
+  const subtitle =
+    streak === 0
+      ? "Take a supplement today to start a streak"
+      : streak >= personal_best
+      ? "New personal best!"
+      : streak === personal_best - 1
+      ? "One day to your personal best"
+      : "Keep it going";
+
+  return (
+    <div style={{
+      position: "relative", overflow: "hidden",
+      borderRadius: 18,
+      background: "linear-gradient(135deg, rgba(122, 154, 130, 0.18) 0%, rgba(122, 154, 130, 0.08) 100%)",
+      border: "1px solid rgba(122, 154, 130, 0.25)",
+      padding: "18px 20px", marginBottom: 12,
+      display: "flex", alignItems: "center", gap: 16,
+    }}>
+      <div aria-hidden style={{
+        position: "absolute", top: -40, right: -40,
+        width: 140, height: 140,
+        background: "radial-gradient(circle, rgba(122, 154, 130, 0.32) 0%, rgba(122, 154, 130, 0) 70%)",
+        pointerEvents: "none",
+      }} />
+      <div style={{ fontSize: 32, lineHeight: 1, flexShrink: 0, position: "relative" }}>🔥</div>
+      <div style={{ flex: 1, minWidth: 0, position: "relative" }}>
+        <div style={{
+          fontFamily: SANS, fontSize: 22, fontWeight: 600, color: TEXT,
+          lineHeight: 1.15, letterSpacing: "-0.2px",
+        }}>
+          {streak}-day streak
+        </div>
+        <div style={{
+          fontFamily: SANS, fontSize: 12, color: TEXT_SEC,
+          marginTop: 4, lineHeight: 1.3,
+        }}>
+          {subtitle}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Weekly compliance card ────────────────────────────────────────────────────
+const DAY_LETTERS = ["M", "T", "W", "T", "F", "S", "S"] as const;
+
+function WeeklyComplianceCard({ stats }: { stats: Stats | null }) {
+  if (!stats) {
+    return (
+      <div style={{
+        position: "relative", overflow: "hidden",
+        borderRadius: 18, background: SURFACE,
+        border: `0.5px solid ${BORDER}`,
+        padding: "18px 18px 16px", marginBottom: 22,
+        height: 108, boxSizing: "border-box",
+      }}>
+        <style>{`@keyframes nura-week-sk { 0%{transform:translateX(-100%);} 100%{transform:translateX(200%);} }`}</style>
+        <div style={{
+          position: "absolute", inset: 0,
+          background: `linear-gradient(90deg, transparent, rgba(var(--nura-sage-rgb), 0.07), transparent)`,
+          animation: "nura-week-sk 1.6s ease infinite",
+        }} />
+      </div>
+    );
+  }
+
+  const { compliance_pct, days } = stats;
+
+  return (
+    <div style={{
+      borderRadius: 18, background: SURFACE,
+      border: `0.5px solid ${BORDER}`,
+      padding: "18px 18px 16px", marginBottom: 22,
+    }}>
+      <div style={{
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        marginBottom: 14,
+      }}>
+        <span style={{
+          fontFamily: SANS, fontSize: 11, fontWeight: 600,
+          letterSpacing: "0.1em", textTransform: "uppercase",
+          color: `rgba(var(--nura-fg-rgb), 0.5)`,
+        }}>
+          This week
+        </span>
+        <span style={{ fontFamily: SANS, fontSize: 12, color: TEXT_SEC }}>
+          <span style={{ color: SAGE_TEXT, fontWeight: 600 }}>{compliance_pct}%</span>{" "}
+          compliance
+        </span>
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 6 }}>
+        {days.map((d, idx) => (
+          <WeeklyDayCell key={d.date} day={d} dayLetter={DAY_LETTERS[idx]} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function WeeklyDayCell({ day, dayLetter }: { day: StatsDay; dayLetter: string }) {
+  const { taken, scheduled, is_today, is_future } = day;
+
+  let state: "full" | "partial" | "empty";
+  if (is_future) {
+    state = "empty";
+  } else if (taken === 0) {
+    state = "empty";
+  } else if (scheduled > 0 && taken < scheduled) {
+    state = "partial";
+  } else {
+    state = "full";
+  }
+
+  const pct = scheduled > 0 ? Math.min(100, Math.round((taken / scheduled) * 100)) : 100;
+  const CIRCLE = 32;
+  const INNER = 24;
+
+  return (
+    <div style={{
+      display: "flex", flexDirection: "column", alignItems: "center", gap: 8,
+    }}>
+      <div style={{
+        fontFamily: SANS, fontSize: 10, fontWeight: 500, letterSpacing: "0.06em",
+        textTransform: "uppercase",
+        color: is_today ? SAGE_TEXT : TEXT_TER,
+      }}>
+        {dayLetter}
+      </div>
+
+      <div style={{
+        width: CIRCLE, height: CIRCLE, borderRadius: "50%",
+        background:
+          state === "full"
+            ? SAGE_BRIGHT
+            : state === "partial"
+            ? `conic-gradient(${SAGE_BRIGHT} ${pct}%, rgba(var(--nura-fg-rgb), 0.10) 0)`
+            : "transparent",
+        border: state === "empty" ? `1px solid ${BORDER}` : "none",
+        boxShadow: is_today
+          ? `0 0 0 2px var(--nura-bg), 0 0 0 3.5px ${SAGE_BRIGHT}`
+          : "none",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        color: state === "full" ? "var(--nura-sage-bg-on)" : TEXT,
+        flexShrink: 0,
+      }}>
+        {state === "full" && <CheckGlyph size={14} />}
+        {state === "partial" && (
+          <div style={{
+            width: INNER, height: INNER, borderRadius: "50%",
+            background: "var(--nura-bg)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontFamily: SANS, fontSize: 9, fontWeight: 600,
+            color: TEXT, lineHeight: 1,
+          }}>
+            {taken}/{scheduled}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
