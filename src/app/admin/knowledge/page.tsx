@@ -922,7 +922,6 @@ export default function AdminKnowledgePage() {
         .nura-primary-btn:hover:not(:disabled) { background: var(--nura-sage-hover) !important; transform: translateY(-1px); }
         .nura-primary-btn:active:not(:disabled) { transform: translateY(0); }
         .filter-pill:hover { border-color: rgba(155,176,165,0.30); color: var(--nura-sage); }
-        .filter-row::-webkit-scrollbar { display: none; height: 0; width: 0; }
       `}</style>
 
       <NuraPlexus opacity={0.35} />
@@ -994,21 +993,7 @@ export default function AdminKnowledgePage() {
           </div>
         </div>
 
-        <div
-          className="filter-row"
-          style={{
-            display: "flex",
-            gap: 6,
-            marginBottom: 18,
-            overflowX: "auto",
-            overflowY: "hidden",
-            scrollbarWidth: "none",
-            WebkitOverflowScrolling: "touch",
-            WebkitMaskImage: "linear-gradient(to right, black calc(100% - 24px), transparent 100%)",
-            maskImage: "linear-gradient(to right, black calc(100% - 24px), transparent 100%)",
-            paddingRight: 24,
-          }}
-        >
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 18 }}>
           {(["all", "book", "research", "article", "video", "audio"] as FilterType[]).map((f) => (
             <button key={f} onClick={() => setFilter(f)} className="filter-pill"
               style={{ flexShrink: 0, padding: "6px 12px", background: filter === f ? `rgba(${SAGE_RGB},0.14)` : "transparent", border: `0.5px solid ${filter === f ? `rgba(${SAGE_RGB},0.4)` : BORDER}`, borderRadius: 999, fontFamily: SANS, fontSize: 10, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", color: filter === f ? SAGE : TEXT_TER, cursor: "pointer", whiteSpace: "nowrap", transition: "background 180ms, border-color 180ms, color 180ms" }}>
