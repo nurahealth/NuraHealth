@@ -50,6 +50,53 @@ interface Stats {
   compliance_pct: number;
 }
 
+interface ScanExtracted {
+  name: string;
+  dosage: string | null;
+  form: string | null;
+  brand: string | null;
+}
+
+type AddFlow =
+  | { mode: "closed" }
+  | { mode: "choice" }
+  | { mode: "scanning"; photoDataUrl: string }
+  | { mode: "confirm"; photoDataUrl: string; initial: ScanExtracted }
+  | { mode: "scan-error"; photoDataUrl: string };
+
+async function compressImage(file: File): Promise<{ dataUrl: string; base64: string }> {
+  const objectUrl = URL.createObjectURL(file);
+  try {
+    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const i = new Image();
+      i.onload = () => resolve(i);
+      i.onerror = () => reject(new Error("Image load failed"));
+      i.src = objectUrl;
+    });
+    const MAX_W = 1200;
+    const ratio = Math.min(1, MAX_W / img.width);
+    const w = Math.max(1, Math.round(img.width * ratio));
+    const h = Math.max(1, Math.round(img.height * ratio));
+    const canvas = document.createElement("canvas");
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) throw new Error("Canvas context unavailable");
+    ctx.drawImage(img, 0, 0, w, h);
+    const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
+    const base64 = dataUrl.split(",")[1] ?? "";
+    return { dataUrl, base64 };
+  } finally {
+    URL.revokeObjectURL(objectUrl);
+  }
+}
+
+function capitalizeWord(s: string): string {
+  const t = s.trim();
+  if (!t) return "";
+  return t.charAt(0).toUpperCase() + t.slice(1).toLowerCase();
+}
+
 // ── Page ──────────────────────────────────────────────────────────────────────
 function SupplementsPageInner() {
   const router = useRouter();
@@ -65,6 +112,8 @@ function SupplementsPageInner() {
     | { mode: "add" }
     | { mode: "edit"; supplement: Supplement }
   >({ mode: "closed" });
+  const [addFlow, setAddFlow] = useState<AddFlow>({ mode: "closed" });
+  const photoInputRef = useRef<HTMLInputElement>(null);
   const [scheduleFadeKey, setScheduleFadeKey] = useState(0);
   const [viewFadeKey, setViewFadeKey] = useState(0);
 
@@ -204,6 +253,94 @@ function SupplementsPageInner() {
     }
   }, [logSet, today, fetchStats]);
 
+  const runScan = useCallback(async (file: File) => {
+    let compressed: { dataUrl: string; base64: string };
+    try {
+      compressed = await compressImage(file);
+    } catch {
+      setAddFlow({ mode: "scan-error", photoDataUrl: "" });
+      return;
+    }
+    setAddFlow({ mode: "scanning", photoDataUrl: compressed.dataUrl });
+
+    try {
+      const res = await fetch("/api/supplements/scan", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ image_base64: compressed.base64 }),
+      });
+      if (!res.ok) {
+        setAddFlow({ mode: "scan-error", photoDataUrl: compressed.dataUrl });
+        return;
+      }
+      const data = (await res.json()) as
+        | { success: true; name: string; dosage: string | null; form: string | null; brand: string | null }
+        | { success: false; error?: string };
+      if (!data.success) {
+        setAddFlow({ mode: "scan-error", photoDataUrl: compressed.dataUrl });
+        return;
+      }
+      setAddFlow({
+        mode: "confirm",
+        photoDataUrl: compressed.dataUrl,
+        initial: {
+          name: data.name ?? "",
+          dosage: data.dosage,
+          form: data.form,
+          brand: data.brand,
+        },
+      });
+    } catch {
+      setAddFlow({ mode: "scan-error", photoDataUrl: compressed.dataUrl });
+    }
+  }, []);
+
+  const handlePhotoSelected = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      e.target.value = "";
+      if (!file) return;
+      void runScan(file);
+    },
+    [runScan]
+  );
+
+  const openChoice = useCallback(() => setAddFlow({ mode: "choice" }), []);
+  const closeFlow = useCallback(() => setAddFlow({ mode: "closed" }), []);
+  const triggerPhotoPicker = useCallback(() => {
+    photoInputRef.current?.click();
+  }, []);
+  const chooseManual = useCallback(() => {
+    setAddFlow({ mode: "closed" });
+    setModalState({ mode: "add" });
+  }, []);
+
+  const confirmScannedAdd = useCallback(
+    async (fields: { name: string; dosage: string; form: string; brand: string }) => {
+      const notesParts: string[] = [];
+      if (fields.brand.trim()) notesParts.push(fields.brand.trim());
+      if (fields.form.trim()) notesParts.push(capitalizeWord(fields.form));
+      const notes = notesParts.length > 0 ? notesParts.join(" · ") : undefined;
+
+      const res = await fetch("/api/supplements", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: fields.name.trim(),
+          dose: fields.dosage.trim() || undefined,
+          notes,
+        }),
+      });
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({ error: "Could not save" }));
+        throw new Error(d.error ?? "Could not save");
+      }
+      await fetchAll();
+      setAddFlow({ mode: "closed" });
+    },
+    [fetchAll]
+  );
+
   if (authLoading) {
     return <NuraPageShell maxWidth={720}><div /></NuraPageShell>;
   }
@@ -258,8 +395,8 @@ function SupplementsPageInner() {
             background: "transparent", border: `0.5px solid ${BORDER}`,
           }}
         >
-          <ViewPill label="Stack" active={view === "stack"} onClick={() => setView("stack")} />
-          <ViewPill label="Schedule" active={view === "schedule"} onClick={() => setView("schedule")} />
+          <ViewPill label="My Stack" active={view === "stack"} onClick={() => setView("stack")} />
+          <ViewPill label="My Schedule" active={view === "schedule"} onClick={() => setView("schedule")} />
         </div>
       </div>
 
@@ -274,7 +411,7 @@ function SupplementsPageInner() {
             animation: "nura-fade-in 220ms ease both",
           }}>
             <CheckGlyph size={13} />
-            Stack complete for today
+            My Stack complete for today
           </span>
         </div>
       )}
@@ -349,11 +486,21 @@ function SupplementsPageInner() {
         </div>
       )}
 
+      {/* Hidden file input (camera on mobile, file picker on desktop) */}
+      <input
+        ref={photoInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        onChange={handlePhotoSelected}
+        style={{ display: "none" }}
+      />
+
       {/* FAB */}
       <button
         type="button"
         aria-label="Add supplement"
-        onClick={() => setModalState({ mode: "add" })}
+        onClick={openChoice}
         onMouseEnter={(e) => { e.currentTarget.style.background = SAGE_HOV; }}
         onMouseLeave={(e) => { e.currentTarget.style.background = SAGE; }}
         onMouseDown={(e) => { e.currentTarget.style.transform = "scale(0.96)"; }}
@@ -383,6 +530,35 @@ function SupplementsPageInner() {
           onClose={() => setModalState({ mode: "closed" })}
           onSaved={async () => { await fetchAll(); setModalState({ mode: "closed" }); }}
           onDeleted={async () => { await fetchAll(); setModalState({ mode: "closed" }); }}
+        />
+      )}
+
+      {/* ADD FLOW — choice sheet, scanning, confirm, error */}
+      {addFlow.mode === "choice" && (
+        <AddChoiceSheet
+          onTakePhoto={triggerPhotoPicker}
+          onAddManual={chooseManual}
+          onCancel={closeFlow}
+        />
+      )}
+      {addFlow.mode === "scanning" && (
+        <ScanningScreen photoDataUrl={addFlow.photoDataUrl} onCancel={closeFlow} />
+      )}
+      {addFlow.mode === "confirm" && (
+        <ConfirmScanScreen
+          photoDataUrl={addFlow.photoDataUrl}
+          initial={addFlow.initial}
+          onCancel={closeFlow}
+          onRetake={triggerPhotoPicker}
+          onConfirm={confirmScannedAdd}
+        />
+      )}
+      {addFlow.mode === "scan-error" && (
+        <ScanErrorScreen
+          photoDataUrl={addFlow.photoDataUrl}
+          onRetake={triggerPhotoPicker}
+          onAddManual={chooseManual}
+          onCancel={closeFlow}
         />
       )}
     </NuraPageShell>
@@ -813,7 +989,7 @@ function ScheduleEmpty({
         maxWidth: 380, margin: "0 0 22px",
       }}>
         {hasAnySupplements
-          ? "Schedule a supplement from Stack, or tap + to add a new one."
+          ? "Schedule a supplement from My Stack, or tap + to add a new one."
           : "Tap + to add a supplement, then schedule it."}
       </p>
       <button
@@ -829,7 +1005,7 @@ function ScheduleEmpty({
           display: "inline-flex", alignItems: "center", gap: 6,
         }}
       >
-        Go to Stack →
+        Go to My Stack →
       </button>
     </div>
   );
@@ -1537,5 +1713,574 @@ function Switch({
         transition: "left 160ms",
       }} />
     </button>
+  );
+}
+
+// ── Add-flow shared primitives ───────────────────────────────────────────────
+const SAGE_BORDER_TINT = "rgba(122, 154, 130, 0.3)";
+const SAGE_BG_TINT = "rgba(var(--nura-sage-rgb), 0.12)";
+
+function FlowBackdrop({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
+  return (
+    <div
+      onClick={onClose}
+      style={{
+        position: "fixed", inset: 0, zIndex: 50,
+        background: "rgba(0,0,0,0.70)",
+        display: "flex", alignItems: "flex-end", justifyContent: "center",
+        animation: "nura-modal-in 200ms ease",
+      }}
+    >
+      <style>{`
+        @keyframes nura-sheet-up { from { transform: translateY(24px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .nura-bottom-sheet { width: 100%; max-width: 100%; margin-left: auto; margin-right: auto; }
+        @media (min-width: 640px) { .nura-bottom-sheet { max-width: 480px; } }
+      `}</style>
+      {children}
+    </div>
+  );
+}
+
+// ── Choice sheet ─────────────────────────────────────────────────────────────
+function AddChoiceSheet({
+  onTakePhoto, onAddManual, onCancel,
+}: {
+  onTakePhoto: () => void;
+  onAddManual: () => void;
+  onCancel: () => void;
+}) {
+  return (
+    <FlowBackdrop onClose={onCancel}>
+      <div
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        className="nura-bottom-sheet"
+        style={{
+          background: "var(--nura-bg)",
+          border: `0.5px solid ${BORDER}`,
+          borderRadius: "20px 20px 0 0",
+          padding: "20px 22px 28px",
+          marginBottom: "max(0px, env(safe-area-inset-bottom))",
+          animation: "nura-sheet-up 220ms ease both",
+          boxShadow: "0 -16px 40px rgba(0,0,0,0.30)",
+        }}
+      >
+        <div aria-hidden style={{
+          width: 36, height: 4, borderRadius: 9999,
+          background: TEXT_TER, opacity: 0.5,
+          margin: "0 auto 18px",
+        }} />
+
+        <h2 style={{
+          fontFamily: SERIF, fontWeight: 500, color: TEXT,
+          margin: "0 0 4px", fontSize: 22, lineHeight: 1.2, letterSpacing: "-0.2px",
+        }}>
+          Add a supplement
+        </h2>
+        <p style={{
+          fontFamily: SANS, fontSize: 13, color: TEXT_SEC,
+          margin: "0 0 18px",
+        }}>
+          Snap the bottle and we&apos;ll read the label.
+        </p>
+
+        <ChoiceCard
+          featured
+          icon="📸"
+          title="Take a photo"
+          subtitle="We'll read the label for you"
+          onClick={onTakePhoto}
+        />
+        <ChoiceCard
+          icon="✏️"
+          title="Add manually"
+          subtitle="Fill in the details yourself"
+          onClick={onAddManual}
+        />
+
+        <button
+          type="button"
+          onClick={onCancel}
+          style={{
+            display: "block",
+            margin: "14px auto 0",
+            background: "none", border: "none", padding: 8,
+            fontFamily: SANS, fontSize: 13, color: TEXT_SEC,
+            cursor: "pointer",
+          }}
+        >
+          Cancel
+        </button>
+      </div>
+    </FlowBackdrop>
+  );
+}
+
+function ChoiceCard({
+  featured, icon, title, subtitle, onClick,
+}: {
+  featured?: boolean;
+  icon: string;
+  title: string;
+  subtitle: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.borderColor = featured ? "transparent" : TEXT_TER;
+        if (featured) e.currentTarget.style.background = SAGE_HOV;
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.borderColor = featured ? "transparent" : BORDER;
+        if (featured) e.currentTarget.style.background = SAGE;
+      }}
+      style={{
+        width: "100%", display: "flex", alignItems: "center", gap: 14,
+        textAlign: "left", marginBottom: 10,
+        padding: "14px 16px", borderRadius: 14,
+        background: featured ? SAGE : SURFACE,
+        border: featured ? "0.5px solid transparent" : `0.5px solid ${BORDER}`,
+        color: featured ? SAGE_ON : TEXT,
+        cursor: "pointer", transition: "background 160ms, border-color 160ms",
+      }}
+    >
+      <span aria-hidden style={{ fontSize: 26, lineHeight: 1, flexShrink: 0 }}>{icon}</span>
+      <span style={{ flex: 1, minWidth: 0 }}>
+        <span style={{
+          display: "block",
+          fontFamily: SANS, fontSize: 15, fontWeight: 500,
+          lineHeight: 1.25,
+        }}>
+          {title}
+        </span>
+        <span style={{
+          display: "block", marginTop: 2,
+          fontFamily: SANS, fontSize: 12,
+          color: featured ? "rgba(255,255,255,0.85)" : TEXT_TER,
+          lineHeight: 1.35,
+        }}>
+          {subtitle}
+        </span>
+      </span>
+    </button>
+  );
+}
+
+// ── Scanning screen ──────────────────────────────────────────────────────────
+function ScanningScreen({
+  photoDataUrl, onCancel,
+}: { photoDataUrl: string; onCancel: () => void }) {
+  return (
+    <div
+      style={{
+        position: "fixed", inset: 0, zIndex: 50,
+        background: "var(--nura-bg)",
+        display: "flex", flexDirection: "column",
+        animation: "nura-modal-in 180ms ease",
+        paddingTop: "max(20px, env(safe-area-inset-top))",
+        paddingBottom: "max(20px, env(safe-area-inset-bottom))",
+      }}
+    >
+      <FlowHeader title="Scan label" onCancel={onCancel} />
+
+      <div style={{
+        flex: 1, display: "flex", flexDirection: "column", alignItems: "center",
+        justifyContent: "flex-start", padding: "8px 20px 20px", overflowY: "auto",
+      }}>
+        {photoDataUrl && (
+          <div style={{
+            width: "100%", maxWidth: 360, aspectRatio: "4 / 5",
+            borderRadius: 18, overflow: "hidden",
+            background: SURFACE, border: `0.5px solid ${BORDER}`,
+            marginBottom: 32,
+            position: "relative",
+          }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={photoDataUrl}
+              alt="Label preview"
+              style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+            />
+          </div>
+        )}
+
+        <style>{`@keyframes nura-spin { to { transform: rotate(360deg); } }`}</style>
+        <div style={{
+          width: 32, height: 32, borderRadius: "50%",
+          border: `2.5px solid rgba(var(--nura-sage-rgb), 0.25)`,
+          borderTopColor: SAGE,
+          animation: "nura-spin 800ms linear infinite",
+          marginBottom: 14,
+        }} />
+        <div style={{
+          fontFamily: SANS, fontSize: 15, fontWeight: 500, color: TEXT,
+          marginBottom: 4,
+        }}>
+          Reading label…
+        </div>
+        <div style={{
+          fontFamily: SANS, fontSize: 12, color: TEXT_TER,
+        }}>
+          Usually 2–4 seconds
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Confirm screen ───────────────────────────────────────────────────────────
+function ConfirmScanScreen({
+  photoDataUrl, initial, onCancel, onRetake, onConfirm,
+}: {
+  photoDataUrl: string;
+  initial: ScanExtracted;
+  onCancel: () => void;
+  onRetake: () => void;
+  onConfirm: (fields: { name: string; dosage: string; form: string; brand: string }) => Promise<void>;
+}) {
+  const [name, setName] = useState(initial.name);
+  const [dosage, setDosage] = useState(initial.dosage ?? "");
+  const [form, setForm] = useState(initial.form ?? "");
+  const [brand, setBrand] = useState(initial.brand ?? "");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const valid = name.trim().length > 0;
+
+  const handleSubmit = async () => {
+    if (!valid || submitting) return;
+    setSubmitting(true);
+    setError(null);
+    try {
+      await onConfirm({ name, dosage, form, brand });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not save");
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div
+      style={{
+        position: "fixed", inset: 0, zIndex: 50,
+        background: "var(--nura-bg)",
+        display: "flex", flexDirection: "column",
+        animation: "nura-modal-in 200ms ease",
+        paddingTop: "max(20px, env(safe-area-inset-top))",
+        paddingBottom: "max(20px, env(safe-area-inset-bottom))",
+      }}
+    >
+      <FlowHeader title="Confirm details" onCancel={submitting ? undefined : onCancel} />
+
+      <div style={{
+        flex: 1, overflowY: "auto",
+        padding: "8px 20px 24px",
+        maxWidth: 560, width: "100%", margin: "0 auto", boxSizing: "border-box",
+      }}>
+        {photoDataUrl && (
+          <div style={{
+            position: "relative",
+            width: 96, height: 96, borderRadius: 14, overflow: "hidden",
+            background: SURFACE, border: `0.5px solid ${BORDER}`,
+            margin: "0 auto 20px",
+          }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={photoDataUrl}
+              alt="Label"
+              style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+            />
+            <span style={{
+              position: "absolute", bottom: 6, left: "50%", transform: "translateX(-50%)",
+              display: "inline-flex", alignItems: "center", gap: 4,
+              padding: "2px 8px", borderRadius: 9999,
+              background: "rgba(0,0,0,0.65)",
+              border: `0.5px solid rgba(var(--nura-sage-rgb), 0.5)`,
+              fontFamily: SANS, fontSize: 10, fontWeight: 600, color: SAGE_TEXT,
+              whiteSpace: "nowrap",
+            }}>
+              ✨ Read
+            </span>
+          </div>
+        )}
+
+        <ScannedField
+          label="Name"
+          value={name}
+          onChange={setName}
+          fromLabel={initial.name.trim().length > 0}
+          required
+          showError={!valid && name.length > 0}
+          errorText="Name is required"
+        />
+        <ScannedField
+          label="Dosage"
+          value={dosage}
+          onChange={setDosage}
+          fromLabel={(initial.dosage ?? "").trim().length > 0}
+          placeholder="e.g. 1000 IU"
+        />
+        <ScannedField
+          label="Form"
+          value={form}
+          onChange={setForm}
+          fromLabel={(initial.form ?? "").trim().length > 0}
+          placeholder="capsule, softgel, tablet…"
+        />
+        <ScannedField
+          label="Brand"
+          value={brand}
+          onChange={setBrand}
+          fromLabel={(initial.brand ?? "").trim().length > 0}
+          optional
+          placeholder="Optional"
+        />
+
+        <div style={{
+          marginTop: 6, padding: "12px 14px", borderRadius: 12,
+          border: `1px dashed ${BORDER}`,
+          background: "transparent",
+          fontFamily: SANS, fontSize: 12, color: TEXT_SEC, lineHeight: 1.5,
+        }}>
+          📅 Will be added as Unscheduled. Set the schedule on the next screen or later.
+        </div>
+
+        {error && (
+          <div style={{
+            marginTop: 14, padding: "9px 12px", borderRadius: 9,
+            background: `rgba(var(--nura-danger-rgb),0.08)`,
+            border: `0.5px solid rgba(var(--nura-danger-rgb),0.3)`,
+            color: RED, fontFamily: SANS, fontSize: 12,
+          }}>{error}</div>
+        )}
+
+        <button
+          type="button"
+          onClick={handleSubmit}
+          disabled={!valid || submitting}
+          onMouseEnter={(e) => { if (valid && !submitting) e.currentTarget.style.background = SAGE_HOV; }}
+          onMouseLeave={(e) => { if (valid && !submitting) e.currentTarget.style.background = SAGE; }}
+          style={{
+            display: "block", width: "100%", marginTop: 22,
+            padding: "13px 16px", borderRadius: 11, border: "none",
+            background: (!valid || submitting) ? `rgba(var(--nura-sage-rgb),0.4)` : SAGE,
+            color: SAGE_ON, fontFamily: SANS, fontSize: 14, fontWeight: 500,
+            cursor: (!valid || submitting) ? "not-allowed" : "pointer",
+            transition: "background 200ms",
+          }}
+        >
+          {submitting ? "Adding…" : "Add to my stack"}
+        </button>
+
+        <button
+          type="button"
+          onClick={onRetake}
+          disabled={submitting}
+          style={{
+            display: "block", margin: "14px auto 0",
+            background: "none", border: "none", padding: 6,
+            fontFamily: SANS, fontSize: 13, color: SAGE_TEXT,
+            cursor: submitting ? "not-allowed" : "pointer",
+            textDecoration: "underline",
+          }}
+        >
+          Retake photo
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function ScannedField({
+  label, value, onChange, fromLabel, required, optional, placeholder, showError, errorText,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  fromLabel: boolean;
+  required?: boolean;
+  optional?: boolean;
+  placeholder?: string;
+  showError?: boolean;
+  errorText?: string;
+}) {
+  return (
+    <div style={{ marginBottom: 14 }}>
+      <div style={{
+        display: "flex", alignItems: "center", gap: 8, marginBottom: 6,
+      }}>
+        <label style={{
+          fontFamily: SANS, fontSize: 10, fontWeight: 600,
+          letterSpacing: "1.5px", textTransform: "uppercase",
+          color: TEXT_TER,
+        }}>
+          {label}
+          {optional && (
+            <span style={{ marginLeft: 6, letterSpacing: "0.4px", textTransform: "none", color: TEXT_TER }}>
+              · optional
+            </span>
+          )}
+        </label>
+        {fromLabel && (
+          <span style={{
+            display: "inline-flex", alignItems: "center", gap: 4,
+            padding: "2px 7px", borderRadius: 9999,
+            background: SAGE_BG_TINT,
+            border: `0.5px solid rgba(var(--nura-sage-rgb), 0.32)`,
+            fontFamily: SANS, fontSize: 9, fontWeight: 600,
+            letterSpacing: "0.06em",
+            color: SAGE_TEXT, textTransform: "uppercase",
+          }}>
+            ✨ From label
+          </span>
+        )}
+      </div>
+      <input
+        type="text"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        required={required}
+        style={{
+          width: "100%", padding: "11px 13px", borderRadius: 10,
+          background: SURFACE,
+          border: `1px solid ${fromLabel ? SAGE_BORDER_TINT : BORDER}`,
+          color: TEXT, fontFamily: SANS, fontSize: 14, outline: "none",
+          boxSizing: "border-box",
+        }}
+      />
+      {showError && errorText && (
+        <div style={{ fontFamily: SANS, fontSize: 12, color: RED, marginTop: 6 }}>
+          {errorText}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Scan error screen ────────────────────────────────────────────────────────
+function ScanErrorScreen({
+  photoDataUrl, onRetake, onAddManual, onCancel,
+}: {
+  photoDataUrl: string;
+  onRetake: () => void;
+  onAddManual: () => void;
+  onCancel: () => void;
+}) {
+  return (
+    <div
+      style={{
+        position: "fixed", inset: 0, zIndex: 50,
+        background: "var(--nura-bg)",
+        display: "flex", flexDirection: "column",
+        animation: "nura-modal-in 200ms ease",
+        paddingTop: "max(20px, env(safe-area-inset-top))",
+        paddingBottom: "max(20px, env(safe-area-inset-bottom))",
+      }}
+    >
+      <FlowHeader title="Scan label" onCancel={onCancel} />
+
+      <div style={{
+        flex: 1, display: "flex", flexDirection: "column", alignItems: "center",
+        justifyContent: "center", padding: "20px 28px",
+        textAlign: "center",
+      }}>
+        {photoDataUrl && (
+          <div style={{
+            width: 88, height: 88, borderRadius: 14, overflow: "hidden",
+            background: SURFACE, border: `0.5px solid ${BORDER}`,
+            marginBottom: 22, opacity: 0.6,
+          }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={photoDataUrl}
+              alt="Label preview"
+              style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+            />
+          </div>
+        )}
+
+        <h2 style={{
+          fontFamily: SERIF, fontWeight: 500, color: TEXT,
+          fontSize: "clamp(20px, 3vw, 24px)",
+          lineHeight: 1.3, letterSpacing: "-0.2px",
+          margin: "0 0 10px",
+        }}>
+          Couldn&apos;t read this label.
+        </h2>
+        <p style={{
+          fontFamily: SANS, fontSize: 14, color: TEXT_SEC, lineHeight: 1.55,
+          maxWidth: 340, margin: "0 0 24px",
+        }}>
+          Try a clearer picture of the label, or add it manually.
+        </p>
+
+        <button
+          type="button"
+          onClick={onRetake}
+          onMouseEnter={(e) => { e.currentTarget.style.background = SAGE_HOV; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = SAGE; }}
+          style={{
+            width: "100%", maxWidth: 320,
+            padding: "12px 16px", borderRadius: 11, border: "none",
+            background: SAGE, color: SAGE_ON,
+            fontFamily: SANS, fontSize: 14, fontWeight: 500,
+            cursor: "pointer", transition: "background 200ms",
+            marginBottom: 10,
+          }}
+        >
+          Retake photo
+        </button>
+        <button
+          type="button"
+          onClick={onAddManual}
+          style={{
+            width: "100%", maxWidth: 320,
+            padding: "12px 16px", borderRadius: 11,
+            background: "transparent",
+            border: `0.5px solid ${BORDER}`,
+            color: TEXT, fontFamily: SANS, fontSize: 14, fontWeight: 500,
+            cursor: "pointer",
+          }}
+        >
+          Add manually
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ── Flow header (Cancel link) ────────────────────────────────────────────────
+function FlowHeader({ title, onCancel }: { title: string; onCancel?: () => void }) {
+  return (
+    <div style={{
+      display: "flex", alignItems: "center", justifyContent: "space-between",
+      padding: "12px 18px 8px",
+    }}>
+      <div style={{
+        fontFamily: SANS, fontSize: 15, fontWeight: 500, color: TEXT,
+      }}>
+        {title}
+      </div>
+      {onCancel ? (
+        <button
+          type="button"
+          onClick={onCancel}
+          style={{
+            background: "none", border: "none", padding: 6,
+            fontFamily: SANS, fontSize: 13, color: TEXT_SEC,
+            cursor: "pointer",
+          }}
+        >
+          Cancel
+        </button>
+      ) : (
+        <span style={{ width: 1 }} />
+      )}
+    </div>
   );
 }

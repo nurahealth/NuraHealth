@@ -17,9 +17,20 @@ import {
   Shield,
   Sparkles,
 } from "lucide-react";
-import { useTheme } from "@/components/ThemeProvider";
-import { FONTS } from "@/lib/theme";
 import { supabase } from "@/lib/supabase";
+
+// ── Design tokens (locked NŪRA system) ────────────────────────────────────────
+const BG = "var(--nura-bg)";
+const TEXT = "var(--nura-text-primary)";
+const TEXT_SEC = "var(--nura-text-secondary)";
+const BORDER = "var(--nura-border)";
+const SURFACE = "var(--nura-surface)";
+const SURFACE_ELEV = "var(--nura-surface-elevated)";
+const SAGE = "var(--nura-sage)";
+const SAGE_ON = "var(--nura-sage-bg-on)";
+const SAGE_RGB = "var(--nura-sage-rgb)";
+const SANS = "'Inter', system-ui, sans-serif";
+const SERIF = "'DM Serif Display', Georgia, serif";
 
 interface SidebarProps {
   open: boolean;
@@ -43,13 +54,113 @@ const RECENT_CHATS = [
   "Balancing cortisol naturally",
 ];
 
+// ── Shared sage outlined pill ─────────────────────────────────────────────────
+function SageBadge({ children }: { children: React.ReactNode }) {
+  return (
+    <span style={{
+      fontFamily: SANS,
+      fontSize: 9,
+      fontWeight: 600,
+      letterSpacing: "0.12em",
+      textTransform: "uppercase",
+      color: SAGE,
+      background: "transparent",
+      border: `0.5px solid rgba(${SAGE_RGB},0.5)`,
+      borderRadius: 8,
+      padding: "2px 7px",
+    }}>
+      {children}
+    </span>
+  );
+}
+
+// ── Nav item with hover ───────────────────────────────────────────────────────
+function NavItem({
+  icon: Icon,
+  label,
+  active,
+  badge,
+  onClick,
+}: {
+  icon: React.ElementType;
+  label: string;
+  active: boolean;
+  badge?: string;
+  onClick: () => void;
+}) {
+  const [hov, setHov] = useState(false);
+  return (
+    <button
+      onClick={onClick}
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
+      style={{
+        width: "100%",
+        display: "flex",
+        alignItems: "center",
+        gap: 12,
+        padding: "11px 14px",
+        marginBottom: 2,
+        background: active ? `rgba(${SAGE_RGB},0.15)` : hov ? SURFACE : "transparent",
+        border: `0.5px solid ${active ? `rgba(${SAGE_RGB},0.5)` : "transparent"}`,
+        borderRadius: 10,
+        fontFamily: SANS,
+        fontSize: 14,
+        color: active ? SAGE : TEXT,
+        cursor: "pointer",
+        textAlign: "left",
+        fontWeight: active ? 500 : 400,
+        transition: "background 180ms, border-color 180ms, color 180ms",
+      }}
+    >
+      <Icon size={16} style={{ flexShrink: 0 }} />
+      <span style={{ flex: 1 }}>{label}</span>
+      {badge && <SageBadge>{badge}</SageBadge>}
+    </button>
+  );
+}
+
+// ── Chat row with hover ───────────────────────────────────────────────────────
+function ChatRow({ text, onClick }: { text: string; onClick: () => void }) {
+  const [hov, setHov] = useState(false);
+  return (
+    <button
+      onClick={onClick}
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
+      style={{
+        width: "100%",
+        display: "block",
+        padding: "8px 14px 8px 38px",
+        background: hov ? SURFACE : "transparent",
+        border: "none",
+        cursor: "pointer",
+        fontFamily: SANS,
+        fontSize: 12.5,
+        color: TEXT,
+        textAlign: "left",
+        borderRadius: 8,
+        overflow: "hidden",
+        textOverflow: "ellipsis",
+        whiteSpace: "nowrap",
+        transition: "background 180ms",
+      }}
+    >
+      {text}
+    </button>
+  );
+}
+
 export default function Sidebar({ open, onClose, userName, userInitial }: SidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
   const [chatsOpen, setChatsOpen] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isPro, setIsPro] = useState<boolean | null>(null);
-  const { colors } = useTheme();
+  const [hovClose, setHovClose] = useState(false);
+  const [hovChats, setHovChats] = useState(false);
+  const [hovUpgrade, setHovUpgrade] = useState(false);
+  const [hovUser, setHovUser] = useState(false);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -85,7 +196,7 @@ export default function Sidebar({ open, onClose, userName, userInitial }: Sideba
           style={{
             position: "fixed",
             inset: 0,
-            background: colors.overlay,
+            background: "rgba(0,0,0,0.6)",
             zIndex: 200,
             backdropFilter: "blur(4px)",
           }}
@@ -99,12 +210,12 @@ export default function Sidebar({ open, onClose, userName, userInitial }: Sideba
           top: 0,
           bottom: 0,
           width: 280,
-          background: colors.bgSidebar,
+          background: BG,
           zIndex: 201,
           transition: "left 0.3s cubic-bezier(0.4,0,0.2,1)",
           display: "flex",
           flexDirection: "column",
-          borderRight: `1px solid ${colors.mintBorder}`,
+          borderRight: `0.5px solid ${BORDER}`,
         }}
       >
         {/* Header */}
@@ -114,26 +225,35 @@ export default function Sidebar({ open, onClose, userName, userInitial }: Sideba
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
-            borderBottom: `1px solid ${colors.border}`,
+            borderBottom: `0.5px solid ${BORDER}`,
           }}
         >
-          <span style={{ fontFamily: FONTS.serif, fontSize: 22, color: colors.mint }}>
-            NŪRA
+          <span style={{
+            fontFamily: SERIF,
+            fontSize: 22,
+            fontWeight: 500,
+            color: SAGE,
+            letterSpacing: "0.3px",
+          }}>
+            nūra
           </span>
           <button
             onClick={onClose}
+            onMouseEnter={() => setHovClose(true)}
+            onMouseLeave={() => setHovClose(false)}
             style={{
               width: 30,
               height: 30,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              background: colors.mintBgSubtle,
-              border: `1px solid ${colors.border}`,
+              background: SURFACE,
+              border: `0.5px solid ${BORDER}`,
               borderRadius: 8,
               cursor: "pointer",
-              color: colors.textMuted,
+              color: hovClose ? SAGE : TEXT_SEC,
               padding: 0,
+              transition: "color 180ms",
             }}
           >
             <X size={14} />
@@ -142,103 +262,33 @@ export default function Sidebar({ open, onClose, userName, userInitial }: Sideba
 
         {/* Nav */}
         <div style={{ flex: 1, padding: "12px 10px", overflowY: "auto" }}>
-          {NAV_ITEMS.map((item) => {
-            const Icon = item.icon;
-            const active = isActive(item.href);
-            return (
-              <button
-                key={item.id}
-                onClick={() => navigate(item.href)}
-                style={{
-                  width: "100%",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 12,
-                  padding: "11px 14px",
-                  marginBottom: 2,
-                  background: active ? colors.mintBgMedium : "transparent",
-                  border: `1px solid ${active ? colors.mintBorder : "transparent"}`,
-                  borderRadius: 10,
-                  fontFamily: FONTS.sans,
-                  fontSize: 14,
-                  color: active ? colors.mint : colors.textMuted,
-                  cursor: "pointer",
-                  textAlign: "left",
-                  fontWeight: active ? 500 : 400,
-                  transition: "all 0.15s",
-                }}
-              >
-                <Icon size={16} style={{ flexShrink: 0 }} />
-                <span style={{ flex: 1 }}>{item.label}</span>
-                {item.badge && (
-                  <span
-                    style={{
-                      fontFamily: FONTS.mono,
-                      fontSize: 9,
-                      fontWeight: 600,
-                      color: colors.mintDeep,
-                      background: colors.mintBgMedium,
-                      border: `1px solid ${colors.mintBorder}`,
-                      borderRadius: 4,
-                      padding: "2px 5px",
-                      letterSpacing: "0.08em",
-                    }}
-                  >
-                    {item.badge}
-                  </span>
-                )}
-              </button>
-            );
-          })}
+          {NAV_ITEMS.map((item) => (
+            <NavItem
+              key={item.id}
+              icon={item.icon}
+              label={item.label}
+              active={isActive(item.href)}
+              badge={item.badge}
+              onClick={() => navigate(item.href)}
+            />
+          ))}
 
           {/* Admin nav item */}
           {isAdmin && (
-            <button
+            <NavItem
+              icon={Shield}
+              label="Admin"
+              active={isActive("/admin")}
+              badge="ADMIN"
               onClick={() => navigate("/admin/knowledge")}
-              style={{
-                width: "100%",
-                display: "flex",
-                alignItems: "center",
-                gap: 12,
-                padding: "11px 14px",
-                marginBottom: 2,
-                background: isActive("/admin") ? colors.mintBgMedium : "transparent",
-                border: `1px solid ${isActive("/admin") ? colors.mintBorder : "transparent"}`,
-                borderRadius: 10,
-                fontFamily: FONTS.sans,
-                fontSize: 14,
-                color: isActive("/admin") ? colors.mint : colors.textMuted,
-                cursor: "pointer",
-                textAlign: "left",
-                fontWeight: isActive("/admin") ? 500 : 400,
-                transition: "all 0.15s",
-              }}
-            >
-              <Shield size={16} style={{ flexShrink: 0 }} />
-              <span style={{ flex: 1 }}>Admin</span>
-              <span
-                style={{
-                  fontFamily: FONTS.mono,
-                  fontSize: 9,
-                  fontWeight: 600,
-                  color: colors.mintDeep,
-                  background: colors.mintBgMedium,
-                  border: `1px solid ${colors.mintBorder}`,
-                  borderRadius: 4,
-                  padding: "2px 5px",
-                  letterSpacing: "0.08em",
-                }}
-              >
-                ADMIN
-              </span>
-            </button>
+            />
           )}
 
           {/* Divider */}
           <div
             style={{
               height: 1,
-              background: colors.border,
+              background: BORDER,
               margin: "12px 4px",
             }}
           />
@@ -246,6 +296,8 @@ export default function Sidebar({ open, onClose, userName, userInitial }: Sideba
           {/* Recent Chats */}
           <button
             onClick={() => setChatsOpen((v) => !v)}
+            onMouseEnter={() => setHovChats(true)}
+            onMouseLeave={() => setHovChats(false)}
             style={{
               width: "100%",
               display: "flex",
@@ -255,13 +307,14 @@ export default function Sidebar({ open, onClose, userName, userInitial }: Sideba
               background: "none",
               border: "none",
               cursor: "pointer",
-              color: colors.textFaint,
-              fontFamily: FONTS.mono,
+              color: hovChats ? TEXT : TEXT_SEC,
+              fontFamily: SANS,
               fontSize: 10,
               fontWeight: 600,
-              letterSpacing: "1.2px",
+              letterSpacing: "0.14em",
               textTransform: "uppercase",
               textAlign: "left",
+              transition: "color 180ms",
             }}
           >
             <MessageSquare size={12} />
@@ -272,59 +325,53 @@ export default function Sidebar({ open, onClose, userName, userInitial }: Sideba
           {chatsOpen && (
             <div style={{ paddingBottom: 8 }}>
               {RECENT_CHATS.map((chat, i) => (
-                <button
-                  key={i}
-                  onClick={() => navigate("/")}
-                  style={{
-                    width: "100%",
-                    display: "block",
-                    padding: "8px 14px 8px 38px",
-                    background: "none",
-                    border: "none",
-                    cursor: "pointer",
-                    fontFamily: FONTS.sans,
-                    fontSize: 12.5,
-                    color: colors.textGhost,
-                    textAlign: "left",
-                    borderRadius: 8,
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  {chat}
-                </button>
+                <ChatRow key={i} text={chat} onClick={() => navigate("/")} />
               ))}
             </div>
           )}
         </div>
 
         {/* Footer */}
-        <div style={{ padding: "12px 10px", borderTop: `1px solid ${colors.border}` }}>
+        <div style={{ padding: "12px 10px", borderTop: `0.5px solid ${BORDER}` }}>
           {/* Upgrade CTA — shown only for non-Pro users once loaded */}
           {isPro === false && (
             <button
               onClick={() => navigate("/upgrade")}
+              onMouseEnter={() => setHovUpgrade(true)}
+              onMouseLeave={() => setHovUpgrade(false)}
               style={{
                 width: "100%",
                 marginBottom: 8,
                 padding: "10px 14px",
-                background: `linear-gradient(135deg, ${colors.mint}20, ${colors.mintDeep}15)`,
-                border: `1px solid ${colors.mintBorder}`,
-                borderRadius: 10,
+                background: hovUpgrade ? SURFACE_ELEV : SURFACE,
+                border: `0.5px solid ${hovUpgrade ? `rgba(${SAGE_RGB},0.3)` : BORDER}`,
+                borderRadius: 12,
                 cursor: "pointer",
                 display: "flex",
                 alignItems: "center",
                 gap: 8,
                 textAlign: "left",
+                transition: "background 180ms, border-color 180ms",
               }}
             >
-              <Sparkles size={14} color={colors.mint} style={{ flexShrink: 0 }} />
+              <Sparkles size={14} color="var(--nura-sage)" style={{ flexShrink: 0 }} />
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontFamily: FONTS.mono, fontSize: 9, fontWeight: 700, letterSpacing: "1px", color: colors.mint }}>
-                  UPGRADE TO PRO
+                <div style={{
+                  fontFamily: SANS,
+                  fontSize: 10,
+                  fontWeight: 600,
+                  letterSpacing: "0.14em",
+                  textTransform: "uppercase",
+                  color: SAGE,
+                }}>
+                  Upgrade to Pro
                 </div>
-                <div style={{ fontFamily: FONTS.sans, fontSize: 11, color: colors.textFaint, marginTop: 1 }}>
+                <div style={{
+                  fontFamily: SANS,
+                  fontSize: 11,
+                  color: TEXT_SEC,
+                  marginTop: 2,
+                }}>
                   $9.99/mo · Cancel anytime
                 </div>
               </div>
@@ -333,17 +380,20 @@ export default function Sidebar({ open, onClose, userName, userInitial }: Sideba
 
           <button
             onClick={() => navigate("/settings")}
+            onMouseEnter={() => setHovUser(true)}
+            onMouseLeave={() => setHovUser(false)}
             style={{
               width: "100%",
               display: "flex",
               alignItems: "center",
               gap: 12,
               padding: "10px 14px",
-              background: colors.mintBgSubtle,
-              border: `1px solid ${colors.border}`,
+              background: hovUser ? SURFACE_ELEV : SURFACE,
+              border: `0.5px solid ${BORDER}`,
               borderRadius: 12,
               cursor: "pointer",
               textAlign: "left",
+              transition: "background 180ms",
             }}
           >
             <div
@@ -351,15 +401,15 @@ export default function Sidebar({ open, onClose, userName, userInitial }: Sideba
                 width: 34,
                 height: 34,
                 borderRadius: "50%",
-                background: `linear-gradient(135deg, ${colors.mint}, ${colors.mintDeep})`,
+                background: SAGE,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                fontFamily: FONTS.serif,
+                fontFamily: SERIF,
                 fontSize: 15,
-                color: colors.textOnAccent,
+                fontWeight: 500,
+                color: SAGE_ON,
                 flexShrink: 0,
-                fontWeight: 700,
               }}
             >
               {userInitial}
@@ -368,9 +418,9 @@ export default function Sidebar({ open, onClose, userName, userInitial }: Sideba
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                 <div
                   style={{
-                    fontFamily: FONTS.sans,
+                    fontFamily: SANS,
                     fontSize: 13,
-                    color: colors.text,
+                    color: TEXT,
                     fontWeight: 500,
                     overflow: "hidden",
                     textOverflow: "ellipsis",
@@ -379,26 +429,23 @@ export default function Sidebar({ open, onClose, userName, userInitial }: Sideba
                 >
                   {userName}
                 </div>
-                {isPro && (
-                  <span style={{ fontFamily: FONTS.mono, fontSize: 8, fontWeight: 700, letterSpacing: "0.8px", color: colors.textOnAccent, background: `linear-gradient(135deg, ${colors.mint}, ${colors.mintDeep})`, borderRadius: 3, padding: "1px 5px", flexShrink: 0 }}>
-                    PRO
-                  </span>
-                )}
+                {isPro && <SageBadge>PRO</SageBadge>}
               </div>
               <div
                 style={{
-                  fontFamily: FONTS.mono,
+                  fontFamily: SANS,
                   fontSize: 10,
-                  color: colors.textFaint,
-                  letterSpacing: "0.08em",
+                  fontWeight: 600,
+                  color: TEXT_SEC,
+                  letterSpacing: "0.14em",
                   textTransform: "uppercase",
-                  marginTop: 1,
+                  marginTop: 2,
                 }}
               >
                 Settings
               </div>
             </div>
-            <Settings size={14} color={colors.textFaint} />
+            <Settings size={14} color="var(--nura-text-secondary)" />
           </button>
         </div>
       </div>

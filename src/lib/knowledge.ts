@@ -5,7 +5,7 @@ export interface KnowledgeSource {
   uploaded_by: string;
   title: string;
   author: string | null;
-  source_type: "book" | "research" | "article" | "other";
+  source_type: "book" | "research" | "article" | "other" | "video" | "audio";
   topics: string[] | null;
   conditions: string[] | null;
   key_concepts: string[] | null;
