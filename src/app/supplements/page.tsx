@@ -68,12 +68,11 @@ interface BarcodeLookup {
 type AddFlow =
   | { mode: "closed" }
   | { mode: "choice" }
-  | { mode: "barcode-scanning" }
-  | { mode: "barcode-permission-denied" }
-  | { mode: "barcode-camera-failed" }
-  | { mode: "barcode-looking-up"; upc: string; capturedFrame: string | null }
+  | { mode: "barcode-reading"; photoDataUrl: string }
   | { mode: "barcode-match"; lookup: BarcodeLookup; capturedFrame: string | null }
-  | { mode: "barcode-not-found"; upc: string; capturedFrame: string | null }
+  | { mode: "barcode-not-found"; upc: string; capturedFrame: string }
+  | { mode: "barcode-no-barcode"; capturedFrame: string }
+  | { mode: "barcode-error"; capturedFrame: string | null }
   | { mode: "scanning"; photoDataUrl: string }
   | { mode: "confirm"; photoDataUrl: string; initial: ScanExtracted }
   | { mode: "scan-error"; photoDataUrl: string };
@@ -128,6 +127,7 @@ function SupplementsPageInner() {
   >({ mode: "closed" });
   const [addFlow, setAddFlow] = useState<AddFlow>({ mode: "closed" });
   const photoInputRef = useRef<HTMLInputElement>(null);
+  const barcodeInputRef = useRef<HTMLInputElement>(null);
   const [scheduleFadeKey, setScheduleFadeKey] = useState(0);
   const [viewFadeKey, setViewFadeKey] = useState(0);
 
@@ -327,37 +327,58 @@ function SupplementsPageInner() {
     [performImageScan]
   );
 
-  const lookupBarcode = useCallback(
-    async (upc: string, capturedFrame: string | null) => {
-      setAddFlow({ mode: "barcode-looking-up", upc, capturedFrame });
-      try {
-        const res = await fetch("/api/supplements/barcode-lookup", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ upc }),
-        });
-        const data = (await res.json().catch(() => null)) as
-          | { success: true; upc: string; brand: string | null; name: string; size: string | null }
-          | { success: false; upc?: string; error?: string }
-          | null;
-        if (res.ok && data && data.success) {
-          setAddFlow({
-            mode: "barcode-match",
-            lookup: { upc: data.upc, brand: data.brand, name: data.name, size: data.size },
-            capturedFrame,
-          });
-          return;
-        }
-        setAddFlow({ mode: "barcode-not-found", upc, capturedFrame });
-      } catch {
-        setAddFlow({ mode: "barcode-not-found", upc, capturedFrame });
-      }
-    },
-    []
-  );
+  const runBarcodeScan = useCallback(async (file: File) => {
+    let compressed: { dataUrl: string; base64: string };
+    try {
+      compressed = await compressImage(file);
+    } catch {
+      setAddFlow({ mode: "barcode-error", capturedFrame: null });
+      return;
+    }
+    setAddFlow({ mode: "barcode-reading", photoDataUrl: compressed.dataUrl });
 
-  const startBarcodeScan = useCallback(() => {
-    setAddFlow({ mode: "barcode-scanning" });
+    try {
+      const res = await fetch("/api/supplements/scan-barcode", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ image_base64: compressed.base64 }),
+      });
+      const data = (await res.json().catch(() => null)) as
+        | { success: true; source: "barcode"; upc: string; brand: string | null; name: string; size: string | null }
+        | { success: false; source: "barcode_no_match"; upc: string }
+        | { success: false; source: "no_barcode"; error?: string }
+        | { success: false; source: "error"; error?: string }
+        | null;
+
+      if (!data) {
+        setAddFlow({ mode: "barcode-error", capturedFrame: compressed.dataUrl });
+        return;
+      }
+
+      if (data.success && data.source === "barcode") {
+        setAddFlow({
+          mode: "barcode-match",
+          lookup: { upc: data.upc, brand: data.brand, name: data.name, size: data.size },
+          capturedFrame: compressed.dataUrl,
+        });
+        return;
+      }
+      if (data.success === false && data.source === "barcode_no_match") {
+        setAddFlow({
+          mode: "barcode-not-found",
+          upc: data.upc,
+          capturedFrame: compressed.dataUrl,
+        });
+        return;
+      }
+      if (data.success === false && data.source === "no_barcode") {
+        setAddFlow({ mode: "barcode-no-barcode", capturedFrame: compressed.dataUrl });
+        return;
+      }
+      setAddFlow({ mode: "barcode-error", capturedFrame: compressed.dataUrl });
+    } catch {
+      setAddFlow({ mode: "barcode-error", capturedFrame: compressed.dataUrl });
+    }
   }, []);
 
   const editLookupDetails = useCallback(
@@ -408,10 +429,27 @@ function SupplementsPageInner() {
     [runScan]
   );
 
+  const handleBarcodePhotoSelected = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      e.target.value = "";
+      if (!file) return;
+      void runBarcodeScan(file);
+    },
+    [runBarcodeScan]
+  );
+
   const openChoice = useCallback(() => setAddFlow({ mode: "choice" }), []);
   const closeFlow = useCallback(() => setAddFlow({ mode: "closed" }), []);
   const triggerPhotoPicker = useCallback(() => {
     photoInputRef.current?.click();
+  }, []);
+  const triggerBarcodePicker = useCallback(() => {
+    barcodeInputRef.current?.click();
+  }, []);
+  const startBarcodeScan = useCallback(() => {
+    setAddFlow({ mode: "closed" });
+    barcodeInputRef.current?.click();
   }, []);
   const chooseManual = useCallback(() => {
     setAddFlow({ mode: "closed" });
@@ -589,13 +627,21 @@ function SupplementsPageInner() {
         </div>
       )}
 
-      {/* Hidden file input (camera on mobile, file picker on desktop) */}
+      {/* Hidden file inputs (camera on mobile, file picker on desktop) */}
       <input
         ref={photoInputRef}
         type="file"
         accept="image/*"
         capture="environment"
         onChange={handlePhotoSelected}
+        style={{ display: "none" }}
+      />
+      <input
+        ref={barcodeInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        onChange={handleBarcodePhotoSelected}
         style={{ display: "none" }}
       />
 
@@ -645,29 +691,9 @@ function SupplementsPageInner() {
           onCancel={closeFlow}
         />
       )}
-      {addFlow.mode === "barcode-scanning" && (
-        <BarcodeScanScreen
-          onBack={openChoice}
-          onCancel={closeFlow}
-          onDetected={lookupBarcode}
-          onPermissionDenied={() => setAddFlow({ mode: "barcode-permission-denied" })}
-          onCameraFailed={() => setAddFlow({ mode: "barcode-camera-failed" })}
-        />
-      )}
-      {addFlow.mode === "barcode-looking-up" && (
-        <BarcodeLookingUpScreen onCancel={closeFlow} />
-      )}
-      {addFlow.mode === "barcode-permission-denied" && (
-        <BarcodePermissionDeniedScreen
-          onUsePhoto={() => { setAddFlow({ mode: "closed" }); triggerPhotoPicker(); }}
-          onAddManual={chooseManual}
-          onCancel={closeFlow}
-        />
-      )}
-      {addFlow.mode === "barcode-camera-failed" && (
-        <BarcodeCameraFailedScreen
-          onUsePhoto={() => { setAddFlow({ mode: "closed" }); triggerPhotoPicker(); }}
-          onAddManual={chooseManual}
+      {addFlow.mode === "barcode-reading" && (
+        <BarcodeReadingScreen
+          photoDataUrl={addFlow.photoDataUrl}
           onCancel={closeFlow}
         />
       )}
@@ -682,17 +708,36 @@ function SupplementsPageInner() {
         />
       )}
       {addFlow.mode === "barcode-not-found" && (
-        <BarcodeNotFoundScreen
+        <BarcodeFallbackScreen
+          variant="no-match"
           upc={addFlow.upc}
-          capturedFrame={addFlow.capturedFrame}
           onBack={openChoice}
           onCancel={closeFlow}
-          onReadLabel={() => {
+          onPrimary={() => {
             if (addFlow.mode !== "barcode-not-found") return;
-            const frame = addFlow.capturedFrame;
-            if (frame) void scanFrameAsLabel(frame);
-            else triggerPhotoPicker();
+            void scanFrameAsLabel(addFlow.capturedFrame);
           }}
+          onAddManual={chooseManual}
+        />
+      )}
+      {addFlow.mode === "barcode-no-barcode" && (
+        <BarcodeFallbackScreen
+          variant="no-barcode"
+          onBack={openChoice}
+          onCancel={closeFlow}
+          onPrimary={() => {
+            if (addFlow.mode !== "barcode-no-barcode") return;
+            void scanFrameAsLabel(addFlow.capturedFrame);
+          }}
+          onAddManual={chooseManual}
+        />
+      )}
+      {addFlow.mode === "barcode-error" && (
+        <BarcodeFallbackScreen
+          variant="error"
+          onBack={openChoice}
+          onCancel={closeFlow}
+          onPrimary={triggerBarcodePicker}
           onAddManual={chooseManual}
         />
       )}
@@ -1957,7 +2002,7 @@ function AddChoiceSheet({
           icon={<ScanLine size={22} strokeWidth={2} aria-hidden />}
           title="Scan barcode"
           titleBadge="New"
-          subtitle="Fastest. Auto-detects the product."
+          subtitle="Snap a photo of the barcode"
           onClick={onScanBarcode}
         />
         <ChoiceCard
@@ -2497,413 +2542,49 @@ function FlowHeaderWithBack({
   );
 }
 
-// ── Barcode viewfinder overlay (corners + animated scan line) ────────────────
-function CornerMarker({
-  position,
-}: { position: "tl" | "tr" | "bl" | "br" }) {
-  const isTop = position === "tl" || position === "tr";
-  const isLeft = position === "tl" || position === "bl";
+// ── Reading-barcode (loading) ────────────────────────────────────────────────
+function BarcodeReadingScreen({
+  photoDataUrl, onCancel,
+}: { photoDataUrl: string; onCancel: () => void }) {
   return (
-    <div aria-hidden style={{
-      position: "absolute",
-      top: isTop ? "38%" : "auto",
-      bottom: !isTop ? "38%" : "auto",
-      left: isLeft ? "12%" : "auto",
-      right: !isLeft ? "12%" : "auto",
-      width: 22, height: 22,
-      borderTop: isTop ? "3px solid #7a9a82" : "none",
-      borderBottom: !isTop ? "3px solid #7a9a82" : "none",
-      borderLeft: isLeft ? "3px solid #7a9a82" : "none",
-      borderRight: !isLeft ? "3px solid #7a9a82" : "none",
-      filter: "drop-shadow(0 0 6px rgba(122, 154, 130, 0.6))",
-      pointerEvents: "none",
-    }} />
-  );
-}
-
-function BarcodeViewfinder() {
-  return (
-    <>
-      <style>{`
-        @keyframes nura-scan-line {
-          0%   { transform: translateY(0); }
-          50%  { transform: translateY(calc(100% - 2px)); }
-          100% { transform: translateY(0); }
-        }
-        #nura-barcode-reader video {
-          position: absolute !important;
-          top: 0 !important; left: 0 !important;
-          width: 100% !important; height: 100% !important;
-          object-fit: cover !important;
-          z-index: 1;
-          background: transparent;
-        }
-        #nura-barcode-reader > div { width: 100% !important; height: 100% !important; padding: 0 !important; }
-      `}</style>
-      <div aria-hidden style={{ position: "absolute", inset: 0, pointerEvents: "none", zIndex: 2 }}>
-        <CornerMarker position="tl" />
-        <CornerMarker position="tr" />
-        <CornerMarker position="bl" />
-        <CornerMarker position="br" />
-        <div style={{
-          position: "absolute",
-          top: "38%", bottom: "38%", left: "12%", right: "12%",
-          overflow: "hidden",
-        }}>
-          <div style={{
-            position: "absolute", left: 0, right: 0, top: 0,
-            height: 2,
-            background: "linear-gradient(90deg, rgba(122,154,130,0), rgba(122,154,130,0.95), rgba(122,154,130,0))",
-            boxShadow: "0 0 12px rgba(122, 154, 130, 0.8)",
-            animation: "nura-scan-line 1.8s ease-in-out infinite",
-          }} />
-        </div>
-      </div>
-    </>
-  );
-}
-
-// ── Barcode scan modal (camera + html5-qrcode) ──────────────────────────────
-function BarcodeScanScreen({
-  onBack, onCancel, onDetected, onPermissionDenied, onCameraFailed,
-}: {
-  onBack: () => void;
-  onCancel: () => void;
-  onDetected: (upc: string, capturedFrame: string | null) => void;
-  onPermissionDenied: () => void;
-  onCameraFailed: () => void;
-}) {
-  const readerRef = useRef<HTMLDivElement>(null);
-  const handledRef = useRef(false);
-
-  useEffect(() => {
-    let cancelled = false;
-    let qrInstance: { stop: () => Promise<void>; clear?: () => void } | null = null;
-    let observer: MutationObserver | null = null;
-    let readyTimer: ReturnType<typeof setTimeout> | null = null;
-    let attachedVideo: HTMLVideoElement | null = null;
-
-    const attachIosFixes = (video: HTMLVideoElement) => {
-      if (attachedVideo === video) return;
-      attachedVideo = video;
-
-      // iOS Safari refuses to render inline video without these. Set BEFORE play().
-      video.setAttribute("playsinline", "true");
-      video.setAttribute("webkit-playsinline", "true");
-      video.setAttribute("autoplay", "true");
-      video.setAttribute("muted", "true");
-      video.playsInline = true;
-      video.muted = true;
-      video.autoplay = true;
-      video.style.zIndex = "1";
-      // Retry play() in case html5-qrcode's initial play was rejected by autoplay policy.
-      video.play().catch(() => {});
-
-      const clearReadyTimer = () => {
-        if (readyTimer) { clearTimeout(readyTimer); readyTimer = null; }
-        video.removeEventListener("loadeddata", clearReadyTimer);
-        video.removeEventListener("playing", clearReadyTimer);
-      };
-      video.addEventListener("loadeddata", clearReadyTimer);
-      video.addEventListener("playing", clearReadyTimer);
-
-      readyTimer = setTimeout(() => {
-        if (cancelled) return;
-        // HAVE_CURRENT_DATA = 2. If we haven't reached that in 5s, the stream isn't rendering.
-        if (video.readyState < 2) {
-          onCameraFailed();
-        }
-      }, 5000);
-    };
-
-    const watchForVideo = (container: HTMLElement) => {
-      const existing = container.querySelector("video");
-      if (existing instanceof HTMLVideoElement) {
-        attachIosFixes(existing);
-        return;
-      }
-      observer = new MutationObserver(() => {
-        const v = container.querySelector("video");
-        if (v instanceof HTMLVideoElement) {
-          attachIosFixes(v);
-          observer?.disconnect();
-          observer = null;
-        }
-      });
-      observer.observe(container, { childList: true, subtree: true });
-    };
-
-    const start = async () => {
-      try {
-        const lib = await import("html5-qrcode");
-        if (cancelled) return;
-        const { Html5Qrcode, Html5QrcodeSupportedFormats } = lib;
-        const formats = [
-          Html5QrcodeSupportedFormats.UPC_A,
-          Html5QrcodeSupportedFormats.UPC_E,
-          Html5QrcodeSupportedFormats.EAN_13,
-          Html5QrcodeSupportedFormats.EAN_8,
-          Html5QrcodeSupportedFormats.CODE_128,
-        ];
-        const instance = new Html5Qrcode("nura-barcode-reader", {
-          formatsToSupport: formats,
-          verbose: false,
-        });
-        qrInstance = instance;
-
-        if (readerRef.current) watchForVideo(readerRef.current);
-
-        await instance.start(
-          { facingMode: "environment" },
-          { fps: 10, aspectRatio: 0.75 },
-          (decodedText: string) => {
-            if (handledRef.current) return;
-            handledRef.current = true;
-
-            let frame: string | null = null;
-            const video = readerRef.current?.querySelector("video");
-            if (video instanceof HTMLVideoElement && video.videoWidth > 0) {
-              try {
-                const canvas = document.createElement("canvas");
-                canvas.width = video.videoWidth;
-                canvas.height = video.videoHeight;
-                const ctx = canvas.getContext("2d");
-                if (ctx) {
-                  ctx.drawImage(video, 0, 0);
-                  frame = canvas.toDataURL("image/jpeg", 0.85);
-                }
-              } catch {
-                frame = null;
-              }
-            }
-
-            if (typeof navigator !== "undefined" && typeof navigator.vibrate === "function") {
-              try { navigator.vibrate(50); } catch {}
-            }
-
-            instance.stop().catch(() => {});
-            onDetected(decodedText, frame);
-          },
-          () => {}
-        );
-
-        // start() resolved — html5-qrcode has inserted the video. Re-check in case the
-        // observer didn't fire (some browsers batch mutations).
-        if (!attachedVideo && readerRef.current) {
-          const v = readerRef.current.querySelector("video");
-          if (v instanceof HTMLVideoElement) attachIosFixes(v);
-        }
-      } catch (err) {
-        if (cancelled) return;
-        console.error("[barcode] start failed:", err);
-        onPermissionDenied();
-      }
-    };
-
-    void start();
-
-    return () => {
-      cancelled = true;
-      if (readyTimer) clearTimeout(readyTimer);
-      if (observer) observer.disconnect();
-      if (qrInstance) {
-        qrInstance.stop().catch(() => {});
-        try { qrInstance.clear?.(); } catch {}
-      }
-    };
-  }, [onDetected, onPermissionDenied, onCameraFailed]);
-
-  return (
-    <FlowModal onClose={onCancel} ariaLabel="Scan barcode">
-      <FlowHeaderWithBack title="Scan barcode" onBack={onBack} />
-      <div style={{ padding: "8px 22px 22px" }}>
-        <div style={{
-          position: "relative",
-          width: "100%", aspectRatio: "3 / 4",
-          borderRadius: 16, overflow: "hidden",
-          background: "#000", border: `0.5px solid ${BORDER}`,
-          marginBottom: 18,
-        }}>
-          <div id="nura-barcode-reader" ref={readerRef} style={{
-            position: "absolute", inset: 0,
-          }} />
-          <BarcodeViewfinder />
-        </div>
-        <div style={{ textAlign: "center" }}>
-          <div style={{
-            fontFamily: SANS, fontSize: 14, fontWeight: 600, color: TEXT,
-            marginBottom: 4,
-          }}>
-            Point at the barcode
-          </div>
-          <div style={{
-            fontFamily: SANS, fontSize: 12, color: TEXT,
-            opacity: 0.55, lineHeight: 1.4,
-          }}>
-            Auto-detects in 1–2 seconds. No need to tap anything.
-          </div>
-        </div>
-      </div>
-    </FlowModal>
-  );
-}
-
-// ── Looking-up state (between detection and lookup result) ───────────────────
-function BarcodeLookingUpScreen({ onCancel }: { onCancel: () => void }) {
-  return (
-    <FlowModal onClose={onCancel} ariaLabel="Looking up barcode">
+    <FlowModal onClose={onCancel} ariaLabel="Reading barcode">
       <div style={{
-        padding: "36px 24px 32px",
+        padding: "20px 24px 28px",
         display: "flex", flexDirection: "column", alignItems: "center",
         textAlign: "center",
       }}>
+        {photoDataUrl && (
+          <div style={{
+            width: "100%", maxWidth: 240, aspectRatio: "4 / 5",
+            borderRadius: 14, overflow: "hidden",
+            background: SURFACE, border: `0.5px solid ${BORDER}`,
+            marginBottom: 22,
+          }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={photoDataUrl}
+              alt="Barcode preview"
+              style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+            />
+          </div>
+        )}
         <style>{`@keyframes nura-spin { to { transform: rotate(360deg); } }`}</style>
         <div style={{
           width: 32, height: 32, borderRadius: "50%",
           border: `2.5px solid rgba(var(--nura-sage-rgb), 0.25)`,
           borderTopColor: SAGE,
           animation: "nura-spin 800ms linear infinite",
-          marginBottom: 16,
+          marginBottom: 14,
         }} />
         <div style={{
           fontFamily: SANS, fontSize: 15, fontWeight: 500, color: TEXT,
           marginBottom: 4,
         }}>
-          Looking up product…
+          Reading barcode…
         </div>
         <div style={{ fontFamily: SANS, fontSize: 12, color: TEXT_TER }}>
-          Checking the supplement database
+          Looking for the product
         </div>
-      </div>
-    </FlowModal>
-  );
-}
-
-// ── Permission denied ────────────────────────────────────────────────────────
-function BarcodePermissionDeniedScreen({
-  onUsePhoto, onAddManual, onCancel,
-}: {
-  onUsePhoto: () => void;
-  onAddManual: () => void;
-  onCancel: () => void;
-}) {
-  return (
-    <FlowModal onClose={onCancel} ariaLabel="Camera blocked">
-      <FlowHeader title="Scan barcode" onCancel={onCancel} />
-      <div style={{
-        padding: "12px 28px 26px",
-        display: "flex", flexDirection: "column", alignItems: "center",
-        textAlign: "center",
-      }}>
-        <h2 style={{
-          fontFamily: SERIF, fontWeight: 500, color: TEXT,
-          fontSize: "clamp(20px, 3vw, 24px)",
-          lineHeight: 1.3, letterSpacing: "-0.2px",
-          margin: "0 0 8px",
-        }}>
-          Camera access blocked.
-        </h2>
-        <p style={{
-          fontFamily: SANS, fontSize: 14, color: TEXT_SEC, lineHeight: 1.55,
-          maxWidth: 320, margin: "0 0 22px",
-        }}>
-          Allow camera access in your browser settings, or use one of these instead.
-        </p>
-        <button
-          type="button"
-          onClick={onUsePhoto}
-          onMouseEnter={(e) => { e.currentTarget.style.background = SAGE_HOV; }}
-          onMouseLeave={(e) => { e.currentTarget.style.background = SAGE; }}
-          style={{
-            width: "100%", maxWidth: 320,
-            padding: "12px 16px", borderRadius: 11, border: "none",
-            background: SAGE, color: SAGE_ON,
-            fontFamily: SANS, fontSize: 14, fontWeight: 500,
-            cursor: "pointer", transition: "background 200ms",
-            marginBottom: 10,
-          }}
-        >
-          Take a photo instead
-        </button>
-        <button
-          type="button"
-          onClick={onAddManual}
-          style={{
-            width: "100%", maxWidth: 320,
-            padding: "12px 16px", borderRadius: 11,
-            background: "transparent",
-            border: `0.5px solid ${BORDER}`,
-            color: TEXT, fontFamily: SANS, fontSize: 14, fontWeight: 500,
-            cursor: "pointer",
-          }}
-        >
-          Add manually
-        </button>
-      </div>
-    </FlowModal>
-  );
-}
-
-// ── Camera failed to render (iOS playback failure, etc.) ─────────────────────
-function BarcodeCameraFailedScreen({
-  onUsePhoto, onAddManual, onCancel,
-}: {
-  onUsePhoto: () => void;
-  onAddManual: () => void;
-  onCancel: () => void;
-}) {
-  return (
-    <FlowModal onClose={onCancel} ariaLabel="Camera couldn't start">
-      <FlowHeader title="Scan barcode" onCancel={onCancel} />
-      <div style={{
-        padding: "12px 28px 26px",
-        display: "flex", flexDirection: "column", alignItems: "center",
-        textAlign: "center",
-      }}>
-        <h2 style={{
-          fontFamily: SERIF, fontWeight: 500, color: TEXT,
-          fontSize: "clamp(20px, 3vw, 24px)",
-          lineHeight: 1.3, letterSpacing: "-0.2px",
-          margin: "0 0 8px",
-        }}>
-          Camera couldn&apos;t start.
-        </h2>
-        <p style={{
-          fontFamily: SANS, fontSize: 14, color: TEXT_SEC, lineHeight: 1.55,
-          maxWidth: 320, margin: "0 0 22px",
-        }}>
-          Try refreshing, or use Take a photo / Add manually.
-        </p>
-        <button
-          type="button"
-          onClick={onUsePhoto}
-          onMouseEnter={(e) => { e.currentTarget.style.background = SAGE_HOV; }}
-          onMouseLeave={(e) => { e.currentTarget.style.background = SAGE; }}
-          style={{
-            width: "100%", maxWidth: 320,
-            padding: "12px 16px", borderRadius: 11, border: "none",
-            background: SAGE, color: SAGE_ON,
-            fontFamily: SANS, fontSize: 14, fontWeight: 500,
-            cursor: "pointer", transition: "background 200ms",
-            marginBottom: 10,
-          }}
-        >
-          Take a photo instead
-        </button>
-        <button
-          type="button"
-          onClick={onAddManual}
-          style={{
-            width: "100%", maxWidth: 320,
-            padding: "12px 16px", borderRadius: 11,
-            background: "transparent",
-            border: `0.5px solid ${BORDER}`,
-            color: TEXT, fontFamily: SANS, fontSize: 14, fontWeight: 500,
-            cursor: "pointer",
-          }}
-        >
-          Add manually
-        </button>
       </div>
     </FlowModal>
   );
@@ -3089,21 +2770,46 @@ function BarcodeMatchScreen({
   );
 }
 
-// ── Not found / fallback ─────────────────────────────────────────────────────
-function BarcodeNotFoundScreen({
-  upc, capturedFrame, onBack, onCancel, onReadLabel, onAddManual,
+// ── Fallback screen (no match / no barcode in photo / error) ─────────────────
+function BarcodeFallbackScreen({
+  variant, upc, onBack, onCancel, onPrimary, onAddManual,
 }: {
-  upc: string;
-  capturedFrame: string | null;
+  variant: "no-match" | "no-barcode" | "error";
+  upc?: string;
   onBack: () => void;
   onCancel: () => void;
-  onReadLabel: () => void;
+  onPrimary: () => void;
   onAddManual: () => void;
 }) {
-  void capturedFrame;
+  const config = {
+    "no-match": {
+      headerTitle: "Not found",
+      cardTitle: "Couldn't find this product.",
+      body: upc
+        ? `Found barcode ${formatUpc(upc)} but not in our supplement database. We can read the label instead.`
+        : "We didn't find this barcode in our supplement database, but we can read the label instead.",
+      showUpc: false,
+      primaryLabel: "Read the label",
+    },
+    "no-barcode": {
+      headerTitle: "No barcode",
+      cardTitle: "Couldn't read a barcode.",
+      body: "We couldn't find a barcode in that photo. We can read the label instead.",
+      showUpc: false,
+      primaryLabel: "Read the label",
+    },
+    "error": {
+      headerTitle: "Scan failed",
+      cardTitle: "Something went wrong.",
+      body: "Try again, or add this manually.",
+      showUpc: false,
+      primaryLabel: "Try again",
+    },
+  }[variant];
+
   return (
-    <FlowModal onClose={onCancel} ariaLabel="Product not found">
-      <FlowHeaderWithBack title="Not found" onBack={onBack} />
+    <FlowModal onClose={onCancel} ariaLabel={config.headerTitle}>
+      <FlowHeaderWithBack title={config.headerTitle} onBack={onBack} />
       <div style={{ padding: "8px 22px 24px" }}>
         <div style={{
           padding: "18px 16px 16px",
@@ -3117,27 +2823,19 @@ function BarcodeNotFoundScreen({
             fontSize: 20, lineHeight: 1.25, letterSpacing: "-0.2px",
             marginBottom: 6,
           }}>
-            Couldn&apos;t find this product.
+            {config.cardTitle}
           </div>
           <p style={{
             fontFamily: SANS, fontSize: 13, color: TEXT_SEC, lineHeight: 1.55,
-            margin: "0 0 12px",
+            margin: 0,
           }}>
-            We didn&apos;t find this barcode in our supplement database, but we can read the label instead.
+            {config.body}
           </p>
-          <div style={{
-            fontFamily: "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace",
-            fontSize: 11,
-            color: `rgba(var(--nura-fg-rgb), 0.45)`,
-            letterSpacing: "0.02em",
-          }}>
-            UPC: {formatUpc(upc)}
-          </div>
         </div>
 
         <button
           type="button"
-          onClick={onReadLabel}
+          onClick={onPrimary}
           onMouseEnter={(e) => { e.currentTarget.style.background = SAGE_HOV; }}
           onMouseLeave={(e) => { e.currentTarget.style.background = SAGE; }}
           style={{
@@ -3148,7 +2846,7 @@ function BarcodeNotFoundScreen({
             cursor: "pointer", transition: "background 200ms",
           }}
         >
-          Read the label
+          {config.primaryLabel}
         </button>
 
         <button

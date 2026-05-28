@@ -6,12 +6,10 @@ export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ sourceId: string }> }
 ): Promise<NextResponse> {
-  console.log('🔥 DELETE route hit');
   try {
     await requireAdminFromRequest(req);
 
     const { sourceId } = await params;
-    console.log('🔥 DELETE route hit with sourceId:', sourceId);
     if (!sourceId) {
       return NextResponse.json({ error: "sourceId required" }, { status: 400 });
     }

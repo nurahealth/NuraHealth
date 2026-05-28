@@ -1,4 +1,5 @@
 import OpenAI from "openai";
+import Anthropic from "@anthropic-ai/sdk";
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 import { YoutubeTranscript } from "youtube-transcript";
@@ -8,6 +9,38 @@ import { generateEmbeddings } from "@/lib/embeddings";
 import { createKnowledgeSource, updateKnowledgeSource, insertChunks } from "@/lib/knowledge";
 
 export const maxDuration = 300;
+
+const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
+
+const METADATA_PROMPT = `Analyze this transcript and return ONLY a JSON object with these fields:
+{
+  "topics": ["topic1", "topic2"],
+  "conditions": ["condition1"],
+  "key_concepts": ["concept1", "concept2"],
+  "summary": "2-3 sentence summary of the main content"
+}
+Aim for 3-7 topics, 0-5 conditions covered, and 5-10 key concepts. Return ONLY valid JSON, no markdown.`;
+
+async function extractMetadata(text: string) {
+  const snippet = text.slice(0, 10000);
+  const res = await anthropic.messages.create({
+    model: "claude-opus-4-7",
+    max_tokens: 800,
+    messages: [{ role: "user", content: `${METADATA_PROMPT}\n\nTranscript:\n${snippet}` }],
+  });
+  const raw = res.content.find((c) => c.type === "text");
+  const txt = raw && "text" in raw ? raw.text : "";
+  const cleaned = txt.replace(/^```(?:json)?\s*/i, "").replace(/\s*```\s*$/i, "").trim();
+  const match = cleaned.match(/\{[\s\S]*\}/);
+  if (!match) throw new Error("No JSON in metadata response");
+  const parsed = JSON.parse(match[0]) as Record<string, unknown>;
+  return {
+    topics: Array.isArray(parsed.topics) ? (parsed.topics as string[]) : [],
+    conditions: Array.isArray(parsed.conditions) ? (parsed.conditions as string[]) : [],
+    key_concepts: Array.isArray(parsed.key_concepts) ? (parsed.key_concepts as string[]) : [],
+    summary: (parsed.summary as string) ?? "",
+  };
+}
 
 const AUDIO_MIME = new Set([
   "audio/mpeg", "audio/mp3", "audio/mp4", "audio/m4a", "audio/x-m4a",
@@ -172,6 +205,14 @@ async function handleYoutube(req: NextRequest): Promise<NextResponse> {
   });
 
   try {
+    const meta = await extractMetadata(text);
+    await updateKnowledgeSource(source.id, {
+      topics: meta.topics,
+      conditions: meta.conditions,
+      key_concepts: meta.key_concepts,
+      summary: meta.summary,
+    });
+
     const chunks = chunkText(text);
     const embeddings = await generateEmbeddings(chunks);
     await insertChunks(
@@ -289,6 +330,14 @@ async function handleFile(req: NextRequest): Promise<NextResponse> {
     if (!text) {
       throw new Error("Whisper returned an empty transcript");
     }
+
+    const meta = await extractMetadata(text);
+    await updateKnowledgeSource(source.id, {
+      topics: meta.topics,
+      conditions: meta.conditions,
+      key_concepts: meta.key_concepts,
+      summary: meta.summary,
+    });
 
     const chunks = chunkText(text);
     const embeddings = await generateEmbeddings(chunks);

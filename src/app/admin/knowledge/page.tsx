@@ -19,7 +19,6 @@ const TEXT_TER = "var(--nura-text-tertiary)";
 const BORDER = "var(--nura-border)";
 const BORDER_STRONG = "var(--nura-border-strong)";
 const SURFACE = "var(--nura-surface)";
-const SURFACE_ELEV = "var(--nura-surface-elevated)";
 const SAGE = "var(--nura-sage)";
 const SAGE_ON = "var(--nura-sage-bg-on)";
 const SAGE_RGB = "var(--nura-sage-rgb)";
@@ -70,9 +69,11 @@ interface KnowledgeSource {
   source_type: "book" | "research" | "article" | "other" | "video" | "audio";
   topics: string[] | null;
   conditions: string[] | null;
+  key_concepts: string[] | null;
   summary: string | null;
   status: "processing" | "analyzed" | "failed";
   error_message: string | null;
+  file_url: string | null;
   file_size: number | null;
   chunk_count: number | null;
   created_at: string;
@@ -715,7 +716,7 @@ function ConfirmDeleteModal({ sourceTitle, busy, errorMsg, onCancel, onConfirm }
             Cancel
           </button>
           <button
-            onClick={() => { alert('Step 3: Confirm Delete clicked'); onConfirm(); }}
+            onClick={onConfirm}
             disabled={busy}
             style={{
               flex: 1, padding: 12,
@@ -776,7 +777,8 @@ export default function AdminKnowledgePage() {
   const [filter, setFilter] = useState<FilterType>("all");
   const [search, setSearch] = useState("");
   const [showUploadModal, setShowUploadModal] = useState(false);
-  const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [previewById, setPreviewById] = useState<Record<string, string>>({});
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<{ id: string; title: string } | null>(null);
   const [deleteError, setDeleteError] = useState("");
@@ -811,27 +813,46 @@ export default function AdminKnowledgePage() {
     return () => clearInterval(t);
   }, [sources, loadSources]);
 
+  const toggleExpand = useCallback(async (s: KnowledgeSource) => {
+    const wasOpen = expandedId === s.id;
+    setExpandedId(wasOpen ? null : s.id);
+    if (wasOpen) return;
+    if (previewById[s.id] !== undefined) return;
+    if (s.status !== "analyzed" || (s.chunk_count ?? 0) === 0) {
+      setPreviewById((prev) => ({ ...prev, [s.id]: "" }));
+      return;
+    }
+    try {
+      const { data } = await supabase
+        .from("knowledge_chunks")
+        .select("content")
+        .eq("source_id", s.id)
+        .order("chunk_index", { ascending: true })
+        .limit(1)
+        .maybeSingle();
+      const content = (data as { content?: string } | null)?.content ?? "";
+      setPreviewById((prev) => ({ ...prev, [s.id]: content.slice(0, 500) }));
+    } catch {
+      setPreviewById((prev) => ({ ...prev, [s.id]: "" }));
+    }
+  }, [expandedId, previewById]);
+
   const handleDelete = async (id: string) => {
-    alert('Step 4: handleDelete fired with id: ' + id);
     setDeletingId(id);
     setDeleteError("");
     try {
-      alert('Step 5: About to fetch DELETE endpoint');
       const res = await fetch(`/api/admin/knowledge/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
-      alert('Step 6: Got response with status ' + res.status);
       if (!res.ok) {
         let msg = "Delete failed";
         try { const b = await res.json() as { error?: string }; if (b.error) msg = b.error; } catch {}
         throw new Error(msg);
       }
       setConfirmDelete(null);
-      setMenuOpenId(null);
       await loadSources();
     } catch (e) {
-      alert('Step 7 ERROR: ' + (e instanceof Error ? e.message : String(e)));
       setDeleteError(e instanceof Error ? e.message : "Delete failed");
     } finally {
       setDeletingId(null);
@@ -901,6 +922,7 @@ export default function AdminKnowledgePage() {
         .nura-primary-btn:hover:not(:disabled) { background: var(--nura-sage-hover) !important; transform: translateY(-1px); }
         .nura-primary-btn:active:not(:disabled) { transform: translateY(0); }
         .filter-pill:hover { border-color: rgba(155,176,165,0.30); color: var(--nura-sage); }
+        .filter-row::-webkit-scrollbar { display: none; height: 0; width: 0; }
       `}</style>
 
       <NuraPlexus opacity={0.35} />
@@ -972,7 +994,21 @@ export default function AdminKnowledgePage() {
           </div>
         </div>
 
-        <div style={{ display: "flex", gap: 6, marginBottom: 18, overflowX: "auto" }}>
+        <div
+          className="filter-row"
+          style={{
+            display: "flex",
+            gap: 6,
+            marginBottom: 18,
+            overflowX: "auto",
+            overflowY: "hidden",
+            scrollbarWidth: "none",
+            WebkitOverflowScrolling: "touch",
+            WebkitMaskImage: "linear-gradient(to right, black calc(100% - 24px), transparent 100%)",
+            maskImage: "linear-gradient(to right, black calc(100% - 24px), transparent 100%)",
+            paddingRight: 24,
+          }}
+        >
           {(["all", "book", "research", "article", "video", "audio"] as FilterType[]).map((f) => (
             <button key={f} onClick={() => setFilter(f)} className="filter-pill"
               style={{ flexShrink: 0, padding: "6px 12px", background: filter === f ? `rgba(${SAGE_RGB},0.14)` : "transparent", border: `0.5px solid ${filter === f ? `rgba(${SAGE_RGB},0.4)` : BORDER}`, borderRadius: 999, fontFamily: SANS, fontSize: 10, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", color: filter === f ? SAGE : TEXT_TER, cursor: "pointer", whiteSpace: "nowrap", transition: "background 180ms, border-color 180ms, color 180ms" }}>
@@ -1002,10 +1038,23 @@ export default function AdminKnowledgePage() {
             {filtered.map((s) => {
               const isProcessing = s.status === "processing";
               const isFailed = s.status === "failed";
-              const menuOpen = menuOpenId === s.id;
+              const expanded = expandedId === s.id;
+              const preview = previewById[s.id];
 
               return (
-                <div key={s.id} className="source-card" style={{ position: "relative", padding: "14px 16px", background: SURFACE, border: `0.5px solid ${isProcessing ? `rgba(${SAGE_RGB},0.35)` : isFailed ? "rgba(255,76,92,0.35)" : BORDER}`, borderRadius: 14 }}>
+                <div
+                  key={s.id}
+                  className="source-card"
+                  onClick={() => toggleExpand(s)}
+                  style={{
+                    position: "relative",
+                    padding: "14px 16px",
+                    background: SURFACE,
+                    border: `0.5px solid ${isProcessing ? `rgba(${SAGE_RGB},0.35)` : isFailed ? "rgba(255,76,92,0.35)" : expanded ? `rgba(${SAGE_RGB},0.35)` : BORDER}`,
+                    borderRadius: 14,
+                    cursor: "pointer",
+                  }}
+                >
                   <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 6, flexWrap: "wrap" }}>
@@ -1040,24 +1089,150 @@ export default function AdminKnowledgePage() {
                       )}
                     </div>
 
-                    <div style={{ position: "relative", flexShrink: 0 }}>
-                      <button
-                        onClick={(e) => { alert('Step 1: Chevron clicked'); e.stopPropagation(); setMenuOpenId(menuOpen ? null : s.id); }}
-                        style={{ width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center", background: "none", border: "none", cursor: "pointer", color: TEXT_TER, borderRadius: 6, padding: 0 }}
+                    <button
+                      onClick={(e) => { e.stopPropagation(); toggleExpand(s); }}
+                      aria-label={expanded ? "Collapse source" : "Expand source"}
+                      aria-expanded={expanded}
+                      style={{ flexShrink: 0, width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center", background: "none", border: "none", cursor: "pointer", color: expanded ? SAGE : TEXT_TER, borderRadius: 6, padding: 0 }}
+                    >
+                      <ChevronDown size={14} style={{ transform: expanded ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 250ms ease-out" }} />
+                    </button>
+                  </div>
+
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateRows: expanded ? "1fr" : "0fr",
+                      transition: "grid-template-rows 250ms ease-out",
+                    }}
+                  >
+                    <div style={{ overflow: "hidden" }}>
+                      <div
+                        onClick={(e) => e.stopPropagation()}
+                        style={{ paddingTop: 14, display: "flex", flexDirection: "column", gap: 16, cursor: "default" }}
                       >
-                        <ChevronDown size={14} />
-                      </button>
-                      {menuOpen && (
-                        <div style={{ position: "absolute", right: 0, top: 32, background: SURFACE_ELEV, border: `0.5px solid ${BORDER}`, borderRadius: 12, padding: "4px 0", zIndex: 60, minWidth: 140, boxShadow: "0 8px 24px rgba(0,0,0,0.35)", backdropFilter: "blur(12px)" }} onClick={(e) => e.stopPropagation()}>
+                        <Panel>
+                          <Eyebrow color={TEXT_TER}>Summary</Eyebrow>
+                          <div style={{ marginTop: 8, fontFamily: SANS, fontSize: 13, color: TEXT, lineHeight: 1.55 }}>
+                            {s.summary?.trim()
+                              ? s.summary
+                              : <span style={{ color: TEXT_SEC, fontStyle: "italic" }}>No summary generated.</span>}
+                          </div>
+                        </Panel>
+
+                        <Panel>
+                          <Eyebrow color={TEXT_TER}>Topics</Eyebrow>
+                          {s.topics && s.topics.length > 0 ? (
+                            <div style={{ marginTop: 8, display: "flex", flexWrap: "wrap", gap: 6 }}>
+                              {s.topics.map((t) => (
+                                <span key={t} style={{ fontFamily: SANS, fontSize: 11, fontWeight: 500, color: TEXT, background: `rgba(${SAGE_RGB},0.14)`, border: `0.5px solid rgba(${SAGE_RGB},0.25)`, borderRadius: 8, padding: "4px 9px" }}>{t}</span>
+                              ))}
+                            </div>
+                          ) : (
+                            <div style={{ marginTop: 8, fontFamily: SANS, fontSize: 13, color: TEXT_SEC, fontStyle: "italic" }}>No topics generated.</div>
+                          )}
+                        </Panel>
+
+                        {s.conditions && s.conditions.length > 0 && (
+                          <Panel>
+                            <Eyebrow color={TEXT_TER}>Conditions covered</Eyebrow>
+                            <div style={{ marginTop: 8, display: "flex", flexWrap: "wrap", gap: 6 }}>
+                              {s.conditions.map((c) => (
+                                <span key={c} style={{ fontFamily: SANS, fontSize: 11, fontWeight: 500, color: TEXT, background: `rgba(${SAGE_RGB},0.14)`, border: `0.5px solid rgba(${SAGE_RGB},0.25)`, borderRadius: 8, padding: "4px 9px" }}>{c}</span>
+                              ))}
+                            </div>
+                          </Panel>
+                        )}
+
+                        {s.key_concepts && s.key_concepts.length > 0 && (
+                          <Panel>
+                            <Eyebrow color={TEXT_TER}>Key concepts</Eyebrow>
+                            <div style={{ marginTop: 8, display: "flex", flexWrap: "wrap", gap: 6 }}>
+                              {s.key_concepts.map((k) => (
+                                <span key={k} style={{ fontFamily: SANS, fontSize: 11, fontWeight: 500, color: TEXT, background: `rgba(${SAGE_RGB},0.14)`, border: `0.5px solid rgba(${SAGE_RGB},0.25)`, borderRadius: 8, padding: "4px 9px" }}>{k}</span>
+                              ))}
+                            </div>
+                          </Panel>
+                        )}
+
+                        <Panel>
+                          <Eyebrow color={TEXT_TER}>Preview</Eyebrow>
+                          <div style={{
+                            marginTop: 8,
+                            maxHeight: 200,
+                            overflowY: "auto",
+                            fontFamily: "ui-monospace, 'SF Mono', Menlo, Consolas, monospace",
+                            fontSize: 12,
+                            color: TEXT_SEC,
+                            lineHeight: 1.6,
+                            whiteSpace: "pre-wrap",
+                          }}>
+                            {preview === undefined ? (
+                              <span style={{ fontStyle: "italic" }}>Loading…</span>
+                            ) : preview ? (
+                              <>{preview}{preview.length >= 500 ? "…" : ""}</>
+                            ) : (
+                              <span style={{ fontStyle: "italic" }}>No preview available.</span>
+                            )}
+                          </div>
+                        </Panel>
+
+                        <Panel>
+                          <Eyebrow color={TEXT_TER}>Source info</Eyebrow>
+                          <div style={{ marginTop: 8, fontFamily: SANS, fontSize: 12, color: TEXT_SEC, display: "flex", flexWrap: "wrap", alignItems: "center", gap: 6 }}>
+                            <span>{s.source_type}</span>
+                            <span style={{ color: TEXT_TER }}>·</span>
+                            <span>{s.chunk_count ?? 0} chunks</span>
+                            <span style={{ color: TEXT_TER }}>·</span>
+                            <span>{formatBytes(s.file_size)}</span>
+                            {s.author && (
+                              <>
+                                <span style={{ color: TEXT_TER }}>·</span>
+                                <span>{s.author}</span>
+                              </>
+                            )}
+                            {s.file_url && (
+                              <>
+                                <span style={{ color: TEXT_TER }}>·</span>
+                                <a
+                                  href={s.file_url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  style={{ color: SAGE, textDecoration: "none" }}
+                                >
+                                  View source ↗
+                                </a>
+                              </>
+                            )}
+                          </div>
+                        </Panel>
+
+                        <div style={{ display: "flex", justifyContent: "flex-end" }}>
                           <button
-                            onClick={() => { alert('Step 2: Delete menu item clicked'); setConfirmDelete({ id: s.id, title: s.title }); setMenuOpenId(null); }}
-                            style={{ width: "100%", padding: "9px 14px", background: "none", border: "none", cursor: "pointer", fontFamily: SANS, fontSize: 13, color: DANGER, textAlign: "left", display: "flex", alignItems: "center", gap: 8 }}
+                            onClick={() => setConfirmDelete({ id: s.id, title: s.title })}
+                            style={{
+                              padding: "8px 12px",
+                              background: "transparent",
+                              border: `0.5px solid rgba(${SAGE_RGB},0.4)`,
+                              borderRadius: 10,
+                              color: SAGE,
+                              fontFamily: SANS,
+                              fontSize: 10,
+                              fontWeight: 600,
+                              letterSpacing: "0.12em",
+                              textTransform: "uppercase",
+                              cursor: "pointer",
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 6,
+                              transition: "background 180ms, border-color 180ms",
+                            }}
                           >
-                            <Trash2 size={13} />
-                            Delete
+                            <Trash2 size={11} />
+                            Delete source
                           </button>
                         </div>
-                      )}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1115,7 +1290,6 @@ export default function AdminKnowledgePage() {
           </Panel>
         </div>
 
-        {menuOpenId && <div onClick={() => setMenuOpenId(null)} style={{ position: "fixed", inset: 0, zIndex: 55 }} />}
       </div>
 
       {showUploadModal && userId && token && (
