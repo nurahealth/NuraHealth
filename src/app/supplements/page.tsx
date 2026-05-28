@@ -70,6 +70,7 @@ interface BarcodeLookup {
 type AddFlow =
   | { mode: "closed" }
   | { mode: "choice" }
+  | { mode: "barcode-live" }
   | { mode: "barcode-reading"; photoDataUrl: string }
   | { mode: "barcode-match"; lookup: BarcodeLookup; capturedFrame: string | null }
   | { mode: "barcode-not-found"; upc: string; capturedFrame: string }
@@ -473,9 +474,47 @@ function SupplementsPageInner() {
     barcodeInputRef.current?.click();
   }, []);
   const startBarcodeScan = useCallback(() => {
-    setAddFlow({ mode: "closed" });
-    barcodeInputRef.current?.click();
+    setAddFlow({ mode: "barcode-live" });
   }, []);
+  const fallbackFromLiveScan = useCallback(() => {
+    setAddFlow({ mode: "closed" });
+    // Let the modal unmount (and the camera stream release) before opening the file input.
+    setTimeout(() => barcodeInputRef.current?.click(), 50);
+  }, []);
+  const handleLiveBarcodeDetected = useCallback(
+    async (upc: string, capturedFrame: string | null) => {
+      const photoDataUrl = capturedFrame ?? "";
+      setAddFlow({ mode: "barcode-reading", photoDataUrl });
+      try {
+        const res = await fetch("/api/supplements/barcode-lookup", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ upc }),
+        });
+        const data = (await res.json().catch(() => null)) as
+          | { success: true; upc: string; brand: string | null; name: string; size: string | null }
+          | { success: false; upc?: string; error?: string }
+          | null;
+
+        if (res.ok && data && "success" in data && data.success === true) {
+          setAddFlow({
+            mode: "barcode-match",
+            lookup: { upc: data.upc, brand: data.brand, name: data.name, size: data.size },
+            capturedFrame: photoDataUrl || null,
+          });
+          return;
+        }
+        if (res.status === 404 && data && "upc" in data && typeof data.upc === "string") {
+          setAddFlow({ mode: "barcode-not-found", upc: data.upc, capturedFrame: photoDataUrl });
+          return;
+        }
+        setAddFlow({ mode: "barcode-error", capturedFrame: photoDataUrl || null });
+      } catch {
+        setAddFlow({ mode: "barcode-error", capturedFrame: photoDataUrl || null });
+      }
+    },
+    []
+  );
   const chooseManual = useCallback(() => {
     setAddFlow({ mode: "closed" });
     setModalState({ mode: "add" });
@@ -725,6 +764,14 @@ function SupplementsPageInner() {
           onTakePhoto={triggerPhotoPicker}
           onAddManual={chooseManual}
           onCancel={closeFlow}
+        />
+      )}
+      {addFlow.mode === "barcode-live" && (
+        <LiveBarcodeScreen
+          onBack={openChoice}
+          onCancel={closeFlow}
+          onDetected={handleLiveBarcodeDetected}
+          onFallback={fallbackFromLiveScan}
         />
       )}
       {addFlow.mode === "barcode-reading" && (
@@ -2077,7 +2124,7 @@ function AddChoiceSheet({
           icon={<ScanLine size={22} strokeWidth={2} aria-hidden />}
           title="Scan barcode"
           titleBadge="New"
-          subtitle="Snap a photo of the barcode"
+          subtitle="Point your camera at the barcode"
           onClick={onScanBarcode}
         />
         <ChoiceCard
@@ -2939,5 +2986,298 @@ function BarcodeFallbackScreen({
         </button>
       </div>
     </FlowModal>
+  );
+}
+
+// ── Live barcode scanner (@zxing/browser) ────────────────────────────────────
+function LiveBarcodeScreen({
+  onBack, onCancel, onDetected, onFallback,
+}: {
+  onBack: () => void;
+  onCancel: () => void;
+  onDetected: (upc: string, capturedFrame: string | null) => void;
+  onFallback: () => void;
+}) {
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const controlsRef = useRef<{ stop: () => void } | null>(null);
+  const fallbackTriggered = useRef(false);
+  const detectedRef = useRef(false);
+  const readyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const fallbackTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
+
+  const stopStream = useCallback(() => {
+    if (controlsRef.current) {
+      try { controlsRef.current.stop(); } catch { /* ignore */ }
+      controlsRef.current = null;
+    }
+    const v = videoRef.current;
+    if (v && v.srcObject instanceof MediaStream) {
+      for (const t of v.srcObject.getTracks()) {
+        try { t.stop(); } catch { /* ignore */ }
+      }
+      v.srcObject = null;
+    }
+    if (readyTimeoutRef.current !== null) {
+      clearTimeout(readyTimeoutRef.current);
+      readyTimeoutRef.current = null;
+    }
+  }, []);
+
+  const captureFrame = useCallback((): string | null => {
+    const v = videoRef.current;
+    if (!v || v.videoWidth === 0 || v.videoHeight === 0) return null;
+    try {
+      const MAX_W = 1200;
+      const ratio = Math.min(1, MAX_W / v.videoWidth);
+      const w = Math.max(1, Math.round(v.videoWidth * ratio));
+      const h = Math.max(1, Math.round(v.videoHeight * ratio));
+      const canvas = document.createElement("canvas");
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return null;
+      ctx.drawImage(v, 0, 0, w, h);
+      return canvas.toDataURL("image/jpeg", 0.85);
+    } catch {
+      return null;
+    }
+  }, []);
+
+  const triggerFallback = useCallback(() => {
+    if (fallbackTriggered.current) return;
+    fallbackTriggered.current = true;
+    setStatusMessage("Live scan unavailable — switching to photo mode");
+    stopStream();
+    fallbackTimeoutRef.current = setTimeout(() => onFallback(), 900);
+  }, [onFallback, stopStream]);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    // iOS Safari critical attributes — must be set BEFORE the stream attaches.
+    // Set both the DOM property and the matching attribute (incl. webkit-playsinline).
+    video.playsInline = true;
+    video.setAttribute("playsinline", "true");
+    video.setAttribute("webkit-playsinline", "true");
+    video.muted = true;
+    video.setAttribute("muted", "");
+    video.autoplay = true;
+    video.setAttribute("autoplay", "");
+
+    let cancelled = false;
+
+    (async () => {
+      let BrowserMultiFormatReader: typeof import("@zxing/browser").BrowserMultiFormatReader;
+      let BarcodeFormat: typeof import("@zxing/library").BarcodeFormat;
+      let DecodeHintType: typeof import("@zxing/library").DecodeHintType;
+      try {
+        const browserMod = await import("@zxing/browser");
+        const libraryMod = await import("@zxing/library");
+        BrowserMultiFormatReader = browserMod.BrowserMultiFormatReader;
+        BarcodeFormat = libraryMod.BarcodeFormat;
+        DecodeHintType = libraryMod.DecodeHintType;
+      } catch {
+        if (!cancelled) triggerFallback();
+        return;
+      }
+
+      if (cancelled) return;
+
+      const hints = new Map();
+      hints.set(DecodeHintType.POSSIBLE_FORMATS, [
+        BarcodeFormat.UPC_A,
+        BarcodeFormat.UPC_E,
+        BarcodeFormat.EAN_13,
+        BarcodeFormat.EAN_8,
+        BarcodeFormat.CODE_128,
+      ]);
+      const reader = new BrowserMultiFormatReader(hints);
+
+      try {
+        const controls = await reader.decodeFromConstraints(
+          { video: { facingMode: { ideal: "environment" } } },
+          video,
+          (result, _err, ctrl) => {
+            if (cancelled || detectedRef.current || fallbackTriggered.current) return;
+            if (!result) return;
+
+            detectedRef.current = true;
+            const text = result.getText().trim();
+            const frame = captureFrame();
+
+            try { ctrl.stop(); } catch { /* ignore */ }
+            controlsRef.current = null;
+
+            if (typeof navigator.vibrate === "function") {
+              try { navigator.vibrate(50); } catch { /* ignore */ }
+            }
+
+            // Release camera before initiating the lookup network call.
+            const v = videoRef.current;
+            if (v && v.srcObject instanceof MediaStream) {
+              for (const t of v.srcObject.getTracks()) {
+                try { t.stop(); } catch { /* ignore */ }
+              }
+              v.srcObject = null;
+            }
+
+            onDetected(text, frame);
+          }
+        );
+
+        if (cancelled) {
+          try { controls.stop(); } catch { /* ignore */ }
+          return;
+        }
+        controlsRef.current = controls;
+      } catch {
+        if (!cancelled) triggerFallback();
+      }
+    })();
+
+    // 4-second readyState watchdog — catches the iOS black-screen case where
+    // getUserMedia "succeeds" but the video never paints a frame.
+    readyTimeoutRef.current = setTimeout(() => {
+      const v = videoRef.current;
+      if (cancelled || detectedRef.current || fallbackTriggered.current) return;
+      if (!v || v.readyState < 2) {
+        triggerFallback();
+      }
+    }, 4000);
+
+    return () => {
+      cancelled = true;
+      if (fallbackTimeoutRef.current !== null) {
+        clearTimeout(fallbackTimeoutRef.current);
+        fallbackTimeoutRef.current = null;
+      }
+      stopStream();
+    };
+  }, [captureFrame, onDetected, stopStream, triggerFallback]);
+
+  return (
+    <FlowModal onClose={onCancel} ariaLabel="Scan barcode">
+      <FlowHeaderWithBack title="Scan barcode" onBack={onBack} />
+      <div style={{ padding: "8px 22px 22px" }}>
+        <style>{`
+          @keyframes nura-scanline {
+            0%   { top: 14%; }
+            50%  { top: 86%; }
+            100% { top: 14%; }
+          }
+        `}</style>
+        <div style={{
+          position: "relative",
+          width: "100%",
+          aspectRatio: "3 / 4",
+          borderRadius: 16,
+          overflow: "hidden",
+          background: "#000",
+          border: `0.5px solid ${BORDER}`,
+          marginBottom: 14,
+        }}>
+          <video
+            ref={videoRef}
+            playsInline
+            muted
+            autoPlay
+            style={{
+              width: "100%", height: "100%",
+              objectFit: "cover", display: "block",
+              background: "#000",
+            }}
+          />
+          {/* Viewfinder overlay (transparent so the video shows through) */}
+          <div aria-hidden style={{
+            position: "absolute", inset: 0,
+            pointerEvents: "none",
+            background: "transparent",
+            zIndex: 2,
+          }}>
+            <ViewfinderCorner pos="tl" />
+            <ViewfinderCorner pos="tr" />
+            <ViewfinderCorner pos="bl" />
+            <ViewfinderCorner pos="br" />
+            <div style={{
+              position: "absolute",
+              left: "14%", right: "14%",
+              height: 2,
+              borderRadius: 9999,
+              background: `linear-gradient(90deg, rgba(122,154,130,0) 0%, ${SAGE_BRIGHT} 50%, rgba(122,154,130,0) 100%)`,
+              boxShadow: `0 0 14px ${SAGE_BRIGHT}, 0 0 28px rgba(122,154,130,0.6)`,
+              animation: "nura-scanline 1.8s ease-in-out infinite",
+            }} />
+          </div>
+        </div>
+
+        <div style={{
+          textAlign: "center",
+          fontFamily: SANS, fontSize: 14, fontWeight: 500, color: TEXT,
+          marginBottom: 2,
+        }}>
+          Point at the barcode
+        </div>
+        <div style={{
+          textAlign: "center",
+          fontFamily: SANS, fontSize: 12, color: TEXT_TER,
+          marginBottom: 14,
+        }}>
+          Auto-detects in 1–2 seconds
+        </div>
+
+        {statusMessage && (
+          <div style={{
+            textAlign: "center",
+            fontFamily: SANS, fontSize: 12, color: SAGE_TEXT,
+            marginBottom: 10,
+            animation: "nura-fade-in 200ms ease both",
+          }}>
+            {statusMessage}
+          </div>
+        )}
+
+        <button
+          type="button"
+          onClick={onFallback}
+          style={{
+            display: "block", margin: "0 auto",
+            background: "none", border: "none", padding: 6,
+            fontFamily: SANS, fontSize: 13, color: SAGE_TEXT,
+            cursor: "pointer", textDecoration: "underline",
+          }}
+        >
+          Trouble scanning? Take a photo instead
+        </button>
+      </div>
+    </FlowModal>
+  );
+}
+
+function ViewfinderCorner({ pos }: { pos: "tl" | "tr" | "bl" | "br" }) {
+  const SZ = 28;
+  const T = 3;
+  const OFFSET = "12%";
+  const isTop = pos === "tl" || pos === "tr";
+  const isLeft = pos === "tl" || pos === "bl";
+  return (
+    <div style={{
+      position: "absolute",
+      top: isTop ? OFFSET : "auto",
+      bottom: isTop ? "auto" : OFFSET,
+      left: isLeft ? OFFSET : "auto",
+      right: isLeft ? "auto" : OFFSET,
+      width: SZ, height: SZ,
+      borderTop: isTop ? `${T}px solid ${SAGE_BRIGHT}` : "none",
+      borderBottom: isTop ? "none" : `${T}px solid ${SAGE_BRIGHT}`,
+      borderLeft: isLeft ? `${T}px solid ${SAGE_BRIGHT}` : "none",
+      borderRight: isLeft ? "none" : `${T}px solid ${SAGE_BRIGHT}`,
+      borderTopLeftRadius: pos === "tl" ? 8 : 0,
+      borderTopRightRadius: pos === "tr" ? 8 : 0,
+      borderBottomLeftRadius: pos === "bl" ? 8 : 0,
+      borderBottomRightRadius: pos === "br" ? 8 : 0,
+      filter: `drop-shadow(0 0 6px ${SAGE_BRIGHT})`,
+    }} />
   );
 }

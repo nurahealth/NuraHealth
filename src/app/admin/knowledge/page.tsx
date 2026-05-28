@@ -399,17 +399,19 @@ function UploadModal({ userId, token, onClose, onSuccess }: {
               key={id}
               onClick={() => !busy && setTab(id)}
               style={{
-                flex: 1, padding: "9px 4px", display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                flex: 1, minWidth: 0, height: 38, padding: "0 4px",
+                display: "flex", alignItems: "center", justifyContent: "center", gap: 4,
                 background: tab === id ? `rgba(${SAGE_RGB},0.14)` : "transparent",
                 border: `0.5px solid ${tab === id ? `rgba(${SAGE_RGB},0.4)` : BORDER}`,
                 borderRadius: 10, fontFamily: SANS, fontSize: 10, fontWeight: 600,
-                letterSpacing: "0.12em", textTransform: "uppercase",
+                letterSpacing: "0.06em", textTransform: "uppercase",
                 color: tab === id ? SAGE : TEXT_TER,
                 cursor: "pointer",
                 transition: "background 180ms, border-color 180ms, color 180ms",
               }}
             >
-              <Icon size={12} />{label}
+              <Icon size={12} style={{ flexShrink: 0 }} />
+              <span style={{ whiteSpace: "nowrap" }}>{label}</span>
             </button>
           ))}
         </div>
@@ -776,6 +778,36 @@ export default function AdminKnowledgePage() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<FilterType>("all");
   const [search, setSearch] = useState("");
+  const [topicFilter, setTopicFilter] = useState<string | null>(null);
+  const toggleTopicFilter = useCallback((t: string) => {
+    setTopicFilter((cur) => (cur === t ? null : t));
+  }, []);
+
+  const TopicChip = useCallback(({ value, size }: { value: string; size: "sm" | "md" }) => {
+    const active = value === topicFilter;
+    const sm = size === "sm";
+    return (
+      <button
+        onClick={(e) => { e.stopPropagation(); toggleTopicFilter(value); }}
+        style={{
+          fontFamily: SANS,
+          fontSize: sm ? 10 : 11,
+          fontWeight: 500,
+          color: active ? SAGE : (sm ? TEXT_SEC : TEXT),
+          background: active
+            ? `rgba(${SAGE_RGB},0.28)`
+            : (sm ? `rgba(${FG_RGB},0.06)` : `rgba(${SAGE_RGB},0.14)`),
+          border: `0.5px solid ${active ? SAGE : (sm ? BORDER : `rgba(${SAGE_RGB},0.25)`)}`,
+          borderRadius: 8,
+          padding: sm ? "3px 7px" : "4px 9px",
+          cursor: "pointer",
+          transition: "background 180ms, border-color 180ms, color 180ms",
+        }}
+      >
+        {value}
+      </button>
+    );
+  }, [topicFilter, toggleTopicFilter]);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [previewById, setPreviewById] = useState<Record<string, string>>({});
@@ -892,11 +924,21 @@ export default function AdminKnowledgePage() {
   }
 
   // ── Admin UI ────────────────────────────────────────────────────────────────
+  const q = search.trim().toLowerCase();
+  const filtersActive = filter !== "all" || topicFilter !== null || q.length > 0;
   const filtered = sources.filter((s) => {
     if (filter !== "all" && s.source_type !== filter) return false;
-    if (search) {
-      const q = search.toLowerCase();
-      return s.title.toLowerCase().includes(q) || s.author?.toLowerCase().includes(q) || s.topics?.some((t) => t.toLowerCase().includes(q));
+    if (topicFilter) {
+      const inTopics = s.topics?.includes(topicFilter) ?? false;
+      const inConditions = s.conditions?.includes(topicFilter) ?? false;
+      if (!inTopics && !inConditions) return false;
+    }
+    if (q) {
+      const inTitle = s.title.toLowerCase().includes(q);
+      const inAuthor = s.author?.toLowerCase().includes(q) ?? false;
+      const inTopics = s.topics?.some((t) => t.toLowerCase().includes(q)) ?? false;
+      const inConditions = s.conditions?.some((c) => c.toLowerCase().includes(q)) ?? false;
+      if (!inTitle && !inAuthor && !inTopics && !inConditions) return false;
     }
     return true;
   });
@@ -941,7 +983,7 @@ export default function AdminKnowledgePage() {
 
       <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} userName={userName} userInitial={userInitial} />
 
-      <div style={{ position: "relative", zIndex: 2, padding: "24px 20px 100px", maxWidth: 480, margin: "0 auto" }}>
+      <div style={{ position: "relative", zIndex: 2, padding: "24px 32px 100px", width: "100%", maxWidth: 1100, margin: "0 auto" }}>
 
         <div style={{ marginBottom: 24 }}>
           <h1 style={{ fontFamily: SERIF, fontSize: 30, fontWeight: 500, color: TEXT, margin: "0 0 6px", letterSpacing: "-0.3px", lineHeight: 1.2 }}>
@@ -950,7 +992,7 @@ export default function AdminKnowledgePage() {
           <Eyebrow color={TEXT_TER}>NŪRA&apos;s brain · training corpus</Eyebrow>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 8, marginBottom: 18 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 16, marginBottom: 18 }}>
           {[
             { label: "Sources", value: sources.length.toString() },
             { label: "Chunks", value: totalChunks > 999 ? `${(totalChunks / 1000).toFixed(1)}K` : totalChunks.toString() },
@@ -997,10 +1039,26 @@ export default function AdminKnowledgePage() {
           {(["all", "book", "research", "article", "video", "audio"] as FilterType[]).map((f) => (
             <button key={f} onClick={() => setFilter(f)} className="filter-pill"
               style={{ flexShrink: 0, padding: "6px 12px", background: filter === f ? `rgba(${SAGE_RGB},0.14)` : "transparent", border: `0.5px solid ${filter === f ? `rgba(${SAGE_RGB},0.4)` : BORDER}`, borderRadius: 999, fontFamily: SANS, fontSize: 10, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", color: filter === f ? SAGE : TEXT_TER, cursor: "pointer", whiteSpace: "nowrap", transition: "background 180ms, border-color 180ms, color 180ms" }}>
-              {f === "all" ? `All · ${sources.length}` : f}
+              {f === "all" ? `All · ${filtersActive ? filtered.length : sources.length}` : f}
             </button>
           ))}
         </div>
+
+        {topicFilter && (
+          <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", background: `rgba(${SAGE_RGB},0.08)`, border: `0.5px solid rgba(${SAGE_RGB},0.35)`, borderRadius: 14, marginBottom: 14 }}>
+            <Eyebrow color={TEXT_TER} size={9}>Filtering by topic</Eyebrow>
+            <span style={{ flex: 1, minWidth: 0, fontFamily: SANS, fontSize: 12.5, fontWeight: 500, color: SAGE, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              {topicFilter}
+            </span>
+            <button
+              onClick={() => setTopicFilter(null)}
+              aria-label="Clear topic filter"
+              style={{ flexShrink: 0, width: 22, height: 22, display: "flex", alignItems: "center", justifyContent: "center", background: "transparent", border: `0.5px solid rgba(${SAGE_RGB},0.4)`, borderRadius: 6, color: SAGE, cursor: "pointer", padding: 0, transition: "background 180ms" }}
+            >
+              <X size={11} />
+            </button>
+          </div>
+        )}
 
         {deleteError && (
           <div style={{ marginBottom: 12, padding: "10px 12px", background: "rgba(255,76,92,0.08)", border: `0.5px solid rgba(255,76,92,0.4)`, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
@@ -1033,7 +1091,7 @@ export default function AdminKnowledgePage() {
                   onClick={() => toggleExpand(s)}
                   style={{
                     position: "relative",
-                    padding: "14px 16px",
+                    padding: "18px 22px",
                     background: SURFACE,
                     border: `0.5px solid ${isProcessing ? `rgba(${SAGE_RGB},0.35)` : isFailed ? "rgba(255,76,92,0.35)" : expanded ? `rgba(${SAGE_RGB},0.35)` : BORDER}`,
                     borderRadius: 14,
@@ -1062,7 +1120,7 @@ export default function AdminKnowledgePage() {
                       {s.topics && s.topics.length > 0 && (
                         <div style={{ display: "flex", gap: 5, marginTop: 8, flexWrap: "wrap" }}>
                           {s.topics.slice(0, 4).map((t) => (
-                            <span key={t} style={{ fontFamily: SANS, fontSize: 10, fontWeight: 500, color: TEXT_SEC, background: `rgba(${FG_RGB},0.06)`, border: `0.5px solid ${BORDER}`, borderRadius: 8, padding: "3px 7px" }}>{t}</span>
+                            <TopicChip key={t} value={t} size="sm" />
                           ))}
                         </div>
                       )}
@@ -1110,7 +1168,7 @@ export default function AdminKnowledgePage() {
                           {s.topics && s.topics.length > 0 ? (
                             <div style={{ marginTop: 8, display: "flex", flexWrap: "wrap", gap: 6 }}>
                               {s.topics.map((t) => (
-                                <span key={t} style={{ fontFamily: SANS, fontSize: 11, fontWeight: 500, color: TEXT, background: `rgba(${SAGE_RGB},0.14)`, border: `0.5px solid rgba(${SAGE_RGB},0.25)`, borderRadius: 8, padding: "4px 9px" }}>{t}</span>
+                                <TopicChip key={t} value={t} size="md" />
                               ))}
                             </div>
                           ) : (
@@ -1123,7 +1181,7 @@ export default function AdminKnowledgePage() {
                             <Eyebrow color={TEXT_TER}>Conditions covered</Eyebrow>
                             <div style={{ marginTop: 8, display: "flex", flexWrap: "wrap", gap: 6 }}>
                               {s.conditions.map((c) => (
-                                <span key={c} style={{ fontFamily: SANS, fontSize: 11, fontWeight: 500, color: TEXT, background: `rgba(${SAGE_RGB},0.14)`, border: `0.5px solid rgba(${SAGE_RGB},0.25)`, borderRadius: 8, padding: "4px 9px" }}>{c}</span>
+                                <TopicChip key={c} value={c} size="md" />
                               ))}
                             </div>
                           </Panel>
