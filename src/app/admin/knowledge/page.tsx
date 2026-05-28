@@ -1110,9 +1110,9 @@ export default function AdminKnowledgePage() {
             )}
           </Panel>
         </div>
-      </div>
 
-      {menuOpenId && <div onClick={() => setMenuOpenId(null)} style={{ position: "fixed", inset: 0, zIndex: 55 }} />}
+        {menuOpenId && <div onClick={() => setMenuOpenId(null)} style={{ position: "fixed", inset: 0, zIndex: 55 }} />}
+      </div>
 
       {showUploadModal && userId && token && (
         <UploadModal

@@ -2,7 +2,7 @@
 
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Calendar, Camera, Edit3, Flame, Sparkles } from "lucide-react";
+import { ArrowLeft, Calendar, Camera, Check, Edit3, Flame, ScanLine, Sparkles } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import type { User } from "@supabase/supabase-js";
 import NuraPageShell from "@/components/NuraPageShell";
@@ -58,9 +58,21 @@ interface ScanExtracted {
   brand: string | null;
 }
 
+interface BarcodeLookup {
+  upc: string;
+  brand: string | null;
+  name: string;
+  size: string | null;
+}
+
 type AddFlow =
   | { mode: "closed" }
   | { mode: "choice" }
+  | { mode: "barcode-scanning" }
+  | { mode: "barcode-permission-denied" }
+  | { mode: "barcode-looking-up"; upc: string; capturedFrame: string | null }
+  | { mode: "barcode-match"; lookup: BarcodeLookup; capturedFrame: string | null }
+  | { mode: "barcode-not-found"; upc: string; capturedFrame: string | null }
   | { mode: "scanning"; photoDataUrl: string }
   | { mode: "confirm"; photoDataUrl: string; initial: ScanExtracted }
   | { mode: "scan-error"; photoDataUrl: string };
@@ -254,6 +266,43 @@ function SupplementsPageInner() {
     }
   }, [logSet, today, fetchStats]);
 
+  const performImageScan = useCallback(
+    async (photoDataUrl: string, base64: string) => {
+      setAddFlow({ mode: "scanning", photoDataUrl });
+      try {
+        const res = await fetch("/api/supplements/scan", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ image_base64: base64 }),
+        });
+        if (!res.ok) {
+          setAddFlow({ mode: "scan-error", photoDataUrl });
+          return;
+        }
+        const data = (await res.json()) as
+          | { success: true; name: string; dosage: string | null; form: string | null; brand: string | null }
+          | { success: false; error?: string };
+        if (!data.success) {
+          setAddFlow({ mode: "scan-error", photoDataUrl });
+          return;
+        }
+        setAddFlow({
+          mode: "confirm",
+          photoDataUrl,
+          initial: {
+            name: data.name ?? "",
+            dosage: data.dosage,
+            form: data.form,
+            brand: data.brand,
+          },
+        });
+      } catch {
+        setAddFlow({ mode: "scan-error", photoDataUrl });
+      }
+    },
+    []
+  );
+
   const runScan = useCallback(async (file: File) => {
     let compressed: { dataUrl: string; base64: string };
     try {
@@ -262,39 +311,91 @@ function SupplementsPageInner() {
       setAddFlow({ mode: "scan-error", photoDataUrl: "" });
       return;
     }
-    setAddFlow({ mode: "scanning", photoDataUrl: compressed.dataUrl });
+    await performImageScan(compressed.dataUrl, compressed.base64);
+  }, [performImageScan]);
 
-    try {
-      const res = await fetch("/api/supplements/scan", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ image_base64: compressed.base64 }),
-      });
-      if (!res.ok) {
-        setAddFlow({ mode: "scan-error", photoDataUrl: compressed.dataUrl });
+  const scanFrameAsLabel = useCallback(
+    async (frameDataUrl: string) => {
+      const base64 = frameDataUrl.split(",")[1] ?? "";
+      if (!base64) {
+        setAddFlow({ mode: "scan-error", photoDataUrl: frameDataUrl });
         return;
       }
-      const data = (await res.json()) as
-        | { success: true; name: string; dosage: string | null; form: string | null; brand: string | null }
-        | { success: false; error?: string };
-      if (!data.success) {
-        setAddFlow({ mode: "scan-error", photoDataUrl: compressed.dataUrl });
-        return;
+      await performImageScan(frameDataUrl, base64);
+    },
+    [performImageScan]
+  );
+
+  const lookupBarcode = useCallback(
+    async (upc: string, capturedFrame: string | null) => {
+      setAddFlow({ mode: "barcode-looking-up", upc, capturedFrame });
+      try {
+        const res = await fetch("/api/supplements/barcode-lookup", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ upc }),
+        });
+        const data = (await res.json().catch(() => null)) as
+          | { success: true; upc: string; brand: string | null; name: string; size: string | null }
+          | { success: false; upc?: string; error?: string }
+          | null;
+        if (res.ok && data && data.success) {
+          setAddFlow({
+            mode: "barcode-match",
+            lookup: { upc: data.upc, brand: data.brand, name: data.name, size: data.size },
+            capturedFrame,
+          });
+          return;
+        }
+        setAddFlow({ mode: "barcode-not-found", upc, capturedFrame });
+      } catch {
+        setAddFlow({ mode: "barcode-not-found", upc, capturedFrame });
       }
+    },
+    []
+  );
+
+  const startBarcodeScan = useCallback(() => {
+    setAddFlow({ mode: "barcode-scanning" });
+  }, []);
+
+  const editLookupDetails = useCallback(
+    (lookup: BarcodeLookup, capturedFrame: string | null) => {
       setAddFlow({
         mode: "confirm",
-        photoDataUrl: compressed.dataUrl,
+        photoDataUrl: capturedFrame ?? "",
         initial: {
-          name: data.name ?? "",
-          dosage: data.dosage,
-          form: data.form,
-          brand: data.brand,
+          name: lookup.name,
+          dosage: lookup.size,
+          form: null,
+          brand: lookup.brand,
         },
       });
-    } catch {
-      setAddFlow({ mode: "scan-error", photoDataUrl: compressed.dataUrl });
-    }
-  }, []);
+    },
+    []
+  );
+
+  const confirmLookupAdd = useCallback(
+    async (lookup: BarcodeLookup) => {
+      const notes = lookup.brand ? lookup.brand : undefined;
+      const res = await fetch("/api/supplements", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: lookup.name,
+          dose: lookup.size || undefined,
+          notes,
+        }),
+      });
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({ error: "Could not save" }));
+        throw new Error(d.error ?? "Could not save");
+      }
+      await fetchAll();
+      setAddFlow({ mode: "closed" });
+    },
+    [fetchAll]
+  );
 
   const handlePhotoSelected = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -534,12 +635,56 @@ function SupplementsPageInner() {
         />
       )}
 
-      {/* ADD FLOW — choice sheet, scanning, confirm, error */}
+      {/* ADD FLOW — choice, barcode scan/match/not-found, photo scan/confirm/error */}
       {addFlow.mode === "choice" && (
         <AddChoiceSheet
+          onScanBarcode={startBarcodeScan}
           onTakePhoto={triggerPhotoPicker}
           onAddManual={chooseManual}
           onCancel={closeFlow}
+        />
+      )}
+      {addFlow.mode === "barcode-scanning" && (
+        <BarcodeScanScreen
+          onBack={openChoice}
+          onCancel={closeFlow}
+          onDetected={lookupBarcode}
+          onPermissionDenied={() => setAddFlow({ mode: "barcode-permission-denied" })}
+        />
+      )}
+      {addFlow.mode === "barcode-looking-up" && (
+        <BarcodeLookingUpScreen onCancel={closeFlow} />
+      )}
+      {addFlow.mode === "barcode-permission-denied" && (
+        <BarcodePermissionDeniedScreen
+          onUsePhoto={() => { setAddFlow({ mode: "closed" }); triggerPhotoPicker(); }}
+          onAddManual={chooseManual}
+          onCancel={closeFlow}
+        />
+      )}
+      {addFlow.mode === "barcode-match" && (
+        <BarcodeMatchScreen
+          lookup={addFlow.lookup}
+          capturedFrame={addFlow.capturedFrame}
+          onBack={openChoice}
+          onCancel={closeFlow}
+          onConfirm={confirmLookupAdd}
+          onEditDetails={() => editLookupDetails(addFlow.lookup, addFlow.capturedFrame)}
+        />
+      )}
+      {addFlow.mode === "barcode-not-found" && (
+        <BarcodeNotFoundScreen
+          upc={addFlow.upc}
+          capturedFrame={addFlow.capturedFrame}
+          onBack={openChoice}
+          onCancel={closeFlow}
+          onReadLabel={() => {
+            if (addFlow.mode !== "barcode-not-found") return;
+            const frame = addFlow.capturedFrame;
+            if (frame) void scanFrameAsLabel(frame);
+            else triggerPhotoPicker();
+          }}
+          onAddManual={chooseManual}
         />
       )}
       {addFlow.mode === "scanning" && (
@@ -1775,8 +1920,9 @@ function FlowModal({
 
 // ── Choice modal ─────────────────────────────────────────────────────────────
 function AddChoiceSheet({
-  onTakePhoto, onAddManual, onCancel,
+  onScanBarcode, onTakePhoto, onAddManual, onCancel,
 }: {
+  onScanBarcode: () => void;
   onTakePhoto: () => void;
   onAddManual: () => void;
   onCancel: () => void;
@@ -1794,18 +1940,27 @@ function AddChoiceSheet({
           fontFamily: SANS, fontSize: 13, color: TEXT_SEC,
           margin: "0 0 18px",
         }}>
-          Snap the bottle and we&apos;ll read the label.
+          Scan the barcode for fastest entry.
         </p>
 
         <ChoiceCard
-          featured
+          tier="featured"
+          icon={<ScanLine size={22} strokeWidth={2} aria-hidden />}
+          title="Scan barcode"
+          titleBadge="New"
+          subtitle="Fastest. Auto-detects the product."
+          onClick={onScanBarcode}
+        />
+        <ChoiceCard
+          tier="secondary"
           icon={<Camera size={22} strokeWidth={2} aria-hidden />}
           title="Take a photo"
           subtitle="We'll read the label for you"
           onClick={onTakePhoto}
         />
         <ChoiceCard
-          icon={<Edit3 size={22} strokeWidth={2} aria-hidden />}
+          tier="tertiary"
+          icon={<Edit3 size={20} strokeWidth={2} aria-hidden />}
           title="Add manually"
           subtitle="Fill in the details yourself"
           onClick={onAddManual}
@@ -1830,14 +1985,22 @@ function AddChoiceSheet({
 }
 
 function ChoiceCard({
-  featured, icon, title, subtitle, onClick,
+  tier = "secondary", icon, title, titleBadge, subtitle, onClick,
 }: {
-  featured?: boolean;
+  tier?: "featured" | "secondary" | "tertiary";
   icon: React.ReactNode;
   title: string;
+  titleBadge?: string;
   subtitle: string;
   onClick: () => void;
 }) {
+  const featured = tier === "featured";
+  const tertiary = tier === "tertiary";
+
+  const baseBg = featured ? SAGE : tertiary ? "transparent" : SURFACE;
+  const baseBorder = featured ? "0.5px solid transparent" : `0.5px solid ${BORDER}`;
+  const baseColor = featured ? SAGE_ON : TEXT;
+
   return (
     <button
       type="button"
@@ -1853,25 +2016,39 @@ function ChoiceCard({
       style={{
         width: "100%", display: "flex", alignItems: "center", gap: 14,
         textAlign: "left", marginBottom: 10,
-        padding: "14px 16px", borderRadius: 14,
-        background: featured ? SAGE : SURFACE,
-        border: featured ? "0.5px solid transparent" : `0.5px solid ${BORDER}`,
-        color: featured ? SAGE_ON : TEXT,
+        padding: tertiary ? "12px 14px" : "14px 16px",
+        borderRadius: 14,
+        background: baseBg,
+        border: baseBorder,
+        color: baseColor,
         cursor: "pointer", transition: "background 160ms, border-color 160ms",
       }}
     >
       <span aria-hidden style={{
         display: "inline-flex", alignItems: "center", justifyContent: "center",
-        flexShrink: 0, width: 28, height: 28,
-        color: featured ? SAGE_ON : SAGE,
+        flexShrink: 0, width: tertiary ? 24 : 28, height: tertiary ? 24 : 28,
+        color: featured ? SAGE_ON : tertiary ? TEXT_TER : SAGE,
       }}>{icon}</span>
       <span style={{ flex: 1, minWidth: 0 }}>
         <span style={{
-          display: "block",
-          fontFamily: SANS, fontSize: 15, fontWeight: 500,
+          display: "flex", alignItems: "center", gap: 8,
+          fontFamily: SANS, fontSize: tertiary ? 14 : 15, fontWeight: 500,
           lineHeight: 1.25,
         }}>
           {title}
+          {titleBadge && (
+            <span style={{
+              display: "inline-flex", alignItems: "center",
+              padding: "1px 7px", borderRadius: 9999,
+              background: featured ? "rgba(255,255,255,0.22)" : SAGE_BG_TINT,
+              border: featured ? "none" : `0.5px solid rgba(var(--nura-sage-rgb), 0.32)`,
+              fontFamily: SANS, fontSize: 9, fontWeight: 600,
+              letterSpacing: "0.08em", textTransform: "uppercase",
+              color: featured ? SAGE_ON : SAGE_TEXT,
+            }}>
+              {titleBadge}
+            </span>
+          )}
         </span>
         <span style={{
           display: "block", marginTop: 2,
@@ -2275,5 +2452,577 @@ function FlowHeader({ title, onCancel }: { title: string; onCancel?: () => void 
         <span style={{ width: 1 }} />
       )}
     </div>
+  );
+}
+
+// ── Flow header (Back arrow, centered title) ─────────────────────────────────
+function FlowHeaderWithBack({
+  title, onBack,
+}: { title: string; onBack: () => void }) {
+  return (
+    <div style={{
+      display: "grid", gridTemplateColumns: "44px 1fr 44px",
+      alignItems: "center", padding: "10px 12px 6px",
+    }}>
+      <button
+        type="button"
+        onClick={onBack}
+        aria-label="Back"
+        style={{
+          width: 36, height: 36, padding: 0, borderRadius: 9,
+          background: SURFACE, border: `0.5px solid ${BORDER}`,
+          color: TEXT_SEC, cursor: "pointer",
+          display: "inline-flex", alignItems: "center", justifyContent: "center",
+        }}
+      >
+        <ArrowLeft size={16} strokeWidth={2} aria-hidden />
+      </button>
+      <div style={{
+        fontFamily: SANS, fontSize: 15, fontWeight: 500, color: TEXT,
+        textAlign: "center",
+      }}>
+        {title}
+      </div>
+      <span aria-hidden />
+    </div>
+  );
+}
+
+// ── Barcode viewfinder overlay (corners + animated scan line) ────────────────
+function CornerMarker({
+  position,
+}: { position: "tl" | "tr" | "bl" | "br" }) {
+  const isTop = position === "tl" || position === "tr";
+  const isLeft = position === "tl" || position === "bl";
+  return (
+    <div aria-hidden style={{
+      position: "absolute",
+      top: isTop ? "38%" : "auto",
+      bottom: !isTop ? "38%" : "auto",
+      left: isLeft ? "12%" : "auto",
+      right: !isLeft ? "12%" : "auto",
+      width: 22, height: 22,
+      borderTop: isTop ? "3px solid #7a9a82" : "none",
+      borderBottom: !isTop ? "3px solid #7a9a82" : "none",
+      borderLeft: isLeft ? "3px solid #7a9a82" : "none",
+      borderRight: !isLeft ? "3px solid #7a9a82" : "none",
+      filter: "drop-shadow(0 0 6px rgba(122, 154, 130, 0.6))",
+      pointerEvents: "none",
+    }} />
+  );
+}
+
+function BarcodeViewfinder() {
+  return (
+    <>
+      <style>{`
+        @keyframes nura-scan-line {
+          0%   { transform: translateY(0); }
+          50%  { transform: translateY(calc(100% - 2px)); }
+          100% { transform: translateY(0); }
+        }
+        #nura-barcode-reader video {
+          position: absolute !important;
+          top: 0 !important; left: 0 !important;
+          width: 100% !important; height: 100% !important;
+          object-fit: cover !important;
+        }
+        #nura-barcode-reader > div { width: 100% !important; height: 100% !important; padding: 0 !important; }
+      `}</style>
+      <div aria-hidden style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
+        <CornerMarker position="tl" />
+        <CornerMarker position="tr" />
+        <CornerMarker position="bl" />
+        <CornerMarker position="br" />
+        <div style={{
+          position: "absolute",
+          top: "38%", bottom: "38%", left: "12%", right: "12%",
+          overflow: "hidden",
+        }}>
+          <div style={{
+            position: "absolute", left: 0, right: 0, top: 0,
+            height: 2,
+            background: "linear-gradient(90deg, rgba(122,154,130,0), rgba(122,154,130,0.95), rgba(122,154,130,0))",
+            boxShadow: "0 0 12px rgba(122, 154, 130, 0.8)",
+            animation: "nura-scan-line 1.8s ease-in-out infinite",
+          }} />
+        </div>
+      </div>
+    </>
+  );
+}
+
+// ── Barcode scan modal (camera + html5-qrcode) ──────────────────────────────
+function BarcodeScanScreen({
+  onBack, onCancel, onDetected, onPermissionDenied,
+}: {
+  onBack: () => void;
+  onCancel: () => void;
+  onDetected: (upc: string, capturedFrame: string | null) => void;
+  onPermissionDenied: () => void;
+}) {
+  const readerRef = useRef<HTMLDivElement>(null);
+  const handledRef = useRef(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    let qrInstance: { stop: () => Promise<void>; clear?: () => void } | null = null;
+
+    const start = async () => {
+      try {
+        const lib = await import("html5-qrcode");
+        if (cancelled) return;
+        const { Html5Qrcode, Html5QrcodeSupportedFormats } = lib;
+        const formats = [
+          Html5QrcodeSupportedFormats.UPC_A,
+          Html5QrcodeSupportedFormats.UPC_E,
+          Html5QrcodeSupportedFormats.EAN_13,
+          Html5QrcodeSupportedFormats.EAN_8,
+          Html5QrcodeSupportedFormats.CODE_128,
+        ];
+        const instance = new Html5Qrcode("nura-barcode-reader", {
+          formatsToSupport: formats,
+          verbose: false,
+        });
+        qrInstance = instance;
+        await instance.start(
+          { facingMode: "environment" },
+          { fps: 10, aspectRatio: 0.75 },
+          (decodedText: string) => {
+            if (handledRef.current) return;
+            handledRef.current = true;
+
+            let frame: string | null = null;
+            const video = readerRef.current?.querySelector("video");
+            if (video instanceof HTMLVideoElement && video.videoWidth > 0) {
+              try {
+                const canvas = document.createElement("canvas");
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                const ctx = canvas.getContext("2d");
+                if (ctx) {
+                  ctx.drawImage(video, 0, 0);
+                  frame = canvas.toDataURL("image/jpeg", 0.85);
+                }
+              } catch {
+                frame = null;
+              }
+            }
+
+            if (typeof navigator !== "undefined" && typeof navigator.vibrate === "function") {
+              try { navigator.vibrate(50); } catch {}
+            }
+
+            instance.stop().catch(() => {});
+            onDetected(decodedText, frame);
+          },
+          () => {}
+        );
+      } catch (err) {
+        if (cancelled) return;
+        console.error("[barcode] start failed:", err);
+        onPermissionDenied();
+      }
+    };
+
+    void start();
+
+    return () => {
+      cancelled = true;
+      if (qrInstance) {
+        qrInstance.stop().catch(() => {});
+        try { qrInstance.clear?.(); } catch {}
+      }
+    };
+  }, [onDetected, onPermissionDenied]);
+
+  return (
+    <FlowModal onClose={onCancel} ariaLabel="Scan barcode">
+      <FlowHeaderWithBack title="Scan barcode" onBack={onBack} />
+      <div style={{ padding: "8px 22px 22px" }}>
+        <div style={{
+          position: "relative",
+          width: "100%", aspectRatio: "3 / 4",
+          borderRadius: 16, overflow: "hidden",
+          background: "#000", border: `0.5px solid ${BORDER}`,
+          marginBottom: 18,
+        }}>
+          <div id="nura-barcode-reader" ref={readerRef} style={{
+            position: "absolute", inset: 0,
+          }} />
+          <BarcodeViewfinder />
+        </div>
+        <div style={{ textAlign: "center" }}>
+          <div style={{
+            fontFamily: SANS, fontSize: 14, fontWeight: 600, color: TEXT,
+            marginBottom: 4,
+          }}>
+            Point at the barcode
+          </div>
+          <div style={{
+            fontFamily: SANS, fontSize: 12, color: TEXT,
+            opacity: 0.55, lineHeight: 1.4,
+          }}>
+            Auto-detects in 1–2 seconds. No need to tap anything.
+          </div>
+        </div>
+      </div>
+    </FlowModal>
+  );
+}
+
+// ── Looking-up state (between detection and lookup result) ───────────────────
+function BarcodeLookingUpScreen({ onCancel }: { onCancel: () => void }) {
+  return (
+    <FlowModal onClose={onCancel} ariaLabel="Looking up barcode">
+      <div style={{
+        padding: "36px 24px 32px",
+        display: "flex", flexDirection: "column", alignItems: "center",
+        textAlign: "center",
+      }}>
+        <style>{`@keyframes nura-spin { to { transform: rotate(360deg); } }`}</style>
+        <div style={{
+          width: 32, height: 32, borderRadius: "50%",
+          border: `2.5px solid rgba(var(--nura-sage-rgb), 0.25)`,
+          borderTopColor: SAGE,
+          animation: "nura-spin 800ms linear infinite",
+          marginBottom: 16,
+        }} />
+        <div style={{
+          fontFamily: SANS, fontSize: 15, fontWeight: 500, color: TEXT,
+          marginBottom: 4,
+        }}>
+          Looking up product…
+        </div>
+        <div style={{ fontFamily: SANS, fontSize: 12, color: TEXT_TER }}>
+          Checking the supplement database
+        </div>
+      </div>
+    </FlowModal>
+  );
+}
+
+// ── Permission denied ────────────────────────────────────────────────────────
+function BarcodePermissionDeniedScreen({
+  onUsePhoto, onAddManual, onCancel,
+}: {
+  onUsePhoto: () => void;
+  onAddManual: () => void;
+  onCancel: () => void;
+}) {
+  return (
+    <FlowModal onClose={onCancel} ariaLabel="Camera blocked">
+      <FlowHeader title="Scan barcode" onCancel={onCancel} />
+      <div style={{
+        padding: "12px 28px 26px",
+        display: "flex", flexDirection: "column", alignItems: "center",
+        textAlign: "center",
+      }}>
+        <h2 style={{
+          fontFamily: SERIF, fontWeight: 500, color: TEXT,
+          fontSize: "clamp(20px, 3vw, 24px)",
+          lineHeight: 1.3, letterSpacing: "-0.2px",
+          margin: "0 0 8px",
+        }}>
+          Camera access blocked.
+        </h2>
+        <p style={{
+          fontFamily: SANS, fontSize: 14, color: TEXT_SEC, lineHeight: 1.55,
+          maxWidth: 320, margin: "0 0 22px",
+        }}>
+          Allow camera access in your browser settings, or use one of these instead.
+        </p>
+        <button
+          type="button"
+          onClick={onUsePhoto}
+          onMouseEnter={(e) => { e.currentTarget.style.background = SAGE_HOV; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = SAGE; }}
+          style={{
+            width: "100%", maxWidth: 320,
+            padding: "12px 16px", borderRadius: 11, border: "none",
+            background: SAGE, color: SAGE_ON,
+            fontFamily: SANS, fontSize: 14, fontWeight: 500,
+            cursor: "pointer", transition: "background 200ms",
+            marginBottom: 10,
+          }}
+        >
+          Take a photo instead
+        </button>
+        <button
+          type="button"
+          onClick={onAddManual}
+          style={{
+            width: "100%", maxWidth: 320,
+            padding: "12px 16px", borderRadius: 11,
+            background: "transparent",
+            border: `0.5px solid ${BORDER}`,
+            color: TEXT, fontFamily: SANS, fontSize: 14, fontWeight: 500,
+            cursor: "pointer",
+          }}
+        >
+          Add manually
+        </button>
+      </div>
+    </FlowModal>
+  );
+}
+
+// ── Match found ──────────────────────────────────────────────────────────────
+function formatUpc(upc: string): string {
+  if (upc.length === 12) {
+    return `${upc[0]}-${upc.slice(1, 6)}-${upc.slice(6, 11)}-${upc[11]}`;
+  }
+  if (upc.length === 13) {
+    return `${upc[0]}-${upc.slice(1, 7)}-${upc.slice(7, 13)}`;
+  }
+  return upc;
+}
+
+function BarcodeMatchScreen({
+  lookup, capturedFrame, onBack, onCancel, onConfirm, onEditDetails,
+}: {
+  lookup: BarcodeLookup;
+  capturedFrame: string | null;
+  onBack: () => void;
+  onCancel: () => void;
+  onConfirm: (lookup: BarcodeLookup) => Promise<void>;
+  onEditDetails: () => void;
+}) {
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  void capturedFrame;
+
+  const handleSubmit = async () => {
+    if (submitting) return;
+    setSubmitting(true);
+    setError(null);
+    try {
+      await onConfirm(lookup);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not save");
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <FlowModal
+      onClose={submitting ? () => undefined : onCancel}
+      ariaLabel="Confirm matched product"
+    >
+      <FlowHeaderWithBack title="Confirm details" onBack={submitting ? () => undefined : onBack} />
+      <div style={{ padding: "8px 22px 22px" }}>
+        <div style={{
+          display: "flex", alignItems: "center", gap: 10,
+          padding: "10px 14px", marginBottom: 16,
+          borderRadius: 12,
+          background: SAGE_BG_TINT,
+          border: `0.5px solid rgba(var(--nura-sage-rgb), 0.3)`,
+        }}>
+          <span aria-hidden style={{
+            display: "inline-flex", alignItems: "center", justifyContent: "center",
+            width: 22, height: 22, borderRadius: "50%",
+            background: SAGE_BRIGHT, color: SAGE_ON,
+            flexShrink: 0,
+          }}>
+            <Check size={14} strokeWidth={3} aria-hidden />
+          </span>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{
+              fontFamily: SANS, fontSize: 13, fontWeight: 600, color: TEXT,
+              lineHeight: 1.2,
+            }}>
+              Product found
+            </div>
+            <div style={{
+              fontFamily: SANS, fontSize: 11, color: TEXT_SEC,
+              marginTop: 1, lineHeight: 1.3,
+            }}>
+              Matched in supplement database
+            </div>
+          </div>
+        </div>
+
+        <div style={{
+          padding: "16px 16px 14px",
+          borderRadius: 14,
+          background: "linear-gradient(180deg, rgba(122,154,130,0.1) 0%, transparent 100%)",
+          border: `0.5px solid ${BORDER}`,
+          marginBottom: 14,
+        }}>
+          {lookup.brand && (
+            <div style={{
+              fontFamily: SANS, fontSize: 11, fontWeight: 600,
+              letterSpacing: "0.12em", textTransform: "uppercase",
+              color: `rgba(var(--nura-fg-rgb), 0.5)`,
+              marginBottom: 4,
+            }}>
+              {lookup.brand}
+            </div>
+          )}
+          <div style={{
+            fontFamily: SANS, fontSize: 17, fontWeight: 600, color: TEXT,
+            lineHeight: 1.25,
+          }}>
+            {lookup.name}
+          </div>
+          {lookup.size && (
+            <div style={{
+              fontFamily: SANS, fontSize: 13,
+              color: `rgba(var(--nura-fg-rgb), 0.7)`,
+              marginTop: 4, lineHeight: 1.4,
+            }}>
+              {lookup.size}
+            </div>
+          )}
+          <div style={{
+            height: 1, background: BORDER,
+            margin: "12px 0 10px",
+          }} />
+          <div style={{
+            fontFamily: "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace",
+            fontSize: 11,
+            color: `rgba(var(--nura-fg-rgb), 0.4)`,
+            letterSpacing: "0.02em",
+          }}>
+            UPC: {formatUpc(lookup.upc)}
+          </div>
+        </div>
+
+        <div style={{
+          padding: "12px 14px", borderRadius: 12,
+          border: `1px dashed ${BORDER}`,
+          background: "transparent",
+          fontFamily: SANS, fontSize: 12, color: TEXT_SEC, lineHeight: 1.5,
+          display: "flex", alignItems: "flex-start", gap: 8,
+          marginBottom: 4,
+        }}>
+          <Calendar size={14} strokeWidth={2} aria-hidden style={{ flexShrink: 0, marginTop: 1, color: TEXT_TER }} />
+          <span>Will be added as Unscheduled. Set the schedule later.</span>
+        </div>
+
+        {error && (
+          <div style={{
+            marginTop: 12, padding: "9px 12px", borderRadius: 9,
+            background: `rgba(var(--nura-danger-rgb),0.08)`,
+            border: `0.5px solid rgba(var(--nura-danger-rgb),0.3)`,
+            color: RED, fontFamily: SANS, fontSize: 12,
+          }}>{error}</div>
+        )}
+
+        <button
+          type="button"
+          onClick={handleSubmit}
+          disabled={submitting}
+          onMouseEnter={(e) => { if (!submitting) e.currentTarget.style.background = SAGE_HOV; }}
+          onMouseLeave={(e) => { if (!submitting) e.currentTarget.style.background = SAGE; }}
+          style={{
+            display: "block", width: "100%", marginTop: 18,
+            padding: "13px 16px", borderRadius: 11, border: "none",
+            background: submitting ? `rgba(var(--nura-sage-rgb),0.4)` : SAGE,
+            color: SAGE_ON, fontFamily: SANS, fontSize: 14, fontWeight: 500,
+            cursor: submitting ? "not-allowed" : "pointer",
+            transition: "background 200ms",
+          }}
+        >
+          {submitting ? "Adding…" : "Add to my stack"}
+        </button>
+
+        <button
+          type="button"
+          onClick={onEditDetails}
+          disabled={submitting}
+          style={{
+            display: "block", margin: "14px auto 0",
+            background: "none", border: "none", padding: 6,
+            fontFamily: SANS, fontSize: 13, color: SAGE_TEXT,
+            cursor: submitting ? "not-allowed" : "pointer",
+            textDecoration: "underline",
+          }}
+        >
+          Edit details before saving
+        </button>
+      </div>
+    </FlowModal>
+  );
+}
+
+// ── Not found / fallback ─────────────────────────────────────────────────────
+function BarcodeNotFoundScreen({
+  upc, capturedFrame, onBack, onCancel, onReadLabel, onAddManual,
+}: {
+  upc: string;
+  capturedFrame: string | null;
+  onBack: () => void;
+  onCancel: () => void;
+  onReadLabel: () => void;
+  onAddManual: () => void;
+}) {
+  void capturedFrame;
+  return (
+    <FlowModal onClose={onCancel} ariaLabel="Product not found">
+      <FlowHeaderWithBack title="Not found" onBack={onBack} />
+      <div style={{ padding: "8px 22px 24px" }}>
+        <div style={{
+          padding: "18px 16px 16px",
+          borderRadius: 14,
+          background: SURFACE,
+          border: `0.5px solid ${BORDER}`,
+          marginBottom: 18,
+        }}>
+          <div style={{
+            fontFamily: SERIF, fontWeight: 500, color: TEXT,
+            fontSize: 20, lineHeight: 1.25, letterSpacing: "-0.2px",
+            marginBottom: 6,
+          }}>
+            Couldn&apos;t find this product.
+          </div>
+          <p style={{
+            fontFamily: SANS, fontSize: 13, color: TEXT_SEC, lineHeight: 1.55,
+            margin: "0 0 12px",
+          }}>
+            We didn&apos;t find this barcode in our supplement database, but we can read the label instead.
+          </p>
+          <div style={{
+            fontFamily: "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace",
+            fontSize: 11,
+            color: `rgba(var(--nura-fg-rgb), 0.45)`,
+            letterSpacing: "0.02em",
+          }}>
+            UPC: {formatUpc(upc)}
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={onReadLabel}
+          onMouseEnter={(e) => { e.currentTarget.style.background = SAGE_HOV; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = SAGE; }}
+          style={{
+            display: "block", width: "100%",
+            padding: "13px 16px", borderRadius: 11, border: "none",
+            background: SAGE, color: SAGE_ON,
+            fontFamily: SANS, fontSize: 14, fontWeight: 500,
+            cursor: "pointer", transition: "background 200ms",
+          }}
+        >
+          Read the label
+        </button>
+
+        <button
+          type="button"
+          onClick={onAddManual}
+          style={{
+            display: "block", margin: "14px auto 0",
+            background: "none", border: "none", padding: 6,
+            fontFamily: SANS, fontSize: 13, color: TEXT_SEC,
+            cursor: "pointer",
+            textDecoration: "underline",
+          }}
+        >
+          Add manually
+        </button>
+      </div>
+    </FlowModal>
   );
 }
