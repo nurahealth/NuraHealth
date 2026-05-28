@@ -2,7 +2,7 @@
 
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowLeft, Calendar, Camera, Check, Edit3, Flame, ScanLine, Sparkles } from "lucide-react";
+import { ArrowLeft, Calendar, Camera, Check, Edit3, Eye, EyeOff, Flame, ScanLine, Sparkles } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import type { User } from "@supabase/supabase-js";
 import NuraPageShell from "@/components/NuraPageShell";
@@ -24,6 +24,8 @@ const SAGE_ON = "var(--nura-bg)";
 const RED = "var(--nura-danger)";
 const SANS = "'Inter', system-ui, sans-serif";
 const SERIF = "'DM Serif Display', Georgia, serif";
+
+const SHOW_EMPTY_SLOTS_KEY = "nura.schedule.showEmptySlots";
 
 // ── Labels ────────────────────────────────────────────────────────────────────
 const DAY_LABEL: Record<Day, string> = {
@@ -130,6 +132,29 @@ function SupplementsPageInner() {
   const barcodeInputRef = useRef<HTMLInputElement>(null);
   const [scheduleFadeKey, setScheduleFadeKey] = useState(0);
   const [viewFadeKey, setViewFadeKey] = useState(0);
+  const [showEmptySlots, setShowEmptySlots] = useState(false);
+
+  // Load persisted toggle state (SSR-safe: only after mount).
+  useEffect(() => {
+    try {
+      const stored = window.localStorage.getItem(SHOW_EMPTY_SLOTS_KEY);
+      if (stored === "1") setShowEmptySlots(true);
+    } catch {
+      // ignore (private mode, etc.)
+    }
+  }, []);
+
+  const toggleShowEmptySlots = useCallback(() => {
+    setShowEmptySlots((prev) => {
+      const next = !prev;
+      try {
+        window.localStorage.setItem(SHOW_EMPTY_SLOTS_KEY, next ? "1" : "0");
+      } catch {
+        // ignore
+      }
+      return next;
+    });
+  }, []);
 
   // Per-day check-off state — Set of `${supplementId}|${mealSlot ?? ""}`
   const [logSet, setLogSet] = useState<Set<string>>(new Set());
@@ -601,11 +626,22 @@ function SupplementsPageInner() {
 
           {scheduledAny ? (
             <div key={scheduleFadeKey} style={{ animation: "nura-fade-in 150ms ease both" }}>
-              {ALL_MEALS.map((meal) => {
-                const items = supplements.filter((s) =>
-                  isSupplementScheduledFor(s, selectedDay, meal)
-                );
-                return (
+              <ShowEmptySlotsToggle on={showEmptySlots} onClick={toggleShowEmptySlots} />
+              {(() => {
+                const mealRows = ALL_MEALS.map((meal) => ({
+                  meal,
+                  items: supplements.filter((s) =>
+                    isSupplementScheduledFor(s, selectedDay, meal)
+                  ),
+                }));
+                const visibleRows = showEmptySlots
+                  ? mealRows
+                  : mealRows.filter((r) => r.items.length > 0);
+
+                if (visibleRows.length === 0) {
+                  return <DayEmpty day={selectedDay} />;
+                }
+                return visibleRows.map(({ meal, items }) => (
                   <MealSection
                     key={meal}
                     meal={meal}
@@ -615,8 +651,8 @@ function SupplementsPageInner() {
                     onToggle={(suppId) => toggleLog(suppId, meal)}
                     onEdit={(s) => setModalState({ mode: "edit", supplement: s })}
                   />
-                );
-              })}
+                ));
+              })()}
             </div>
           ) : (
             <ScheduleEmpty
@@ -893,6 +929,45 @@ function ScheduleTag({ supplement }: { supplement: Supplement }) {
 }
 
 // ── Schedule view ─────────────────────────────────────────────────────────────
+function ShowEmptySlotsToggle({ on, onClick }: { on: boolean; onClick: () => void }) {
+  return (
+    <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 12 }}>
+      <button
+        type="button"
+        onClick={onClick}
+        aria-pressed={on}
+        onMouseEnter={(e) => { e.currentTarget.style.color = on ? SAGE_HOV : TEXT_SEC; }}
+        onMouseLeave={(e) => { e.currentTarget.style.color = on ? SAGE : TEXT_TER; }}
+        style={{
+          display: "inline-flex", alignItems: "center", gap: 6,
+          padding: "5px 10px", borderRadius: 9999, border: "none",
+          background: "transparent",
+          color: on ? SAGE : TEXT_TER,
+          fontFamily: SANS, fontSize: 12, fontWeight: 500,
+          cursor: "pointer", transition: "color 160ms",
+        }}
+      >
+        {on
+          ? <Eye size={14} strokeWidth={1.8} aria-hidden />
+          : <EyeOff size={14} strokeWidth={1.8} aria-hidden />}
+        Show empty slots
+      </button>
+    </div>
+  );
+}
+
+function DayEmpty({ day }: { day: Day }) {
+  return (
+    <div style={{
+      padding: "32px 20px", textAlign: "center",
+      fontFamily: SANS, fontSize: 13, color: TEXT_TER, lineHeight: 1.5,
+      animation: "nura-fade-in 150ms ease both",
+    }}>
+      Nothing scheduled for {DAY_LABEL[day]}.
+    </div>
+  );
+}
+
 function MealSection({
   meal, items, interactive, logSet, onToggle, onEdit,
 }: {
