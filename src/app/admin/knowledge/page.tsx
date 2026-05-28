@@ -669,6 +669,71 @@ function UploadModal({ userId, token, onClose, onSuccess }: {
   );
 }
 
+// ─── Confirm delete modal ─────────────────────────────────────────────────────
+
+function ConfirmDeleteModal({ sourceTitle, busy, errorMsg, onCancel, onConfirm }: {
+  sourceTitle: string;
+  busy: boolean;
+  errorMsg: string;
+  onCancel: () => void;
+  onConfirm: () => void;
+}) {
+  return (
+    <div
+      onClick={() => !busy && onCancel()}
+      style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.72)", zIndex: 310, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)", padding: "0 16px" }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{ width: "100%", maxWidth: 380, background: BG, borderRadius: 20, border: `0.5px solid ${BORDER_STRONG}`, padding: 22 }}
+      >
+        <div style={{ fontFamily: SERIF, fontSize: 22, fontWeight: 500, color: TEXT, marginBottom: 10 }}>
+          Delete source?
+        </div>
+        <div style={{ fontFamily: SANS, fontSize: 13.5, color: TEXT_SEC, lineHeight: 1.55, marginBottom: errorMsg ? 12 : 20 }}>
+          Delete <span style={{ color: TEXT, fontWeight: 500 }}>&ldquo;{sourceTitle}&rdquo;</span>? This will also remove its chunks and embeddings. This cannot be undone.
+        </div>
+
+        {errorMsg && (
+          <div style={{ marginBottom: 14, padding: "9px 12px", background: "rgba(255,76,92,0.08)", border: `0.5px solid rgba(255,76,92,0.4)`, borderRadius: 10 }}>
+            <Eyebrow color={DANGER} size={10}>{errorMsg}</Eyebrow>
+          </div>
+        )}
+
+        <div style={{ display: "flex", gap: 8 }}>
+          <button
+            onClick={onCancel}
+            disabled={busy}
+            style={{
+              flex: 1, padding: 12, background: "transparent",
+              border: `0.5px solid ${BORDER}`, borderRadius: 12,
+              fontFamily: SANS, fontSize: 12, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase",
+              color: busy ? TEXT_TER : TEXT, cursor: busy ? "not-allowed" : "pointer",
+              transition: "background 180ms",
+            }}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={busy}
+            style={{
+              flex: 1, padding: 12,
+              background: busy ? "rgba(255,76,92,0.30)" : DANGER,
+              border: "none", borderRadius: 12,
+              fontFamily: SANS, fontSize: 12, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase",
+              color: "#fff", cursor: busy ? "not-allowed" : "pointer",
+              transition: "background 180ms",
+            }}
+          >
+            {busy ? "Deleting..." : "Delete"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function AdminKnowledgePage() {
@@ -713,6 +778,8 @@ export default function AdminKnowledgePage() {
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<{ id: string; title: string } | null>(null);
+  const [deleteError, setDeleteError] = useState("");
   const [testQuery, setTestQuery] = useState("");
   const [testResults, setTestResults] = useState<SearchResult[] | null>(null);
   const [testLoading, setTestLoading] = useState(false);
@@ -746,15 +813,24 @@ export default function AdminKnowledgePage() {
 
   const handleDelete = async (id: string) => {
     setDeletingId(id);
+    setDeleteError("");
     try {
-      await supabase.from("knowledge_chunks").delete().eq("source_id", id);
-      await supabase.from("knowledge_sources").delete().eq("id", id);
-      setSources((prev) => prev.filter((s) => s.id !== id));
-    } catch {
-      // silent
+      const res = await fetch(`/api/admin/knowledge/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) {
+        let msg = "Delete failed";
+        try { const b = await res.json() as { error?: string }; if (b.error) msg = b.error; } catch {}
+        throw new Error(msg);
+      }
+      setConfirmDelete(null);
+      setMenuOpenId(null);
+      await loadSources();
+    } catch (e) {
+      setDeleteError(e instanceof Error ? e.message : "Delete failed");
     } finally {
       setDeletingId(null);
-      setMenuOpenId(null);
     }
   };
 
@@ -901,6 +977,15 @@ export default function AdminKnowledgePage() {
           ))}
         </div>
 
+        {deleteError && (
+          <div style={{ marginBottom: 12, padding: "10px 12px", background: "rgba(255,76,92,0.08)", border: `0.5px solid rgba(255,76,92,0.4)`, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+            <Eyebrow color={DANGER} size={10}>{deleteError}</Eyebrow>
+            <button onClick={() => setDeleteError("")} style={{ background: "none", border: "none", cursor: "pointer", color: TEXT_SEC, padding: 0, display: "flex", alignItems: "center" }} aria-label="Dismiss">
+              <X size={12} />
+            </button>
+          </div>
+        )}
+
         {loading ? (
           <div style={{ fontFamily: SANS, fontSize: 10, fontWeight: 600, color: TEXT_TER, letterSpacing: "0.14em", textTransform: "uppercase", textAlign: "center", padding: "40px 0" }}>Loading...</div>
         ) : filtered.length === 0 ? (
@@ -961,12 +1046,11 @@ export default function AdminKnowledgePage() {
                       {menuOpen && (
                         <div style={{ position: "absolute", right: 0, top: 32, background: SURFACE_ELEV, border: `0.5px solid ${BORDER}`, borderRadius: 12, padding: "4px 0", zIndex: 60, minWidth: 140, boxShadow: "0 8px 24px rgba(0,0,0,0.35)", backdropFilter: "blur(12px)" }} onClick={(e) => e.stopPropagation()}>
                           <button
-                            onClick={() => handleDelete(s.id)}
-                            disabled={deletingId === s.id}
-                            style={{ width: "100%", padding: "9px 14px", background: "none", border: "none", cursor: "pointer", fontFamily: SANS, fontSize: 13, color: DANGER, textAlign: "left", display: "flex", alignItems: "center", gap: 8, opacity: deletingId === s.id ? 0.5 : 1 }}
+                            onClick={() => { setConfirmDelete({ id: s.id, title: s.title }); setMenuOpenId(null); }}
+                            style={{ width: "100%", padding: "9px 14px", background: "none", border: "none", cursor: "pointer", fontFamily: SANS, fontSize: 13, color: DANGER, textAlign: "left", display: "flex", alignItems: "center", gap: 8 }}
                           >
                             <Trash2 size={13} />
-                            {deletingId === s.id ? "Deleting..." : "Delete"}
+                            Delete
                           </button>
                         </div>
                       )}
@@ -1036,6 +1120,19 @@ export default function AdminKnowledgePage() {
           token={token}
           onClose={() => setShowUploadModal(false)}
           onSuccess={loadSources}
+        />
+      )}
+
+      {confirmDelete && (
+        <ConfirmDeleteModal
+          sourceTitle={confirmDelete.title}
+          busy={deletingId === confirmDelete.id}
+          errorMsg={deleteError}
+          onCancel={() => {
+            if (deletingId === confirmDelete.id) return;
+            setConfirmDelete(null);
+          }}
+          onConfirm={() => handleDelete(confirmDelete.id)}
         />
       )}
     </div>

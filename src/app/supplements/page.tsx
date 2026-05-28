@@ -2,6 +2,7 @@
 
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { Calendar, Camera, Edit3, Flame, Sparkles } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import type { User } from "@supabase/supabase-js";
 import NuraPageShell from "@/components/NuraPageShell";
@@ -1061,7 +1062,13 @@ function StreakCard({ stats }: { stats: Stats | null }) {
         background: "radial-gradient(circle, rgba(122, 154, 130, 0.32) 0%, rgba(122, 154, 130, 0) 70%)",
         pointerEvents: "none",
       }} />
-      <div style={{ fontSize: 32, lineHeight: 1, flexShrink: 0, position: "relative" }}>🔥</div>
+      <div aria-hidden style={{
+        display: "flex", alignItems: "center", justifyContent: "center",
+        flexShrink: 0, position: "relative",
+        color: SAGE_BRIGHT,
+      }}>
+        <Flame size={28} strokeWidth={1.75} fill={SAGE_BRIGHT} aria-hidden />
+      </div>
       <div style={{ flex: 1, minWidth: 0, position: "relative" }}>
         <div style={{
           fontFamily: SANS, fontSize: 22, fontWeight: 600, color: TEXT,
@@ -1720,28 +1727,53 @@ function Switch({
 const SAGE_BORDER_TINT = "rgba(122, 154, 130, 0.3)";
 const SAGE_BG_TINT = "rgba(var(--nura-sage-rgb), 0.12)";
 
-function FlowBackdrop({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
+function FlowModal({
+  children, onClose, ariaLabel,
+}: {
+  children: React.ReactNode;
+  onClose: () => void;
+  ariaLabel?: string;
+}) {
   return (
     <div
       onClick={onClose}
       style={{
         position: "fixed", inset: 0, zIndex: 50,
-        background: "rgba(0,0,0,0.70)",
-        display: "flex", alignItems: "flex-end", justifyContent: "center",
-        animation: "nura-modal-in 200ms ease",
+        background: "rgba(0,0,0,0.65)",
+        backdropFilter: "blur(8px)",
+        WebkitBackdropFilter: "blur(8px)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        padding: 16,
+        animation: "nura-modal-in 200ms ease-out",
       }}
     >
       <style>{`
-        @keyframes nura-sheet-up { from { transform: translateY(24px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        .nura-bottom-sheet { width: 100%; max-width: 100%; margin-left: auto; margin-right: auto; }
-        @media (min-width: 640px) { .nura-bottom-sheet { max-width: 480px; } }
+        @keyframes nura-modal-card-in { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        .nura-flow-modal-card { width: 100%; max-width: 420px; margin-left: auto; margin-right: auto; }
       `}</style>
-      {children}
+      <div
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-label={ariaLabel}
+        className="nura-flow-modal-card"
+        style={{
+          background: "var(--nura-bg)",
+          border: `0.5px solid ${BORDER}`,
+          borderRadius: 18,
+          maxHeight: "calc(100dvh - 32px)",
+          overflowY: "auto",
+          animation: "nura-modal-card-in 200ms ease-out both",
+          boxShadow: "0 24px 60px rgba(0,0,0,0.40)",
+        }}
+      >
+        {children}
+      </div>
     </div>
   );
 }
 
-// ── Choice sheet ─────────────────────────────────────────────────────────────
+// ── Choice modal ─────────────────────────────────────────────────────────────
 function AddChoiceSheet({
   onTakePhoto, onAddManual, onCancel,
 }: {
@@ -1750,28 +1782,8 @@ function AddChoiceSheet({
   onCancel: () => void;
 }) {
   return (
-    <FlowBackdrop onClose={onCancel}>
-      <div
-        onClick={(e) => e.stopPropagation()}
-        role="dialog"
-        aria-modal="true"
-        className="nura-bottom-sheet"
-        style={{
-          background: "var(--nura-bg)",
-          border: `0.5px solid ${BORDER}`,
-          borderRadius: "20px 20px 0 0",
-          padding: "20px 22px 28px",
-          marginBottom: "max(0px, env(safe-area-inset-bottom))",
-          animation: "nura-sheet-up 220ms ease both",
-          boxShadow: "0 -16px 40px rgba(0,0,0,0.30)",
-        }}
-      >
-        <div aria-hidden style={{
-          width: 36, height: 4, borderRadius: 9999,
-          background: TEXT_TER, opacity: 0.5,
-          margin: "0 auto 18px",
-        }} />
-
+    <FlowModal onClose={onCancel} ariaLabel="Add a supplement">
+      <div style={{ padding: "24px 22px 22px" }}>
         <h2 style={{
           fontFamily: SERIF, fontWeight: 500, color: TEXT,
           margin: "0 0 4px", fontSize: 22, lineHeight: 1.2, letterSpacing: "-0.2px",
@@ -1787,13 +1799,13 @@ function AddChoiceSheet({
 
         <ChoiceCard
           featured
-          icon="📸"
+          icon={<Camera size={22} strokeWidth={2} aria-hidden />}
           title="Take a photo"
           subtitle="We'll read the label for you"
           onClick={onTakePhoto}
         />
         <ChoiceCard
-          icon="✏️"
+          icon={<Edit3 size={22} strokeWidth={2} aria-hidden />}
           title="Add manually"
           subtitle="Fill in the details yourself"
           onClick={onAddManual}
@@ -1813,7 +1825,7 @@ function AddChoiceSheet({
           Cancel
         </button>
       </div>
-    </FlowBackdrop>
+    </FlowModal>
   );
 }
 
@@ -1821,7 +1833,7 @@ function ChoiceCard({
   featured, icon, title, subtitle, onClick,
 }: {
   featured?: boolean;
-  icon: string;
+  icon: React.ReactNode;
   title: string;
   subtitle: string;
   onClick: () => void;
@@ -1848,7 +1860,11 @@ function ChoiceCard({
         cursor: "pointer", transition: "background 160ms, border-color 160ms",
       }}
     >
-      <span aria-hidden style={{ fontSize: 26, lineHeight: 1, flexShrink: 0 }}>{icon}</span>
+      <span aria-hidden style={{
+        display: "inline-flex", alignItems: "center", justifyContent: "center",
+        flexShrink: 0, width: 28, height: 28,
+        color: featured ? SAGE_ON : SAGE,
+      }}>{icon}</span>
       <span style={{ flex: 1, minWidth: 0 }}>
         <span style={{
           display: "block",
@@ -1870,34 +1886,23 @@ function ChoiceCard({
   );
 }
 
-// ── Scanning screen ──────────────────────────────────────────────────────────
+// ── Scanning modal ───────────────────────────────────────────────────────────
 function ScanningScreen({
   photoDataUrl, onCancel,
 }: { photoDataUrl: string; onCancel: () => void }) {
   return (
-    <div
-      style={{
-        position: "fixed", inset: 0, zIndex: 50,
-        background: "var(--nura-bg)",
-        display: "flex", flexDirection: "column",
-        animation: "nura-modal-in 180ms ease",
-        paddingTop: "max(20px, env(safe-area-inset-top))",
-        paddingBottom: "max(20px, env(safe-area-inset-bottom))",
-      }}
-    >
+    <FlowModal onClose={onCancel} ariaLabel="Scanning label">
       <FlowHeader title="Scan label" onCancel={onCancel} />
-
       <div style={{
-        flex: 1, display: "flex", flexDirection: "column", alignItems: "center",
-        justifyContent: "flex-start", padding: "8px 20px 20px", overflowY: "auto",
+        display: "flex", flexDirection: "column", alignItems: "center",
+        padding: "8px 22px 24px",
       }}>
         {photoDataUrl && (
           <div style={{
-            width: "100%", maxWidth: 360, aspectRatio: "4 / 5",
-            borderRadius: 18, overflow: "hidden",
+            width: "100%", maxWidth: 280, aspectRatio: "4 / 5",
+            borderRadius: 16, overflow: "hidden",
             background: SURFACE, border: `0.5px solid ${BORDER}`,
-            marginBottom: 32,
-            position: "relative",
+            marginBottom: 24,
           }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
@@ -1928,7 +1933,7 @@ function ScanningScreen({
           Usually 2–4 seconds
         </div>
       </div>
-    </div>
+    </FlowModal>
   );
 }
 
@@ -1964,22 +1969,15 @@ function ConfirmScanScreen({
   };
 
   return (
-    <div
-      style={{
-        position: "fixed", inset: 0, zIndex: 50,
-        background: "var(--nura-bg)",
-        display: "flex", flexDirection: "column",
-        animation: "nura-modal-in 200ms ease",
-        paddingTop: "max(20px, env(safe-area-inset-top))",
-        paddingBottom: "max(20px, env(safe-area-inset-bottom))",
-      }}
+    <FlowModal
+      onClose={submitting ? () => undefined : onCancel}
+      ariaLabel="Confirm scanned details"
     >
       <FlowHeader title="Confirm details" onCancel={submitting ? undefined : onCancel} />
 
       <div style={{
-        flex: 1, overflowY: "auto",
-        padding: "8px 20px 24px",
-        maxWidth: 560, width: "100%", margin: "0 auto", boxSizing: "border-box",
+        padding: "8px 22px 24px",
+        width: "100%", boxSizing: "border-box",
       }}>
         {photoDataUrl && (
           <div style={{
@@ -2003,7 +2001,8 @@ function ConfirmScanScreen({
               fontFamily: SANS, fontSize: 10, fontWeight: 600, color: SAGE_TEXT,
               whiteSpace: "nowrap",
             }}>
-              ✨ Read
+              <Sparkles size={11} strokeWidth={2} aria-hidden />
+              Read
             </span>
           </div>
         )}
@@ -2045,8 +2044,10 @@ function ConfirmScanScreen({
           border: `1px dashed ${BORDER}`,
           background: "transparent",
           fontFamily: SANS, fontSize: 12, color: TEXT_SEC, lineHeight: 1.5,
+          display: "flex", alignItems: "flex-start", gap: 8,
         }}>
-          📅 Will be added as Unscheduled. Set the schedule on the next screen or later.
+          <Calendar size={14} strokeWidth={2} aria-hidden style={{ flexShrink: 0, marginTop: 1, color: TEXT_TER }} />
+          <span>Will be added as Unscheduled. Set the schedule on the next screen or later.</span>
         </div>
 
         {error && (
@@ -2091,7 +2092,7 @@ function ConfirmScanScreen({
           Retake photo
         </button>
       </div>
-    </div>
+    </FlowModal>
   );
 }
 
@@ -2135,7 +2136,8 @@ function ScannedField({
             letterSpacing: "0.06em",
             color: SAGE_TEXT, textTransform: "uppercase",
           }}>
-            ✨ From label
+            <Sparkles size={10} strokeWidth={2} aria-hidden />
+            From label
           </span>
         )}
       </div>
@@ -2162,7 +2164,7 @@ function ScannedField({
   );
 }
 
-// ── Scan error screen ────────────────────────────────────────────────────────
+// ── Scan error modal ─────────────────────────────────────────────────────────
 function ScanErrorScreen({
   photoDataUrl, onRetake, onAddManual, onCancel,
 }: {
@@ -2172,21 +2174,12 @@ function ScanErrorScreen({
   onCancel: () => void;
 }) {
   return (
-    <div
-      style={{
-        position: "fixed", inset: 0, zIndex: 50,
-        background: "var(--nura-bg)",
-        display: "flex", flexDirection: "column",
-        animation: "nura-modal-in 200ms ease",
-        paddingTop: "max(20px, env(safe-area-inset-top))",
-        paddingBottom: "max(20px, env(safe-area-inset-bottom))",
-      }}
-    >
+    <FlowModal onClose={onCancel} ariaLabel="Scan failed">
       <FlowHeader title="Scan label" onCancel={onCancel} />
 
       <div style={{
-        flex: 1, display: "flex", flexDirection: "column", alignItems: "center",
-        justifyContent: "center", padding: "20px 28px",
+        display: "flex", flexDirection: "column", alignItems: "center",
+        justifyContent: "center", padding: "12px 28px 28px",
         textAlign: "center",
       }}>
         {photoDataUrl && (
@@ -2250,7 +2243,7 @@ function ScanErrorScreen({
           Add manually
         </button>
       </div>
-    </div>
+    </FlowModal>
   );
 }
 
