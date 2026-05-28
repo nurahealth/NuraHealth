@@ -715,7 +715,7 @@ function ConfirmDeleteModal({ sourceTitle, busy, errorMsg, onCancel, onConfirm }
             Cancel
           </button>
           <button
-            onClick={onConfirm}
+            onClick={() => { alert('Step 3: Confirm Delete clicked'); onConfirm(); }}
             disabled={busy}
             style={{
               flex: 1, padding: 12,
@@ -812,13 +812,16 @@ export default function AdminKnowledgePage() {
   }, [sources, loadSources]);
 
   const handleDelete = async (id: string) => {
+    alert('Step 4: handleDelete fired with id: ' + id);
     setDeletingId(id);
     setDeleteError("");
     try {
+      alert('Step 5: About to fetch DELETE endpoint');
       const res = await fetch(`/api/admin/knowledge/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
+      alert('Step 6: Got response with status ' + res.status);
       if (!res.ok) {
         let msg = "Delete failed";
         try { const b = await res.json() as { error?: string }; if (b.error) msg = b.error; } catch {}
@@ -828,6 +831,7 @@ export default function AdminKnowledgePage() {
       setMenuOpenId(null);
       await loadSources();
     } catch (e) {
+      alert('Step 7 ERROR: ' + (e instanceof Error ? e.message : String(e)));
       setDeleteError(e instanceof Error ? e.message : "Delete failed");
     } finally {
       setDeletingId(null);
@@ -1038,7 +1042,7 @@ export default function AdminKnowledgePage() {
 
                     <div style={{ position: "relative", flexShrink: 0 }}>
                       <button
-                        onClick={(e) => { e.stopPropagation(); setMenuOpenId(menuOpen ? null : s.id); }}
+                        onClick={(e) => { alert('Step 1: Chevron clicked'); e.stopPropagation(); setMenuOpenId(menuOpen ? null : s.id); }}
                         style={{ width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center", background: "none", border: "none", cursor: "pointer", color: TEXT_TER, borderRadius: 6, padding: 0 }}
                       >
                         <ChevronDown size={14} />
@@ -1046,7 +1050,7 @@ export default function AdminKnowledgePage() {
                       {menuOpen && (
                         <div style={{ position: "absolute", right: 0, top: 32, background: SURFACE_ELEV, border: `0.5px solid ${BORDER}`, borderRadius: 12, padding: "4px 0", zIndex: 60, minWidth: 140, boxShadow: "0 8px 24px rgba(0,0,0,0.35)", backdropFilter: "blur(12px)" }} onClick={(e) => e.stopPropagation()}>
                           <button
-                            onClick={() => { setConfirmDelete({ id: s.id, title: s.title }); setMenuOpenId(null); }}
+                            onClick={() => { alert('Step 2: Delete menu item clicked'); setConfirmDelete({ id: s.id, title: s.title }); setMenuOpenId(null); }}
                             style={{ width: "100%", padding: "9px 14px", background: "none", border: "none", cursor: "pointer", fontFamily: SANS, fontSize: 13, color: DANGER, textAlign: "left", display: "flex", alignItems: "center", gap: 8 }}
                           >
                             <Trash2 size={13} />

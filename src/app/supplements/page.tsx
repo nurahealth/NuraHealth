@@ -70,6 +70,7 @@ type AddFlow =
   | { mode: "choice" }
   | { mode: "barcode-scanning" }
   | { mode: "barcode-permission-denied" }
+  | { mode: "barcode-camera-failed" }
   | { mode: "barcode-looking-up"; upc: string; capturedFrame: string | null }
   | { mode: "barcode-match"; lookup: BarcodeLookup; capturedFrame: string | null }
   | { mode: "barcode-not-found"; upc: string; capturedFrame: string | null }
@@ -650,6 +651,7 @@ function SupplementsPageInner() {
           onCancel={closeFlow}
           onDetected={lookupBarcode}
           onPermissionDenied={() => setAddFlow({ mode: "barcode-permission-denied" })}
+          onCameraFailed={() => setAddFlow({ mode: "barcode-camera-failed" })}
         />
       )}
       {addFlow.mode === "barcode-looking-up" && (
@@ -657,6 +659,13 @@ function SupplementsPageInner() {
       )}
       {addFlow.mode === "barcode-permission-denied" && (
         <BarcodePermissionDeniedScreen
+          onUsePhoto={() => { setAddFlow({ mode: "closed" }); triggerPhotoPicker(); }}
+          onAddManual={chooseManual}
+          onCancel={closeFlow}
+        />
+      )}
+      {addFlow.mode === "barcode-camera-failed" && (
+        <BarcodeCameraFailedScreen
           onUsePhoto={() => { setAddFlow({ mode: "closed" }); triggerPhotoPicker(); }}
           onAddManual={chooseManual}
           onCancel={closeFlow}
@@ -2526,10 +2535,12 @@ function BarcodeViewfinder() {
           top: 0 !important; left: 0 !important;
           width: 100% !important; height: 100% !important;
           object-fit: cover !important;
+          z-index: 1;
+          background: transparent;
         }
         #nura-barcode-reader > div { width: 100% !important; height: 100% !important; padding: 0 !important; }
       `}</style>
-      <div aria-hidden style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
+      <div aria-hidden style={{ position: "absolute", inset: 0, pointerEvents: "none", zIndex: 2 }}>
         <CornerMarker position="tl" />
         <CornerMarker position="tr" />
         <CornerMarker position="bl" />
@@ -2554,12 +2565,13 @@ function BarcodeViewfinder() {
 
 // ── Barcode scan modal (camera + html5-qrcode) ──────────────────────────────
 function BarcodeScanScreen({
-  onBack, onCancel, onDetected, onPermissionDenied,
+  onBack, onCancel, onDetected, onPermissionDenied, onCameraFailed,
 }: {
   onBack: () => void;
   onCancel: () => void;
   onDetected: (upc: string, capturedFrame: string | null) => void;
   onPermissionDenied: () => void;
+  onCameraFailed: () => void;
 }) {
   const readerRef = useRef<HTMLDivElement>(null);
   const handledRef = useRef(false);
@@ -2567,6 +2579,59 @@ function BarcodeScanScreen({
   useEffect(() => {
     let cancelled = false;
     let qrInstance: { stop: () => Promise<void>; clear?: () => void } | null = null;
+    let observer: MutationObserver | null = null;
+    let readyTimer: ReturnType<typeof setTimeout> | null = null;
+    let attachedVideo: HTMLVideoElement | null = null;
+
+    const attachIosFixes = (video: HTMLVideoElement) => {
+      if (attachedVideo === video) return;
+      attachedVideo = video;
+
+      // iOS Safari refuses to render inline video without these. Set BEFORE play().
+      video.setAttribute("playsinline", "true");
+      video.setAttribute("webkit-playsinline", "true");
+      video.setAttribute("autoplay", "true");
+      video.setAttribute("muted", "true");
+      video.playsInline = true;
+      video.muted = true;
+      video.autoplay = true;
+      video.style.zIndex = "1";
+      // Retry play() in case html5-qrcode's initial play was rejected by autoplay policy.
+      video.play().catch(() => {});
+
+      const clearReadyTimer = () => {
+        if (readyTimer) { clearTimeout(readyTimer); readyTimer = null; }
+        video.removeEventListener("loadeddata", clearReadyTimer);
+        video.removeEventListener("playing", clearReadyTimer);
+      };
+      video.addEventListener("loadeddata", clearReadyTimer);
+      video.addEventListener("playing", clearReadyTimer);
+
+      readyTimer = setTimeout(() => {
+        if (cancelled) return;
+        // HAVE_CURRENT_DATA = 2. If we haven't reached that in 5s, the stream isn't rendering.
+        if (video.readyState < 2) {
+          onCameraFailed();
+        }
+      }, 5000);
+    };
+
+    const watchForVideo = (container: HTMLElement) => {
+      const existing = container.querySelector("video");
+      if (existing instanceof HTMLVideoElement) {
+        attachIosFixes(existing);
+        return;
+      }
+      observer = new MutationObserver(() => {
+        const v = container.querySelector("video");
+        if (v instanceof HTMLVideoElement) {
+          attachIosFixes(v);
+          observer?.disconnect();
+          observer = null;
+        }
+      });
+      observer.observe(container, { childList: true, subtree: true });
+    };
 
     const start = async () => {
       try {
@@ -2585,6 +2650,9 @@ function BarcodeScanScreen({
           verbose: false,
         });
         qrInstance = instance;
+
+        if (readerRef.current) watchForVideo(readerRef.current);
+
         await instance.start(
           { facingMode: "environment" },
           { fps: 10, aspectRatio: 0.75 },
@@ -2618,6 +2686,13 @@ function BarcodeScanScreen({
           },
           () => {}
         );
+
+        // start() resolved — html5-qrcode has inserted the video. Re-check in case the
+        // observer didn't fire (some browsers batch mutations).
+        if (!attachedVideo && readerRef.current) {
+          const v = readerRef.current.querySelector("video");
+          if (v instanceof HTMLVideoElement) attachIosFixes(v);
+        }
       } catch (err) {
         if (cancelled) return;
         console.error("[barcode] start failed:", err);
@@ -2629,12 +2704,14 @@ function BarcodeScanScreen({
 
     return () => {
       cancelled = true;
+      if (readyTimer) clearTimeout(readyTimer);
+      if (observer) observer.disconnect();
       if (qrInstance) {
         qrInstance.stop().catch(() => {});
         try { qrInstance.clear?.(); } catch {}
       }
     };
-  }, [onDetected, onPermissionDenied]);
+  }, [onDetected, onPermissionDenied, onCameraFailed]);
 
   return (
     <FlowModal onClose={onCancel} ariaLabel="Scan barcode">
@@ -2731,6 +2808,71 @@ function BarcodePermissionDeniedScreen({
           maxWidth: 320, margin: "0 0 22px",
         }}>
           Allow camera access in your browser settings, or use one of these instead.
+        </p>
+        <button
+          type="button"
+          onClick={onUsePhoto}
+          onMouseEnter={(e) => { e.currentTarget.style.background = SAGE_HOV; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = SAGE; }}
+          style={{
+            width: "100%", maxWidth: 320,
+            padding: "12px 16px", borderRadius: 11, border: "none",
+            background: SAGE, color: SAGE_ON,
+            fontFamily: SANS, fontSize: 14, fontWeight: 500,
+            cursor: "pointer", transition: "background 200ms",
+            marginBottom: 10,
+          }}
+        >
+          Take a photo instead
+        </button>
+        <button
+          type="button"
+          onClick={onAddManual}
+          style={{
+            width: "100%", maxWidth: 320,
+            padding: "12px 16px", borderRadius: 11,
+            background: "transparent",
+            border: `0.5px solid ${BORDER}`,
+            color: TEXT, fontFamily: SANS, fontSize: 14, fontWeight: 500,
+            cursor: "pointer",
+          }}
+        >
+          Add manually
+        </button>
+      </div>
+    </FlowModal>
+  );
+}
+
+// ── Camera failed to render (iOS playback failure, etc.) ─────────────────────
+function BarcodeCameraFailedScreen({
+  onUsePhoto, onAddManual, onCancel,
+}: {
+  onUsePhoto: () => void;
+  onAddManual: () => void;
+  onCancel: () => void;
+}) {
+  return (
+    <FlowModal onClose={onCancel} ariaLabel="Camera couldn't start">
+      <FlowHeader title="Scan barcode" onCancel={onCancel} />
+      <div style={{
+        padding: "12px 28px 26px",
+        display: "flex", flexDirection: "column", alignItems: "center",
+        textAlign: "center",
+      }}>
+        <h2 style={{
+          fontFamily: SERIF, fontWeight: 500, color: TEXT,
+          fontSize: "clamp(20px, 3vw, 24px)",
+          lineHeight: 1.3, letterSpacing: "-0.2px",
+          margin: "0 0 8px",
+        }}>
+          Camera couldn&apos;t start.
+        </h2>
+        <p style={{
+          fontFamily: SANS, fontSize: 14, color: TEXT_SEC, lineHeight: 1.55,
+          maxWidth: 320, margin: "0 0 22px",
+        }}>
+          Try refreshing, or use Take a photo / Add manually.
         </p>
         <button
           type="button"
