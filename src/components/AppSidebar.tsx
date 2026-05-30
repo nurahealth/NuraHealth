@@ -34,6 +34,7 @@ const Icons = {
   pill:     () => <I><path d="M10 4l10 10a4 4 0 0 1-5.66 5.66L4 9.66A4 4 0 0 1 9.66 4z"/><path d="M9 11l4 4"/></I>,
   watch:    () => <I><circle cx="12" cy="12" r="6"/><path d="M9 4l1-2h4l1 2M9 20l1 2h4l1-2"/></I>,
   bookmark: () => <I><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></I>,
+  flask:    () => <I><path d="M9 3h6M10 3v6l-4.5 9a1 1 0 0 0 .9 1.5h11.2a1 1 0 0 0 .9-1.5L14 9V3M7.5 14h9"/></I>,
   message:  () => <I><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8z"/></I>,
   chevron:  () => <I><path d="M6 9l6 6 6-6"/></I>,
   settings: () => <I><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.05a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.05c.282.668.93 1.108 1.65 1.11H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></I>,
@@ -59,7 +60,7 @@ function relativeTime(iso: string): string {
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface ChatSessionRow { id: string; title: string | null; updated_at: string }
-interface ProfileRow { full_name: string | null }
+interface ProfileRow { full_name: string | null; catalog_beta_enabled: boolean | null }
 interface SubRow { status: string | null }
 
 interface NavItem {
@@ -142,6 +143,7 @@ export default function AppSidebar() {
   const [user, setUser] = useState<User | null>(null);
   const [chats, setChats] = useState<ChatSessionRow[]>([]);
   const [chatsExpanded, setChatsExpanded] = useState(true);
+  const [catalogBeta, setCatalogBeta] = useState(false);
 
   // Load profile + recent chats whenever sidebar opens
   useEffect(() => {
@@ -158,7 +160,7 @@ export default function AppSidebar() {
       const baseName = meta.name ?? meta.full_name ?? "";
 
       const [{ data: prof }, { data: sub }, { data: sessions }] = await Promise.all([
-        supabase.from("profiles").select("full_name").eq("id", authUser.id).maybeSingle(),
+        supabase.from("profiles").select("full_name, catalog_beta_enabled").eq("id", authUser.id).maybeSingle(),
         supabase.from("subscriptions").select("status").eq("user_id", authUser.id).maybeSingle(),
         supabase.from("chat_sessions").select("id, title, updated_at").eq("user_id", authUser.id).order("updated_at", { ascending: false }).limit(5),
       ]);
@@ -171,6 +173,7 @@ export default function AppSidebar() {
         email,
         status: subRow?.status ?? null,
       });
+      setCatalogBeta(profRow?.catalog_beta_enabled === true);
       setChats((sessions as ChatSessionRow[] | null) ?? []);
     })();
 
@@ -296,6 +299,15 @@ export default function AppSidebar() {
               onClick={() => navigate(item.href)}
             />
           ))}
+
+          {/* Lab — beta-gated per profile.catalog_beta_enabled */}
+          {catalogBeta && (
+            <NavRow
+              item={{ key: "lab", label: "Lab", href: "/lab", icon: Icons.flask }}
+              active={pathname.startsWith("/lab")}
+              onClick={() => navigate("/lab")}
+            />
+          )}
         </nav>
 
         {/* DIVIDER */}
