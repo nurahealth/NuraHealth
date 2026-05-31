@@ -67,3 +67,11 @@ html, body {
 body {
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Respect the iPhone notch and home indicator when installed as a standalone PWA */
+@media (display-mode: standalone) {
+  body {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}

@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import AppSidebar from "@/components/AppSidebar";
@@ -6,6 +6,16 @@ import AppSidebar from "@/components/AppSidebar";
 export const metadata: Metadata = {
   title: "NŪRA — Your Personal Health OS",
   description: "Unfiltered AI wellness platform",
+  appleWebApp: {
+    capable: true,
+    title: "NŪRA",
+    statusBarStyle: "black-translucent",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#0a0b0a",
+  viewportFit: "cover",
 };
 
 // Pre-hydration script — sets data-theme before React renders to prevent FOUC.
@@ -25,6 +35,7 @@ export default function RootLayout({
     <html lang="en">
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
