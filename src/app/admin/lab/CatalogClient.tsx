@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { supabase } from "@/lib/supabase";
-import { Plus, X, Pencil, Trash2, RefreshCw, Shield } from "lucide-react";
+import { Plus, X, Pencil, Trash2, RefreshCw, Shield, ImagePlus, Loader2 } from "lucide-react";
 import Sidebar from "@/components/Sidebar";
 import NuraPlexus from "@/components/NuraPlexus";
 
@@ -41,6 +41,16 @@ export interface CatalogProduct {
   status: "draft" | "published";
   slug: string;
   created_at: string;
+  score: number | null;
+  lab_tested: boolean | null;
+  microplastics_present: boolean | null;
+  score_rationale: string | null;
+  shop_url: string | null;
+  affiliate_url: string | null;
+  price_cents: number | null;
+  currency: string | null;
+  image_url: string | null;
+  properties: Record<string, unknown> | null;
   catalog_categories: { id: string; name: string; slug: string; parent_id: string | null } | null;
 }
 
@@ -113,6 +123,22 @@ function StatusBadge({ status }: { status: Status }) {
   );
 }
 
+// ── Properties (key/value) helpers ──────────────────────────────────────────────
+type PropRow = { key: string; value: string };
+type Tri = "yes" | "no" | "unknown";
+
+function propsToRows(p: Record<string, unknown> | null | undefined): PropRow[] {
+  if (!p || typeof p !== "object" || Array.isArray(p)) return [];
+  return Object.entries(p).map(([key, value]) => ({
+    key,
+    value: value === null || value === undefined ? "" : typeof value === "string" ? value : String(value),
+  }));
+}
+
+function triFromBool(v: boolean | null | undefined): Tri {
+  return v === true ? "yes" : v === false ? "no" : "unknown";
+}
+
 // ── Product modal (add / edit) ──────────────────────────────────────────────────
 function ProductModal({ token, editing, categoryOptions, onClose, onSuccess }: {
   token: string;
@@ -126,21 +152,113 @@ function ProductModal({ token, editing, categoryOptions, onClose, onSuccess }: {
   const [categoryId, setCategoryId] = useState(editing?.category_id ?? "");
   const [description, setDescription] = useState(editing?.description ?? "");
   const [status, setStatus] = useState<Status>(editing?.status ?? "draft");
+
+  // Extended fields
+  const [score, setScore] = useState(editing?.score != null ? String(editing.score) : "");
+  const [labTested, setLabTested] = useState<boolean>(editing?.lab_tested ?? false);
+  const [microplastics, setMicroplastics] = useState<Tri>(triFromBool(editing?.microplastics_present));
+  const [scoreRationale, setScoreRationale] = useState(editing?.score_rationale ?? "");
+  const [shopUrl, setShopUrl] = useState(editing?.shop_url ?? "");
+  const [affiliateUrl, setAffiliateUrl] = useState(editing?.affiliate_url ?? "");
+  const [price, setPrice] = useState(editing?.price_cents != null ? (editing.price_cents / 100).toFixed(2) : "");
+  const [imageUrl, setImageUrl] = useState<string | null>(editing?.image_url ?? null);
+  const [localPreview, setLocalPreview] = useState<string | null>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [imageError, setImageError] = useState("");
+  const [propRows, setPropRows] = useState<PropRow[]>(propsToRows(editing?.properties));
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const [busy, setBusy] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
-  const canSubmit = name.trim().length > 0 && categoryId.length > 0 && !busy;
+  const canSubmit = name.trim().length > 0 && categoryId.length > 0 && !busy && !uploadingImage;
+
+  const onPickImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImageError("");
+    setLocalPreview(URL.createObjectURL(file));
+    setUploadingImage(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/admin/catalog/products/upload-image", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: fd,
+      });
+      const b = await res.json() as { url?: string; error?: string };
+      if (!res.ok || !b.url) throw new Error(b.error || "Upload failed");
+      setImageUrl(b.url);
+    } catch (err) {
+      setImageError(err instanceof Error ? err.message : "Upload failed");
+      setLocalPreview(null);
+    } finally {
+      setUploadingImage(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
+  const removeImage = () => { setImageUrl(null); setLocalPreview(null); setImageError(""); };
+
+  const addPropRow = () => setPropRows((r) => [...r, { key: "", value: "" }]);
+  const removePropRow = (i: number) => setPropRows((r) => r.filter((_, idx) => idx !== i));
+  const updatePropRow = (i: number, field: keyof PropRow, val: string) =>
+    setPropRows((r) => r.map((row, idx) => (idx === i ? { ...row, [field]: val } : row)));
 
   const submit = async () => {
     if (!canSubmit) return;
     setBusy(true);
     setErrorMsg("");
+
+    // Price (dollars) → integer cents
+    const priceTrim = price.trim();
+    let priceCents: number | null = null;
+    if (priceTrim !== "") {
+      const dollars = Number(priceTrim);
+      if (!Number.isFinite(dollars) || dollars < 0) {
+        setErrorMsg("Price must be a positive number");
+        setBusy(false);
+        return;
+      }
+      priceCents = Math.round(dollars * 100);
+    }
+
+    // Score → number or null
+    const scoreTrim = score.trim();
+    let scoreVal: number | null = null;
+    if (scoreTrim !== "") {
+      const n = Number(scoreTrim);
+      if (!Number.isFinite(n)) {
+        setErrorMsg("Score must be a number between 0 and 100");
+        setBusy(false);
+        return;
+      }
+      scoreVal = n;
+    }
+
+    // Properties → flat object (drop rows with an empty key)
+    const properties: Record<string, string> = {};
+    for (const { key, value } of propRows) {
+      const k = key.trim();
+      if (k) properties[k] = value;
+    }
+
     const payload = {
       name: name.trim(),
       brand: brand.trim(),
       category_id: categoryId,
       description: description.trim(),
       status,
+      score: scoreVal,
+      lab_tested: labTested,
+      microplastics_present: microplastics === "yes" ? true : microplastics === "no" ? false : null,
+      score_rationale: scoreRationale.trim(),
+      shop_url: shopUrl.trim(),
+      affiliate_url: affiliateUrl.trim(),
+      price_cents: priceCents,
+      image_url: imageUrl,
+      properties,
     };
     try {
       const url = editing
@@ -173,6 +291,7 @@ function ProductModal({ token, editing, categoryOptions, onClose, onSuccess }: {
     display: "block", fontFamily: SANS, fontSize: 10, fontWeight: 600,
     letterSpacing: "0.14em", textTransform: "uppercase", color: TEXT_TER, marginBottom: 6,
   };
+  const previewSrc = localPreview ?? imageUrl;
 
   return (
     <div
@@ -260,6 +379,208 @@ function ProductModal({ token, editing, categoryOptions, onClose, onSuccess }: {
                   </button>
                 );
               })}
+            </div>
+          </div>
+
+          {/* Score + Price (collapses to one column on mobile) */}
+          <div className="cat-field-row">
+            <div>
+              <label style={labelStyle}>Score (0–100)</label>
+              <input
+                value={score}
+                onChange={(e) => setScore(e.target.value)}
+                inputMode="numeric"
+                placeholder="—"
+                style={inputStyle}
+              />
+            </div>
+            <div>
+              <label style={labelStyle}>Price (USD)</label>
+              <div style={{ position: "relative" }}>
+                <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", fontFamily: SANS, fontSize: 14, color: TEXT_TER, pointerEvents: "none" }}>$</span>
+                <input
+                  value={price}
+                  onChange={(e) => setPrice(e.target.value)}
+                  inputMode="decimal"
+                  placeholder="0.00"
+                  style={{ ...inputStyle, paddingLeft: 24 }}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Lab tested toggle */}
+          <div>
+            <label style={labelStyle}>Lab tested</label>
+            <button
+              type="button"
+              onClick={() => setLabTested((v) => !v)}
+              style={{
+                display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "10px 12px",
+                background: labTested ? `rgba(${SAGE_RGB},0.14)` : "transparent",
+                border: `0.5px solid ${labTested ? `rgba(${SAGE_RGB},0.4)` : BORDER}`,
+                borderRadius: 10, cursor: "pointer", transition: "background 180ms, border-color 180ms",
+              }}
+            >
+              <span style={{
+                width: 38, height: 22, borderRadius: 999, flexShrink: 0, position: "relative",
+                background: labTested ? SAGE : `rgba(${FG_RGB},0.18)`, transition: "background 180ms",
+              }}>
+                <span style={{
+                  position: "absolute", top: 2, left: labTested ? 18 : 2, width: 18, height: 18, borderRadius: "50%",
+                  background: "#fff", transition: "left 180ms",
+                }} />
+              </span>
+              <span style={{ fontFamily: SANS, fontSize: 13, fontWeight: 600, color: labTested ? SAGE : TEXT_SEC }}>
+                {labTested ? "Yes — lab tested" : "Not lab tested"}
+              </span>
+            </button>
+          </div>
+
+          {/* Microplastics — three-state */}
+          <div>
+            <label style={labelStyle}>Microplastics present</label>
+            <div style={{ display: "flex", gap: 8 }}>
+              {([["yes", "Yes"], ["no", "No"], ["unknown", "Unknown"]] as [Tri, string][]).map(([val, lbl]) => {
+                const active = microplastics === val;
+                return (
+                  <button
+                    key={val}
+                    type="button"
+                    onClick={() => setMicroplastics(val)}
+                    style={{
+                      flex: 1, padding: "10px 8px",
+                      background: active ? `rgba(${SAGE_RGB},0.14)` : "transparent",
+                      border: `0.5px solid ${active ? `rgba(${SAGE_RGB},0.4)` : BORDER}`,
+                      borderRadius: 10, fontFamily: SANS, fontSize: 11, fontWeight: 600,
+                      letterSpacing: "0.06em", textTransform: "uppercase",
+                      color: active ? SAGE : TEXT_TER, cursor: "pointer",
+                      transition: "background 180ms, border-color 180ms, color 180ms",
+                    }}
+                  >
+                    {lbl}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Score rationale */}
+          <div>
+            <label style={labelStyle}>Why this score</label>
+            <textarea
+              value={scoreRationale}
+              onChange={(e) => setScoreRationale(e.target.value)}
+              placeholder="Optional — shown on the product detail page"
+              rows={3}
+              style={{ ...inputStyle, resize: "vertical", lineHeight: 1.6 }}
+            />
+          </div>
+
+          {/* Shop + affiliate links */}
+          <div>
+            <label style={labelStyle}>Shop URL</label>
+            <input value={shopUrl} onChange={(e) => setShopUrl(e.target.value)} placeholder="https://… (buy link)" style={inputStyle} />
+          </div>
+          <div>
+            <label style={labelStyle}>Affiliate URL</label>
+            <input value={affiliateUrl} onChange={(e) => setAffiliateUrl(e.target.value)} placeholder="Optional" style={inputStyle} />
+          </div>
+
+          {/* Image upload */}
+          <div>
+            <label style={labelStyle}>Image</label>
+            <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+              <div style={{
+                position: "relative", width: 72, height: 72, flexShrink: 0, borderRadius: 12, overflow: "hidden",
+                background: `rgba(${FG_RGB},0.05)`, border: `0.5px solid ${BORDER}`,
+                display: "flex", alignItems: "center", justifyContent: "center",
+              }}>
+                {previewSrc ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={previewSrc} alt="Preview" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                ) : (
+                  <ImagePlus size={22} color={TEXT_TER} />
+                )}
+                {uploadingImage && (
+                  <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.55)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <Loader2 size={20} color="#fff" style={{ animation: "spin 0.8s linear infinite" }} />
+                  </div>
+                )}
+              </div>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: 6, flex: 1, minWidth: 140 }}>
+                <input ref={fileInputRef} type="file" accept="image/*" onChange={onPickImage} style={{ display: "none" }} />
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploadingImage}
+                  className="lab-icon-btn"
+                  style={{
+                    padding: "9px 12px", background: "transparent", border: `0.5px solid ${BORDER}`, borderRadius: 10,
+                    fontFamily: SANS, fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase",
+                    color: TEXT_SEC, cursor: uploadingImage ? "not-allowed" : "pointer",
+                  }}
+                >
+                  {uploadingImage ? "Uploading…" : previewSrc ? "Replace image" : "Upload image"}
+                </button>
+                {previewSrc && !uploadingImage && (
+                  <button
+                    type="button"
+                    onClick={removeImage}
+                    style={{ padding: 0, background: "none", border: "none", textAlign: "left", fontFamily: SANS, fontSize: 11, fontWeight: 600, color: TEXT_TER, cursor: "pointer" }}
+                  >
+                    Remove
+                  </button>
+                )}
+              </div>
+            </div>
+            {imageError && (
+              <div style={{ marginTop: 8 }}><Eyebrow color={DANGER} size={10}>{imageError}</Eyebrow></div>
+            )}
+          </div>
+
+          {/* Properties (key/value) editor */}
+          <div>
+            <label style={labelStyle}>Properties</label>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {propRows.length === 0 && (
+                <div style={{ fontFamily: SANS, fontSize: 12.5, color: TEXT_TER, padding: "2px 0 4px" }}>
+                  No properties yet.
+                </div>
+              )}
+              {propRows.map((row, i) => (
+                <div key={i} style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                  <input
+                    value={row.key}
+                    onChange={(e) => updatePropRow(i, "key", e.target.value)}
+                    placeholder="Key"
+                    style={{ ...inputStyle, flex: 1, minWidth: 0, padding: "9px 11px" }}
+                  />
+                  <input
+                    value={row.value}
+                    onChange={(e) => updatePropRow(i, "value", e.target.value)}
+                    placeholder="Value"
+                    style={{ ...inputStyle, flex: 1.4, minWidth: 0, padding: "9px 11px" }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removePropRow(i)}
+                    aria-label="Remove property"
+                    className="lab-icon-btn"
+                    style={{ width: 34, height: 34, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "transparent", border: `0.5px solid ${BORDER}`, borderRadius: 10, color: TEXT_SEC, cursor: "pointer" }}
+                  >
+                    <X size={13} />
+                  </button>
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={addPropRow}
+                style={{ alignSelf: "flex-start", display: "flex", alignItems: "center", gap: 6, padding: "8px 12px", background: "transparent", border: `0.5px solid ${BORDER}`, borderRadius: 10, fontFamily: SANS, fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: SAGE, cursor: "pointer" }}
+              >
+                <Plus size={13} /> Add property
+              </button>
             </div>
           </div>
 
@@ -419,6 +740,8 @@ export default function CatalogClient({ initialProducts, categories }: {
         .nura-primary-btn:hover:not(:disabled) { background: var(--nura-sage-hover) !important; transform: translateY(-1px); }
         .nura-primary-btn:active:not(:disabled) { transform: translateY(0); }
         .lab-icon-btn:hover { border-color: rgba(155,176,165,0.4) !important; color: var(--nura-sage) !important; }
+        .cat-field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        @media (max-width: 420px) { .cat-field-row { grid-template-columns: 1fr; } }
       `}</style>
 
       <NuraPlexus opacity={0.35} />

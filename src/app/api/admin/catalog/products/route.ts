@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { requireAdminFromRequest, AdminError } from "@/lib/admin";
+import { buildProductFields, ProductFieldError } from "@/lib/catalog-product-fields";
 
 // ── Slug helpers ────────────────────────────────────────────────────────────
 function slugify(name: string): string {
@@ -62,7 +63,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   try {
     await requireAdminFromRequest(req);
 
-    const body = (await req.json()) as {
+    const body = (await req.json()) as Record<string, unknown> & {
       name?: string;
       brand?: string;
       category_id?: string;
@@ -82,6 +83,16 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       return NextResponse.json({ error: "Invalid status" }, { status: 400 });
     }
 
+    let extended: Record<string, unknown>;
+    try {
+      extended = buildProductFields(body);
+    } catch (e) {
+      if (e instanceof ProductFieldError) {
+        return NextResponse.json({ error: e.message }, { status: 400 });
+      }
+      throw e;
+    }
+
     const slug = await uniqueSlug(slugify(name));
 
     const { data, error } = await supabaseAdmin
@@ -95,6 +106,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         status,
         source_urls: [],
         attributes: {},
+        ...extended,
       })
       .select("*, catalog_categories(id, name, slug, parent_id)")
       .single();

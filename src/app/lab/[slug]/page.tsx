@@ -216,42 +216,39 @@ export default async function LabProductPage({ params }: { params: Promise<{ slu
         {/* ── Header card ─────────────────────────────────────────────────── */}
         <div style={{ ...card, padding: 18 }}>
           <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
-            {/* Image */}
-            <div style={{ position: "relative", width: 200, maxWidth: "100%", aspectRatio: "1 / 1", flexShrink: 0, borderRadius: 12, overflow: "hidden", background: `rgba(${FG_RGB},0.04)` }}>
-              {product.image_url ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={product.image_url} alt={product.name} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
-              ) : (
-                <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke={`rgba(${FG_RGB},0.22)`} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            {/* Image — generous padding so the bottle sits centered with whitespace around it */}
+            <div style={{ position: "relative", width: 300, maxWidth: "100%", aspectRatio: "1 / 1", flexShrink: 0, borderRadius: 14, overflow: "hidden", background: `rgba(${FG_RGB},0.04)`, border: `0.5px solid ${BORDER}` }}>
+              <div style={{ position: "absolute", inset: 0, padding: "clamp(22px, 11%, 40px)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                {product.image_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={product.image_url} alt={product.name} style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain", display: "block" }} />
+                ) : (
+                  <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke={`rgba(${FG_RGB},0.22)`} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                     <rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><path d="M21 15l-5-5L5 21" />
                   </svg>
-                </div>
-              )}
-
-              {/* Bookmark */}
-              <div style={{ position: "absolute", top: 8, right: 8 }}>
-                <SaveButton productId={product.id} userId={user.id} initialSaved={initialSaved} />
+                )}
               </div>
 
-              {/* Shop — clean overlay button in the top-left corner of the image */}
-              {product.shop_url && (
-                <a
-                  href={product.shop_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{
-                    position: "absolute", top: 8, left: 8,
-                    display: "inline-flex", alignItems: "center", gap: 5,
-                    padding: "6px 11px", borderRadius: 999,
-                    background: SAGE, color: SAGE_ON, textDecoration: "none",
-                    fontFamily: SANS, fontSize: 11, fontWeight: 600, letterSpacing: "0.06em",
-                    boxShadow: "0 2px 8px rgba(0,0,0,0.28)",
-                  }}
-                >
-                  Shop <ArrowUpRight size={13} />
-                </a>
-              )}
+              {/* Top-right actions — Shop button immediately left of the bookmark */}
+              <div style={{ position: "absolute", top: 8, right: 8, display: "flex", alignItems: "center", gap: 8 }}>
+                {product.shop_url && (
+                  <a
+                    href={product.shop_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      display: "inline-flex", alignItems: "center", gap: 5, height: 34, boxSizing: "border-box",
+                      padding: "0 12px", borderRadius: 999,
+                      background: SAGE, color: SAGE_ON, textDecoration: "none",
+                      fontFamily: SANS, fontSize: 11, fontWeight: 600, letterSpacing: "0.06em",
+                      boxShadow: "0 2px 8px rgba(0,0,0,0.28)",
+                    }}
+                  >
+                    Shop <ArrowUpRight size={13} />
+                  </a>
+                )}
+                <SaveButton productId={product.id} userId={user.id} initialSaved={initialSaved} />
+              </div>
             </div>
 
             {/* Info */}

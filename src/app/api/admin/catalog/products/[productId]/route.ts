@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { requireAdminFromRequest, AdminError } from "@/lib/admin";
+import { buildProductFields, ProductFieldError } from "@/lib/catalog-product-fields";
 
 const VALID_STATUS = new Set(["draft", "published"]);
 
@@ -44,7 +45,7 @@ export async function PATCH(
     await requireAdminFromRequest(req);
     const { productId } = await params;
 
-    const body = (await req.json()) as {
+    const body = (await req.json()) as Record<string, unknown> & {
       name?: string;
       brand?: string;
       category_id?: string;
@@ -70,6 +71,15 @@ export async function PATCH(
         return NextResponse.json({ error: "Invalid status" }, { status: 400 });
       }
       update.status = body.status;
+    }
+
+    try {
+      Object.assign(update, buildProductFields(body));
+    } catch (e) {
+      if (e instanceof ProductFieldError) {
+        return NextResponse.json({ error: e.message }, { status: 400 });
+      }
+      throw e;
     }
 
     const { data, error } = await supabaseAdmin
