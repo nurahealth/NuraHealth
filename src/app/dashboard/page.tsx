@@ -123,8 +123,8 @@ export default function DashboardPage() {
         <div className="dash-hero">
           <div className="dash-hero-left">
             <h1 style={{
-              fontFamily: SERIF, fontWeight: 500, color: TEXT,
-              margin: "0 0 6px", lineHeight: 1.1, letterSpacing: "-0.5px",
+              fontFamily: SANS, fontWeight: 600, color: TEXT,
+              margin: "0 0 6px", lineHeight: 1.1, letterSpacing: "-0.02em",
               fontSize: "clamp(32px, 5vw, 52px)",
             }}>
               Your wellness, today
@@ -265,8 +265,8 @@ function Section({
       {/* Section header */}
       <div style={{ marginBottom: 16 }}>
         <h2 style={{
-          fontFamily: SERIF, fontWeight: 500, color: TEXT,
-          margin: "0 0 4px", lineHeight: 1.2, letterSpacing: "-0.3px",
+          fontFamily: SANS, fontWeight: 600, color: TEXT,
+          margin: "0 0 4px", lineHeight: 1.2, letterSpacing: "-0.02em",
           fontSize: "clamp(22px, 3vw, 28px)",
         }}>
           {section.title}

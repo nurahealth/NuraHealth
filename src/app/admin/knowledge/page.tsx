@@ -986,7 +986,7 @@ export default function AdminKnowledgePage() {
       <div style={{ position: "relative", zIndex: 2, padding: "24px 32px 100px", width: "100%", maxWidth: 1100, margin: "0 auto" }}>
 
         <div style={{ marginBottom: 24 }}>
-          <h1 style={{ fontFamily: SERIF, fontSize: 30, fontWeight: 500, color: TEXT, margin: "0 0 6px", letterSpacing: "-0.3px", lineHeight: 1.2 }}>
+          <h1 style={{ fontFamily: SANS, fontSize: 30, fontWeight: 600, color: TEXT, margin: "0 0 6px", letterSpacing: "-0.02em", lineHeight: 1.2 }}>
             Knowledge Base
           </h1>
           <Eyebrow color={TEXT_TER}>NŪRA&apos;s brain · training corpus</Eyebrow>
@@ -1073,7 +1073,7 @@ export default function AdminKnowledgePage() {
           <div style={{ fontFamily: SANS, fontSize: 10, fontWeight: 600, color: TEXT_TER, letterSpacing: "0.14em", textTransform: "uppercase", textAlign: "center", padding: "40px 0" }}>Loading...</div>
         ) : filtered.length === 0 ? (
           <div style={{ textAlign: "center", padding: "44px 0" }}>
-            <h2 style={{ fontFamily: SERIF, fontSize: 22, fontWeight: 500, color: TEXT, margin: "0 0 8px" }}>No sources yet</h2>
+            <h2 style={{ fontFamily: SANS, fontSize: 22, fontWeight: 600, color: TEXT, margin: "0 0 8px", letterSpacing: "-0.02em" }}>No sources yet</h2>
             <Eyebrow color={TEXT_TER}>Add your first knowledge source above</Eyebrow>
           </div>
         ) : (

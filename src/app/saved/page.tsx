@@ -28,7 +28,6 @@ const SAGE_ON = "var(--nura-bg)";
 const SAGE_RGB = "155,176,165";
 const RED = "var(--nura-danger)";
 const SANS = "'Inter', system-ui, sans-serif";
-const SERIF = "'DM Serif Display', Georgia, serif";
 
 type Filter = "all" | SavedItemType | "product";
 
@@ -139,8 +138,8 @@ export default function SavedPage() {
       {/* HERO */}
       <div style={{ marginBottom: 22 }}>
         <h1 style={{
-          fontFamily: SERIF, fontWeight: 500, color: TEXT,
-          margin: "0 0 6px", lineHeight: 1.15, letterSpacing: "-0.5px",
+          fontFamily: SANS, fontWeight: 600, color: TEXT,
+          margin: "0 0 6px", lineHeight: 1.15, letterSpacing: "-0.02em",
           fontSize: "clamp(32px, 5vw, 44px)",
         }}>
           Saved
@@ -187,7 +186,7 @@ export default function SavedPage() {
               <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
             </svg>
           </div>
-          <h2 style={{ fontFamily: SERIF, fontSize: 22, fontWeight: 500, color: TEXT, margin: "0 0 6px" }}>{empty.title}</h2>
+          <h2 style={{ fontFamily: SANS, fontSize: 22, fontWeight: 600, color: TEXT, margin: "0 0 6px", letterSpacing: "-0.02em" }}>{empty.title}</h2>
           <p style={{ fontFamily: SANS, fontSize: 13, color: TEXT_SEC, margin: 0 }}>{empty.sub}</p>
         </div>
       ) : (

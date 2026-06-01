@@ -1563,7 +1563,7 @@ export default function CatalogClient({ initialProducts, categories }: {
       <div style={{ position: "relative", zIndex: 2, padding: "24px 32px 100px", width: "100%", maxWidth: 1100, margin: "0 auto" }}>
 
         <div style={{ marginBottom: 24 }}>
-          <h1 style={{ fontFamily: SERIF, fontSize: 30, fontWeight: 500, color: TEXT, margin: "0 0 6px", letterSpacing: "-0.3px", lineHeight: 1.2 }}>
+          <h1 style={{ fontFamily: SANS, fontSize: 30, fontWeight: 600, color: TEXT, margin: "0 0 6px", letterSpacing: "-0.02em", lineHeight: 1.2 }}>
             Lab Catalog
           </h1>
           <Eyebrow color={TEXT_TER}>Product testing · Admin</Eyebrow>
@@ -1596,7 +1596,7 @@ export default function CatalogClient({ initialProducts, categories }: {
 
         {products.length === 0 ? (
           <div style={{ textAlign: "center", padding: "44px 0" }}>
-            <h2 style={{ fontFamily: SERIF, fontSize: 22, fontWeight: 500, color: TEXT, margin: "0 0 8px" }}>No products yet</h2>
+            <h2 style={{ fontFamily: SANS, fontSize: 22, fontWeight: 600, color: TEXT, margin: "0 0 8px", letterSpacing: "-0.02em" }}>No products yet</h2>
             <Eyebrow color={TEXT_TER}>Add your first product above</Eyebrow>
           </div>
         ) : (

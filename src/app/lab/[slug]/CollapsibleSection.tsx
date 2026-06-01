@@ -9,7 +9,7 @@ import { ChevronDown } from "lucide-react";
 
 const TEXT = "var(--nura-text-primary)";
 const TEXT_TER = "var(--nura-text-tertiary)";
-const SERIF = "'DM Serif Display', Georgia, serif";
+const SANS = "'Inter', system-ui, sans-serif";
 
 export default function CollapsibleSection({
   title,
@@ -35,7 +35,7 @@ export default function CollapsibleSection({
           color: "inherit", textAlign: "left",
         }}
       >
-        <h2 style={{ fontFamily: SERIF, fontSize: 22, fontWeight: 500, color: TEXT, margin: 0, letterSpacing: "-0.2px" }}>
+        <h2 style={{ fontFamily: SANS, fontSize: 22, fontWeight: 600, color: TEXT, margin: 0, letterSpacing: "-0.02em" }}>
           {title}
         </h2>
         <ChevronDown

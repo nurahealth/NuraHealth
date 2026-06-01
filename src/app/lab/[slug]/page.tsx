@@ -21,7 +21,6 @@ const SAGE_ON = "var(--nura-sage-bg-on)";
 const SAGE_RGB = "var(--nura-sage-rgb)";
 const FG_RGB = "var(--nura-fg-rgb)";
 const SANS = "'Inter', system-ui, sans-serif";
-const SERIF = "'DM Serif Display', Georgia, serif";
 const AMBER = "#FFB400";
 const RED = "#FF4C5C";
 
@@ -72,7 +71,7 @@ function Eyebrow({ children, color }: { children: React.ReactNode; color?: strin
 
 function SectionHeading({ children }: { children: React.ReactNode }) {
   return (
-    <h2 style={{ fontFamily: SERIF, fontSize: 22, fontWeight: 500, color: TEXT, margin: "0 0 12px", letterSpacing: "-0.2px" }}>
+    <h2 style={{ fontFamily: SANS, fontSize: 22, fontWeight: 600, color: TEXT, margin: "0 0 12px", letterSpacing: "-0.02em" }}>
       {children}
     </h2>
   );
@@ -229,7 +228,7 @@ export default async function LabProductPage({ params }: { params: Promise<{ slu
   const card: React.CSSProperties = { background: SURFACE, border: `0.5px solid ${BORDER}`, borderRadius: 14 };
 
   return (
-    <NuraPageShell maxWidth={860} title="Lab">
+    <NuraPageShell maxWidth={860}>
       <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
 
         {/* ── Header card ─────────────────────────────────────────────────── */}
@@ -280,7 +279,7 @@ export default async function LabProductPage({ params }: { params: Promise<{ slu
                       {category.name}
                     </span>
                   )}
-                  <h1 style={{ fontFamily: SERIF, fontSize: "clamp(26px, 4.5vw, 34px)", fontWeight: 500, color: TEXT, margin: "0 0 4px", letterSpacing: "-0.4px", lineHeight: 1.12 }}>
+                  <h1 style={{ fontFamily: SANS, fontSize: "clamp(26px, 4.5vw, 34px)", fontWeight: 600, color: TEXT, margin: "0 0 4px", letterSpacing: "-0.02em", lineHeight: 1.12 }}>
                     {product.name}
                   </h1>
                   {product.brand && (

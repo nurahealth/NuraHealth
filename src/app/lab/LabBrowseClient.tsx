@@ -161,7 +161,7 @@ export default function LabBrowseClient({ categories, products }: {
         <span style={{ fontFamily: SANS, fontSize: 10, fontWeight: 600, letterSpacing: "0.14em", textTransform: "uppercase", color: SAGE }}>
           Lab
         </span>
-        <h1 style={{ fontFamily: SERIF, fontSize: "clamp(30px, 5vw, 40px)", fontWeight: 500, color: TEXT, margin: "6px 0 8px", letterSpacing: "-0.4px", lineHeight: 1.1 }}>
+        <h1 style={{ fontFamily: SANS, fontSize: "clamp(30px, 5vw, 40px)", fontWeight: 600, color: TEXT, margin: "6px 0 8px", letterSpacing: "-0.02em", lineHeight: 1.1 }}>
           Product testing
         </h1>
         <p style={{ fontFamily: SANS, fontSize: 14, color: TEXT_SEC, margin: 0, lineHeight: 1.55, maxWidth: 540 }}>
@@ -200,7 +200,7 @@ export default function LabBrowseClient({ categories, products }: {
       {/* Grid / empty state */}
       {visible.length === 0 ? (
         <div style={{ textAlign: "center", padding: "64px 0" }}>
-          <div style={{ fontFamily: SERIF, fontSize: 22, fontWeight: 500, color: `rgba(${SAGE_RGB},0.7)`, marginBottom: 8 }}>
+          <div style={{ fontFamily: SANS, fontSize: 22, fontWeight: 600, color: `rgba(${SAGE_RGB},0.7)`, marginBottom: 8, letterSpacing: "-0.02em" }}>
             No products yet
           </div>
           <span style={{ fontFamily: SANS, fontSize: 10, fontWeight: 600, letterSpacing: "0.14em", textTransform: "uppercase", color: `rgba(${SAGE_RGB},0.45)` }}>

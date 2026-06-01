@@ -368,11 +368,11 @@ export default function Home() {
       }}>
         <div className="nura-content">
         <h1 className="nura-greeting" style={{
-          fontFamily: SERIF, fontWeight: 500,
-          color: TEXT, margin: "0 0 14px",
+          fontFamily: SANS, fontWeight: 600,
+          color: TEXT, margin: "0 0 14px", letterSpacing: "-0.02em",
         }}>
           How can I help you on your{" "}
-          <em style={{ fontStyle: "italic", color: SAGE, fontWeight: 500 }}>wellness</em>
+          <em style={{ fontFamily: SERIF, fontStyle: "italic", color: SAGE, fontWeight: 500 }}>wellness</em>
           {" "}journey?
         </h1>
 

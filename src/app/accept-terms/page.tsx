@@ -14,7 +14,6 @@ const SAGE_HOV = "var(--nura-sage-hover)";
 const SAGE_ON = "var(--nura-bg)";
 const RED = "var(--nura-danger)";
 const SANS = "'Inter', system-ui, sans-serif";
-const SERIF = "'DM Serif Display', Georgia, serif";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function Checkbox({
@@ -173,8 +172,8 @@ export default function AcceptTermsPage() {
             NŪRA
           </div>
           <h1 style={{
-            fontFamily: SERIF, fontWeight: 500, fontSize: 28, color: TEXT,
-            margin: "12px 0 6px", letterSpacing: "-0.3px", textAlign: "center", lineHeight: 1.15,
+            fontFamily: SANS, fontWeight: 600, fontSize: 28, color: TEXT,
+            margin: "12px 0 6px", letterSpacing: "-0.02em", textAlign: "center", lineHeight: 1.15,
           }}>
             Welcome to NŪRA
           </h1>

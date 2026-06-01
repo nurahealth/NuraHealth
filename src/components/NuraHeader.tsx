@@ -13,7 +13,6 @@ const SURFACE = "var(--nura-surface)";
 const SAGE = "var(--nura-sage)";
 const SAGE_RGB = "155,176,165";
 const SANS = "'Inter', system-ui, sans-serif";
-const SERIF = "'DM Serif Display', Georgia, serif";
 
 interface Props {
   rightAction?: React.ReactNode;
@@ -71,11 +70,11 @@ export default function NuraHeader({ rightAction, title }: Props) {
       </button>
 
       <span style={{
-        fontFamily: title ? SERIF : SANS,
+        fontFamily: SANS,
         fontSize: 18,
-        fontWeight: title ? 500 : 600,
+        fontWeight: 600,
         color: SAGE,
-        letterSpacing: title ? "0.3px" : "0.16em",
+        letterSpacing: title ? "-0.02em" : "0.16em",
       }}>
         {title ?? "NŪRA"}
       </span>

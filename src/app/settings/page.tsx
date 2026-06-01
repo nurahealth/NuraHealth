@@ -22,7 +22,6 @@ const SAGE_ON = "var(--nura-bg)";
 const SAGE_RGB = "155,176,165";
 const RED = "var(--nura-danger)";
 const SANS = "'Inter', system-ui, sans-serif";
-const SERIF = "'DM Serif Display', Georgia, serif";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface SubStatus {
@@ -149,8 +148,8 @@ export default function SettingsPage() {
       {/* HERO */}
       <div style={{ marginBottom: 24 }}>
         <h1 style={{
-          fontFamily: SERIF, fontWeight: 500, color: TEXT,
-          margin: "0 0 6px", lineHeight: 1.15, letterSpacing: "-0.5px",
+          fontFamily: SANS, fontWeight: 600, color: TEXT,
+          margin: "0 0 6px", lineHeight: 1.15, letterSpacing: "-0.02em",
           fontSize: "clamp(32px, 5vw, 44px)",
         }}>
           Settings

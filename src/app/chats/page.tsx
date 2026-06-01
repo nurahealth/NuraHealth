@@ -13,7 +13,6 @@ const SURFACE = "var(--nura-surface)";
 const SAGE = "var(--nura-sage)";
 const SAGE_RGB = "155,176,165";
 const SANS = "'Inter', system-ui, sans-serif";
-const SERIF = "'DM Serif Display', Georgia, serif";
 
 interface SessionRow { id: string; title: string | null; updated_at: string }
 
@@ -82,7 +81,7 @@ export default function ChatsListPage() {
       </header>
 
       <main style={{ flex: 1, maxWidth: 640, width: "100%", margin: "0 auto", padding: "28px 22px 60px" }}>
-        <h1 style={{ fontFamily: SERIF, fontSize: 28, fontWeight: 500, color: TEXT, margin: "0 0 6px", letterSpacing: "-0.3px" }}>
+        <h1 style={{ fontFamily: SANS, fontSize: 28, fontWeight: 600, color: TEXT, margin: "0 0 6px", letterSpacing: "-0.02em" }}>
           Your conversations
         </h1>
         <p style={{ fontSize: 13, color: TEXT_SEC, margin: "0 0 24px" }}>

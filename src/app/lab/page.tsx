@@ -34,7 +34,7 @@ export default async function LabPage() {
   ]);
 
   return (
-    <NuraPageShell maxWidth={1040} title="Lab">
+    <NuraPageShell maxWidth={1040}>
       <LabBrowseClient
         categories={(categories ?? []) as LabCategory[]}
         products={(products ?? []) as LabProduct[]}
