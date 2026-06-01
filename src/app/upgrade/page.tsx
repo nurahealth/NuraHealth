@@ -90,7 +90,7 @@ export default function UpgradePage() {
         {/* Logo wordmark */}
         <div style={{ textAlign: "center", marginBottom: 40 }}>
           <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 64, height: 64, borderRadius: "50%", background: BG, border: `0.5px solid rgba(var(--nura-sage-rgb),0.45)`, marginBottom: 20, animation: "pulse-ring 2.8s ease-in-out infinite" }}>
-            <span style={{ fontFamily: SANS, fontWeight: 700, fontSize: 16, color: "#fff" }}>nūra</span>
+            <span style={{ fontFamily: SANS, fontWeight: 600, fontSize: 16, color: "#fff", letterSpacing: "0.16em" }}>NŪRA</span>
           </div>
 
           {/* Trial badge */}

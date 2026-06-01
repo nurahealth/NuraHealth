@@ -77,7 +77,7 @@ export default function ChatsListPage() {
             <path d="M4 6h16M4 12h16M4 18h16"/>
           </svg>
         </button>
-        <span style={{ fontFamily: SERIF, fontSize: 19, fontWeight: 500, color: SAGE }}>nūra</span>
+        <span style={{ fontFamily: SANS, fontSize: 19, fontWeight: 600, color: SAGE, letterSpacing: "0.16em" }}>NŪRA</span>
         <div style={{ width: 40 }} />
       </header>
 

@@ -19,7 +19,6 @@ const SAGE_HOV = "var(--nura-sage-hover)";
 const SAGE_ON = "var(--nura-bg)";
 const SAGE_RGB = "155,176,165";
 const SANS = "'Inter', system-ui, sans-serif";
-const SERIF = "'DM Serif Display', Georgia, serif";
 
 interface ChatMessage {
   id: string;
@@ -356,8 +355,8 @@ export default function ChatSessionPage({ params }: { params: Promise<{ sessionI
           <Menu />
         </button>
 
-        <span style={{ fontFamily: SERIF, fontSize: 18, fontWeight: 500, color: SAGE, letterSpacing: "0.3px" }}>
-          nūra
+        <span style={{ fontFamily: SANS, fontSize: 18, fontWeight: 600, color: SAGE, letterSpacing: "0.16em" }}>
+          NŪRA
         </span>
 
         <button

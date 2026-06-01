@@ -341,8 +341,8 @@ export default function Home() {
           </svg>
         </button>
 
-        <span style={{ fontFamily: SERIF, fontSize: 19, fontWeight: 500, color: SAGE, letterSpacing: "0.3px" }}>
-          nūra
+        <span style={{ fontFamily: SANS, fontSize: 19, fontWeight: 600, color: SAGE, letterSpacing: "0.16em" }}>
+          NŪRA
         </span>
 
         <button

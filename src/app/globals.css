@@ -32,24 +32,24 @@
 }
 
 [data-theme="light"] {
-  --nura-bg: #f4f1e6;
-  --nura-surface: rgba(125, 147, 133, 0.05);
-  --nura-surface-elevated: rgba(125, 147, 133, 0.08);
-  --nura-text-primary: #1a1f1a;
-  --nura-text-secondary: rgba(26, 31, 26, 0.62);
-  --nura-text-tertiary: rgba(26, 31, 26, 0.42);
-  --nura-border: rgba(125, 147, 133, 0.22);
-  --nura-border-strong: rgba(125, 147, 133, 0.40);
-  --nura-sage: #7d9385;
-  --nura-sage-hover: #6a8175;
-  --nura-sage-bg-on: #faf8f3;
-  --nura-sage-rgb: 125, 147, 133;
-  --nura-fg-rgb: 26, 31, 26;
-  --nura-bg-tint-rgb: 125, 147, 133;
-  --nura-danger: #d08366;
-  --nura-danger-rgb: 208, 131, 102;
-  --nura-watch: #d6b574;
-  --nura-watch-rgb: 214, 181, 116;
+  --nura-bg: #fafaf9;
+  --nura-surface: #ffffff;
+  --nura-surface-elevated: #f4f4f2;
+  --nura-text-primary: #0a0a0a;
+  --nura-text-secondary: rgba(10, 10, 10, 0.62);
+  --nura-text-tertiary: rgba(10, 10, 10, 0.42);
+  --nura-border: rgba(0, 0, 0, 0.08);
+  --nura-border-strong: rgba(0, 0, 0, 0.14);
+  --nura-sage: #5a7864;
+  --nura-sage-hover: #4a6754;
+  --nura-sage-bg-on: #e6ece8;
+  --nura-sage-rgb: 90, 120, 100;
+  --nura-fg-rgb: 10, 10, 10;
+  --nura-bg-tint-rgb: 90, 120, 100;
+  --nura-danger: #b8392f;
+  --nura-danger-rgb: 184, 57, 47;
+  --nura-watch: #b8741a;
+  --nura-watch-rgb: 184, 116, 26;
 }
 
 @theme inline {

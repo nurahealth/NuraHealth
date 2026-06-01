@@ -70,8 +70,14 @@ export default function NuraHeader({ rightAction, title }: Props) {
         </svg>
       </button>
 
-      <span style={{ fontFamily: SERIF, fontSize: 18, fontWeight: 500, color: SAGE, letterSpacing: "0.3px" }}>
-        {title ?? "nūra"}
+      <span style={{
+        fontFamily: title ? SERIF : SANS,
+        fontSize: 18,
+        fontWeight: title ? 500 : 600,
+        color: SAGE,
+        letterSpacing: title ? "0.3px" : "0.16em",
+      }}>
+        {title ?? "NŪRA"}
       </span>
 
       {rightAction !== undefined ? rightAction : <DefaultProfile />}

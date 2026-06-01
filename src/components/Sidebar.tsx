@@ -229,13 +229,13 @@ export default function Sidebar({ open, onClose, userName, userInitial }: Sideba
           }}
         >
           <span style={{
-            fontFamily: SERIF,
+            fontFamily: SANS,
             fontSize: 22,
-            fontWeight: 500,
+            fontWeight: 600,
             color: SAGE,
-            letterSpacing: "0.3px",
+            letterSpacing: "0.16em",
           }}>
-            nūra
+            NŪRA
           </span>
           <button
             onClick={onClose}

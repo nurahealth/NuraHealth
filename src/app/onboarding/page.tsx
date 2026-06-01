@@ -596,7 +596,7 @@ function Step1Welcome({ onNext, animKey }: { onNext: () => void; animKey: number
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             animation: 'heartbeat 2.8s ease-in-out infinite', position: 'relative', zIndex: 1,
           }}>
-            <span style={{ fontFamily: SANS, fontWeight: 700, fontSize: 19, color: '#ffffff' }}>nūra</span>
+            <span style={{ fontFamily: SANS, fontWeight: 600, fontSize: 19, color: '#ffffff', letterSpacing: "0.16em" }}>NŪRA</span>
           </div>
         </div>
         <h1 style={{ fontSize: 30, fontWeight: 500, color: TEXT, fontFamily: SANS, margin: '0 0 12px', letterSpacing: '-0.6px', lineHeight: 1.2 }}>

@@ -242,10 +242,10 @@ function AuthContent() {
         {/* TOP BRAND */}
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: 32 }}>
           <div style={{
-            fontFamily: SERIF, fontWeight: 500, fontSize: 32, color: SAGE,
-            letterSpacing: "-0.3px", lineHeight: 1,
+            fontFamily: SANS, fontWeight: 600, fontSize: 32, color: SAGE,
+            letterSpacing: "0.16em", lineHeight: 1,
           }}>
-            nūra
+            NŪRA
           </div>
           <h1 style={{
             fontFamily: SERIF, fontWeight: 500, fontSize: 28, color: TEXT,
