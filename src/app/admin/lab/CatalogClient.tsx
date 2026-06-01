@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { supabase } from "@/lib/supabase";
-import { Plus, X, Pencil, Trash2, RefreshCw, Shield, ImagePlus, Loader2, FileText, Link2, UploadCloud, Check } from "lucide-react";
+import { Plus, X, Pencil, Trash2, RefreshCw, Shield, ImagePlus, Loader2, FileText, Link2, UploadCloud, Check, Search } from "lucide-react";
 import Sidebar from "@/components/Sidebar";
 import NuraPlexus from "@/components/NuraPlexus";
 
@@ -575,6 +575,345 @@ function DocumentsManager({ token, productId }: { token: string; productId: stri
   );
 }
 
+// ── Measurements manager ─────────────────────────────────────────────────────────
+interface MeasurementType {
+  id: string; name: string; slug: string; kind: string | null; unit: string | null;
+  description: string | null; guideline_limit: number | null; sort_order: number | null;
+}
+interface ProductMeasurement {
+  id: string; value: number | null; risk_count: number | null; measurement_type_id: string;
+  type: MeasurementType | null;
+}
+type Kind = "contaminant" | "nutrient" | "property";
+const KIND_GROUPS: { kind: string; label: string }[] = [
+  { kind: "contaminant", label: "Contaminants" },
+  { kind: "nutrient", label: "Ingredients & minerals" },
+  { kind: "property", label: "Properties" },
+  { kind: "__other__", label: "Other" },
+];
+
+function MeasurementsManager({ token, productId }: { token: string; productId: string }) {
+  const [measurements, setMeasurements] = useState<ProductMeasurement[]>([]);
+  const [types, setTypes] = useState<MeasurementType[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [listError, setListError] = useState("");
+  const [removingId, setRemovingId] = useState<string | null>(null);
+
+  // Add-form state
+  const [addMode, setAddMode] = useState<"existing" | "new">("existing");
+  const [selectedTypeId, setSelectedTypeId] = useState("");
+  const [typeSearch, setTypeSearch] = useState("");
+  const [showTypeList, setShowTypeList] = useState(false);
+  const [ntName, setNtName] = useState("");
+  const [ntKind, setNtKind] = useState<Kind>("contaminant");
+  const [ntUnit, setNtUnit] = useState("");
+  const [ntDesc, setNtDesc] = useState("");
+  const [ntGuideline, setNtGuideline] = useState("");
+  const [ntSort, setNtSort] = useState("");
+  const [value, setValue] = useState("");
+  const [riskCount, setRiskCount] = useState("0");
+  const [adding, setAdding] = useState(false);
+  const [addError, setAddError] = useState("");
+
+  // Edit-in-place (value + risk_count)
+  const [editId, setEditId] = useState<string | null>(null);
+  const [editValue, setEditValue] = useState("");
+  const [editRisk, setEditRisk] = useState("0");
+  const [editBusy, setEditBusy] = useState(false);
+  const [editError, setEditError] = useState("");
+
+  const load = useCallback(async () => {
+    setListError("");
+    try {
+      const res = await fetch(`/api/admin/catalog/products/${productId}/measurements`, { headers: { Authorization: `Bearer ${token}` } });
+      const b = await res.json() as { measurements?: ProductMeasurement[]; types?: MeasurementType[]; error?: string };
+      if (!res.ok) throw new Error(b.error || "Failed to load measurements");
+      setMeasurements(b.measurements ?? []);
+      setTypes(b.types ?? []);
+    } catch (e) {
+      console.error("[MeasurementsManager] load error:", e);
+      setListError(e instanceof Error ? e.message : "Failed to load measurements");
+    } finally {
+      setLoading(false);
+    }
+  }, [productId, token]);
+
+  useEffect(() => { load(); }, [load]);
+
+  const usedTypeIds = useMemo(() => new Set(measurements.map((m) => m.measurement_type_id)), [measurements]);
+  const availableTypes = useMemo(
+    () => types.filter((t) => !usedTypeIds.has(t.id)),
+    [types, usedTypeIds]
+  );
+  const filteredTypes = useMemo(() => {
+    const q = typeSearch.trim().toLowerCase();
+    const base = q ? availableTypes.filter((t) => t.name.toLowerCase().includes(q)) : availableTypes;
+    return base.slice(0, 40);
+  }, [availableTypes, typeSearch]);
+  const selectedType = useMemo(() => types.find((t) => t.id === selectedTypeId) ?? null, [types, selectedTypeId]);
+  const activeUnit = addMode === "existing" ? (selectedType?.unit ?? "") : ntUnit.trim();
+
+  const resetAddForm = () => {
+    setSelectedTypeId(""); setTypeSearch(""); setShowTypeList(false);
+    setNtName(""); setNtKind("contaminant"); setNtUnit(""); setNtDesc(""); setNtGuideline(""); setNtSort("");
+    setValue(""); setRiskCount("0"); setAddMode("existing");
+  };
+
+  const addMeasurement = async () => {
+    if (addMode === "existing" && !selectedTypeId) { setAddError("Pick a measurement type"); return; }
+    if (addMode === "new" && !ntName.trim()) { setAddError("New type needs a name"); return; }
+    setAdding(true);
+    setAddError("");
+    try {
+      const payload: Record<string, unknown> = { value: value.trim() === "" ? null : value.trim(), risk_count: riskCount.trim() === "" ? 0 : riskCount.trim() };
+      if (addMode === "existing") {
+        payload.measurement_type_id = selectedTypeId;
+      } else {
+        payload.new_type = {
+          name: ntName.trim(), kind: ntKind, unit: ntUnit.trim() || null, description: ntDesc.trim() || null,
+          guideline_limit: ntGuideline.trim() === "" ? null : ntGuideline.trim(),
+          sort_order: ntSort.trim() === "" ? null : ntSort.trim(),
+        };
+      }
+      const res = await fetch(`/api/admin/catalog/products/${productId}/measurements`, {
+        method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }, body: JSON.stringify(payload),
+      });
+      const raw = await res.text();
+      let parsed: { measurement?: ProductMeasurement; error?: string } = {};
+      try { parsed = raw ? JSON.parse(raw) : {}; } catch { /* non-JSON */ }
+      if (!res.ok) {
+        const msg = parsed.error || raw.trim().slice(0, 200) || `Add failed (HTTP ${res.status})`;
+        console.error("[MeasurementsManager] add failed:", res.status, msg);
+        throw new Error(msg);
+      }
+      resetAddForm();
+      await load(); // refresh measurements + types (a new inline type now appears in the picker)
+    } catch (e) {
+      console.error("[MeasurementsManager] addMeasurement error:", e);
+      setAddError(e instanceof Error ? e.message : "Failed to add measurement");
+    } finally {
+      setAdding(false);
+    }
+  };
+
+  const startEdit = (m: ProductMeasurement) => {
+    setEditId(m.id);
+    setEditValue(m.value != null ? String(m.value) : "");
+    setEditRisk(m.risk_count != null ? String(m.risk_count) : "0");
+    setEditError("");
+  };
+  const cancelEdit = () => { setEditId(null); setEditError(""); };
+
+  const saveEdit = async (m: ProductMeasurement) => {
+    setEditBusy(true);
+    setEditError("");
+    try {
+      const res = await fetch(`/api/admin/catalog/products/${productId}/measurements/${m.id}`, {
+        method: "PATCH", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ value: editValue.trim() === "" ? null : editValue.trim(), risk_count: editRisk.trim() === "" ? 0 : editRisk.trim() }),
+      });
+      const raw = await res.text();
+      let parsed: { measurement?: ProductMeasurement; error?: string } = {};
+      try { parsed = raw ? JSON.parse(raw) : {}; } catch { /* non-JSON */ }
+      if (!res.ok) {
+        const msg = parsed.error || raw.trim().slice(0, 200) || `Save failed (HTTP ${res.status})`;
+        console.error("[MeasurementsManager] edit failed:", res.status, msg);
+        throw new Error(msg);
+      }
+      if (parsed.measurement) setMeasurements((arr) => arr.map((x) => (x.id === m.id ? parsed.measurement! : x)));
+      setEditId(null);
+    } catch (e) {
+      console.error("[MeasurementsManager] saveEdit error:", e);
+      setEditError(e instanceof Error ? e.message : "Failed to save changes");
+    } finally {
+      setEditBusy(false);
+    }
+  };
+
+  const removeMeasurement = async (id: string) => {
+    setRemovingId(id);
+    setListError("");
+    try {
+      const res = await fetch(`/api/admin/catalog/products/${productId}/measurements/${id}`, { method: "DELETE", headers: { Authorization: `Bearer ${token}` } });
+      if (!res.ok) {
+        let msg = "Delete failed";
+        try { const b = await res.json() as { error?: string }; if (b.error) msg = b.error; } catch {}
+        throw new Error(msg);
+      }
+      setMeasurements((arr) => arr.filter((x) => x.id !== id));
+    } catch (e) {
+      console.error("[MeasurementsManager] remove error:", e);
+      setListError(e instanceof Error ? e.message : "Delete failed");
+    } finally {
+      setRemovingId(null);
+    }
+  };
+
+  const valueLabel = (m: ProductMeasurement) => {
+    if (m.value === null || m.value === undefined) return "—";
+    return m.type?.unit ? `${m.value} ${m.type.unit}` : String(m.value);
+  };
+
+  const inputStyle: React.CSSProperties = {
+    width: "100%", padding: "9px 11px", background: SURFACE,
+    border: `0.5px solid ${BORDER}`, borderRadius: 10,
+    fontFamily: SANS, fontSize: 14, color: TEXT, outline: "none", boxSizing: "border-box",
+  };
+  const labelStyle: React.CSSProperties = {
+    display: "block", fontFamily: SANS, fontSize: 10, fontWeight: 600,
+    letterSpacing: "0.14em", textTransform: "uppercase", color: TEXT_TER, marginBottom: 6,
+  };
+
+  // group measurements by kind in the fixed group order
+  const grouped = KIND_GROUPS.map((g) => ({
+    ...g,
+    items: measurements.filter((m) => (g.kind === "__other__" ? !["contaminant", "nutrient", "property"].includes(m.type?.kind ?? "") : m.type?.kind === g.kind)),
+  })).filter((g) => g.items.length > 0);
+
+  return (
+    <div>
+      <label style={labelStyle}>Measurements</label>
+
+      {/* Existing measurements, grouped by kind */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 12 }}>
+        {loading ? (
+          <div style={{ display: "flex", alignItems: "center", gap: 8, color: TEXT_TER, fontFamily: SANS, fontSize: 12.5, padding: "2px 0" }}>
+            <Loader2 size={14} style={{ animation: "spin 0.8s linear infinite" }} /> Loading…
+          </div>
+        ) : measurements.length === 0 ? (
+          <div style={{ fontFamily: SANS, fontSize: 12.5, color: TEXT_TER, padding: "2px 0" }}>No measurements yet.</div>
+        ) : (
+          grouped.map((g) => (
+            <div key={g.kind} style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              <span style={{ fontFamily: SANS, fontSize: 9.5, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", color: SAGE }}>{g.label}</span>
+              {g.items.map((m) => (
+                editId === m.id ? (
+                  <div key={m.id} style={{ display: "flex", flexDirection: "column", gap: 8, padding: 12, background: SURFACE, border: `0.5px solid rgba(${SAGE_RGB},0.4)`, borderRadius: 10 }}>
+                    <span style={{ fontFamily: SANS, fontSize: 13, fontWeight: 600, color: TEXT }}>{m.type?.name ?? "—"}</span>
+                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                      <div style={{ flex: 2, minWidth: 120 }}>
+                        <label style={labelStyle}>Value{m.type?.unit ? ` (${m.type.unit})` : ""}</label>
+                        <input value={editValue} onChange={(e) => setEditValue(e.target.value)} inputMode="decimal" placeholder="—" style={{ ...inputStyle, padding: "8px 11px" }} />
+                      </div>
+                      <div style={{ flex: 1, minWidth: 90 }}>
+                        <label style={labelStyle}>Risk count</label>
+                        <input value={editRisk} onChange={(e) => setEditRisk(e.target.value)} inputMode="numeric" placeholder="0" style={{ ...inputStyle, padding: "8px 11px" }} />
+                      </div>
+                    </div>
+                    {editError && <div style={{ padding: "8px 11px", background: "rgba(255,76,92,0.08)", border: `0.5px solid rgba(255,76,92,0.4)`, borderRadius: 9, fontFamily: SANS, fontSize: 12, color: DANGER }}>{editError}</div>}
+                    <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+                      <button type="button" onClick={cancelEdit} disabled={editBusy} style={{ padding: "8px 14px", background: "transparent", border: `0.5px solid ${BORDER}`, borderRadius: 9, fontFamily: SANS, fontSize: 11, fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", color: TEXT_SEC, cursor: editBusy ? "default" : "pointer" }}>Cancel</button>
+                      <button type="button" onClick={() => saveEdit(m)} disabled={editBusy} style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", background: `rgba(${SAGE_RGB},0.14)`, border: `0.5px solid rgba(${SAGE_RGB},0.4)`, borderRadius: 9, fontFamily: SANS, fontSize: 11, fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", color: SAGE, cursor: editBusy ? "default" : "pointer" }}>
+                        {editBusy ? <><Loader2 size={13} style={{ animation: "spin 0.8s linear infinite" }} /> Saving…</> : <><Check size={13} /> Save</>}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div key={m.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", background: SURFACE, border: `0.5px solid ${BORDER}`, borderRadius: 10 }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontFamily: SANS, fontSize: 13, fontWeight: 600, color: TEXT, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.type?.name ?? "—"}</div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 2, flexWrap: "wrap" }}>
+                        <span style={{ fontFamily: SANS, fontSize: 11.5, color: TEXT_SEC }}>{valueLabel(m)}</span>
+                        {(m.risk_count ?? 0) > 0 && (
+                          <span style={{ fontFamily: SANS, fontSize: 9, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: DANGER, background: "rgba(255,76,92,0.1)", border: `0.5px solid rgba(255,76,92,0.35)`, borderRadius: 6, padding: "1px 6px" }}>
+                            {m.risk_count} {m.risk_count === 1 ? "risk" : "risks"}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <button type="button" onClick={() => startEdit(m)} disabled={!!editId} aria-label="Edit measurement" className="lab-icon-btn" style={{ width: 32, height: 32, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "transparent", border: `0.5px solid ${BORDER}`, borderRadius: 9, color: TEXT_SEC, cursor: "pointer" }}>
+                      <Pencil size={13} />
+                    </button>
+                    <button type="button" onClick={() => removeMeasurement(m.id)} disabled={removingId === m.id} aria-label="Remove measurement" className="lab-icon-btn" style={{ width: 32, height: 32, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "transparent", border: `0.5px solid ${BORDER}`, borderRadius: 9, color: TEXT_SEC, cursor: removingId === m.id ? "default" : "pointer" }}>
+                      {removingId === m.id ? <Loader2 size={13} style={{ animation: "spin 0.8s linear infinite" }} /> : <Trash2 size={13} />}
+                    </button>
+                  </div>
+                )
+              ))}
+            </div>
+          ))
+        )}
+        {listError && (
+          <div style={{ padding: "8px 11px", background: "rgba(255,76,92,0.08)", border: `0.5px solid rgba(255,76,92,0.4)`, borderRadius: 9, fontFamily: SANS, fontSize: 12.5, color: DANGER }}>{listError}</div>
+        )}
+      </div>
+
+      {/* Add measurement form */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: 12, background: `rgba(${FG_RGB},0.03)`, border: `0.5px solid ${BORDER}`, borderRadius: 12 }}>
+        {/* existing vs new type */}
+        <div style={{ display: "flex", gap: 8 }}>
+          {(["existing", "new"] as const).map((m) => {
+            const active = addMode === m;
+            return (
+              <button key={m} type="button" onClick={() => { setAddMode(m); setAddError(""); }} style={{ flex: 1, padding: "9px 8px", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, background: active ? `rgba(${SAGE_RGB},0.14)` : "transparent", border: `0.5px solid ${active ? `rgba(${SAGE_RGB},0.4)` : BORDER}`, borderRadius: 10, fontFamily: SANS, fontSize: 11, fontWeight: 600, letterSpacing: "0.05em", textTransform: "uppercase", color: active ? SAGE : TEXT_TER, cursor: "pointer" }}>
+                {m === "existing" ? "Pick existing type" : "Create new type"}
+              </button>
+            );
+          })}
+        </div>
+
+        {addMode === "existing" ? (
+          <div style={{ position: "relative" }}>
+            <div style={{ position: "relative" }}>
+              <Search size={14} color={TEXT_TER} style={{ position: "absolute", left: 11, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} />
+              <input
+                value={selectedType && !showTypeList ? selectedType.name : typeSearch}
+                onChange={(e) => { setTypeSearch(e.target.value); setSelectedTypeId(""); setShowTypeList(true); }}
+                onFocus={() => setShowTypeList(true)}
+                onBlur={() => setTimeout(() => setShowTypeList(false), 150)}
+                placeholder="Search measurement types…"
+                style={{ ...inputStyle, paddingLeft: 32 }}
+              />
+            </div>
+            {showTypeList && (
+              <div style={{ position: "absolute", top: "100%", left: 0, right: 0, marginTop: 4, zIndex: 20, maxHeight: 200, overflowY: "auto", background: BG, border: `0.5px solid ${BORDER_STRONG}`, borderRadius: 10, boxShadow: "0 8px 24px rgba(0,0,0,0.4)" }}>
+                {filteredTypes.length === 0 ? (
+                  <div style={{ padding: "10px 12px", fontFamily: SANS, fontSize: 12.5, color: TEXT_TER }}>No matching types{availableTypes.length === 0 ? " (all are already added)" : ""}.</div>
+                ) : filteredTypes.map((t) => (
+                  <button key={t.id} type="button" onMouseDown={(e) => { e.preventDefault(); setSelectedTypeId(t.id); setTypeSearch(""); setShowTypeList(false); setAddError(""); }} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, width: "100%", padding: "9px 12px", background: selectedTypeId === t.id ? `rgba(${SAGE_RGB},0.12)` : "transparent", border: "none", borderBottom: `0.5px solid ${BORDER}`, cursor: "pointer", textAlign: "left" }}>
+                    <span style={{ fontFamily: SANS, fontSize: 13, color: TEXT, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.name}</span>
+                    <span style={{ fontFamily: SANS, fontSize: 10, color: TEXT_TER, flexShrink: 0, textTransform: "capitalize" }}>{[t.kind, t.unit].filter(Boolean).join(" · ")}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        ) : (
+          <>
+            <input value={ntName} onChange={(e) => setNtName(e.target.value)} placeholder="Type name (e.g. Lead)" style={inputStyle} />
+            <div style={{ display: "flex", gap: 6 }}>
+              {(["contaminant", "nutrient", "property"] as Kind[]).map((k) => {
+                const active = ntKind === k;
+                return (
+                  <button key={k} type="button" onClick={() => setNtKind(k)} style={{ flex: 1, padding: "8px 6px", background: active ? `rgba(${SAGE_RGB},0.14)` : "transparent", border: `0.5px solid ${active ? `rgba(${SAGE_RGB},0.4)` : BORDER}`, borderRadius: 9, fontFamily: SANS, fontSize: 10, fontWeight: 600, letterSpacing: "0.03em", textTransform: "uppercase", color: active ? SAGE : TEXT_TER, cursor: "pointer" }}>{k}</button>
+                );
+              })}
+            </div>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <input value={ntUnit} onChange={(e) => setNtUnit(e.target.value)} placeholder="Unit (e.g. mg/L)" style={{ ...inputStyle, flex: 1, minWidth: 110 }} />
+              <input value={ntGuideline} onChange={(e) => setNtGuideline(e.target.value)} inputMode="decimal" placeholder="Guideline limit" style={{ ...inputStyle, flex: 1, minWidth: 110 }} />
+              <input value={ntSort} onChange={(e) => setNtSort(e.target.value)} inputMode="numeric" placeholder="Sort order" style={{ ...inputStyle, flex: 1, minWidth: 90 }} />
+            </div>
+            <textarea value={ntDesc} onChange={(e) => setNtDesc(e.target.value)} placeholder="Description (optional)" rows={2} style={{ ...inputStyle, resize: "vertical", lineHeight: 1.5 }} />
+          </>
+        )}
+
+        {/* per-product value + risk count */}
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <input value={value} onChange={(e) => setValue(e.target.value)} inputMode="decimal" placeholder={activeUnit ? `Value (${activeUnit})` : "Value"} style={{ ...inputStyle, flex: 2, minWidth: 120 }} />
+          <input value={riskCount} onChange={(e) => setRiskCount(e.target.value)} inputMode="numeric" placeholder="Risk count" style={{ ...inputStyle, flex: 1, minWidth: 90 }} />
+        </div>
+
+        {addError && <div style={{ padding: "9px 11px", background: "rgba(255,76,92,0.08)", border: `0.5px solid rgba(255,76,92,0.4)`, borderRadius: 9, fontFamily: SANS, fontSize: 12.5, fontWeight: 500, color: DANGER }}>{addError}</div>}
+
+        <button type="button" onClick={addMeasurement} disabled={adding} style={{ alignSelf: "flex-start", display: "flex", alignItems: "center", gap: 6, padding: "9px 14px", background: `rgba(${SAGE_RGB},0.14)`, border: `0.5px solid rgba(${SAGE_RGB},0.4)`, borderRadius: 10, fontFamily: SANS, fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: SAGE, cursor: adding ? "default" : "pointer" }}>
+          {adding ? <><Loader2 size={13} style={{ animation: "spin 0.8s linear infinite" }} /> Adding…</> : <><Plus size={13} /> Add measurement</>}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ── Product modal (add / edit) ──────────────────────────────────────────────────
 function ProductModal({ token, editing, categoryOptions, onClose, onSuccess }: {
   token: string;
@@ -1019,6 +1358,18 @@ function ProductModal({ token, editing, categoryOptions, onClose, onSuccess }: {
               </button>
             </div>
           </div>
+
+          {/* Measurements — only for an existing (saved) product */}
+          {editing ? (
+            <MeasurementsManager token={token} productId={editing.id} />
+          ) : (
+            <div>
+              <label style={labelStyle}>Measurements</label>
+              <div style={{ fontFamily: SANS, fontSize: 12.5, color: TEXT_TER, padding: "2px 0" }}>
+                Save the product first, then reopen it to add measurements.
+              </div>
+            </div>
+          )}
 
           {/* Sources / Lab reports — only for an existing (saved) product */}
           {editing ? (
