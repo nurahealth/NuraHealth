@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, Fragment } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import type { User } from "@supabase/supabase-js";
@@ -292,22 +292,23 @@ export default function AppSidebar() {
         {/* MAIN NAV */}
         <nav style={{ display: "flex", flexDirection: "column", gap: 1, padding: "0 14px" }}>
           {NAV_ITEMS.map((item) => (
-            <NavRow
-              key={item.key}
-              item={item}
-              active={item.href === "/" ? pathname === "/" : pathname.startsWith(item.href)}
-              onClick={() => navigate(item.href)}
-            />
-          ))}
+            <Fragment key={item.key}>
+              <NavRow
+                item={item}
+                active={item.href === "/" ? pathname === "/" : pathname.startsWith(item.href)}
+                onClick={() => navigate(item.href)}
+              />
 
-          {/* Lab — beta-gated per profile.catalog_beta_enabled */}
-          {catalogBeta && (
-            <NavRow
-              item={{ key: "lab", label: "Lab", href: "/lab", icon: Icons.flask }}
-              active={pathname.startsWith("/lab")}
-              onClick={() => navigate("/lab")}
-            />
-          )}
+              {/* Lab Reports — sits under Supplements, beta-gated per profile.catalog_beta_enabled */}
+              {item.key === "supplements" && catalogBeta && (
+                <NavRow
+                  item={{ key: "lab", label: "Lab Reports", href: "/lab", icon: Icons.flask }}
+                  active={pathname.startsWith("/lab")}
+                  onClick={() => navigate("/lab")}
+                />
+              )}
+            </Fragment>
+          ))}
         </nav>
 
         {/* DIVIDER */}

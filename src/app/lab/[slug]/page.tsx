@@ -4,6 +4,7 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 import NuraPageShell from "@/components/NuraPageShell";
 import ScoreRing from "../ScoreRing";
 import SaveButton from "./SaveButton";
+import CollapsibleSection from "./CollapsibleSection";
 import { ProductCard, type LabProduct } from "../LabBrowseClient";
 import {
   ArrowUpRight, FlaskConical, AlertTriangle, Leaf, Droplets, FileText,
@@ -80,6 +81,23 @@ function SectionHeading({ children }: { children: React.ReactNode }) {
 function valueLabel(m: { value: number | null; unit: string | null }): string {
   if (m.value === null || m.value === undefined) return "—";
   return m.unit ? `${m.value} ${m.unit}` : `${m.value}`;
+}
+
+// Non-interactive status marker: a small solid rounded pill — sage/green for
+// good signals, salmon/red for flagged, muted for unknown. Purely a color
+// indicator (no knob, not a control). Theme-aware via NŪRA tokens.
+function StatusPill({ good }: { good: boolean | null }) {
+  const color =
+    good === true ? SAGE : good === false ? RED : `rgba(${FG_RGB},0.16)`;
+  return (
+    <span
+      aria-hidden
+      style={{
+        width: 22, height: 8, borderRadius: 999,
+        background: color, flexShrink: 0, display: "inline-block",
+      }}
+    />
+  );
 }
 
 // ── Page ──────────────────────────────────────────────────────────────────────
@@ -190,13 +208,15 @@ export default async function LabProductPage({ params }: { params: Promise<{ slu
         .map(([k, v]) => [k, typeof v === "object" ? JSON.stringify(v) : String(v)])
     : [];
 
-  const flaggedContaminants = contaminants.filter((m) => (m.risk_count ?? 0) > 0).length;
+  // Count every flagged measurement (risk_count > 0) across all sections, not
+  // just the ones grouped under "Contaminants".
+  const flaggedContaminants = measurements.filter((m) => (m.risk_count ?? 0) > 0).length;
   const indexed = documents.length > 0 || product.lab_tested === true;
 
   // Summary chips
   const summary: { Icon: typeof FlaskConical; label: string; value: string; good: boolean | null }[] = [
     { Icon: FlaskConical, label: "Lab tested", value: product.lab_tested ? "Yes" : "No", good: product.lab_tested ? true : null },
-    { Icon: AlertTriangle, label: "Contaminants", value: String(contaminants.length), good: contaminants.length === 0 ? true : false },
+    { Icon: AlertTriangle, label: "Contaminants", value: String(flaggedContaminants), good: flaggedContaminants === 0 ? true : false },
     { Icon: Leaf, label: "Nutrients", value: String(nutrients.length), good: nutrients.length > 0 ? true : null },
     {
       Icon: Droplets,
@@ -205,7 +225,6 @@ export default async function LabProductPage({ params }: { params: Promise<{ slu
       good: product.microplastics_present === null || product.microplastics_present === undefined ? null : product.microplastics_present ? false : true,
     },
   ];
-  const dotColor = (good: boolean | null) => (good === true ? SAGE : good === false ? RED : TEXT_TER);
 
   const card: React.CSSProperties = { background: SURFACE, border: `0.5px solid ${BORDER}`, borderRadius: 14 };
 
@@ -251,67 +270,79 @@ export default async function LabProductPage({ params }: { params: Promise<{ slu
               </div>
             </div>
 
-            {/* Info */}
-            <div style={{ flex: 1, minWidth: 220, display: "flex", gap: 16, justifyContent: "space-between" }}>
-              <div style={{ minWidth: 0 }}>
-                {category && (
-                  <span style={{ display: "inline-block", fontFamily: SANS, fontSize: 9, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", color: SAGE, background: `rgba(${SAGE_RGB},0.14)`, border: `0.5px solid rgba(${SAGE_RGB},0.3)`, borderRadius: 8, padding: "3px 8px", marginBottom: 10 }}>
-                    {category.name}
-                  </span>
-                )}
-                <h1 style={{ fontFamily: SERIF, fontSize: "clamp(26px, 4.5vw, 34px)", fontWeight: 500, color: TEXT, margin: "0 0 4px", letterSpacing: "-0.4px", lineHeight: 1.12 }}>
-                  {product.name}
-                </h1>
-                {product.brand && (
-                  <div style={{ fontFamily: SANS, fontSize: 14, color: TEXT_SEC }}>{product.brand}</div>
-                )}
-              </div>
-
-              {product.score !== null && (
-                <div style={{ flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
-                  <ScoreRing score={product.score} size={92} showScale />
-                  {product.score_label && <Eyebrow color={TEXT_TER}>{product.score_label}</Eyebrow>}
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Summary list */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(132px, 1fr))", gap: 10, marginTop: 18, paddingTop: 18, borderTop: `0.5px solid ${BORDER}` }}>
-            {summary.map(({ Icon, label, value, good }) => (
-              <div key={label} style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <Icon size={16} color={TEXT_TER} style={{ flexShrink: 0 }} />
+            {/* Info column — title block, then summary rows, divider, and "Why this score" */}
+            <div style={{ flex: 1, minWidth: 240, display: "flex", flexDirection: "column" }}>
+              {/* Title row: name/brand/pill + score ring */}
+              <div style={{ display: "flex", gap: 16, justifyContent: "space-between", alignItems: "flex-start" }}>
                 <div style={{ minWidth: 0 }}>
-                  <Eyebrow color={TEXT_TER}>{label}</Eyebrow>
-                  <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 3 }}>
-                    <span style={{ width: 7, height: 7, borderRadius: "50%", background: dotColor(good), flexShrink: 0 }} />
-                    <span style={{ fontFamily: SANS, fontSize: 13.5, fontWeight: 600, color: TEXT }}>{value}</span>
+                  {category && (
+                    <span style={{ display: "inline-block", fontFamily: SANS, fontSize: 9, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", color: SAGE, background: `rgba(${SAGE_RGB},0.14)`, border: `0.5px solid rgba(${SAGE_RGB},0.3)`, borderRadius: 8, padding: "3px 8px", marginBottom: 10 }}>
+                      {category.name}
+                    </span>
+                  )}
+                  <h1 style={{ fontFamily: SERIF, fontSize: "clamp(26px, 4.5vw, 34px)", fontWeight: 500, color: TEXT, margin: "0 0 4px", letterSpacing: "-0.4px", lineHeight: 1.12 }}>
+                    {product.name}
+                  </h1>
+                  {product.brand && (
+                    <div style={{ fontFamily: SANS, fontSize: 14, color: TEXT_SEC }}>{product.brand}</div>
+                  )}
+                </div>
+
+                {product.score !== null && (
+                  <div style={{ flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
+                    <ScoreRing score={product.score} size={92} showScale />
+                    {product.score_label && <Eyebrow color={TEXT_TER}>{product.score_label}</Eyebrow>}
                   </div>
+                )}
+              </div>
+
+              {/* Summary — full-width rows: icon + label · value + toggle pill */}
+              <div style={{ marginTop: 16, display: "flex", flexDirection: "column" }}>
+                {summary.map(({ Icon, label, value, good }, i) => (
+                  <div
+                    key={label}
+                    style={{
+                      display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12,
+                      minHeight: 44, padding: "9px 0",
+                      borderTop: i === 0 ? "none" : `0.5px solid ${BORDER}`,
+                    }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+                      <Icon size={16} color={TEXT_TER} style={{ flexShrink: 0 }} />
+                      <span style={{ fontFamily: SANS, fontSize: 13.5, fontWeight: 500, color: TEXT_SEC }}>{label}</span>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
+                      <span style={{ fontFamily: SANS, fontSize: 13.5, fontWeight: 600, color: TEXT }}>{value}</span>
+                      <StatusPill good={good} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Divider */}
+              <div style={{ borderTop: `0.5px solid ${BORDER}`, marginTop: 6 }} />
+
+              {/* Why this score */}
+              <div style={{ marginTop: 16, padding: 14, background: `rgba(${SAGE_RGB},0.06)`, border: `0.5px solid rgba(${SAGE_RGB},0.18)`, borderRadius: 12 }}>
+                <Eyebrow color={SAGE}>Why this score</Eyebrow>
+                <div style={{ marginTop: 8, fontFamily: SANS, fontSize: 13, color: TEXT_SEC, lineHeight: 1.6 }}>
+                  {product.score_rationale ? (
+                    product.score_rationale
+                  ) : (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                      <span>Lab report indexed: <span style={{ color: TEXT, fontWeight: 500 }}>{indexed ? "Indexed" : "Not indexed"}</span></span>
+                      <span>Contaminants: <span style={{ color: TEXT, fontWeight: 500 }}>{flaggedContaminants} flagged</span></span>
+                    </div>
+                  )}
                 </div>
               </div>
-            ))}
-          </div>
-
-          {/* Why this score */}
-          <div style={{ marginTop: 16, padding: 14, background: `rgba(${SAGE_RGB},0.06)`, border: `0.5px solid rgba(${SAGE_RGB},0.18)`, borderRadius: 12 }}>
-            <Eyebrow color={SAGE}>Why this score</Eyebrow>
-            <div style={{ marginTop: 8, fontFamily: SANS, fontSize: 13, color: TEXT_SEC, lineHeight: 1.6 }}>
-              {product.score_rationale ? (
-                product.score_rationale
-              ) : (
-                <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                  <span>Lab report indexed: <span style={{ color: TEXT, fontWeight: 500 }}>{indexed ? "Indexed" : "Not indexed"}</span></span>
-                  <span>Contaminants: <span style={{ color: TEXT, fontWeight: 500 }}>{flaggedContaminants} flagged</span></span>
-                </div>
-              )}
             </div>
           </div>
         </div>
 
         {/* ── Contaminants ─────────────────────────────────────────────────── */}
         {contaminants.length > 0 && (
-          <section>
-            <SectionHeading>Contaminants</SectionHeading>
+          <CollapsibleSection title="Contaminants">
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {contaminants.map((m, i) => (
                 <div key={`${m.name}-${i}`} style={{ ...card, padding: "14px 16px", borderLeft: `3px solid ${RED}` }}>
@@ -332,13 +363,12 @@ export default async function LabProductPage({ params }: { params: Promise<{ slu
                 </div>
               ))}
             </div>
-          </section>
+          </CollapsibleSection>
         )}
 
         {/* ── Ingredients & minerals ───────────────────────────────────────── */}
         {nutrients.length > 0 && (
-          <section>
-            <SectionHeading>Ingredients &amp; minerals</SectionHeading>
+          <CollapsibleSection title="Ingredients & minerals">
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {nutrients.map((m, i) => {
                 const flagged = (m.risk_count ?? 0) > 0;
@@ -362,13 +392,12 @@ export default async function LabProductPage({ params }: { params: Promise<{ slu
                 );
               })}
             </div>
-          </section>
+          </CollapsibleSection>
         )}
 
         {/* ── Properties ───────────────────────────────────────────────────── */}
         {propEntries.length > 0 && (
-          <section>
-            <SectionHeading>Details</SectionHeading>
+          <CollapsibleSection title="Details">
             <div className="lab-props-grid">
               {propEntries.map(([k, v]) => (
                 <div key={k} style={{ ...card, padding: "12px 14px", height: "100%" }}>
@@ -377,13 +406,12 @@ export default async function LabProductPage({ params }: { params: Promise<{ slu
                 </div>
               ))}
             </div>
-          </section>
+          </CollapsibleSection>
         )}
 
         {/* ── Sources ──────────────────────────────────────────────────────── */}
         {docLinks.length > 0 && (
-          <section>
-            <SectionHeading>Sources</SectionHeading>
+          <CollapsibleSection title="Sources">
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 10 }}>
               {docLinks.map((d) => (
                 <a
@@ -405,7 +433,7 @@ export default async function LabProductPage({ params }: { params: Promise<{ slu
                 </a>
               ))}
             </div>
-          </section>
+          </CollapsibleSection>
         )}
 
         {/* ── Related ──────────────────────────────────────────────────────── */}

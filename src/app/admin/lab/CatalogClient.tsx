@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { supabase } from "@/lib/supabase";
-import { Plus, X, Pencil, Trash2, RefreshCw, Shield, ImagePlus, Loader2 } from "lucide-react";
+import { Plus, X, Pencil, Trash2, RefreshCw, Shield, ImagePlus, Loader2, FileText, Link2, UploadCloud, Check } from "lucide-react";
 import Sidebar from "@/components/Sidebar";
 import NuraPlexus from "@/components/NuraPlexus";
 
@@ -137,6 +137,442 @@ function propsToRows(p: Record<string, unknown> | null | undefined): PropRow[] {
 
 function triFromBool(v: boolean | null | undefined): Tri {
   return v === true ? "yes" : v === false ? "no" : "unknown";
+}
+
+// ── Sources / Lab reports manager ────────────────────────────────────────────────
+interface CatalogDocument {
+  id: string;
+  title: string;
+  doc_type: string | null;
+  year: number | null;
+  source_url: string | null;
+  storage_path: string | null;
+}
+
+// Accepted upload types — PDFs, common docs, and report images
+const DOC_ACCEPT = "application/pdf,.pdf,.doc,.docx,image/*";
+
+function DocumentsManager({ token, productId }: { token: string; productId: string }) {
+  const [docs, setDocs] = useState<CatalogDocument[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [listError, setListError] = useState("");
+  const [removingId, setRemovingId] = useState<string | null>(null);
+
+  // Add-form state
+  const [title, setTitle] = useState("");
+  const [docType, setDocType] = useState("");
+  const [year, setYear] = useState("");
+  const [mode, setMode] = useState<"link" | "file">("link");
+  const [sourceUrl, setSourceUrl] = useState("");
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [dragOver, setDragOver] = useState(false);
+  const [adding, setAdding] = useState(false);
+  const [justAdded, setJustAdded] = useState(false);
+  const [addError, setAddError] = useState("");
+  const docFileRef = useRef<HTMLInputElement>(null);
+
+  // Edit-in-place state (one document at a time)
+  const [editId, setEditId] = useState<string | null>(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editType, setEditType] = useState("");
+  const [editYear, setEditYear] = useState("");
+  const [editSource, setEditSource] = useState<"keep" | "link" | "file">("keep");
+  const [editSourceUrl, setEditSourceUrl] = useState("");
+  const [editFile, setEditFile] = useState<File | null>(null);
+  const [editBusy, setEditBusy] = useState(false);
+  const [editError, setEditError] = useState("");
+  const editFileRef = useRef<HTMLInputElement>(null);
+
+  const load = useCallback(async () => {
+    setListError("");
+    try {
+      const res = await fetch(`/api/admin/catalog/products/${productId}/documents`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const b = await res.json() as { documents?: CatalogDocument[]; error?: string };
+      if (!res.ok) throw new Error(b.error || "Failed to load documents");
+      setDocs(b.documents ?? []);
+    } catch (e) {
+      console.error("[DocumentsManager] load documents error:", e);
+      setListError(e instanceof Error ? e.message : "Failed to load documents");
+    } finally {
+      setLoading(false);
+    }
+  }, [productId, token]);
+
+  useEffect(() => { load(); }, [load]);
+
+  // Stop the browser from navigating to / opening a PDF that's dropped just
+  // outside the drop zone — otherwise a near-miss drop looks like "drag & drop
+  // doesn't work" because the page replaces itself with the file.
+  useEffect(() => {
+    const prevent = (e: DragEvent) => { e.preventDefault(); };
+    window.addEventListener("dragover", prevent);
+    window.addEventListener("drop", prevent);
+    return () => {
+      window.removeEventListener("dragover", prevent);
+      window.removeEventListener("drop", prevent);
+    };
+  }, []);
+
+  const addDocument = async () => {
+    if (!productId) { setAddError("Missing product — save the product first, then reopen it."); return; }
+    if (mode === "link" && !sourceUrl.trim()) { setAddError("Paste a link or switch to Upload PDF"); return; }
+    if (mode === "file" && !pendingFile) { setAddError("Choose a PDF or switch to Paste link"); return; }
+
+    // Title is optional in the UI — default it (filename / link) so a dragged
+    // PDF saves without forcing the admin to type a title first.
+    const finalTitle =
+      title.trim() ||
+      (mode === "file" && pendingFile ? pendingFile.name.replace(/\.[^.]+$/, "") : "") ||
+      (mode === "link" && sourceUrl.trim() ? sourceUrl.trim() : "") ||
+      "Untitled document";
+
+    setAdding(true);
+    setAddError("");
+    try {
+      const fd = new FormData();
+      fd.append("title", finalTitle);
+      if (docType.trim()) fd.append("doc_type", docType.trim());
+      if (year.trim()) fd.append("year", year.trim());
+      if (mode === "link") fd.append("source_url", sourceUrl.trim());
+      else if (pendingFile) fd.append("file", pendingFile);
+
+      const res = await fetch(`/api/admin/catalog/products/${productId}/documents`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: fd,
+      });
+
+      // Read the body as text first so we can surface non-JSON errors too (413/HTML/etc.)
+      const rawBody = await res.text();
+      let parsed: { document?: CatalogDocument; error?: string } = {};
+      try { parsed = rawBody ? JSON.parse(rawBody) : {}; } catch { /* non-JSON */ }
+
+      if (!res.ok) {
+        const msg = parsed.error || rawBody.trim().slice(0, 200) || `Upload failed (HTTP ${res.status})`;
+        console.error("[DocumentsManager] add document failed:", res.status, msg);
+        throw new Error(msg);
+      }
+
+      // Show the new document immediately, then reconcile with the server list
+      if (parsed.document) setDocs((d) => [...d, parsed.document!]);
+      setTitle(""); setDocType(""); setYear(""); setSourceUrl(""); setPendingFile(null); setMode("link");
+      if (docFileRef.current) docFileRef.current.value = "";
+      setJustAdded(true);
+      setTimeout(() => setJustAdded(false), 2200);
+      await load();
+    } catch (e) {
+      console.error("[DocumentsManager] addDocument error:", e);
+      setAddError(e instanceof Error ? e.message : "Failed to add document");
+    } finally {
+      setAdding(false);
+    }
+  };
+
+  const onPickFile = (f: File | null) => {
+    if (!f) return;
+    setPendingFile(f);
+    setAddError("");
+    setJustAdded(false);
+  };
+
+  const removeDocument = async (id: string) => {
+    setRemovingId(id);
+    setListError("");
+    try {
+      const res = await fetch(`/api/admin/catalog/products/${productId}/documents/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) {
+        let msg = "Delete failed";
+        try { const b = await res.json() as { error?: string }; if (b.error) msg = b.error; } catch {}
+        throw new Error(msg);
+      }
+      setDocs((d) => d.filter((x) => x.id !== id));
+    } catch (e) {
+      setListError(e instanceof Error ? e.message : "Delete failed");
+    } finally {
+      setRemovingId(null);
+    }
+  };
+
+  const startEdit = (d: CatalogDocument) => {
+    setEditId(d.id);
+    setEditTitle(d.title);
+    setEditType(d.doc_type ?? "");
+    setEditYear(d.year != null ? String(d.year) : "");
+    setEditSource("keep");
+    setEditSourceUrl(d.source_url ?? "");
+    setEditFile(null);
+    setEditError("");
+  };
+
+  const cancelEdit = () => { setEditId(null); setEditFile(null); setEditError(""); };
+
+  const saveEdit = async (d: CatalogDocument) => {
+    if (editSource === "link" && !editSourceUrl.trim()) { setEditError("Enter a link or choose Keep current"); return; }
+    if (editSource === "file" && !editFile) { setEditError("Choose a file or choose Keep current"); return; }
+    setEditBusy(true);
+    setEditError("");
+    try {
+      const fd = new FormData();
+      fd.append("title", editTitle.trim() || d.title);
+      fd.append("doc_type", editType.trim());
+      fd.append("year", editYear.trim());
+      if (editSource === "link") fd.append("source_url", editSourceUrl.trim());
+      else if (editSource === "file" && editFile) fd.append("file", editFile);
+
+      const res = await fetch(`/api/admin/catalog/products/${productId}/documents/${d.id}`, {
+        method: "PATCH",
+        headers: { Authorization: `Bearer ${token}` },
+        body: fd,
+      });
+      const rawBody = await res.text();
+      let parsed: { document?: CatalogDocument; error?: string } = {};
+      try { parsed = rawBody ? JSON.parse(rawBody) : {}; } catch { /* non-JSON */ }
+      if (!res.ok) {
+        const msg = parsed.error || rawBody.trim().slice(0, 200) || `Save failed (HTTP ${res.status})`;
+        console.error("[DocumentsManager] edit document failed:", res.status, msg);
+        throw new Error(msg);
+      }
+      if (parsed.document) setDocs((arr) => arr.map((x) => (x.id === d.id ? parsed.document! : x)));
+      setEditId(null);
+      setEditFile(null);
+    } catch (e) {
+      console.error("[DocumentsManager] saveEdit error:", e);
+      setEditError(e instanceof Error ? e.message : "Failed to save changes");
+    } finally {
+      setEditBusy(false);
+    }
+  };
+
+  const inputStyle: React.CSSProperties = {
+    width: "100%", padding: "9px 11px", background: SURFACE,
+    border: `0.5px solid ${BORDER}`, borderRadius: 10,
+    fontFamily: SANS, fontSize: 14, color: TEXT, outline: "none", boxSizing: "border-box",
+  };
+  const labelStyle: React.CSSProperties = {
+    display: "block", fontFamily: SANS, fontSize: 10, fontWeight: 600,
+    letterSpacing: "0.14em", textTransform: "uppercase", color: TEXT_TER, marginBottom: 6,
+  };
+
+  return (
+    <div>
+      <label style={labelStyle}>Sources / Lab reports</label>
+
+      {/* Existing documents */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 12 }}>
+        {loading ? (
+          <div style={{ display: "flex", alignItems: "center", gap: 8, color: TEXT_TER, fontFamily: SANS, fontSize: 12.5, padding: "2px 0" }}>
+            <Loader2 size={14} style={{ animation: "spin 0.8s linear infinite" }} /> Loading…
+          </div>
+        ) : docs.length === 0 ? (
+          <div style={{ fontFamily: SANS, fontSize: 12.5, color: TEXT_TER, padding: "2px 0 2px" }}>
+            No sources yet.
+          </div>
+        ) : (
+          docs.map((d) => (
+            editId === d.id ? (
+              // ── Inline edit form ───────────────────────────────────────────
+              <div key={d.id} style={{ display: "flex", flexDirection: "column", gap: 8, padding: 12, background: SURFACE, border: `0.5px solid rgba(${SAGE_RGB},0.4)`, borderRadius: 10 }}>
+                <input value={editTitle} onChange={(e) => setEditTitle(e.target.value)} placeholder="Title" style={{ ...inputStyle, padding: "8px 11px" }} />
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                  <input value={editType} onChange={(e) => setEditType(e.target.value)} placeholder="Type" style={{ ...inputStyle, flex: 2, minWidth: 120, padding: "8px 11px" }} />
+                  <input value={editYear} onChange={(e) => setEditYear(e.target.value)} placeholder="Year" inputMode="numeric" style={{ ...inputStyle, flex: 1, minWidth: 70, padding: "8px 11px" }} />
+                </div>
+
+                {/* Source: keep / replace with link / replace with file */}
+                <div style={{ display: "flex", gap: 6 }}>
+                  {([["keep", "Keep current"], ["link", "Replace link"], ["file", "Replace file"]] as [typeof editSource, string][]).map(([m, lbl]) => {
+                    const active = editSource === m;
+                    return (
+                      <button
+                        key={m}
+                        type="button"
+                        onClick={() => { setEditSource(m); setEditError(""); }}
+                        style={{ flex: 1, padding: "8px 6px", background: active ? `rgba(${SAGE_RGB},0.14)` : "transparent", border: `0.5px solid ${active ? `rgba(${SAGE_RGB},0.4)` : BORDER}`, borderRadius: 9, fontFamily: SANS, fontSize: 10, fontWeight: 600, letterSpacing: "0.03em", textTransform: "uppercase", color: active ? SAGE : TEXT_TER, cursor: "pointer" }}
+                      >
+                        {lbl}
+                      </button>
+                    );
+                  })}
+                </div>
+                {editSource === "link" && (
+                  <input value={editSourceUrl} onChange={(e) => setEditSourceUrl(e.target.value)} placeholder="https://… (link to the report)" style={{ ...inputStyle, padding: "8px 11px" }} />
+                )}
+                {editSource === "file" && (
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                    <input ref={editFileRef} type="file" accept={DOC_ACCEPT} onChange={(e) => { setEditFile(e.target.files?.[0] ?? null); setEditError(""); }} style={{ display: "none" }} />
+                    <button type="button" onClick={() => editFileRef.current?.click()} className="lab-icon-btn" style={{ padding: "8px 12px", background: "transparent", border: `0.5px solid ${BORDER}`, borderRadius: 9, fontFamily: SANS, fontSize: 11, fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase", color: TEXT_SEC, cursor: "pointer", flexShrink: 0 }}>
+                      {editFile ? "Change file" : "Choose file"}
+                    </button>
+                    <span style={{ fontFamily: SANS, fontSize: 12, color: editFile ? TEXT : TEXT_TER, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", minWidth: 0, flex: 1 }}>
+                      {editFile ? editFile.name : "No file chosen"}
+                    </span>
+                  </div>
+                )}
+
+                {editError && (
+                  <div style={{ padding: "8px 11px", background: "rgba(255,76,92,0.08)", border: `0.5px solid rgba(255,76,92,0.4)`, borderRadius: 9, fontFamily: SANS, fontSize: 12, color: DANGER }}>{editError}</div>
+                )}
+                <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+                  <button type="button" onClick={cancelEdit} disabled={editBusy} style={{ padding: "8px 14px", background: "transparent", border: `0.5px solid ${BORDER}`, borderRadius: 9, fontFamily: SANS, fontSize: 11, fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", color: TEXT_SEC, cursor: editBusy ? "default" : "pointer" }}>Cancel</button>
+                  <button type="button" onClick={() => saveEdit(d)} disabled={editBusy} style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", background: `rgba(${SAGE_RGB},0.14)`, border: `0.5px solid rgba(${SAGE_RGB},0.4)`, borderRadius: 9, fontFamily: SANS, fontSize: 11, fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", color: SAGE, cursor: editBusy ? "default" : "pointer" }}>
+                    {editBusy ? <><Loader2 size={13} style={{ animation: "spin 0.8s linear infinite" }} /> Saving…</> : <><Check size={13} /> Save</>}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              // ── Normal row with edit + remove controls ─────────────────────
+              <div key={d.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", background: SURFACE, border: `0.5px solid ${BORDER}`, borderRadius: 10 }}>
+                {d.storage_path ? <FileText size={15} color={SAGE} style={{ flexShrink: 0 }} /> : <Link2 size={15} color={SAGE} style={{ flexShrink: 0 }} />}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontFamily: SANS, fontSize: 13, fontWeight: 600, color: TEXT, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{d.title}</div>
+                  {(d.doc_type || d.year || d.storage_path) && (
+                    <div style={{ fontFamily: SANS, fontSize: 11, color: TEXT_TER, marginTop: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {[d.doc_type, d.year ? String(d.year) : null, d.storage_path ? "PDF" : "Link"].filter(Boolean).join(" · ")}
+                    </div>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => startEdit(d)}
+                  disabled={removingId === d.id || !!editId}
+                  aria-label="Edit document"
+                  className="lab-icon-btn"
+                  style={{ width: 32, height: 32, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "transparent", border: `0.5px solid ${BORDER}`, borderRadius: 9, color: TEXT_SEC, cursor: "pointer" }}
+                >
+                  <Pencil size={13} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => removeDocument(d.id)}
+                  disabled={removingId === d.id}
+                  aria-label="Remove document"
+                  className="lab-icon-btn"
+                  style={{ width: 32, height: 32, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "transparent", border: `0.5px solid ${BORDER}`, borderRadius: 9, color: TEXT_SEC, cursor: removingId === d.id ? "default" : "pointer" }}
+                >
+                  {removingId === d.id ? <Loader2 size={13} style={{ animation: "spin 0.8s linear infinite" }} /> : <Trash2 size={13} />}
+                </button>
+              </div>
+            )
+          ))
+        )}
+        {listError && (
+          <div style={{ padding: "8px 11px", background: "rgba(255,76,92,0.08)", border: `0.5px solid rgba(255,76,92,0.4)`, borderRadius: 9, fontFamily: SANS, fontSize: 12.5, color: DANGER }}>
+            {listError}
+          </div>
+        )}
+      </div>
+
+      {/* Add document form */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: 12, background: `rgba(${FG_RGB},0.03)`, border: `0.5px solid ${BORDER}`, borderRadius: 12 }}>
+        <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Title — optional (defaults to file name)" style={inputStyle} />
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <input value={docType} onChange={(e) => setDocType(e.target.value)} placeholder="Type (optional)" style={{ ...inputStyle, flex: 2, minWidth: 130 }} />
+          <input value={year} onChange={(e) => setYear(e.target.value)} placeholder="Year" inputMode="numeric" style={{ ...inputStyle, flex: 1, minWidth: 80 }} />
+        </div>
+
+        {/* Link vs Upload toggle */}
+        <div style={{ display: "flex", gap: 8 }}>
+          {(["link", "file"] as const).map((m) => {
+            const active = mode === m;
+            return (
+              <button
+                key={m}
+                type="button"
+                onClick={() => { setMode(m); setAddError(""); }}
+                style={{
+                  flex: 1, padding: "9px 8px",
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                  background: active ? `rgba(${SAGE_RGB},0.14)` : "transparent",
+                  border: `0.5px solid ${active ? `rgba(${SAGE_RGB},0.4)` : BORDER}`,
+                  borderRadius: 10, fontFamily: SANS, fontSize: 11, fontWeight: 600,
+                  letterSpacing: "0.06em", textTransform: "uppercase",
+                  color: active ? SAGE : TEXT_TER, cursor: "pointer",
+                }}
+              >
+                {m === "link" ? <><Link2 size={13} /> Paste link</> : <><FileText size={13} /> Upload PDF</>}
+              </button>
+            );
+          })}
+        </div>
+
+        {mode === "link" ? (
+          <input value={sourceUrl} onChange={(e) => setSourceUrl(e.target.value)} placeholder="https://… (link to the report)" style={inputStyle} />
+        ) : (
+          <div
+            onClick={() => !adding && docFileRef.current?.click()}
+            onDragOver={(e) => { e.preventDefault(); if (!adding) setDragOver(true); }}
+            onDragLeave={(e) => { e.preventDefault(); setDragOver(false); }}
+            onDrop={(e) => {
+              e.preventDefault();
+              setDragOver(false);
+              if (adding) return;
+              onPickFile(e.dataTransfer.files?.[0] ?? null);
+            }}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => { if ((e.key === "Enter" || e.key === " ") && !adding) docFileRef.current?.click(); }}
+            style={{
+              display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 5,
+              padding: "18px 14px", borderRadius: 10, textAlign: "center",
+              cursor: adding ? "default" : "pointer",
+              border: `1px dashed ${dragOver ? SAGE : pendingFile ? `rgba(${SAGE_RGB},0.45)` : BORDER}`,
+              background: dragOver ? `rgba(${SAGE_RGB},0.10)` : `rgba(${FG_RGB},0.02)`,
+              transition: "background 160ms, border-color 160ms",
+            }}
+          >
+            <input ref={docFileRef} type="file" accept={DOC_ACCEPT} onChange={(e) => { onPickFile(e.target.files?.[0] ?? null); }} style={{ display: "none" }} />
+            {adding ? (
+              <>
+                <Loader2 size={20} color={SAGE} style={{ animation: "spin 0.8s linear infinite" }} />
+                <span style={{ fontFamily: SANS, fontSize: 12.5, fontWeight: 600, color: SAGE }}>Uploading…</span>
+              </>
+            ) : pendingFile ? (
+              <>
+                <FileText size={20} color={SAGE} />
+                <span style={{ fontFamily: SANS, fontSize: 12.5, fontWeight: 600, color: TEXT, maxWidth: "100%", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{pendingFile.name}</span>
+                <span style={{ fontFamily: SANS, fontSize: 10.5, color: TEXT_TER }}>Click to choose a different file</span>
+              </>
+            ) : (
+              <>
+                <UploadCloud size={20} color={dragOver ? SAGE : TEXT_TER} />
+                <span style={{ fontFamily: SANS, fontSize: 12.5, fontWeight: 600, color: TEXT_SEC }}>Drag &amp; drop a file here</span>
+                <span style={{ fontFamily: SANS, fontSize: 10.5, color: TEXT_TER }}>or click to browse · PDF, DOC, or image</span>
+              </>
+            )}
+          </div>
+        )}
+
+        {addError && (
+          <div style={{ padding: "9px 11px", background: "rgba(255,76,92,0.08)", border: `0.5px solid rgba(255,76,92,0.4)`, borderRadius: 9, fontFamily: SANS, fontSize: 12.5, fontWeight: 500, color: DANGER }}>
+            {addError}
+          </div>
+        )}
+
+        <button
+          type="button"
+          onClick={addDocument}
+          disabled={adding}
+          style={{
+            alignSelf: "flex-start", display: "flex", alignItems: "center", gap: 6, padding: "9px 14px",
+            background: `rgba(${SAGE_RGB},0.14)`, border: `0.5px solid rgba(${SAGE_RGB},0.4)`, borderRadius: 10,
+            fontFamily: SANS, fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase",
+            color: SAGE, cursor: adding ? "default" : "pointer",
+          }}
+        >
+          {adding
+            ? <><Loader2 size={13} style={{ animation: "spin 0.8s linear infinite" }} /> Adding…</>
+            : justAdded
+              ? <><Check size={13} /> Added</>
+              : <><Plus size={13} /> Add document</>}
+        </button>
+      </div>
+    </div>
+  );
 }
 
 // ── Product modal (add / edit) ──────────────────────────────────────────────────
@@ -583,6 +1019,18 @@ function ProductModal({ token, editing, categoryOptions, onClose, onSuccess }: {
               </button>
             </div>
           </div>
+
+          {/* Sources / Lab reports — only for an existing (saved) product */}
+          {editing ? (
+            <DocumentsManager token={token} productId={editing.id} />
+          ) : (
+            <div>
+              <label style={labelStyle}>Sources / Lab reports</label>
+              <div style={{ fontFamily: SANS, fontSize: 12.5, color: TEXT_TER, padding: "2px 0" }}>
+                Save the product first, then reopen it to attach lab reports and links.
+              </div>
+            </div>
+          )}
 
           <button
             onClick={submit}
