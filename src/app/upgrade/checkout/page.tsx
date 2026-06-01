@@ -26,12 +26,17 @@ const MONO = "'JetBrains Mono', monospace";
 // so we resolve concrete colors per theme.
 function buildAppearance(theme: Theme): StripeElementsOptions["appearance"] {
   const isLight = theme === "light";
-  const sage = isLight ? "#7d9385" : "#9bb0a5";
+  // Stripe iframes can't read parent CSS variables, so resolve the themed tokens
+  // to concrete values from :root / [data-theme] at call time. globals.css stays
+  // authoritative; the ternaries are an SSR/no-document fallback only.
+  const css = typeof document !== "undefined" ? getComputedStyle(document.documentElement) : null;
+  const cssVar = (name: string, fallback: string) => css?.getPropertyValue(name).trim() || fallback;
+  const sage = cssVar("--nura-sage", isLight ? "#7d9385" : "#9bb0a5");
   const sageRgb = isLight ? "125,147,133" : "155,176,165";
-  const bg = isLight ? "#f4f1e6" : "#0d0d0e";
+  const bg = cssVar("--nura-bg", isLight ? "#f4f1e6" : "#0d0d0e");
   const surface = isLight ? "#ecead8" : "#111214";
   const surfaceElevated = isLight ? "#e4e1cb" : "#1a1a1c";
-  const text = isLight ? "#1a1f1a" : "#f0ebde";
+  const text = cssVar("--nura-text-primary", isLight ? "#1a1f1a" : "#f0ebde");
   const textSec = isLight ? "rgba(26,31,26,0.62)" : "rgba(235,230,216,0.55)";
   const textTer = isLight ? "rgba(26,31,26,0.42)" : "rgba(235,230,216,0.40)";
   const border = isLight ? "rgba(125,147,133,0.22)" : "rgba(235,230,216,0.09)";

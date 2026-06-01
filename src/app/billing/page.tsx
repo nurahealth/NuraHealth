@@ -111,9 +111,14 @@ const brandLabel = (brand: string) => {
 // Stripe appearance per theme
 function buildAppearance(theme: Theme): StripeElementsOptions["appearance"] {
   const isLight = theme === "light";
-  const sage = isLight ? "#7d9385" : "#9bb0a5";
+  // Stripe iframes can't read parent CSS variables, so resolve the themed tokens
+  // to concrete values from :root / [data-theme] at call time. globals.css stays
+  // authoritative; the ternaries are an SSR/no-document fallback only.
+  const css = typeof document !== "undefined" ? getComputedStyle(document.documentElement) : null;
+  const cssVar = (name: string, fallback: string) => css?.getPropertyValue(name).trim() || fallback;
+  const sage = cssVar("--nura-sage", isLight ? "#7d9385" : "#9bb0a5");
   const surface = isLight ? "#ecead8" : "#111214";
-  const text = isLight ? "#1a1f1a" : "#f0ebde";
+  const text = cssVar("--nura-text-primary", isLight ? "#1a1f1a" : "#f0ebde");
   return {
     theme: isLight ? "stripe" : "night",
     variables: {
