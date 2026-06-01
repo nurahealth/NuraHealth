@@ -87,6 +87,49 @@ export async function deleteSavedItem(itemId: string): Promise<void> {
   if (error) throw error;
 }
 
+// ── Saved Lab products (catalog_saved_products → catalog_products) ─────────────
+export interface SavedProduct {
+  id: string;
+  slug: string;
+  name: string;
+  brand: string | null;
+  score: number | null;
+  lab_tested: boolean | null;
+  image_url: string | null;
+  category_id: string | null;
+  saved_at: string;
+}
+
+interface SavedProductJoinRow {
+  saved_at: string;
+  catalog_products:
+    | (Omit<SavedProduct, "saved_at"> & { status: string | null })
+    | (Omit<SavedProduct, "saved_at"> & { status: string | null })[]
+    | null;
+}
+
+// Reads the current user's saved products (RLS limits rows to their own).
+// Only published products are returned so cards never link to a 404 detail page.
+export async function getUserSavedProducts(userId: string): Promise<SavedProduct[]> {
+  const { data, error } = await supabase
+    .from("catalog_saved_products")
+    .select("saved_at, catalog_products(id, slug, name, brand, score, lab_tested, image_url, category_id, status)")
+    .eq("user_id", userId)
+    .order("saved_at", { ascending: false });
+  if (error) throw error;
+
+  return ((data ?? []) as SavedProductJoinRow[])
+    .map((r) => {
+      const p = Array.isArray(r.catalog_products) ? r.catalog_products[0] : r.catalog_products;
+      return p ? { p, saved_at: r.saved_at } : null;
+    })
+    .filter((x): x is { p: Omit<SavedProduct, "saved_at"> & { status: string | null }; saved_at: string } => !!x && x.p.status === "published")
+    .map(({ p, saved_at }) => ({
+      id: p.id, slug: p.slug, name: p.name, brand: p.brand, score: p.score,
+      lab_tested: p.lab_tested, image_url: p.image_url, category_id: p.category_id, saved_at,
+    }));
+}
+
 export async function getSavedItemCounts(userId: string): Promise<SavedItemCounts> {
   const { data, error } = await supabase
     .from("saved_items")

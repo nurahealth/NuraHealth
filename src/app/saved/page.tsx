@@ -7,12 +7,15 @@ import type { User } from "@supabase/supabase-js";
 import {
   getUserSavedItems,
   getSavedItemCounts,
+  getUserSavedProducts,
   deleteSavedItem,
   type SavedItem,
   type SavedItemType,
   type SavedItemCounts,
+  type SavedProduct,
 } from "@/lib/saved";
 import NuraPageShell from "@/components/NuraPageShell";
+import { ProductCard, type LabProduct } from "@/app/lab/LabBrowseClient";
 
 // ── Tokens ────────────────────────────────────────────────────────────────────
 const TEXT = "var(--nura-text-primary)";
@@ -27,7 +30,7 @@ const RED = "var(--nura-danger)";
 const SANS = "'Inter', system-ui, sans-serif";
 const SERIF = "'DM Serif Display', Georgia, serif";
 
-type Filter = "all" | SavedItemType;
+type Filter = "all" | SavedItemType | "product";
 
 const TYPE_LABEL: Record<SavedItemType, string> = {
   protocol: "Protocol", stack: "Stack", insight: "Insight", chat: "Chat",
@@ -49,6 +52,7 @@ export default function SavedPage() {
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [items, setItems] = useState<SavedItem[]>([]);
+  const [savedProducts, setSavedProducts] = useState<SavedProduct[]>([]);
   const [counts, setCounts] = useState<SavedItemCounts>({ all: 0, protocol: 0, stack: 0, insight: 0, chat: 0 });
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<Filter>("all");
@@ -63,15 +67,18 @@ export default function SavedPage() {
     });
   }, [router]);
 
-  const loadData = useCallback(async (userId: string, typeFilter?: SavedItemType) => {
+  const loadData = useCallback(async (userId: string, current: Filter) => {
     setLoading(true);
     try {
-      const [fetched, c] = await Promise.all([
+      const typeFilter = current !== "all" && current !== "product" ? current : undefined;
+      const [fetched, c, prods] = await Promise.all([
         getUserSavedItems(userId, typeFilter),
         getSavedItemCounts(userId),
+        getUserSavedProducts(userId),
       ]);
       setItems(fetched);
       setCounts(c);
+      setSavedProducts(prods);
     } catch {} finally {
       setLoading(false);
     }
@@ -79,7 +86,7 @@ export default function SavedPage() {
 
   useEffect(() => {
     if (!user) return;
-    loadData(user.id, filter === "all" ? undefined : filter);
+    loadData(user.id, filter);
   }, [user, filter, loadData]);
 
   const handleDelete = async (id: string) => {
@@ -101,8 +108,10 @@ export default function SavedPage() {
 
   if (authLoading) return <NuraPageShell><div /></NuraPageShell>;
 
+  const productCount = savedProducts.length;
   const FILTERS: { id: Filter; label: string; count: number }[] = [
-    { id: "all", label: "All", count: counts.all },
+    { id: "all", label: "All", count: counts.all + productCount },
+    { id: "product", label: "Products", count: productCount },
     { id: "protocol", label: "Protocols", count: counts.protocol },
     { id: "stack", label: "Stacks", count: counts.stack },
     { id: "insight", label: "Insights", count: counts.insight },
@@ -111,6 +120,7 @@ export default function SavedPage() {
 
   const EMPTY_MSG: Record<Filter, { title: string; sub: string }> = {
     all: { title: "Nothing saved yet", sub: "Save insights, protocols, and stacks as you go." },
+    product: { title: "No products saved", sub: "Bookmark a product from the Lab to save it here." },
     protocol: { title: "No protocols saved", sub: "Save an action plan from a bloodwork panel." },
     stack: { title: "No stacks saved", sub: "Snapshot your supplement stack from the supplements page." },
     insight: { title: "No insights saved", sub: "Save NŪRA insights as you discover them." },
@@ -118,6 +128,11 @@ export default function SavedPage() {
   };
 
   const empty = EMPTY_MSG[filter];
+
+  // What to render: products grid (All + Products tabs) and/or the generic item list
+  const showProducts = (filter === "all" || filter === "product") && savedProducts.length > 0;
+  const showItems = filter !== "product" && items.length > 0;
+  const isEmpty = !showProducts && !showItems;
 
   return (
     <NuraPageShell maxWidth={680}>
@@ -158,7 +173,7 @@ export default function SavedPage() {
 
       {loading ? (
         <div style={{ padding: "48px 0", textAlign: "center", color: TEXT_TER, fontSize: 13 }}>Loading…</div>
-      ) : items.length === 0 ? (
+      ) : isEmpty ? (
         <div style={{
           padding: "48px 24px", textAlign: "center", borderRadius: 14,
           background: SURFACE, border: `0.5px dashed ${BORDER}`,
@@ -176,7 +191,18 @@ export default function SavedPage() {
           <p style={{ fontFamily: SANS, fontSize: 13, color: TEXT_SEC, margin: 0 }}>{empty.sub}</p>
         </div>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          {/* Saved Lab products — reuse the Lab browse card, responsive grid */}
+          {showProducts && (
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: 12 }}>
+              {savedProducts.map((p) => (
+                <ProductCard key={p.id} p={p as LabProduct} />
+              ))}
+            </div>
+          )}
+
+          {showItems && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {items.map((item) => {
             const isExpanded = expandedId === item.id;
             const isDeleting = deletingId === item.id;
@@ -274,6 +300,8 @@ export default function SavedPage() {
               </div>
             );
           })}
+          </div>
+          )}
         </div>
       )}
     </NuraPageShell>
