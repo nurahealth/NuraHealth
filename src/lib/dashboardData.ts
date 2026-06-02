@@ -60,6 +60,24 @@ export type MetricViz =
   | { kind: "mini-bars"; bars: number[] }
   | { kind: "deviation"; value: number; baseline: number; range: number };
 
+// ── Metric-card chart (shared rich bar chart) ────────────────────────────────
+/** Color ramp direction, applied per-bar by normalized value. */
+export type ChartRamp = "hr" | "higherBetter" | "lowerBetter";
+
+export interface MetricChartData {
+  /** Dense intraday readings (~36–44 samples, 12a → now). */
+  readings: number[];
+  /** Coarse series driving the dashed threshold curve. */
+  baseline: number[];
+  /** Bottom of the plotted value range (bars rise from here). */
+  floor: number;
+  /** Top of the plotted value range. */
+  ceiling: number;
+  /** Up to 3 values to draw gridlines + edge labels at. */
+  gridlines: number[];
+  ramp: ChartRamp;
+}
+
 // ── Metric card ──────────────────────────────────────────────────────────────
 export interface DashboardMetric {
   /** Route slug — links to /dashboard/[id]. */
@@ -74,6 +92,8 @@ export interface DashboardMetric {
   status: MetricStatus;
   caption: string;
   viz: MetricViz;
+  /** Rich bar-chart data rendered by every metric card. */
+  chart: MetricChartData;
 }
 
 // ── Bottom insight card ──────────────────────────────────────────────────────
@@ -92,12 +112,27 @@ export interface DashboardData {
   insight: DashboardInsight;
 }
 
+// ── Chart sample helpers ─────────────────────────────────────────────────────
+// Synthesize realistic intraday shapes as a sum of Gaussian "bumps". A real
+// device source would supply these arrays directly.
+function gauss(i: number, center: number, width: number, h: number): number {
+  return h * Math.exp(-((i - center) ** 2) / (2 * width * width));
+}
+function dayReadings(n: number, floor: number, peaks: [number, number, number][]): number[] {
+  return Array.from({ length: n }, (_, i) =>
+    Number(peaks.reduce((s, [c, w, h]) => s + gauss(i, c, w, h), floor).toFixed(2)),
+  );
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Sample payload
 // ─────────────────────────────────────────────────────────────────────────────
 const DASHBOARD_DATA: DashboardData = {
   user: { firstName: "Alex" },
 
+  // Simulate ALL devices connected so the overview shows no locked cards. A real
+  // integration would set `connected` per the user's actual linked devices; the
+  // adaptive locked-state UI then surfaces for anyone who owns only one device.
   sources: [
     { id: "oura", name: "Oura", connected: true, state: "synced", syncLabel: "synced 2m" },
     { id: "apple-watch", name: "Apple Watch", connected: true, state: "live", syncLabel: "live" },
@@ -139,6 +174,11 @@ const DASHBOARD_DATA: DashboardData = {
           { label: "Awake", hours: 0.5 },
         ],
       },
+      chart: {
+        readings: dayReadings(40, 0, [[2, 2, 70], [5, 3, 88], [9, 2.2, 62]]),
+        baseline: [70, 82, 60, 8, 2, 2, 2, 2],
+        floor: 0, ceiling: 100, gridlines: [30, 60, 90], ramp: "higherBetter",
+      },
     },
     {
       id: "hrv",
@@ -150,6 +190,11 @@ const DASHBOARD_DATA: DashboardData = {
       status: "optimal",
       caption: "Trending up over the last 7 days",
       viz: { kind: "sparkline", points: [48, 52, 49, 55, 58, 60, 62] },
+      chart: {
+        readings: [34, 40, 36, 44, 38, 46, 42, 50, 44, 52, 48, 56, 50, 58, 54, 60, 52, 62, 56, 64, 58, 66, 60, 68, 62, 70, 64, 66, 60, 68, 64, 70, 66, 62, 64, 62],
+        baseline: [34, 42, 50, 56, 62, 66, 63, 60],
+        floor: 20, ceiling: 80, gridlines: [30, 50, 70], ramp: "higherBetter",
+      },
     },
     {
       id: "resting-hr",
@@ -161,6 +206,11 @@ const DASHBOARD_DATA: DashboardData = {
       status: "good",
       caption: "Steady and low through the week",
       viz: { kind: "sparkline", points: [58, 57, 56, 55, 56, 55, 54] },
+      chart: {
+        readings: [58, 57, 56, 55, 57, 54, 55, 53, 54, 56, 53, 52, 54, 55, 53, 54, 52, 53, 55, 54, 52, 53, 54, 55, 53, 54, 52, 53, 54, 52, 53, 54, 53, 52, 54, 54],
+        baseline: [57, 55, 54, 53, 53, 53, 54, 54],
+        floor: 45, ceiling: 70, gridlines: [50, 55, 60], ramp: "lowerBetter",
+      },
     },
     {
       id: "steps",
@@ -171,6 +221,11 @@ const DASHBOARD_DATA: DashboardData = {
       status: "good",
       caption: "84% of your 10,000 goal",
       viz: { kind: "progress-ring", value: 8420, goal: 10000 },
+      chart: {
+        readings: dayReadings(40, 12, [[11, 3, 260], [20, 5, 420], [30, 3, 640], [37, 2, 360]]),
+        baseline: [20, 120, 360, 520, 700, 520, 300, 160],
+        floor: 0, ceiling: 1100, gridlines: [300, 600, 900], ramp: "higherBetter",
+      },
     },
     {
       id: "active-energy",
@@ -182,6 +237,11 @@ const DASHBOARD_DATA: DashboardData = {
       status: "optimal",
       caption: "Above your daily average",
       viz: { kind: "mini-bars", bars: [380, 420, 510, 470, 560, 590, 612] },
+      chart: {
+        readings: dayReadings(40, 3, [[11, 3, 22], [20, 5, 36], [30, 3, 52], [37, 2, 28]]),
+        baseline: [4, 18, 34, 46, 58, 44, 28, 14],
+        floor: 0, ceiling: 80, gridlines: [20, 40, 60], ramp: "higherBetter",
+      },
     },
     {
       id: "body-temp",
@@ -193,6 +253,58 @@ const DASHBOARD_DATA: DashboardData = {
       status: "good",
       caption: "Slightly above your baseline",
       viz: { kind: "deviation", value: 0.3, baseline: 0, range: 1.5 },
+      chart: {
+        readings: dayReadings(40, 0, [[5, 4, -0.45], [34, 5, 0.5]]),
+        baseline: [-0.2, -0.4, -0.3, -0.1, 0.1, 0.3, 0.4, 0.2],
+        floor: -1, ceiling: 1.5, gridlines: [-0.5, 0, 1], ramp: "lowerBetter",
+      },
+    },
+    {
+      id: "heart-rate",
+      name: "Heart Rate",
+      source: "apple-watch",
+      value: 72,
+      unit: "bpm",
+      status: "good",
+      caption: "Continuous · range 52–138 bpm today",
+      viz: { kind: "sparkline", points: [62, 78, 95, 71, 66, 88, 74, 72] },
+      chart: {
+        readings: [58, 55, 54, 52, 53, 56, 60, 58, 54, 52, 55, 62, 58, 70, 82, 76, 68, 90, 104, 88, 72, 118, 96, 84, 130, 138, 110, 92, 78, 86, 74, 96, 108, 90, 82, 70, 76, 64, 60, 58, 56, 54, 52, 71],
+        baseline: [56, 58, 66, 90, 120, 84, 64, 58],
+        floor: 45, ceiling: 150, gridlines: [60, 100, 140], ramp: "hr",
+      },
+    },
+    {
+      id: "exercise",
+      name: "Exercise",
+      source: "apple-watch",
+      value: 48,
+      unit: "min",
+      delta: { value: 12, dir: "up" },
+      status: "optimal",
+      caption: "18 min over your 30 min goal",
+      viz: { kind: "mini-bars", bars: [22, 35, 18, 41, 30, 52, 48] },
+      chart: {
+        readings: dayReadings(40, 0.2, [[12, 1.6, 6.2], [31, 2, 9]]),
+        baseline: [0.3, 1, 4, 2, 3, 7, 3, 1],
+        floor: 0, ceiling: 10, gridlines: [2, 5, 8], ramp: "higherBetter",
+      },
+    },
+    {
+      id: "distance",
+      name: "Distance",
+      source: "apple-health",
+      value: 4.2,
+      unit: "mi",
+      delta: { value: 0.8, dir: "up" },
+      status: "good",
+      caption: "From today's 8,420 steps",
+      viz: { kind: "mini-bars", bars: [2.1, 3.4, 1.8, 3.9, 3.1, 4.8, 4.2] },
+      chart: {
+        readings: dayReadings(40, 0.01, [[11, 3, 0.16], [20, 5, 0.3], [30, 3, 0.42], [37, 2, 0.22]]),
+        baseline: [0.02, 0.1, 0.28, 0.4, 0.5, 0.36, 0.22, 0.12],
+        floor: 0, ceiling: 0.6, gridlines: [0.1, 0.3, 0.5], ramp: "higherBetter",
+      },
     },
   ],
 

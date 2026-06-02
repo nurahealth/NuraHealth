@@ -11,9 +11,8 @@ import {
   type ConnectedSource,
   type Readiness,
   type DashboardMetric,
-  type MetricViz,
-  type SleepStage,
 } from "@/lib/dashboardData";
+import MetricChart from "@/components/dashboard/MetricChart";
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
 const TEXT = "var(--nura-text-primary)";
@@ -22,10 +21,7 @@ const TEXT_TER = "var(--nura-text-tertiary)";
 const BORDER = "var(--nura-border)";
 const CARD = "var(--nura-card)";
 const SAGE = "var(--nura-sage)";
-const TEAL = "var(--nura-teal)";
-const TEAL_RGB = "var(--nura-teal-rgb)";
 const SAGE_RGB = "var(--nura-sage-rgb)";
-const FG_RGB = "var(--nura-fg-rgb)";
 const SANS = "'Inter', system-ui, sans-serif";
 
 const STATUS: Record<MetricStatus, { color: string; rgb: string; label: string }> = {
@@ -240,7 +236,7 @@ function MetricCard({ metric, onClick }: { metric: DashboardMetric; onClick: () 
       style={{
         background: CARD, border: `0.5px solid ${BORDER}`, borderRadius: 18,
         padding: 18, cursor: "pointer", display: "flex", flexDirection: "column",
-        minHeight: 190,
+        minHeight: 248,
       }}
     >
       {/* Top: name + source tag */}
@@ -267,143 +263,14 @@ function MetricCard({ metric, onClick }: { metric: DashboardMetric; onClick: () 
       </div>
 
       {/* Visualization */}
-      <div style={{ marginTop: 16, marginBottom: 14, flex: 1, display: "flex", alignItems: "center" }}>
-        <Viz viz={metric.viz} status={metric.status} />
+      <div style={{ marginTop: 14, marginBottom: 14, flex: 1 }}>
+        <MetricChart data={metric.chart} />
       </div>
 
       {/* Footer caption + status */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginTop: "auto" }}>
         <span style={{ fontFamily: SANS, fontSize: 11.5, color: TEXT_TER, lineHeight: 1.4 }}>{metric.caption}</span>
         <span style={{ flexShrink: 0 }}><StatusPill status={metric.status} size="sm" /></span>
-      </div>
-    </div>
-  );
-}
-
-// ── Visualizations ──────────────────────────────────────────────────────────────
-function Viz({ viz, status }: { viz: MetricViz; status: MetricStatus }) {
-  switch (viz.kind) {
-    case "sleep-stages": return <SleepStages stages={viz.stages} />;
-    case "sparkline": return <Sparkline points={viz.points} color={STATUS[status].color} rgb={STATUS[status].rgb} />;
-    case "progress-ring": return <ProgressRing value={viz.value} goal={viz.goal} color={STATUS[status].color} />;
-    case "mini-bars": return <MiniBars bars={viz.bars} color={STATUS[status].color} rgb={STATUS[status].rgb} />;
-    case "deviation": return <Deviation value={viz.value} baseline={viz.baseline} range={viz.range} color={STATUS[status].color} rgb={STATUS[status].rgb} />;
-  }
-}
-
-function stageColor(label: string): string {
-  switch (label) {
-    case "Deep": return TEAL;
-    case "REM": return `rgba(${TEAL_RGB},0.6)`;
-    case "Light": return `rgba(${SAGE_RGB},0.5)`;
-    default: return `rgba(${FG_RGB},0.16)`; // Awake
-  }
-}
-
-function SleepStages({ stages }: { stages: SleepStage[] }) {
-  const total = stages.reduce((a, b) => a + b.hours, 0) || 1;
-  return (
-    <div style={{ width: "100%" }}>
-      <div style={{ display: "flex", width: "100%", height: 12, borderRadius: 6, overflow: "hidden", gap: 2 }}>
-        {stages.map((st) => (
-          <div key={st.label} style={{ width: `${(st.hours / total) * 100}%`, background: stageColor(st.label) }} />
-        ))}
-      </div>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 12px", marginTop: 10 }}>
-        {stages.map((st) => (
-          <span key={st.label} style={{ display: "inline-flex", alignItems: "center", gap: 5, fontFamily: SANS, fontSize: 10, color: TEXT_TER }}>
-            <span style={{ width: 7, height: 7, borderRadius: 2, background: stageColor(st.label) }} />
-            {st.label}
-          </span>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function Sparkline({ points, color, rgb }: { points: number[]; color: string; rgb: string }) {
-  const W = 200, H = 44, pad = 3;
-  const min = Math.min(...points), max = Math.max(...points);
-  const span = max - min || 1;
-  const xy = points.map((p, i) => {
-    const x = pad + (i / (points.length - 1)) * (W - pad * 2);
-    const y = pad + (1 - (p - min) / span) * (H - pad * 2);
-    return [x, y] as const;
-  });
-  const line = xy.map(([x, y], i) => `${i === 0 ? "M" : "L"}${x.toFixed(1)} ${y.toFixed(1)}`).join(" ");
-  const area = `${line} L${xy[xy.length - 1][0].toFixed(1)} ${H} L${xy[0][0].toFixed(1)} ${H} Z`;
-  const [lx, ly] = xy[xy.length - 1];
-  return (
-    <svg width="100%" height={H} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" style={{ display: "block", overflow: "visible" }}>
-      <path d={area} fill={`rgba(${rgb},0.10)`} />
-      <path d={line} fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
-      <circle cx={lx} cy={ly} r="3" fill={color} />
-    </svg>
-  );
-}
-
-function ProgressRing({ value, goal, color }: { value: number; goal: number; color: string }) {
-  const pct = Math.max(0, Math.min(1, value / goal));
-  const size = 80, stroke = 8, r = (size - stroke) / 2, c = size / 2, circ = 2 * Math.PI * r;
-  return (
-    <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ flexShrink: 0 }}>
-        <g transform={`rotate(-90 ${c} ${c})`}>
-          <circle cx={c} cy={c} r={r} fill="none" stroke={`rgba(${FG_RGB},0.10)`} strokeWidth={stroke} />
-          <circle cx={c} cy={c} r={r} fill="none" stroke={color} strokeWidth={stroke} strokeLinecap="round"
-            strokeDasharray={circ} strokeDashoffset={circ * (1 - pct)} />
-        </g>
-        <text x={c} y={c} textAnchor="middle" dominantBaseline="central"
-          style={{ fontFamily: SANS, fontSize: 18, fontWeight: 700, fill: TEXT }}>
-          {Math.round(pct * 100)}%
-        </text>
-      </svg>
-      <div style={{ fontFamily: SANS, fontSize: 11, color: TEXT_TER, lineHeight: 1.5 }}>
-        <div style={{ color: TEXT_SEC, fontWeight: 600 }}>{fmtNumber(goal)}</div>
-        goal
-        <div style={{ marginTop: 4, color, fontWeight: 600 }}>{fmtNumber(goal - value)}</div>
-        to go
-      </div>
-    </div>
-  );
-}
-
-function MiniBars({ bars, color, rgb }: { bars: number[]; color: string; rgb: string }) {
-  const max = Math.max(...bars) || 1;
-  return (
-    <div style={{ display: "flex", alignItems: "flex-end", gap: 5, width: "100%", height: 48 }}>
-      {bars.map((b, i) => {
-        const last = i === bars.length - 1;
-        return (
-          <div key={i} style={{
-            flex: 1, height: `${Math.max(10, (b / max) * 100)}%`, borderRadius: 4,
-            background: last ? color : `rgba(${rgb},0.28)`,
-          }} />
-        );
-      })}
-    </div>
-  );
-}
-
-function Deviation({ value, baseline, range, color, rgb }: { value: number; baseline: number; range: number; color: string; rgb: string }) {
-  // Map [-range, +range] around baseline to 0–100%.
-  const pct = Math.max(0, Math.min(100, ((value - baseline + range) / (2 * range)) * 100));
-  return (
-    <div style={{ width: "100%" }}>
-      <div style={{ position: "relative", height: 8, borderRadius: 4, background: `rgba(${FG_RGB},0.08)` }}>
-        {/* baseline center tick */}
-        <div style={{ position: "absolute", left: "50%", top: -3, bottom: -3, width: 1, background: `rgba(${FG_RGB},0.22)` }} />
-        {/* marker */}
-        <div style={{
-          position: "absolute", left: `${pct}%`, top: "50%", transform: "translate(-50%,-50%)",
-          width: 12, height: 12, borderRadius: "50%", background: color,
-          border: "2px solid var(--nura-card)", boxShadow: `0 0 0 3px rgba(${rgb},0.18)`,
-        }} />
-      </div>
-      <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8, fontFamily: SANS, fontSize: 9.5, color: TEXT_TER, letterSpacing: "0.3px" }}>
-        <span>-{range}°</span>
-        <span>baseline</span>
-        <span>+{range}°</span>
       </div>
     </div>
   );
