@@ -8,7 +8,7 @@ import type { User } from "@supabase/supabase-js";
 import NuraPageShell from "@/components/NuraPageShell";
 import {
   ALL_DAYS, ALL_MEALS, todayDay, todayISO, logKey,
-  isSupplementScheduledFor, isSupplementScheduled, formatScheduleSummary,
+  isSupplementScheduledFor, isSupplementScheduled, formatScheduleSummary, isReminderDue,
   type Day, type Meal, type Schedule, type Supplement, type SupplementLog,
 } from "@/lib/supplements";
 
@@ -293,6 +293,69 @@ function SupplementsPageInner() {
     }
   }, [logSet, today, fetchStats]);
 
+  // ── Reminders ───────────────────────────────────────────────────────────────
+  // A "now" that we bump on focus / visibility / interval so a reminder that
+  // becomes due while the tab is open shows up without a manual reload.
+  const [reminderNow, setReminderNow] = useState<Date>(() => new Date());
+  useEffect(() => {
+    const bump = () => setReminderNow(new Date());
+    const id = window.setInterval(bump, 30_000);
+    const onVis = () => { if (document.visibilityState === "visible") bump(); };
+    window.addEventListener("focus", bump);
+    document.addEventListener("visibilitychange", onVis);
+    return () => {
+      window.clearInterval(id);
+      window.removeEventListener("focus", bump);
+      document.removeEventListener("visibilitychange", onVis);
+    };
+  }, []);
+
+  // Persist a partial update for one supplement, optimistically updating local state.
+  const patchSupplement = useCallback(async (id: string, patch: Partial<Supplement>) => {
+    setSupplements((prev) => prev.map((s) => (s.id === id ? { ...s, ...patch } : s)));
+    try {
+      const res = await fetch(`/api/supplements/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(patch),
+      });
+      if (!res.ok) throw new Error("save failed");
+    } catch {
+      // Resync from the server if the write failed.
+      void fetchAll();
+    }
+  }, [fetchAll]);
+
+  // Mark a supplement as taken now. Persist immediately, but delay the local
+  // state change so the "Time to take" row can play its check animation first.
+  const markAsTaken = useCallback((id: string) => {
+    const nowIso = new Date().toISOString();
+    void (async () => {
+      try {
+        const res = await fetch(`/api/supplements/${id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ last_taken_at: nowIso }),
+        });
+        if (!res.ok) throw new Error("save failed");
+      } catch {
+        void fetchAll();
+      }
+    })();
+    window.setTimeout(() => {
+      setSupplements((prev) => prev.map((s) => (s.id === id ? { ...s, last_taken_at: nowIso } : s)));
+    }, 760);
+  }, [fetchAll]);
+
+  // Supplements due right now (device local time), sorted by name.
+  const dueSupplements = useMemo(
+    () =>
+      [...supplements]
+        .filter((s) => isReminderDue(s, reminderNow))
+        .sort((a, b) => a.name.localeCompare(b.name)),
+    [supplements, reminderNow]
+  );
+
   const performImageScan = useCallback(
     async (photoDataUrl: string, base64: string) => {
       setAddFlow({ mode: "scanning", photoDataUrl });
@@ -571,6 +634,11 @@ function SupplementsPageInner() {
         .nura-day-strip { scrollbar-width: none; }
       `}</style>
 
+      {/* TIME TO TAKE — pinned at the very top when one or more reminders are due */}
+      {!loading && dueSupplements.length > 0 && (
+        <TimeToTakeSection items={dueSupplements} onMarkTaken={markAsTaken} />
+      )}
+
       {/* HERO */}
       <div style={{ marginBottom: 20 }}>
         <h1 style={{
@@ -634,6 +702,7 @@ function SupplementsPageInner() {
               logSet={logSet}
               onToggleStack={(suppId) => toggleLog(suppId, null)}
               onEdit={(s) => setModalState({ mode: "edit", supplement: s })}
+              onSaveReminder={patchSupplement}
             />
           )}
         </div>
@@ -856,14 +925,118 @@ export default function SupplementsPage() {
   );
 }
 
+// ── Time to take (reminders due now) ──────────────────────────────────────────
+function TimeToTakeSection({
+  items, onMarkTaken,
+}: {
+  items: Supplement[];
+  onMarkTaken: (id: string) => void;
+}) {
+  // Ids currently playing the "taken" check animation before they leave the list.
+  const [taking, setTaking] = useState<Set<string>>(new Set());
+
+  const handleMark = (id: string) => {
+    setTaking((prev) => { const next = new Set(prev); next.add(id); return next; });
+    onMarkTaken(id);
+    // Clear the local flag after the parent has removed the row (~760ms).
+    window.setTimeout(() => {
+      setTaking((prev) => { const next = new Set(prev); next.delete(id); return next; });
+    }, 1000);
+  };
+
+  return (
+    <div style={{
+      position: "relative", overflow: "hidden",
+      borderRadius: 18,
+      background: `linear-gradient(135deg, rgba(var(--nura-sage-rgb),0.16) 0%, rgba(var(--nura-sage-rgb),0.06) 100%)`,
+      border: `1px solid rgba(var(--nura-sage-rgb),0.28)`,
+      padding: "18px 20px", marginBottom: 22,
+      animation: "nura-fade-in 220ms ease both",
+    }}>
+      <style>{`@keyframes nura-check-draw { to { stroke-dashoffset: 0; } }`}</style>
+      <div style={{
+        fontFamily: SANS, fontSize: 10, fontWeight: 600, letterSpacing: "1.5px",
+        color: SAGE, textTransform: "uppercase", marginBottom: 14,
+        display: "flex", alignItems: "center", gap: 8,
+      }}>
+        <Check size={13} strokeWidth={2.2} aria-hidden />
+        Time to take
+      </div>
+
+      <div>
+        {items.map((s) => {
+          const isTaking = taking.has(s.id);
+          return (
+            <div
+              key={s.id}
+              style={{
+                display: "flex", alignItems: "center", gap: 12,
+                padding: "10px 0",
+                borderTop: `0.5px solid ${BORDER}`,
+              }}
+            >
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{
+                  fontFamily: SANS, fontSize: 15, fontWeight: 500,
+                  color: isTaking ? TEXT_TER : TEXT,
+                  transition: "color 200ms",
+                }}>
+                  {s.name}
+                </div>
+                {s.dose && (
+                  <div style={{ fontFamily: SANS, fontSize: 12, color: TEXT_TER, marginTop: 2 }}>
+                    {s.dose}
+                  </div>
+                )}
+              </div>
+
+              {isTaking ? (
+                <span aria-hidden style={{
+                  display: "inline-flex", alignItems: "center", justifyContent: "center",
+                  width: 36, height: 36, borderRadius: "50%",
+                  background: SAGE, color: SAGE_ON, flexShrink: 0,
+                }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M5 13l4 4L19 7" strokeDasharray="26" strokeDashoffset="26"
+                      style={{ animation: "nura-check-draw 360ms ease 60ms both" }} />
+                  </svg>
+                </span>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => handleMark(s.id)}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = SAGE_HOV; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = SAGE; }}
+                  style={{
+                    flexShrink: 0,
+                    padding: "8px 14px", borderRadius: 10, border: "none",
+                    background: SAGE, color: SAGE_ON,
+                    fontFamily: SANS, fontSize: 13, fontWeight: 500,
+                    cursor: "pointer", transition: "background 160ms",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  Mark as taken
+                </button>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // ── Stack view ────────────────────────────────────────────────────────────────
 function StackList({
-  items, logSet, onToggleStack, onEdit,
+  items, logSet, onToggleStack, onEdit, onSaveReminder,
 }: {
   items: Supplement[];
   logSet: Set<string>;
   onToggleStack: (suppId: string) => void;
   onEdit: (s: Supplement) => void;
+  onSaveReminder: (id: string, patch: Partial<Supplement>) => void;
 }) {
   return (
     <section>
@@ -885,6 +1058,7 @@ function StackList({
             checked={checked}
             onToggle={() => onToggleStack(s.id)}
             onEdit={() => onEdit(s)}
+            onSaveReminder={(patch) => onSaveReminder(s.id, patch)}
           />
         );
       })}
@@ -893,14 +1067,48 @@ function StackList({
 }
 
 function StackCard({
-  supplement, checked, onToggle, onEdit,
+  supplement, checked, onToggle, onEdit, onSaveReminder,
 }: {
   supplement: Supplement;
   checked: boolean;
   onToggle: () => void;
   onEdit: () => void;
+  onSaveReminder: (patch: Partial<Supplement>) => void;
 }) {
   const nameColor = checked ? TEXT_TER : TEXT;
+
+  // Reminder controls (in-app nudge — no push). Saves immediately on change.
+  const [reminderOn, setReminderOn] = useState(supplement.reminder_enabled);
+  const [reminderTime, setReminderTime] = useState(supplement.reminder_time || "08:00");
+  const [saved, setSaved] = useState(false);
+  const savedTimer = useRef<number | null>(null);
+
+  const flashSaved = () => {
+    setSaved(true);
+    if (savedTimer.current) window.clearTimeout(savedTimer.current);
+    savedTimer.current = window.setTimeout(() => setSaved(false), 1600);
+  };
+  useEffect(() => () => { if (savedTimer.current) window.clearTimeout(savedTimer.current); }, []);
+
+  const handleReminderToggle = () => {
+    const next = !reminderOn;
+    setReminderOn(next);
+    if (next) {
+      const time = supplement.reminder_time || reminderTime || "08:00";
+      setReminderTime(time);
+      onSaveReminder({ reminder_enabled: true, reminder_time: time });
+    } else {
+      onSaveReminder({ reminder_enabled: false });
+    }
+    flashSaved();
+  };
+
+  const handleTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value; // "HH:MM" or ""
+    setReminderTime(value || "08:00");
+    onSaveReminder({ reminder_time: value || null, reminder_enabled: true });
+    flashSaved();
+  };
 
   return (
     <div
@@ -945,6 +1153,45 @@ function StackCard({
         )}
         <div style={{ marginTop: 10 }}>
           <ScheduleTag supplement={supplement} />
+        </div>
+
+        {/* Remind me — toggle + time picker, saves immediately */}
+        <div
+          onClick={(e) => e.stopPropagation()}
+          style={{ marginTop: 12, paddingTop: 12, borderTop: `0.5px solid ${BORDER}` }}
+        >
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <span style={{ fontFamily: SANS, fontSize: 13, color: TEXT_SEC }}>Remind me</span>
+            <Switch on={reminderOn} onClick={handleReminderToggle} />
+          </div>
+          {reminderOn && (
+            <div style={{
+              display: "flex", alignItems: "center", gap: 10, marginTop: 10,
+              animation: "nura-fade-in 160ms ease both",
+            }}>
+              <input
+                type="time"
+                value={reminderTime}
+                onChange={handleTimeChange}
+                aria-label="Reminder time"
+                style={{
+                  padding: "7px 10px", borderRadius: 10,
+                  background: SURFACE, border: `0.5px solid ${BORDER}`,
+                  color: TEXT, fontFamily: SANS, fontSize: 13, outline: "none",
+                }}
+              />
+              {saved && (
+                <span style={{
+                  display: "inline-flex", alignItems: "center", gap: 4,
+                  fontFamily: SANS, fontSize: 11, color: SAGE,
+                  animation: "nura-fade-in 200ms ease both",
+                }}>
+                  <CheckGlyph size={10} />
+                  Saved
+                </span>
+              )}
+            </div>
+          )}
         </div>
       </div>
       <span aria-hidden style={{ color: TEXT_TER, flexShrink: 0, marginTop: 1 }}>

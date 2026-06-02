@@ -12,6 +12,19 @@ interface UpdateBody {
   timing?: string | null;
   frequency?: string;
   schedule?: { days?: unknown; meals?: unknown };
+  reminder_enabled?: boolean;
+  reminder_time?: string | null;
+  last_taken_at?: string | null;
+}
+
+/** Accept only "HH:MM" 24-hour strings; anything else → null. */
+function normalizeReminderTime(input: string | null | undefined): string | null {
+  if (typeof input !== "string") return null;
+  const raw = input.trim();
+  const m = /^(\d{2}):(\d{2})$/.exec(raw);
+  if (!m) return null;
+  if (Number(m[1]) > 23 || Number(m[2]) > 59) return null;
+  return raw;
 }
 
 function parseSchedule(input: UpdateBody["schedule"]): { schedule: Schedule } | { error: string } {
@@ -70,6 +83,19 @@ export async function PATCH(
         return NextResponse.json({ error: parsed.error }, { status: 400 });
       }
       update.schedule = parsed.schedule;
+    }
+
+    if (body.reminder_enabled !== undefined) update.reminder_enabled = !!body.reminder_enabled;
+    if (body.reminder_time !== undefined) update.reminder_time = normalizeReminderTime(body.reminder_time);
+    if (body.last_taken_at !== undefined) {
+      // Accept a client ISO timestamp or null (to clear). Anything unparseable → ignored as null.
+      if (body.last_taken_at === null) {
+        update.last_taken_at = null;
+      } else if (typeof body.last_taken_at === "string" && !Number.isNaN(Date.parse(body.last_taken_at))) {
+        update.last_taken_at = body.last_taken_at;
+      } else {
+        update.last_taken_at = null;
+      }
     }
 
     const { data, error } = await supabaseAdmin

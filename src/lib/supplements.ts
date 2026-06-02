@@ -110,8 +110,52 @@ export interface Supplement {
   recommendation_reason: string | null;
   started_at: string | null;
   schedule: Schedule | null;
+  /** In-app reminder: whether the user wants a "time to take" nudge. */
+  reminder_enabled: boolean;
+  /** "HH:MM" in 24-hour LOCAL time, or null. */
+  reminder_time: string | null;
+  /** Last time the user marked this taken (used to clear today's reminder). */
+  last_taken_at: string | null;
   created_at: string;
   updated_at: string;
+}
+
+/**
+ * Whether a supplement's reminder is currently "due" in the device's LOCAL time.
+ *
+ * Due ⇢ reminder is enabled AND today's reminder time is now-or-past
+ * AND it hasn't been taken yet today. A null/malformed reminder_time is
+ * treated as "not due" (never throws).
+ */
+export function isReminderDue(
+  s: Pick<Supplement, "reminder_enabled" | "reminder_time" | "last_taken_at">,
+  now: Date = new Date()
+): boolean {
+  if (!s.reminder_enabled) return false;
+
+  const raw = typeof s.reminder_time === "string" ? s.reminder_time.trim() : "";
+  const m = /^(\d{2}):(\d{2})$/.exec(raw);
+  if (!m) return false;
+  const hh = Number(m[1]);
+  const mm = Number(m[2]);
+  if (hh > 23 || mm > 59) return false;
+
+  // Today's reminder time, applied to the local "now" date.
+  const dueAt = new Date(now);
+  dueAt.setHours(hh, mm, 0, 0);
+  if (dueAt.getTime() > now.getTime()) return false; // not yet due today
+
+  // Already taken today? (last_taken_at on/after local midnight)
+  if (s.last_taken_at) {
+    const taken = new Date(s.last_taken_at);
+    if (!Number.isNaN(taken.getTime())) {
+      const midnight = new Date(now);
+      midnight.setHours(0, 0, 0, 0);
+      if (taken.getTime() >= midnight.getTime()) return false;
+    }
+  }
+
+  return true;
 }
 
 export async function getUserSupplements(userId: string): Promise<Supplement[]> {
