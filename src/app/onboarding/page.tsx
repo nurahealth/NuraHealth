@@ -15,7 +15,7 @@ const BORDER = 'var(--nura-border)';
 const SAGE = 'var(--nura-sage)';
 const SAGE_HOV = 'var(--nura-sage-hover)';
 const SAGE_ON = 'var(--nura-bg)';
-const SAGE_RGB = '155,176,165';
+const SAGE_RGB = 'var(--nura-sage-rgb)';
 const SANS = "'Inter', system-ui, sans-serif";
 const MONO = "'JetBrains Mono', monospace";
 
@@ -588,11 +588,11 @@ function Step1Welcome({ onNext, animKey }: { onNext: () => void; animKey: number
       <WelcomeCanvas />
       <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', width: '100%' }}>
         <div style={{ position: 'relative', width: 88, height: 88, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 32 }}>
-          <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', border: '1px solid rgba(155,176,165,0.25)', animation: 'ripple 2.8s ease-out infinite' }} />
-          <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', border: '1px solid rgba(155,176,165,0.15)', animation: 'ripple 2.8s ease-out 1.4s infinite' }} />
+          <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', border: '1px solid rgba(var(--nura-sage-rgb),0.25)', animation: 'ripple 2.8s ease-out infinite' }} />
+          <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', border: '1px solid rgba(var(--nura-sage-rgb),0.15)', animation: 'ripple 2.8s ease-out 1.4s infinite' }} />
           <div style={{
             width: 88, height: 88, borderRadius: '50%', background: BG,
-            border: '0.5px solid rgba(155,176,165,0.45)',
+            border: '0.5px solid rgba(var(--nura-sage-rgb),0.45)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             animation: 'heartbeat 2.8s ease-in-out infinite', position: 'relative', zIndex: 1,
           }}>

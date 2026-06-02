@@ -151,7 +151,7 @@ export default function LabBrowseClient({ categories, products }: {
     <div>
       <style>{`
         .lab-card { transition: background 180ms, border-color 180ms, transform 180ms; }
-        .lab-card:hover { background: var(--nura-surface-elevated); border-color: rgba(155,176,165,0.35); transform: translateY(-2px); }
+        .lab-card:hover { background: var(--nura-surface-elevated); border-color: rgba(var(--nura-sage-rgb),0.35); transform: translateY(-2px); }
         .lab-chip-row { scrollbar-width: none; }
         .lab-chip-row::-webkit-scrollbar { display: none; }
       `}</style>

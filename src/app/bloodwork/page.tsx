@@ -23,7 +23,7 @@ const SURFACE = "var(--nura-surface)";
 const SAGE = "var(--nura-sage)";
 const SAGE_HOV = "var(--nura-sage-hover)";
 const SAGE_ON = "var(--nura-bg)";
-const SAGE_RGB = "155,176,165";
+const SAGE_RGB = "var(--nura-sage-rgb)";
 const AMBER = "var(--nura-watch)";
 const RED = "var(--nura-danger)";
 const SANS = "'Inter', system-ui, sans-serif";
@@ -287,7 +287,7 @@ function BloodworkPageInner() {
           ) : narrativeError ? (
             <div style={{
               margin: "32px 0", padding: "14px 16px", borderRadius: 12,
-              background: "rgba(212,87,77,0.08)", border: `0.5px solid rgba(212,87,77,0.3)`,
+              background: "rgba(var(--nura-danger-rgb),0.08)", border: `0.5px solid rgba(var(--nura-danger-rgb),0.3)`,
               color: RED, fontFamily: SANS, fontSize: 13, lineHeight: 1.6,
             }}>
               {narrativeError}
@@ -295,7 +295,7 @@ function BloodworkPageInner() {
                 onClick={handleRegenerate}
                 style={{
                   marginLeft: 10, padding: "4px 10px", borderRadius: 8,
-                  background: "transparent", border: `0.5px solid rgba(212,87,77,0.4)`,
+                  background: "transparent", border: `0.5px solid rgba(var(--nura-danger-rgb),0.4)`,
                   color: RED, fontFamily: SANS, fontSize: 12, cursor: "pointer",
                 }}
               >
@@ -398,7 +398,7 @@ function BloodworkPageInner() {
       {uploadError && (
         <div style={{
           padding: "10px 14px", borderRadius: 10, marginBottom: 16,
-          background: "rgba(212,87,77,0.08)", border: `1px solid rgba(212,87,77,0.28)`,
+          background: "rgba(var(--nura-danger-rgb),0.08)", border: `1px solid rgba(var(--nura-danger-rgb),0.28)`,
           color: RED, fontSize: 13, fontFamily: SANS,
         }}>
           {uploadError}
@@ -625,7 +625,7 @@ function DeleteModal({ onCancel, onConfirm, deleting }: { onCancel: () => void; 
       display: "flex", alignItems: "center", justifyContent: "center", padding: 20,
     }}>
       <div onClick={(e) => e.stopPropagation()} style={{
-        background: "var(--nura-bg)", border: `1px solid rgba(212,87,77,0.4)`,
+        background: "var(--nura-bg)", border: `1px solid rgba(var(--nura-danger-rgb),0.4)`,
         borderRadius: 14, padding: "22px 20px", maxWidth: 320, width: "100%",
       }}>
         <h3 style={{ fontFamily: SERIF, fontSize: 22, color: TEXT, margin: "0 0 8px", fontWeight: 500 }}>Delete panel?</h3>
@@ -642,7 +642,7 @@ function DeleteModal({ onCancel, onConfirm, deleting }: { onCancel: () => void; 
           </button>
           <button onClick={onConfirm} disabled={deleting} style={{
             flex: 1, padding: "11px 0", borderRadius: 10,
-            background: "rgba(212,87,77,0.12)", border: `1px solid rgba(212,87,77,0.4)`,
+            background: "rgba(var(--nura-danger-rgb),0.12)", border: `1px solid rgba(var(--nura-danger-rgb),0.4)`,
             color: RED, fontFamily: SANS, fontSize: 13, fontWeight: 500,
             cursor: deleting ? "not-allowed" : "pointer", opacity: deleting ? 0.6 : 1,
           }}>

@@ -25,7 +25,7 @@ const BORDER = "var(--nura-border)";
 const SURFACE = "var(--nura-surface)";
 const SAGE = "var(--nura-sage)";
 const SAGE_ON = "var(--nura-bg)";
-const SAGE_RGB = "155,176,165";
+const SAGE_RGB = "var(--nura-sage-rgb)";
 const RED = "var(--nura-danger)";
 const SANS = "'Inter', system-ui, sans-serif";
 
@@ -282,7 +282,7 @@ export default function SavedPage() {
                         disabled={isDeleting}
                         style={{
                           padding: "9px 16px", borderRadius: 9,
-                          background: "rgba(212,87,77,0.1)", border: `1px solid rgba(212,87,77,0.35)`,
+                          background: "rgba(var(--nura-danger-rgb),0.1)", border: `1px solid rgba(var(--nura-danger-rgb),0.35)`,
                           color: RED, fontFamily: SANS, fontSize: 12, fontWeight: 500,
                           cursor: isDeleting ? "not-allowed" : "pointer", opacity: isDeleting ? 0.5 : 1,
                           display: "flex", alignItems: "center", gap: 5,

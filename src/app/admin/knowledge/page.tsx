@@ -26,8 +26,8 @@ const FG_RGB = "var(--nura-fg-rgb)";
 const SANS = "'Inter', system-ui, sans-serif";
 const SERIF = "'DM Serif Display', Georgia, serif";
 
-const DANGER = "#FF4C5C";
-const WARN = "#FFB400";
+const DANGER = "var(--nura-danger)";
+const WARN = "var(--nura-watch)";
 
 // ─── Primitives ──────────────────────────────────────────────────────────────
 
@@ -418,7 +418,7 @@ function UploadModal({ userId, token, onClose, onSuccess }: {
 
         <div style={{ padding: "16px 20px 0" }}>
           {stage !== "idle" && (
-            <div style={{ padding: "10px 12px", background: stage === "error" ? "rgba(255,76,92,0.08)" : stage === "done" ? `rgba(${SAGE_RGB},0.10)` : SURFACE, border: `0.5px solid ${stage === "error" ? "rgba(255,76,92,0.4)" : stage === "done" ? `rgba(${SAGE_RGB},0.35)` : BORDER}`, borderRadius: 10, marginBottom: 16, display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={{ padding: "10px 12px", background: stage === "error" ? "rgba(var(--nura-danger-rgb),0.08)" : stage === "done" ? `rgba(${SAGE_RGB},0.10)` : SURFACE, border: `0.5px solid ${stage === "error" ? "rgba(var(--nura-danger-rgb),0.4)" : stage === "done" ? `rgba(${SAGE_RGB},0.35)` : BORDER}`, borderRadius: 10, marginBottom: 16, display: "flex", alignItems: "center", gap: 10 }}>
               {stage !== "done" && stage !== "error" && (
                 <div style={{ width: 14, height: 14, borderRadius: "50%", border: `2px solid rgba(${SAGE_RGB},0.25)`, borderTopColor: SAGE, animation: "spin 1s linear infinite", flexShrink: 0 }} />
               )}
@@ -698,7 +698,7 @@ function ConfirmDeleteModal({ sourceTitle, busy, errorMsg, onCancel, onConfirm }
         </div>
 
         {errorMsg && (
-          <div style={{ marginBottom: 14, padding: "9px 12px", background: "rgba(255,76,92,0.08)", border: `0.5px solid rgba(255,76,92,0.4)`, borderRadius: 10 }}>
+          <div style={{ marginBottom: 14, padding: "9px 12px", background: "rgba(var(--nura-danger-rgb),0.08)", border: `0.5px solid rgba(var(--nura-danger-rgb),0.4)`, borderRadius: 10 }}>
             <Eyebrow color={DANGER} size={10}>{errorMsg}</Eyebrow>
           </div>
         )}
@@ -722,7 +722,7 @@ function ConfirmDeleteModal({ sourceTitle, busy, errorMsg, onCancel, onConfirm }
             disabled={busy}
             style={{
               flex: 1, padding: 12,
-              background: busy ? "rgba(255,76,92,0.30)" : DANGER,
+              background: busy ? "rgba(var(--nura-danger-rgb),0.30)" : DANGER,
               border: "none", borderRadius: 12,
               fontFamily: SANS, fontSize: 12, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase",
               color: "#fff", cursor: busy ? "not-allowed" : "pointer",
@@ -955,15 +955,15 @@ export default function AdminKnowledgePage() {
       <style>{`
         @keyframes live-pulse { 0%, 100% { opacity: 0.5; transform: scale(1); } 50% { opacity: 1; transform: scale(1.4); } }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        @keyframes drop-pulse { 0%, 100% { box-shadow: 0 0 0 4px rgba(155,176,165,0.15); } 50% { box-shadow: 0 0 0 6px rgba(155,176,165,0.30); } }
+        @keyframes drop-pulse { 0%, 100% { box-shadow: 0 0 0 4px rgba(var(--nura-sage-rgb),0.15); } 50% { box-shadow: 0 0 0 6px rgba(var(--nura-sage-rgb),0.30); } }
         * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
         html, body { margin: 0; padding: 0; background: var(--nura-bg); }
         ::-webkit-scrollbar { width: 0; }
         .source-card { transition: background 200ms, border-color 200ms, transform 200ms; }
-        .source-card:hover { background: var(--nura-surface-elevated); border-color: rgba(155,176,165,0.35); transform: translateY(-1px); }
+        .source-card:hover { background: var(--nura-surface-elevated); border-color: rgba(var(--nura-sage-rgb),0.35); transform: translateY(-1px); }
         .nura-primary-btn:hover:not(:disabled) { background: var(--nura-sage-hover) !important; transform: translateY(-1px); }
         .nura-primary-btn:active:not(:disabled) { transform: translateY(0); }
-        .filter-pill:hover { border-color: rgba(155,176,165,0.30); color: var(--nura-sage); }
+        .filter-pill:hover { border-color: rgba(var(--nura-sage-rgb),0.30); color: var(--nura-sage); }
       `}</style>
 
       <NuraPlexus opacity={0.35} />
@@ -1061,7 +1061,7 @@ export default function AdminKnowledgePage() {
         )}
 
         {deleteError && (
-          <div style={{ marginBottom: 12, padding: "10px 12px", background: "rgba(255,76,92,0.08)", border: `0.5px solid rgba(255,76,92,0.4)`, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+          <div style={{ marginBottom: 12, padding: "10px 12px", background: "rgba(var(--nura-danger-rgb),0.08)", border: `0.5px solid rgba(var(--nura-danger-rgb),0.4)`, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
             <Eyebrow color={DANGER} size={10}>{deleteError}</Eyebrow>
             <button onClick={() => setDeleteError("")} style={{ background: "none", border: "none", cursor: "pointer", color: TEXT_SEC, padding: 0, display: "flex", alignItems: "center" }} aria-label="Dismiss">
               <X size={12} />
@@ -1093,7 +1093,7 @@ export default function AdminKnowledgePage() {
                     position: "relative",
                     padding: "18px 22px",
                     background: SURFACE,
-                    border: `0.5px solid ${isProcessing ? `rgba(${SAGE_RGB},0.35)` : isFailed ? "rgba(255,76,92,0.35)" : expanded ? `rgba(${SAGE_RGB},0.35)` : BORDER}`,
+                    border: `0.5px solid ${isProcessing ? `rgba(${SAGE_RGB},0.35)` : isFailed ? "rgba(var(--nura-danger-rgb),0.35)" : expanded ? `rgba(${SAGE_RGB},0.35)` : BORDER}`,
                     borderRadius: 14,
                     cursor: "pointer",
                   }}

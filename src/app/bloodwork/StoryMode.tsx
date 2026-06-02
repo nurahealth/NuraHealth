@@ -65,8 +65,8 @@ function statusChipColors(status: string): { bg: string; border: string; color: 
   const s = status.toLowerCase();
   if (s === "high" || s === "critical") {
     return {
-      bg: `rgba(212,165,116,0.14)`,
-      border: `rgba(212,165,116,0.42)`,
+      bg: `rgba(var(--nura-watch-rgb),0.14)`,
+      border: `rgba(var(--nura-watch-rgb),0.42)`,
       color: AMBER,
     };
   }
@@ -297,7 +297,7 @@ export default function StoryMode({
               {addError && (
                 <div style={{
                   marginTop: -4, marginBottom: 14, padding: "9px 12px", borderRadius: 9,
-                  background: "rgba(212,87,77,0.08)", border: `0.5px solid rgba(212,87,77,0.3)`,
+                  background: "rgba(var(--nura-danger-rgb),0.08)", border: `0.5px solid rgba(var(--nura-danger-rgb),0.3)`,
                   color: RED, fontFamily: SANS, fontSize: 12,
                 }}>
                   {addError}

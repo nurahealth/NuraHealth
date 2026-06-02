@@ -219,8 +219,8 @@ function Section({ title, blocks }: { title: string; blocks: Block[] }) {
           <div
             key={i}
             style={{
-              background: "rgba(212,87,77,0.08)",
-              border: `1px solid rgba(212,87,77,0.4)`,
+              background: "rgba(var(--nura-danger-rgb),0.08)",
+              border: `1px solid rgba(var(--nura-danger-rgb),0.4)`,
               borderLeft: `3px solid ${RED}`,
               borderRadius: 12,
               padding: "16px 18px",

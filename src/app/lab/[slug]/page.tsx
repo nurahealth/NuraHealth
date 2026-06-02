@@ -21,8 +21,8 @@ const SAGE_ON = "var(--nura-sage-bg-on)";
 const SAGE_RGB = "var(--nura-sage-rgb)";
 const FG_RGB = "var(--nura-fg-rgb)";
 const SANS = "'Inter', system-ui, sans-serif";
-const AMBER = "#FFB400";
-const RED = "#FF4C5C";
+const AMBER = "var(--nura-watch)";
+const RED = "var(--nura-danger)";
 
 // ── Types ───────────────────────────────────────────────────────────────────
 interface ProductRow {
@@ -349,7 +349,7 @@ export default async function LabProductPage({ params }: { params: Promise<{ slu
                     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                       <span style={{ fontFamily: SANS, fontSize: 14, fontWeight: 600, color: TEXT }}>{m.name}</span>
                       {(m.risk_count ?? 0) > 0 && (
-                        <span style={{ fontFamily: SANS, fontSize: 9, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: RED, background: "rgba(255,76,92,0.12)", border: "0.5px solid rgba(255,76,92,0.4)", borderRadius: 7, padding: "2px 7px" }}>
+                        <span style={{ fontFamily: SANS, fontSize: 9, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: RED, background: "rgba(var(--nura-danger-rgb),0.12)", border: "0.5px solid rgba(var(--nura-danger-rgb),0.4)", borderRadius: 7, padding: "2px 7px" }}>
                           {m.risk_count} {m.risk_count === 1 ? "risk" : "risks"}
                         </span>
                       )}
@@ -377,7 +377,7 @@ export default async function LabProductPage({ params }: { params: Promise<{ slu
                       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                         <span style={{ fontFamily: SANS, fontSize: 14, fontWeight: 600, color: TEXT }}>{m.name}</span>
                         {flagged && (
-                          <span style={{ fontFamily: SANS, fontSize: 9, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: AMBER, background: "rgba(255,180,0,0.12)", border: "0.5px solid rgba(255,180,0,0.4)", borderRadius: 7, padding: "2px 7px" }}>
+                          <span style={{ fontFamily: SANS, fontSize: 9, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: AMBER, background: "rgba(var(--nura-watch-rgb),0.12)", border: "0.5px solid rgba(var(--nura-watch-rgb),0.4)", borderRadius: 7, padding: "2px 7px" }}>
                             {m.risk_count} {m.risk_count === 1 ? "risk" : "risks"}
                           </span>
                         )}
@@ -452,7 +452,7 @@ export default async function LabProductPage({ params }: { params: Promise<{ slu
 
       <style>{`
         .lab-source { transition: border-color 180ms, background 180ms; }
-        .lab-source:hover { border-color: rgba(155,176,165,0.4); background: var(--nura-surface-elevated); }
+        .lab-source:hover { border-color: rgba(var(--nura-sage-rgb),0.4); background: var(--nura-surface-elevated); }
         .lab-rel-row { scrollbar-width: none; }
         .lab-rel-row::-webkit-scrollbar { display: none; }
         /* Details grid — uniform 2-up cells that size to content, single column on mobile */

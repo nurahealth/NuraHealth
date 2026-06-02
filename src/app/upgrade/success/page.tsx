@@ -11,7 +11,7 @@ const TEXT_TER = "var(--nura-text-tertiary)";
 const BORDER = "var(--nura-border)";
 const SAGE = "var(--nura-sage)";
 const SAGE_ON = "var(--nura-bg)";
-const SAGE_RGB = "155,176,165";
+const SAGE_RGB = "var(--nura-sage-rgb)";
 const SANS = "'Inter', system-ui, sans-serif";
 const MONO = "'JetBrains Mono', monospace";
 

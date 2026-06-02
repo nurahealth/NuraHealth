@@ -11,7 +11,7 @@ const TEXT = "var(--nura-text-primary)";
 const BORDER = "var(--nura-border)";
 const SURFACE = "var(--nura-surface)";
 const SAGE = "var(--nura-sage)";
-const SAGE_RGB = "155,176,165";
+const SAGE_RGB = "var(--nura-sage-rgb)";
 const SANS = "'Inter', system-ui, sans-serif";
 
 interface Props {

@@ -17,7 +17,7 @@ const SURFACE = "var(--nura-surface)";
 const SAGE = "var(--nura-sage)";
 const SAGE_HOV = "var(--nura-sage-hover)";
 const SAGE_ON = "var(--nura-bg)";
-const SAGE_RGB = "155,176,165";
+const SAGE_RGB = "var(--nura-sage-rgb)";
 const SANS = "'Inter', system-ui, sans-serif";
 
 interface ChatMessage {
@@ -339,7 +339,7 @@ export default function ChatSessionPage({ params }: { params: Promise<{ sessionI
         flexShrink: 0, position: "relative", zIndex: 3,
         display: "flex", alignItems: "center", justifyContent: "space-between",
         padding: "max(env(safe-area-inset-top), 8px) 22px 18px",
-        background: "rgba(13,13,14,0.82)", backdropFilter: "blur(10px)",
+        background: "rgba(var(--nura-bg-rgb),0.82)", backdropFilter: "blur(10px)",
         borderBottom: `0.5px solid rgba(var(--nura-bg-tint-rgb),0.06)`,
       }}>
         <button
@@ -485,7 +485,7 @@ export default function ChatSessionPage({ params }: { params: Promise<{ sessionI
       {toast && (
         <div style={{
           position: "fixed", bottom: 110, left: "50%", transform: "translateX(-50%)",
-          background: "rgba(20,20,21,0.95)", border: `0.5px solid rgba(var(--nura-sage-rgb),0.3)`,
+          background: "rgba(var(--nura-bg-elevated-rgb),0.95)", border: `0.5px solid rgba(var(--nura-sage-rgb),0.3)`,
           color: TEXT, padding: "8px 14px", borderRadius: 20, fontSize: 12,
           zIndex: 60, animation: "toast-in 220ms ease both",
         }}>
@@ -497,7 +497,7 @@ export default function ChatSessionPage({ params }: { params: Promise<{ sessionI
       <div style={{
         flexShrink: 0, position: "relative", zIndex: 3,
         padding: "8px 18px max(env(safe-area-inset-bottom), 14px)",
-        background: "rgba(13,13,14,0.9)", backdropFilter: "blur(10px)",
+        background: "rgba(var(--nura-bg-rgb),0.9)", backdropFilter: "blur(10px)",
         borderTop: `0.5px solid ${BORDER}`,
       }}>
         <div style={{ maxWidth: 720, margin: "0 auto" }}>

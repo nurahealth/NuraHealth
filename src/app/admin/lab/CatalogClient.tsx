@@ -1535,10 +1535,10 @@ export default function CatalogClient({ initialProducts, categories }: {
         html, body { margin: 0; padding: 0; background: var(--nura-bg); }
         ::-webkit-scrollbar { width: 0; }
         .lab-row { transition: background 200ms, border-color 200ms, transform 200ms; }
-        .lab-row:hover { background: var(--nura-surface-elevated); border-color: rgba(155,176,165,0.35); transform: translateY(-1px); }
+        .lab-row:hover { background: var(--nura-surface-elevated); border-color: rgba(var(--nura-sage-rgb),0.35); transform: translateY(-1px); }
         .nura-primary-btn:hover:not(:disabled) { background: var(--nura-sage-hover) !important; transform: translateY(-1px); }
         .nura-primary-btn:active:not(:disabled) { transform: translateY(0); }
-        .lab-icon-btn:hover { border-color: rgba(155,176,165,0.4) !important; color: var(--nura-sage) !important; }
+        .lab-icon-btn:hover { border-color: rgba(var(--nura-sage-rgb),0.4) !important; color: var(--nura-sage) !important; }
         .cat-field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         @media (max-width: 420px) { .cat-field-row { grid-template-columns: 1fr; } }
       `}</style>

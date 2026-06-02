@@ -6,6 +6,8 @@
 :root {
   /* Dark (default) */
   --nura-bg: #0d0d0e;
+  --nura-bg-rgb: 13, 13, 14;            /* page bg as rgb — for translucent chrome (header/composer) */
+  --nura-bg-elevated-rgb: 20, 20, 21;   /* elevated translucent chrome (toast/menus) */
   --nura-surface: rgba(235, 230, 216, 0.04);
   --nura-surface-elevated: rgba(235, 230, 216, 0.06);
   --nura-text-primary: #f0ebde;
@@ -24,6 +26,25 @@
   --nura-watch: #d4a574;
   --nura-watch-rgb: 212, 165, 116;
 
+  /* Dashboard premium surface + status palette */
+  --nura-card: #161718;                 /* solid card surface (dashboard) */
+  --nura-optimal: #5fbf8c;              /* emerald — Optimal */
+  --nura-optimal-rgb: 95, 191, 140;
+  --nura-good: #d3a253;                 /* gold — Good */
+  --nura-good-rgb: 211, 162, 83;
+  --nura-alert: #e8745a;                /* coral — Alert */
+  --nura-alert-rgb: 232, 116, 90;
+  --nura-teal: #5dccae;                 /* sleep data-viz teal */
+  --nura-teal-rgb: 93, 204, 174;
+  --nura-teal-mid: #2f9e83;             /* mid teal — gradients / light-sleep */
+  --nura-teal-deep: #15564a;            /* deep teal — deep-sleep */
+  --nura-amber: #e0a23e;                /* movement amber accent */
+  --nura-amber-rgb: 224, 162, 62;
+  --nura-amber-2: #c47f24;              /* deeper amber — gradients */
+  --nura-amber-deep: #7a4e12;
+  --nura-glass: rgba(22, 25, 27, 0.46); /* frosted-glass card fill */
+  --nura-glass-line: rgba(235, 230, 216, 0.10);
+
   /* Legacy tokens kept for tailwind theme — unused by new theme system */
   --background: #ffffff;
   --foreground: #171717;
@@ -33,6 +54,8 @@
 
 [data-theme="light"] {
   --nura-bg: #fafaf9;
+  --nura-bg-rgb: 250, 250, 249;
+  --nura-bg-elevated-rgb: 244, 244, 242;
   --nura-surface: #ffffff;
   --nura-surface-elevated: #f4f4f2;
   --nura-text-primary: #0a0a0a;
@@ -50,6 +73,10 @@
   --nura-danger-rgb: 184, 57, 47;
   --nura-watch: #b8741a;
   --nura-watch-rgb: 184, 116, 26;
+  /* Dashboard: light card surface (status/teal tokens inherit from :root) */
+  --nura-card: #ffffff;
+  --nura-glass: rgba(255, 255, 255, 0.62);
+  --nura-glass-line: rgba(0, 0, 0, 0.08);
 }
 
 @theme inline {

@@ -1,469 +1,434 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import type { User } from "@supabase/supabase-js";
-import {
-  getLatestBiomarkers,
-  getUserPanels,
-  getOverallHealthScore,
-  type Biomarker,
-  type LabPanel,
-  type HealthScore,
-} from "@/lib/bloodwork";
-import {
-  BIOMARKER_CATALOG,
-  enrichCatalogWithUserData,
-  type EnrichedSection,
-  type EnrichedMarker,
-  type SourceType,
-} from "@/lib/biomarkerCatalog";
 import NuraPageShell from "@/components/NuraPageShell";
+import {
+  getDashboardData,
+  SOURCE_LABEL,
+  type MetricStatus,
+  type ConnectedSource,
+  type Readiness,
+  type DashboardMetric,
+  type MetricViz,
+  type SleepStage,
+} from "@/lib/dashboardData";
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
 const TEXT = "var(--nura-text-primary)";
 const TEXT_SEC = "var(--nura-text-secondary)";
 const TEXT_TER = "var(--nura-text-tertiary)";
 const BORDER = "var(--nura-border)";
-const SURFACE = "var(--nura-surface)";
+const CARD = "var(--nura-card)";
 const SAGE = "var(--nura-sage)";
-const SAGE_RGB = "155,176,165";
-const AMBER = "var(--nura-watch)";
-const RED = "var(--nura-danger)";
+const TEAL = "var(--nura-teal)";
+const TEAL_RGB = "var(--nura-teal-rgb)";
+const SAGE_RGB = "var(--nura-sage-rgb)";
+const FG_RGB = "var(--nura-fg-rgb)";
 const SANS = "'Inter', system-ui, sans-serif";
-const SERIF = "'DM Serif Display', Georgia, serif";
 
-const statusColor = (s: Biomarker["status"]) =>
-  s === "watch" ? AMBER : (s === "low" || s === "high" || s === "critical") ? RED : SAGE;
-
-const fmtDate = (d: Date) =>
-  d.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" });
-
-const fmtPanelDate = (d: string | null) => {
-  if (!d) return "—";
-  try { return new Date(d + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }); }
-  catch { return d; }
+const STATUS: Record<MetricStatus, { color: string; rgb: string; label: string }> = {
+  optimal: { color: "var(--nura-optimal)", rgb: "var(--nura-optimal-rgb)", label: "Optimal" },
+  good: { color: "var(--nura-good)", rgb: "var(--nura-good-rgb)", label: "Good" },
+  alert: { color: "var(--nura-alert)", rgb: "var(--nura-alert-rgb)", label: "Alert" },
 };
 
-const formatValue = (v: number) => (v % 1 === 0 ? v.toString() : v.toFixed(1));
+const EYEBROW: React.CSSProperties = {
+  fontFamily: SANS, fontSize: 10, fontWeight: 600, letterSpacing: "1.6px",
+  textTransform: "uppercase",
+};
 
-// ── Page ──────────────────────────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function greetingFor(d: Date): string {
+  const h = d.getHours();
+  if (h < 12) return "Good morning";
+  if (h < 18) return "Good afternoon";
+  return "Good evening";
+}
+
+function fmtNumber(n: number): string {
+  return n.toLocaleString("en-US");
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Page
+// ─────────────────────────────────────────────────────────────────────────────
 export default function DashboardPage() {
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
-  const [biomarkers, setBiomarkers] = useState<Biomarker[]>([]);
-  const [panels, setPanels] = useState<LabPanel[]>([]);
-  const [score, setScore] = useState<HealthScore | null>(null);
-  const [dataLoading, setDataLoading] = useState(true);
+  const [firstName, setFirstName] = useState<string>("");
+
+  const data = getDashboardData();
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) router.push("/auth");
-      else { setUser(user); setAuthLoading(false); }
+      if (!user) { router.push("/auth"); return; }
+      const meta = (user.user_metadata ?? {}) as { name?: string; full_name?: string };
+      const raw = meta.name ?? meta.full_name ?? user.email?.split("@")[0] ?? data.user.firstName;
+      setFirstName(raw.split(" ")[0]);
+      setAuthLoading(false);
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router]);
 
-  const loadAll = useCallback(async (userId: string) => {
-    setDataLoading(true);
-    try {
-      const [bm, ps, sc] = await Promise.all([
-        getLatestBiomarkers(userId),
-        getUserPanels(userId),
-        getOverallHealthScore(userId),
-      ]);
-      setBiomarkers(bm);
-      setPanels(ps);
-      setScore(sc);
-    } catch {
-      // silent
-    } finally {
-      setDataLoading(false);
-    }
-  }, []);
+  if (authLoading) return <NuraPageShell maxWidth={860}><div /></NuraPageShell>;
 
-  useEffect(() => {
-    if (!user) return;
-    loadAll(user.id);
-  }, [user, loadAll]);
-
-  if (authLoading) {
-    return <NuraPageShell maxWidth={1280}><div /></NuraPageShell>;
-  }
-
-  const enriched = enrichCatalogWithUserData(BIOMARKER_CATALOG, biomarkers);
-  const analyzedPanels = panels.filter((p) => p.status === "analyzed");
-  const latestPanel = analyzedPanels[0];
-  const todayLabel = fmtDate(new Date());
+  const now = new Date();
+  const dateLabel = now.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
 
   return (
-    <NuraPageShell maxWidth={1280}>
+    <NuraPageShell maxWidth={860}>
       <style>{`
-        .dash-pad { padding: 0 6px; }
-        @media (min-width: 768px) { .dash-pad { padding: 0 22px; } }
-        @media (min-width: 1024px) { .dash-pad { padding: 0 38px; } }
-
-        .dash-hero { display: flex; flex-direction: column; gap: 24px; margin-bottom: 40px; }
-        @media (min-width: 1024px) {
-          .dash-hero { flex-direction: row; align-items: flex-start; gap: 32px; }
-          .dash-hero-left { flex: 1; }
-          .dash-hero-right { width: 100%; max-width: 380px; flex-shrink: 0; }
-        }
-
-        .dash-marker-grid {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 12px;
-        }
+        .dash-grid { display: grid; grid-template-columns: 1fr; gap: 14px; }
+        @media (min-width: 640px) { .dash-grid { grid-template-columns: 1fr 1fr; gap: 16px; } }
+        .dash-card { transition: border-color 180ms, transform 180ms; }
+        .dash-card:hover { border-color: rgba(var(--nura-sage-rgb),0.35) !important; transform: translateY(-2px); }
+        .dash-cta:hover { color: var(--nura-sage-hover) !important; }
       `}</style>
 
-      <div className="dash-pad">
-        {/* HERO */}
-        <div className="dash-hero">
-          <div className="dash-hero-left">
-            <h1 style={{
-              fontFamily: SANS, fontWeight: 600, color: TEXT,
-              margin: "0 0 6px", lineHeight: 1.1, letterSpacing: "-0.02em",
-              fontSize: "clamp(32px, 5vw, 52px)",
-            }}>
-              Your wellness, today
-            </h1>
-            <p style={{ fontFamily: SANS, fontSize: 13, color: TEXT_SEC, margin: 0 }}>
-              {todayLabel}
-            </p>
-          </div>
-
-          {/* Health score card */}
-          <div className="dash-hero-right">
-            <div style={{
-              background: SURFACE, border: `0.5px solid ${BORDER}`, borderRadius: 14,
-              padding: 20,
-            }}>
-              <div style={{
-                fontFamily: SANS, fontSize: 10, fontWeight: 600, letterSpacing: "1.5px",
-                color: SAGE, textTransform: "uppercase", marginBottom: 8,
-              }}>
-                Overall score
-              </div>
-              <div style={{
-                fontFamily: SERIF, fontWeight: 500, color: SAGE, lineHeight: 1,
-                fontSize: "clamp(48px, 6vw, 56px)", marginBottom: 18,
-                display: "flex", alignItems: "baseline", gap: 4,
-              }}>
-                <span>{score?.score ?? 0}</span>
-                <span style={{
-                  fontFamily: SERIF, fontWeight: 400,
-                  fontSize: "clamp(24px, 3vw, 28px)",
-                  color: `rgba(var(--nura-sage-rgb),0.5)`,
-                }}>
-                  /100
-                </span>
-              </div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-                <ScoreTile count={score?.optimalCount ?? 0} label="Optimal" color={SAGE} />
-                <ScoreTile count={score?.watchCount ?? 0} label="Watch" color={AMBER} />
-                <ScoreTile count={score?.alertCount ?? 0} label="Alert" color={RED} />
-              </div>
-            </div>
-          </div>
+      {/* 1 — Date eyebrow + greeting */}
+      <div style={{ marginBottom: 22 }}>
+        <div style={{ ...EYEBROW, color: SAGE, marginBottom: 8 }}>
+          Today · {dateLabel}
         </div>
-
-        {dataLoading ? (
-          <div style={{ padding: "60px 0", textAlign: "center", color: TEXT_TER, fontSize: 13 }}>
-            Loading…
-          </div>
-        ) : (
-          <>
-            {/* SECTIONS */}
-            {enriched.map((section) => (
-              <Section
-                key={section.id}
-                section={section}
-                onConnect={() => router.push("/integrations")}
-                onUpload={() => router.push("/bloodwork")}
-                onTileClick={(m) => m.match && router.push(`/bloodwork/${m.match.panel_id}`)}
-              />
-            ))}
-
-            {/* LATEST INSIGHT */}
-            {latestPanel?.insight && (
-              <div style={{
-                background: SURFACE, border: `0.5px solid ${BORDER}`,
-                borderLeft: `2px solid ${SAGE}`, borderRadius: 14,
-                padding: 20, marginTop: 32,
-              }}>
-                <div style={{
-                  fontFamily: SANS, fontSize: 10, fontWeight: 600, letterSpacing: "1.5px",
-                  color: SAGE, textTransform: "uppercase", marginBottom: 10,
-                }}>
-                  Latest insight
-                </div>
-                <p style={{ fontFamily: SANS, fontSize: 13.5, color: TEXT, margin: 0, lineHeight: 1.6 }}>
-                  {latestPanel.insight}
-                </p>
-              </div>
-            )}
-
-            {/* RECENT PANELS */}
-            {analyzedPanels.length > 0 && (
-              <div style={{ marginTop: 32 }}>
-                <SectionLabel>Recent panels</SectionLabel>
-                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                  {analyzedPanels.slice(0, 5).map((p) => (
-                    <button
-                      key={p.id}
-                      onClick={() => router.push(`/bloodwork/${p.id}`)}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.background = "var(--nura-surface-elevated)";
-                        e.currentTarget.style.borderColor = `rgba(var(--nura-sage-rgb),0.25)`;
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = SURFACE;
-                        e.currentTarget.style.borderColor = BORDER;
-                      }}
-                      style={{
-                        width: "100%", textAlign: "left", padding: "14px 16px",
-                        background: SURFACE, border: `0.5px solid ${BORDER}`, borderRadius: 14,
-                        cursor: "pointer", fontFamily: SANS,
-                        transition: "background 160ms, border-color 160ms",
-                      }}
-                    >
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
-                        <span style={{ fontSize: 14, fontWeight: 500, color: TEXT }}>{p.name}</span>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={TEXT_TER} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M9 6l6 6-6 6"/>
-                        </svg>
-                      </div>
-                      <div style={{ fontSize: 12, color: TEXT_SEC }}>{fmtPanelDate(p.collected_date)}</div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </>
-        )}
+        <h1 style={{
+          fontFamily: SANS, fontWeight: 600, color: TEXT, margin: 0,
+          fontSize: "clamp(26px, 5vw, 34px)", letterSpacing: "-0.02em", lineHeight: 1.1,
+        }}>
+          {greetingFor(now)}, {firstName || data.user.firstName}
+        </h1>
       </div>
+
+      {/* 2 — Connected sources strip */}
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 22 }}>
+        {data.sources.map((s) => <SourcePill key={s.id} source={s} />)}
+      </div>
+
+      {/* 3 — Readiness hero */}
+      <ReadinessCard readiness={data.readiness} />
+
+      {/* 4 — Metric grid */}
+      <div className="dash-grid" style={{ marginTop: 16 }}>
+        {data.metrics.map((m) => (
+          <MetricCard key={m.id} metric={m} onClick={() => router.push(`/dashboard/${m.id}`)} />
+        ))}
+      </div>
+
+      {/* 5 — NŪRA insight */}
+      <InsightCard
+        text={data.insight.text}
+        ctaLabel={data.insight.ctaLabel}
+        onCta={() => router.push(data.insight.ctaHref)}
+      />
     </NuraPageShell>
   );
 }
 
-// ── Section ──────────────────────────────────────────────────────────────────
-function Section({
-  section,
-  onConnect,
-  onUpload,
-  onTileClick,
-}: {
-  section: EnrichedSection;
-  onConnect: () => void;
-  onUpload: () => void;
-  onTileClick: (m: EnrichedMarker) => void;
-}) {
+// ── 2 · Source pill ────────────────────────────────────────────────────────────
+function SourcePill({ source }: { source: ConnectedSource }) {
   return (
-    <section style={{ marginTop: 32, marginBottom: 16 }}>
-      {/* Section header */}
-      <div style={{ marginBottom: 16 }}>
-        <h2 style={{
-          fontFamily: SANS, fontWeight: 600, color: TEXT,
-          margin: "0 0 4px", lineHeight: 1.2, letterSpacing: "-0.02em",
-          fontSize: "clamp(22px, 3vw, 28px)",
-        }}>
-          {section.title}
-        </h2>
-        <div style={{
-          fontFamily: SANS, fontSize: 10, fontWeight: 600, letterSpacing: "1.5px",
-          color: SAGE, textTransform: "uppercase",
-        }}>
-          {section.subtitle}
-        </div>
-      </div>
-
-      {/* Body */}
-      {!section.hasAnyMatch ? (
-        <EmptySectionPrompt sourceType={section.sourceType} onConnect={onConnect} onUpload={onUpload} />
-      ) : section.subgroups ? (
-        section.subgroups.map((sg) => (
-          <div key={sg.title} style={{ marginBottom: 8 }}>
-            <div style={{
-              fontFamily: SANS, fontSize: 10, fontWeight: 600, letterSpacing: "1.5px",
-              color: SAGE, textTransform: "uppercase",
-              margin: "14px 0 8px",
-            }}>
-              {sg.title} · {sg.markers.length}
-            </div>
-            <div className="dash-marker-grid">
-              {sg.markers.map((m) => (
-                <MarkerTile key={m.id} marker={m} onClick={() => onTileClick(m)} />
-              ))}
-            </div>
-          </div>
-        ))
-      ) : (
-        <div className="dash-marker-grid">
-          {(section.markers ?? []).map((m) => (
-            <MarkerTile key={m.id} marker={m} onClick={() => onTileClick(m)} />
-          ))}
-        </div>
-      )}
-    </section>
+    <div style={{
+      display: "flex", alignItems: "center", gap: 8,
+      padding: "7px 13px", borderRadius: 999,
+      background: CARD, border: `0.5px solid ${BORDER}`,
+    }}>
+      <span style={{
+        width: 7, height: 7, borderRadius: "50%",
+        background: "var(--nura-optimal)",
+        boxShadow: source.state === "live" ? "0 0 0 3px rgba(var(--nura-optimal-rgb),0.18)" : "none",
+      }} />
+      <span style={{ fontFamily: SANS, fontSize: 12.5, fontWeight: 500, color: TEXT }}>{source.name}</span>
+      <span style={{ fontFamily: SANS, fontSize: 11, color: TEXT_TER }}>{source.syncLabel}</span>
+    </div>
   );
 }
 
-// ── Marker tile ──────────────────────────────────────────────────────────────
-function MarkerTile({ marker, onClick }: { marker: EnrichedMarker; onClick: () => void }) {
-  const hasData = !!marker.match;
-  const b = marker.match;
-  const sc = b ? statusColor(b.status) : TEXT_TER;
-  const unit = b?.unit ?? marker.unit;
+// ── Status pill ─────────────────────────────────────────────────────────────────
+function StatusPill({ status, size = "md" }: { status: MetricStatus; size?: "sm" | "md" }) {
+  const s = STATUS[status];
+  const pad = size === "sm" ? "3px 8px" : "5px 11px";
+  const fs = size === "sm" ? 9 : 10;
+  return (
+    <span style={{
+      ...EYEBROW, fontSize: fs, color: s.color, padding: pad, borderRadius: 999,
+      background: `rgba(${s.rgb},0.12)`, border: `0.5px solid rgba(${s.rgb},0.35)`,
+      whiteSpace: "nowrap",
+    }}>
+      {s.label}
+    </span>
+  );
+}
+
+// ── 3 · Readiness hero card ─────────────────────────────────────────────────────
+function ReadinessCard({ readiness }: { readiness: Readiness }) {
+  const max = Math.max(...readiness.week.map((d) => d.value), 100);
+
+  return (
+    <div style={{
+      position: "relative", overflow: "hidden",
+      borderRadius: 22, padding: 22,
+      background: `radial-gradient(120% 95% at 25% 0%, rgba(var(--nura-optimal-rgb),0.13), rgba(var(--nura-sage-rgb),0.04) 42%, transparent 72%), ${CARD}`,
+      border: `0.5px solid ${BORDER}`,
+    }}>
+      {/* Top row: label + status */}
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
+        <div style={{ ...EYEBROW, color: SAGE, paddingTop: 6 }}>Readiness</div>
+        <StatusPill status={readiness.status} />
+      </div>
+
+      {/* Score */}
+      <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginTop: 6 }}>
+        <span style={{
+          fontFamily: SANS, fontWeight: 600, color: TEXT, lineHeight: 1,
+          fontSize: "clamp(56px, 13vw, 76px)", letterSpacing: "-0.03em",
+        }}>
+          {readiness.score}
+        </span>
+        <span style={{ fontFamily: SANS, fontSize: 18, fontWeight: 500, color: TEXT_TER }}>/100</span>
+      </div>
+
+      {/* Summary */}
+      <p style={{ fontFamily: SANS, fontSize: 13.5, color: TEXT_SEC, margin: "10px 0 0", lineHeight: 1.55, maxWidth: 460 }}>
+        {readiness.summary}
+      </p>
+
+      {/* 7-day strip */}
+      <div style={{ display: "flex", alignItems: "flex-end", gap: 10, marginTop: 22, height: 92 }}>
+        {readiness.week.map((d, i) => {
+          const h = Math.max(8, (d.value / max) * 70);
+          return (
+            <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
+              <span style={{
+                fontFamily: SANS, fontSize: 10, fontWeight: 600,
+                color: d.isToday ? TEXT : TEXT_TER,
+              }}>
+                {d.value}
+              </span>
+              <div style={{
+                width: "100%", maxWidth: 26, height: h, borderRadius: 6,
+                background: d.isToday ? "#ffffff" : `rgba(${SAGE_RGB},0.22)`,
+              }} />
+              <span style={{
+                fontFamily: SANS, fontSize: 9.5, letterSpacing: "0.4px",
+                color: d.isToday ? TEXT_SEC : TEXT_TER,
+                fontWeight: d.isToday ? 600 : 400,
+              }}>
+                {d.day}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ── 4 · Metric card ──────────────────────────────────────────────────────────────
+function MetricCard({ metric, onClick }: { metric: DashboardMetric; onClick: () => void }) {
+  const s = STATUS[metric.status];
+  const display = metric.displayValue ?? fmtNumber(metric.value);
+  const showUnit = !metric.displayValue && metric.unit;
 
   return (
     <div
-      onClick={hasData ? onClick : undefined}
+      className="dash-card"
+      role="link"
+      tabIndex={0}
+      onClick={onClick}
+      onKeyDown={(e) => { if (e.key === "Enter") onClick(); }}
       style={{
-        flex: "1 1 240px",
-        minWidth: 200,
-        background: SURFACE, border: `0.5px solid ${BORDER}`, borderRadius: 14,
-        padding: 14, cursor: hasData ? "pointer" : "default",
-        transition: "border-color 160ms",
+        background: CARD, border: `0.5px solid ${BORDER}`, borderRadius: 18,
+        padding: 18, cursor: "pointer", display: "flex", flexDirection: "column",
+        minHeight: 190,
       }}
-      onMouseEnter={hasData ? (e) => { e.currentTarget.style.borderColor = `rgba(var(--nura-sage-rgb),0.25)`; } : undefined}
-      onMouseLeave={hasData ? (e) => { e.currentTarget.style.borderColor = BORDER; } : undefined}
     >
-      <div style={{
-        fontFamily: SANS, fontSize: 10, fontWeight: 600, letterSpacing: "1.5px",
-        color: sc, textTransform: "uppercase", lineHeight: 1.3, marginBottom: 8,
-        overflow: "hidden", textOverflow: "ellipsis", display: "-webkit-box",
-        WebkitLineClamp: 2, WebkitBoxOrient: "vertical" as const,
-        minHeight: 26,
-      }}>
-        {marker.shortName ?? marker.name}
+      {/* Top: name + source tag */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+        <span style={{ ...EYEBROW, color: TEXT_SEC }}>{metric.name}</span>
+        <span style={{ ...EYEBROW, fontSize: 9, color: TEXT_TER }}>{SOURCE_LABEL[metric.source]}</span>
       </div>
 
-      {hasData && b ? (
-        <>
-          <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
-            <span style={{ fontFamily: SANS, fontSize: 20, fontWeight: 500, color: TEXT, lineHeight: 1 }}>
-              {formatValue(b.value)}
-            </span>
-            <span style={{ fontFamily: SANS, fontSize: 12, color: TEXT_SEC }}>{unit}</span>
-          </div>
-          <MarkerRangeBar marker={marker} />
-        </>
-      ) : (
-        <>
-          <div style={{ fontFamily: SANS, fontSize: 22, fontWeight: 500, color: TEXT_TER, lineHeight: 1 }}>—</div>
-          <div style={{ fontFamily: SANS, fontSize: 10, color: TEXT_TER, marginTop: 8 }}>No data yet</div>
-        </>
-      )}
+      {/* Value + delta */}
+      <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginTop: 12 }}>
+        <span style={{ fontFamily: SANS, fontSize: 30, fontWeight: 600, color: TEXT, lineHeight: 1, letterSpacing: "-0.02em" }}>
+          {display}
+        </span>
+        {showUnit && <span style={{ fontFamily: SANS, fontSize: 13, color: TEXT_SEC }}>{metric.unit}</span>}
+        {metric.delta && (
+          <span style={{
+            fontFamily: SANS, fontSize: 12, fontWeight: 600,
+            color: metric.delta.dir === "up" ? "var(--nura-optimal)" : SAGE,
+            display: "inline-flex", alignItems: "center", gap: 2,
+          }}>
+            {metric.delta.dir === "up" ? "▲" : "▼"}{metric.delta.value}
+          </span>
+        )}
+      </div>
+
+      {/* Visualization */}
+      <div style={{ marginTop: 16, marginBottom: 14, flex: 1, display: "flex", alignItems: "center" }}>
+        <Viz viz={metric.viz} status={metric.status} />
+      </div>
+
+      {/* Footer caption + status */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginTop: "auto" }}>
+        <span style={{ fontFamily: SANS, fontSize: 11.5, color: TEXT_TER, lineHeight: 1.4 }}>{metric.caption}</span>
+        <span style={{ flexShrink: 0 }}><StatusPill status={metric.status} size="sm" /></span>
+      </div>
     </div>
   );
 }
 
-// ── Range bar for a marker tile ──────────────────────────────────────────────
-function MarkerRangeBar({ marker }: { marker: EnrichedMarker }) {
-  const b = marker.match;
-  if (!b) return null;
-  const sc = statusColor(b.status);
-
-  // Determine optimal range from user data > catalog defaults
-  const optLow = b.optimal_range_low ?? marker.optimalLow ?? null;
-  const optHigh = b.optimal_range_high ?? marker.optimalHigh ?? null;
-
-  // If we don't know the optimal range AND we don't know reference range,
-  // just show a flat colored bar (no marker dot).
-  if (optLow === null && optHigh === null && b.reference_range_low === null && b.reference_range_high === null) {
-    return (
-      <div style={{ height: 4, borderRadius: 2, marginTop: 10, background: sc, opacity: 0.6 }} />
-    );
+// ── Visualizations ──────────────────────────────────────────────────────────────
+function Viz({ viz, status }: { viz: MetricViz; status: MetricStatus }) {
+  switch (viz.kind) {
+    case "sleep-stages": return <SleepStages stages={viz.stages} />;
+    case "sparkline": return <Sparkline points={viz.points} color={STATUS[status].color} rgb={STATUS[status].rgb} />;
+    case "progress-ring": return <ProgressRing value={viz.value} goal={viz.goal} color={STATUS[status].color} />;
+    case "mini-bars": return <MiniBars bars={viz.bars} color={STATUS[status].color} rgb={STATUS[status].rgb} />;
+    case "deviation": return <Deviation value={viz.value} baseline={viz.baseline} range={viz.range} color={STATUS[status].color} rgb={STATUS[status].rgb} />;
   }
+}
 
-  // Build the scale
-  const refLow = b.reference_range_low ?? (optLow !== null ? optLow * 0.5 : 0);
-  const refHigh = b.reference_range_high ?? (optHigh !== null ? optHigh * 1.5 : (optLow !== null ? optLow * 2 : 100));
-  const low = Math.min(refLow, b.value);
-  const high = Math.max(refHigh, b.value);
-  const span = (high - low) || 1;
-  const clamp = (v: number) => Math.min(100, Math.max(0, ((v - low) / span) * 100));
+function stageColor(label: string): string {
+  switch (label) {
+    case "Deep": return TEAL;
+    case "REM": return `rgba(${TEAL_RGB},0.6)`;
+    case "Light": return `rgba(${SAGE_RGB},0.5)`;
+    default: return `rgba(${FG_RGB},0.16)`; // Awake
+  }
+}
 
-  const optStart = optLow ?? refLow ?? low;
-  const optEnd = optHigh ?? refHigh ?? high;
-
+function SleepStages({ stages }: { stages: SleepStage[] }) {
+  const total = stages.reduce((a, b) => a + b.hours, 0) || 1;
   return (
-    <div style={{ position: "relative", height: 4, borderRadius: 2, marginTop: 10, overflow: "visible" }}>
-      <div style={{ position: "absolute", inset: 0, background: "rgba(var(--nura-bg-tint-rgb),0.07)", borderRadius: 2 }} />
-      <div style={{
-        position: "absolute", top: 0, bottom: 0,
-        left: `${clamp(optStart)}%`,
-        width: `${Math.max(0, clamp(optEnd) - clamp(optStart))}%`,
-        background: `rgba(var(--nura-sage-rgb),0.4)`,
-      }} />
-      <div style={{
-        position: "absolute", top: "50%", left: `${clamp(b.value)}%`,
-        transform: "translate(-50%, -50%)",
-        width: 8, height: 8, borderRadius: "50%",
-        background: sc, border: "1.5px solid var(--nura-bg)",
-        boxShadow: `0 0 4px ${sc}`,
-      }} />
+    <div style={{ width: "100%" }}>
+      <div style={{ display: "flex", width: "100%", height: 12, borderRadius: 6, overflow: "hidden", gap: 2 }}>
+        {stages.map((st) => (
+          <div key={st.label} style={{ width: `${(st.hours / total) * 100}%`, background: stageColor(st.label) }} />
+        ))}
+      </div>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 12px", marginTop: 10 }}>
+        {stages.map((st) => (
+          <span key={st.label} style={{ display: "inline-flex", alignItems: "center", gap: 5, fontFamily: SANS, fontSize: 10, color: TEXT_TER }}>
+            <span style={{ width: 7, height: 7, borderRadius: 2, background: stageColor(st.label) }} />
+            {st.label}
+          </span>
+        ))}
+      </div>
     </div>
   );
 }
 
-// ── Empty section prompt ─────────────────────────────────────────────────────
-function EmptySectionPrompt({
-  sourceType,
-  onConnect,
-  onUpload,
-}: {
-  sourceType: SourceType;
-  onConnect: () => void;
-  onUpload: () => void;
-}) {
-  const isWearable = sourceType === "wearable";
+function Sparkline({ points, color, rgb }: { points: number[]; color: string; rgb: string }) {
+  const W = 200, H = 44, pad = 3;
+  const min = Math.min(...points), max = Math.max(...points);
+  const span = max - min || 1;
+  const xy = points.map((p, i) => {
+    const x = pad + (i / (points.length - 1)) * (W - pad * 2);
+    const y = pad + (1 - (p - min) / span) * (H - pad * 2);
+    return [x, y] as const;
+  });
+  const line = xy.map(([x, y], i) => `${i === 0 ? "M" : "L"}${x.toFixed(1)} ${y.toFixed(1)}`).join(" ");
+  const area = `${line} L${xy[xy.length - 1][0].toFixed(1)} ${H} L${xy[0][0].toFixed(1)} ${H} Z`;
+  const [lx, ly] = xy[xy.length - 1];
+  return (
+    <svg width="100%" height={H} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" style={{ display: "block", overflow: "visible" }}>
+      <path d={area} fill={`rgba(${rgb},0.10)`} />
+      <path d={line} fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+      <circle cx={lx} cy={ly} r="3" fill={color} />
+    </svg>
+  );
+}
+
+function ProgressRing({ value, goal, color }: { value: number; goal: number; color: string }) {
+  const pct = Math.max(0, Math.min(1, value / goal));
+  const size = 80, stroke = 8, r = (size - stroke) / 2, c = size / 2, circ = 2 * Math.PI * r;
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ flexShrink: 0 }}>
+        <g transform={`rotate(-90 ${c} ${c})`}>
+          <circle cx={c} cy={c} r={r} fill="none" stroke={`rgba(${FG_RGB},0.10)`} strokeWidth={stroke} />
+          <circle cx={c} cy={c} r={r} fill="none" stroke={color} strokeWidth={stroke} strokeLinecap="round"
+            strokeDasharray={circ} strokeDashoffset={circ * (1 - pct)} />
+        </g>
+        <text x={c} y={c} textAnchor="middle" dominantBaseline="central"
+          style={{ fontFamily: SANS, fontSize: 18, fontWeight: 700, fill: TEXT }}>
+          {Math.round(pct * 100)}%
+        </text>
+      </svg>
+      <div style={{ fontFamily: SANS, fontSize: 11, color: TEXT_TER, lineHeight: 1.5 }}>
+        <div style={{ color: TEXT_SEC, fontWeight: 600 }}>{fmtNumber(goal)}</div>
+        goal
+        <div style={{ marginTop: 4, color, fontWeight: 600 }}>{fmtNumber(goal - value)}</div>
+        to go
+      </div>
+    </div>
+  );
+}
+
+function MiniBars({ bars, color, rgb }: { bars: number[]; color: string; rgb: string }) {
+  const max = Math.max(...bars) || 1;
+  return (
+    <div style={{ display: "flex", alignItems: "flex-end", gap: 5, width: "100%", height: 48 }}>
+      {bars.map((b, i) => {
+        const last = i === bars.length - 1;
+        return (
+          <div key={i} style={{
+            flex: 1, height: `${Math.max(10, (b / max) * 100)}%`, borderRadius: 4,
+            background: last ? color : `rgba(${rgb},0.28)`,
+          }} />
+        );
+      })}
+    </div>
+  );
+}
+
+function Deviation({ value, baseline, range, color, rgb }: { value: number; baseline: number; range: number; color: string; rgb: string }) {
+  // Map [-range, +range] around baseline to 0–100%.
+  const pct = Math.max(0, Math.min(100, ((value - baseline + range) / (2 * range)) * 100));
+  return (
+    <div style={{ width: "100%" }}>
+      <div style={{ position: "relative", height: 8, borderRadius: 4, background: `rgba(${FG_RGB},0.08)` }}>
+        {/* baseline center tick */}
+        <div style={{ position: "absolute", left: "50%", top: -3, bottom: -3, width: 1, background: `rgba(${FG_RGB},0.22)` }} />
+        {/* marker */}
+        <div style={{
+          position: "absolute", left: `${pct}%`, top: "50%", transform: "translate(-50%,-50%)",
+          width: 12, height: 12, borderRadius: "50%", background: color,
+          border: "2px solid var(--nura-card)", boxShadow: `0 0 0 3px rgba(${rgb},0.18)`,
+        }} />
+      </div>
+      <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8, fontFamily: SANS, fontSize: 9.5, color: TEXT_TER, letterSpacing: "0.3px" }}>
+        <span>-{range}°</span>
+        <span>baseline</span>
+        <span>+{range}°</span>
+      </div>
+    </div>
+  );
+}
+
+// ── 5 · NŪRA insight card ───────────────────────────────────────────────────────
+function InsightCard({ text, ctaLabel, onCta }: { text: string; ctaLabel: string; onCta: () => void }) {
   return (
     <div style={{
-      width: "100%", padding: "20px 22px", borderRadius: 14,
-      background: "rgba(var(--nura-bg-tint-rgb),0.02)", border: `0.5px dashed ${BORDER}`,
-      display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14, flexWrap: "wrap" as const,
+      marginTop: 16, borderRadius: 20, padding: 22,
+      background: `linear-gradient(135deg, rgba(var(--nura-sage-rgb),0.06), transparent 60%), ${CARD}`,
+      border: `0.5px solid ${BORDER}`, borderLeft: `2px solid ${SAGE}`,
     }}>
-      <span style={{ fontFamily: SANS, fontSize: 13.5, color: TEXT_SEC, lineHeight: 1.5 }}>
-        {isWearable ? "Connect a device to track these." : "Upload bloodwork to see these."}
-      </span>
+      <div style={{ ...EYEBROW, color: SAGE, letterSpacing: "2px", marginBottom: 10 }}>NŪRA</div>
+      <p style={{ fontFamily: SANS, fontSize: 14, color: TEXT, margin: 0, lineHeight: 1.65 }}>{text}</p>
       <button
-        onClick={isWearable ? onConnect : onUpload}
+        className="dash-cta"
+        onClick={onCta}
         style={{
-          background: "none", border: "none", cursor: "pointer", padding: 0,
-          fontFamily: SANS, fontSize: 13, fontWeight: 500, color: SAGE,
-          display: "flex", alignItems: "center", gap: 4,
+          marginTop: 16, background: "none", border: "none", padding: 0, cursor: "pointer",
+          fontFamily: SANS, fontSize: 13, fontWeight: 600, color: SAGE, transition: "color 160ms",
         }}
       >
-        {isWearable ? "Connect" : "Upload"}
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M5 12h14M13 6l6 6-6 6"/>
-        </svg>
+        {ctaLabel}
       </button>
-    </div>
-  );
-}
-
-// ── Small helpers ────────────────────────────────────────────────────────────
-function SectionLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <div style={{
-      fontFamily: SANS, fontSize: 10, fontWeight: 600, letterSpacing: "1.5px",
-      color: TEXT_TER, textTransform: "uppercase", marginBottom: 12,
-    }}>{children}</div>
-  );
-}
-
-function ScoreTile({ count, label, color }: { count: number; label: string; color: string }) {
-  return (
-    <div style={{
-      background: "rgba(var(--nura-bg-tint-rgb),0.03)", border: `0.5px solid ${BORDER}`, borderRadius: 10,
-      padding: "10px 8px", textAlign: "center",
-    }}>
-      <div style={{ fontFamily: SANS, fontSize: 20, fontWeight: 500, color, lineHeight: 1 }}>{count}</div>
-      <div style={{ fontFamily: SANS, fontSize: 10, color: TEXT_SEC, marginTop: 4, letterSpacing: "0.5px" }}>{label}</div>
     </div>
   );
 }

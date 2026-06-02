@@ -19,7 +19,7 @@ const SURFACE = "var(--nura-surface)";
 const SAGE = "var(--nura-sage)";
 const SAGE_HOV = "var(--nura-sage-hover)";
 const SAGE_ON = "var(--nura-bg)";
-const SAGE_RGB = "155,176,165";
+const SAGE_RGB = "var(--nura-sage-rgb)";
 const RED = "var(--nura-danger)";
 const SANS = "'Inter', system-ui, sans-serif";
 
@@ -226,8 +226,8 @@ export default function SettingsPage() {
       {/* PAST DUE BANNER */}
       {isPastDue && (
         <div style={{
-          background: "rgba(212,87,77,0.08)",
-          border: `0.5px solid rgba(212,87,77,0.4)`,
+          background: "rgba(var(--nura-danger-rgb),0.08)",
+          border: `0.5px solid rgba(var(--nura-danger-rgb),0.4)`,
           borderRadius: 14, padding: 14, marginBottom: 14,
           display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap",
         }}>
@@ -341,7 +341,7 @@ export default function SettingsPage() {
             color: RED, fontFamily: SANS, fontSize: 13, fontWeight: 500, cursor: "pointer",
             transition: "background 160ms",
           }}
-          onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(212,87,77,0.08)"; }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(var(--nura-danger-rgb),0.08)"; }}
           onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
         >
           Sign out
@@ -815,7 +815,7 @@ function EditProfileModal({
             {photoError && (
               <div style={{
                 padding: "9px 12px", borderRadius: 9, marginBottom: 14,
-                background: "rgba(212,87,77,0.08)", border: `0.5px solid rgba(212,87,77,0.3)`,
+                background: "rgba(var(--nura-danger-rgb),0.08)", border: `0.5px solid rgba(var(--nura-danger-rgb),0.3)`,
                 color: RED, fontFamily: SANS, fontSize: 12,
               }}>{photoError}</div>
             )}
@@ -934,7 +934,7 @@ function EditProfileModal({
                   disabled={removing}
                   style={{
                     padding: "6px 12px", borderRadius: 8,
-                    background: "rgba(212,87,77,0.12)", border: `0.5px solid rgba(212,87,77,0.4)`,
+                    background: "rgba(var(--nura-danger-rgb),0.12)", border: `0.5px solid rgba(var(--nura-danger-rgb),0.4)`,
                     color: RED, fontFamily: SANS, fontSize: 12, fontWeight: 500,
                     cursor: removing ? "not-allowed" : "pointer",
                   }}
@@ -1020,7 +1020,7 @@ function EditProfileModal({
         {error && (
           <div style={{
             padding: "9px 12px", borderRadius: 9, marginBottom: 14,
-            background: "rgba(212,87,77,0.08)", border: `0.5px solid rgba(212,87,77,0.3)`,
+            background: "rgba(var(--nura-danger-rgb),0.08)", border: `0.5px solid rgba(var(--nura-danger-rgb),0.3)`,
             color: RED, fontFamily: SANS, fontSize: 12,
           }}>{error}</div>
         )}
@@ -1281,7 +1281,7 @@ function SecurityModal({ user, onClose }: { user: User; onClose: () => void }) {
             {errors.generic && (
               <div style={{
                 padding: "9px 12px", borderRadius: 9, marginBottom: 14,
-                background: "rgba(212,87,77,0.08)", border: `0.5px solid rgba(212,87,77,0.3)`,
+                background: "rgba(var(--nura-danger-rgb),0.08)", border: `0.5px solid rgba(var(--nura-danger-rgb),0.3)`,
                 color: RED, fontFamily: SANS, fontSize: 12,
               }}>{errors.generic}</div>
             )}

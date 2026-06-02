@@ -14,7 +14,7 @@ const SURFACE = "var(--nura-surface)";
 const SAGE = "var(--nura-sage)";
 const SAGE_HOV = "var(--nura-sage-hover)";
 const SAGE_ON = "var(--nura-bg)";
-const SAGE_RGB = "155,176,165";
+const SAGE_RGB = "var(--nura-sage-rgb)";
 const RED = "var(--nura-danger)";
 const SANS = "'Inter', system-ui, sans-serif";
 
@@ -319,7 +319,7 @@ function AuthContent() {
           {error && (
             <div style={{
               padding: "10px 14px", borderRadius: 10, marginBottom: 12,
-              background: `rgba(212,87,77,0.08)`, border: `0.5px solid rgba(212,87,77,0.35)`,
+              background: `rgba(var(--nura-danger-rgb),0.08)`, border: `0.5px solid rgba(var(--nura-danger-rgb),0.35)`,
               fontFamily: SANS, fontSize: 12.5, color: RED, lineHeight: 1.5,
             }}>
               {error}

@@ -9,8 +9,8 @@ const SANS = "'Inter', system-ui, sans-serif";
 const FG_RGB = "var(--nura-fg-rgb)";
 
 const SAGE = "var(--nura-sage)"; // >= 80
-const AMBER = "#FFB400";         // 60–79
-const RED = "#FF4C5C";           // < 60
+const AMBER = "var(--nura-watch)";         // 60–79
+const RED = "var(--nura-danger)";           // < 60
 
 // Fixed internal coordinate system — everything below is in viewBox units.
 const VB = 100;

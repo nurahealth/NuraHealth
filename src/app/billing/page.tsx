@@ -445,7 +445,7 @@ export default function BillingPage() {
 
 // ── Card primitives ───────────────────────────────────────────────────────────
 function Card({ children, highlight }: { children: React.ReactNode; highlight?: "danger" }) {
-  const borderColor = highlight === "danger" ? `rgba(212,87,77,0.5)` : BORDER;
+  const borderColor = highlight === "danger" ? `rgba(var(--nura-danger-rgb),0.5)` : BORDER;
   return (
     <div style={{
       background: SURFACE, border: `0.5px solid ${borderColor}`, borderRadius: 14,
@@ -555,8 +555,8 @@ function StatusBadge({
   } else if (status === "active") {
     label = "Active";
   } else if (status === "past_due") {
-    bg = "rgba(212,165,116,0.16)";
-    border = "rgba(212,165,116,0.4)";
+    bg = "rgba(var(--nura-watch-rgb),0.16)";
+    border = "rgba(var(--nura-watch-rgb),0.4)";
     color = WATCH;
     label = "Payment required";
   } else if (status === "canceled") {
@@ -581,8 +581,8 @@ function StatusBadge({
 function PastDueBanner({ onUpdate }: { onUpdate: () => void }) {
   return (
     <div style={{
-      background: "rgba(212,87,77,0.08)",
-      border: `0.5px solid rgba(212,87,77,0.4)`,
+      background: "rgba(var(--nura-danger-rgb),0.08)",
+      border: `0.5px solid rgba(var(--nura-danger-rgb),0.4)`,
       borderRadius: 14, padding: 16, marginBottom: 14,
       display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap",
     }}>
@@ -717,8 +717,8 @@ function InvoiceStatusBadge({ status }: { status: string | null }) {
     border = `rgba(var(--nura-sage-rgb),0.3)`;
   } else if (s === "open") {
     label = "Open"; color = WATCH;
-    bg = "rgba(212,165,116,0.10)";
-    border = "rgba(212,165,116,0.3)";
+    bg = "rgba(var(--nura-watch-rgb),0.10)";
+    border = "rgba(var(--nura-watch-rgb),0.3)";
   } else if (s === "void" || s === "uncollectible") {
     label = s === "void" ? "Void" : "Uncollectible";
   } else if (s === "draft") {
@@ -783,7 +783,7 @@ function CancelSubscriptionModal({
       {error && (
         <div style={{
           padding: "9px 12px", borderRadius: 9, marginBottom: 14,
-          background: "rgba(212,87,77,0.08)", border: `0.5px solid rgba(212,87,77,0.3)`,
+          background: "rgba(var(--nura-danger-rgb),0.08)", border: `0.5px solid rgba(var(--nura-danger-rgb),0.3)`,
           color: RED, fontFamily: SANS, fontSize: 12,
         }}>{error}</div>
       )}
@@ -856,7 +856,7 @@ function UpdatePaymentMethodModal({
       {error && (
         <div style={{
           padding: "9px 12px", borderRadius: 9, marginBottom: 14,
-          background: "rgba(212,87,77,0.08)", border: `0.5px solid rgba(212,87,77,0.3)`,
+          background: "rgba(var(--nura-danger-rgb),0.08)", border: `0.5px solid rgba(var(--nura-danger-rgb),0.3)`,
           color: RED, fontFamily: SANS, fontSize: 12,
         }}>{error}</div>
       )}
@@ -951,7 +951,7 @@ function UpdatePaymentForm({
       {error && (
         <div style={{
           marginTop: 14, padding: "11px 14px",
-          background: "rgba(212,87,77,0.08)", border: `0.5px solid rgba(212,87,77,0.3)`,
+          background: "rgba(var(--nura-danger-rgb),0.08)", border: `0.5px solid rgba(var(--nura-danger-rgb),0.3)`,
           borderRadius: 10, fontFamily: SANS, fontSize: 12, color: RED, lineHeight: 1.5,
         }}>
           {error}
