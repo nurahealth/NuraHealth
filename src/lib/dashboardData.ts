@@ -473,10 +473,10 @@ const SLEEP_DETAIL: SleepDetail = {
   ],
   timeInBed: "8h 20m",
   stages: [
-    { label: "Awake", color: "#ebe6d8", textColor: "#0d0d0e", duration: "0h 58m", pct: 12 },
+    { label: "Awake", color: "rgba(235,230,216,0.4)", textColor: "#0d0d0e", duration: "0h 58m", pct: 12 },
     { label: "REM sleep", color: "#5dccae", textColor: "#06372c", duration: "2h 18m", pct: 28 },
-    { label: "Light sleep", color: "#2f9e83", textColor: "#eafff7", duration: "3h 46m", pct: 46 },
-    { label: "Deep sleep", color: "#15564a", textColor: "#9fe6d2", duration: "1h 04m", pct: 13 },
+    { label: "Light sleep", color: "#9bb0a5", textColor: "#16241e", duration: "3h 46m", pct: 46 },
+    { label: "Deep sleep", color: "#5aa0e6", textColor: "#082742", duration: "1h 04m", pct: 13 },
   ],
   hypnogram: {
     // 0 deep · 1 light · 2 REM · 3 awake
@@ -484,7 +484,7 @@ const SLEEP_DETAIL: SleepDetail = {
       1, 1, 2, 1, 0, 0, 1, 1, 2, 3, 1, 1, 0, 0, 0, 1, 2, 2, 1, 1, 0, 1, 1, 2,
       2, 3, 1, 1, 1, 2, 2, 2, 1, 3, 1, 2, 2, 2, 3, 1, 1, 2, 2, 3, 3,
     ],
-    levelColors: ["#15564a", "#2f9e83", "#5dccae", "#ebe6d8"],
+    levelColors: ["#5aa0e6", "#9bb0a5", "#5dccae", "rgba(235,230,216,0.4)"],
     axisLabels: ["11:48 PM", "2 AM", "4 AM", "6 AM", "8:08 AM"],
   },
   cycles: {
