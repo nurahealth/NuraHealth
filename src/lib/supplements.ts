@@ -120,6 +120,54 @@ export interface Supplement {
   updated_at: string;
 }
 
+/** Minutes-since-midnight for an "HH:MM" reminder time, or null if blank/malformed. */
+export function reminderTimeMinutes(time: string | null): number | null {
+  const raw = typeof time === "string" ? time.trim() : "";
+  const m = /^(\d{2}):(\d{2})$/.exec(raw);
+  if (!m) return null;
+  const hh = Number(m[1]);
+  const mm = Number(m[2]);
+  if (hh > 23 || mm > 59) return null;
+  return hh * 60 + mm;
+}
+
+/** Human "8:00 AM" label for an "HH:MM" reminder time, or null if blank/malformed. */
+export function formatReminderTime(time: string | null): string | null {
+  const mins = reminderTimeMinutes(time);
+  if (mins === null) return null;
+  const hh = Math.floor(mins / 60);
+  const mm = mins % 60;
+  const ampm = hh < 12 ? "AM" : "PM";
+  const h12 = hh % 12 === 0 ? 12 : hh % 12;
+  return `${h12}:${String(mm).padStart(2, "0")} ${ampm}`;
+}
+
+/**
+ * Whether a supplement's reminder should appear on the given weekday.
+ * Days come from schedule.days; a missing/empty schedule (or no days) is
+ * treated as daily. Requires reminder_enabled and a valid reminder_time.
+ */
+export function isReminderScheduledForDay(
+  s: Pick<Supplement, "reminder_enabled" | "reminder_time" | "schedule">,
+  day: Day
+): boolean {
+  if (!s.reminder_enabled) return false;
+  if (reminderTimeMinutes(s.reminder_time) === null) return false;
+  const days = s.schedule?.days;
+  if (Array.isArray(days) && days.length > 0) return days.includes(day);
+  return true; // unscheduled / missing days → every day
+}
+
+/** Whether last_taken_at falls on/after local midnight of `now` (i.e. taken today). */
+export function isTakenToday(lastTakenAt: string | null, now: Date = new Date()): boolean {
+  if (!lastTakenAt) return false;
+  const taken = new Date(lastTakenAt);
+  if (Number.isNaN(taken.getTime())) return false;
+  const midnight = new Date(now);
+  midnight.setHours(0, 0, 0, 0);
+  return taken.getTime() >= midnight.getTime();
+}
+
 /**
  * Whether a supplement's reminder is currently "due" in the device's LOCAL time.
  *
@@ -133,28 +181,15 @@ export function isReminderDue(
 ): boolean {
   if (!s.reminder_enabled) return false;
 
-  const raw = typeof s.reminder_time === "string" ? s.reminder_time.trim() : "";
-  const m = /^(\d{2}):(\d{2})$/.exec(raw);
-  if (!m) return false;
-  const hh = Number(m[1]);
-  const mm = Number(m[2]);
-  if (hh > 23 || mm > 59) return false;
+  const mins = reminderTimeMinutes(s.reminder_time);
+  if (mins === null) return false;
 
   // Today's reminder time, applied to the local "now" date.
   const dueAt = new Date(now);
-  dueAt.setHours(hh, mm, 0, 0);
+  dueAt.setHours(Math.floor(mins / 60), mins % 60, 0, 0);
   if (dueAt.getTime() > now.getTime()) return false; // not yet due today
 
-  // Already taken today? (last_taken_at on/after local midnight)
-  if (s.last_taken_at) {
-    const taken = new Date(s.last_taken_at);
-    if (!Number.isNaN(taken.getTime())) {
-      const midnight = new Date(now);
-      midnight.setHours(0, 0, 0, 0);
-      if (taken.getTime() >= midnight.getTime()) return false;
-    }
-  }
-
+  if (isTakenToday(s.last_taken_at, now)) return false; // already taken today
   return true;
 }
 

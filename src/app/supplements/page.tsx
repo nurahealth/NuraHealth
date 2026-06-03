@@ -2,13 +2,14 @@
 
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowLeft, Calendar, Camera, Check, Edit3, Eye, EyeOff, Flame, ScanLine, Sparkles } from "lucide-react";
+import { ArrowLeft, Calendar, Camera, Check, Clock, Edit3, Eye, EyeOff, Flame, ScanLine, Sparkles } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import type { User } from "@supabase/supabase-js";
 import NuraPageShell from "@/components/NuraPageShell";
 import {
   ALL_DAYS, ALL_MEALS, todayDay, todayISO, logKey,
-  isSupplementScheduledFor, isSupplementScheduled, formatScheduleSummary, isReminderDue,
+  isSupplementScheduledFor, isSupplementScheduled, formatScheduleSummary,
+  isReminderDue, isReminderScheduledForDay, isTakenToday, reminderTimeMinutes, formatReminderTime,
   type Day, type Meal, type Schedule, type Supplement, type SupplementLog,
 } from "@/lib/supplements";
 
@@ -354,6 +355,25 @@ function SupplementsPageInner() {
         .filter((s) => isReminderDue(s, reminderNow))
         .sort((a, b) => a.name.localeCompare(b.name)),
     [supplements, reminderNow]
+  );
+
+  // Toggle a reminder's "taken today" state via last_taken_at (shared with the
+  // Supplements tab + the "Time to take" section, so all three stay in sync).
+  const toggleReminderTaken = useCallback((s: Supplement) => {
+    const nextIso = isTakenToday(s.last_taken_at) ? null : new Date().toISOString();
+    void patchSupplement(s.id, { last_taken_at: nextIso });
+  }, [patchSupplement]);
+
+  // Reminder entries for the selected day on My Schedule, sorted by reminder_time.
+  const dayReminders = useMemo(
+    () =>
+      [...supplements]
+        .filter((s) => isReminderScheduledForDay(s, selectedDay))
+        .sort((a, b) =>
+          ((reminderTimeMinutes(a.reminder_time) ?? 0) - (reminderTimeMinutes(b.reminder_time) ?? 0))
+          || a.name.localeCompare(b.name)
+        ),
+    [supplements, selectedDay]
   );
 
   const performImageScan = useCallback(
@@ -732,42 +752,55 @@ function SupplementsPageInner() {
             </div>
           </div>
 
-          {scheduledAny ? (
-            <div key={scheduleFadeKey} style={{ animation: "nura-fade-in 150ms ease both" }}>
-              <ShowEmptySlotsToggle on={showEmptySlots} onClick={toggleShowEmptySlots} />
-              {(() => {
-                const mealRows = ALL_MEALS.map((meal) => ({
-                  meal,
-                  items: supplements.filter((s) =>
-                    isSupplementScheduledFor(s, selectedDay, meal)
-                  ),
-                }));
-                const visibleRows = showEmptySlots
-                  ? mealRows
-                  : mealRows.filter((r) => r.items.length > 0);
+          <div key={scheduleFadeKey} style={{ animation: "nura-fade-in 150ms ease both" }}>
+            {/* REMINDERS — pulled live from supplement reminders, sorted by time */}
+            {dayReminders.length > 0 && (
+              <ReminderSection
+                items={dayReminders}
+                interactive={isScheduleInteractive}
+                reminderNow={reminderNow}
+                onToggle={toggleReminderTaken}
+                onEdit={(s) => setModalState({ mode: "edit", supplement: s })}
+              />
+            )}
 
-                if (visibleRows.length === 0) {
-                  return <DayEmpty day={selectedDay} />;
-                }
-                return visibleRows.map(({ meal, items }) => (
-                  <MealSection
-                    key={meal}
-                    meal={meal}
-                    items={items}
-                    interactive={isScheduleInteractive}
-                    logSet={logSet}
-                    onToggle={(suppId) => toggleLog(suppId, meal)}
-                    onEdit={(s) => setModalState({ mode: "edit", supplement: s })}
-                  />
-                ));
-              })()}
-            </div>
-          ) : (
-            <ScheduleEmpty
-              onGoToStack={() => setView("stack")}
-              hasAnySupplements={sortedAll.length > 0}
-            />
-          )}
+            {scheduledAny ? (
+              <>
+                <ShowEmptySlotsToggle on={showEmptySlots} onClick={toggleShowEmptySlots} />
+                {(() => {
+                  const mealRows = ALL_MEALS.map((meal) => ({
+                    meal,
+                    items: supplements.filter((s) =>
+                      isSupplementScheduledFor(s, selectedDay, meal)
+                    ),
+                  }));
+                  const visibleRows = showEmptySlots
+                    ? mealRows
+                    : mealRows.filter((r) => r.items.length > 0);
+
+                  if (visibleRows.length === 0) {
+                    return <DayEmpty day={selectedDay} />;
+                  }
+                  return visibleRows.map(({ meal, items }) => (
+                    <MealSection
+                      key={meal}
+                      meal={meal}
+                      items={items}
+                      interactive={isScheduleInteractive}
+                      logSet={logSet}
+                      onToggle={(suppId) => toggleLog(suppId, meal)}
+                      onEdit={(s) => setModalState({ mode: "edit", supplement: s })}
+                    />
+                  ));
+                })()}
+              </>
+            ) : dayReminders.length === 0 ? (
+              <ScheduleEmpty
+                onGoToStack={() => setView("stack")}
+                hasAnySupplements={sortedAll.length > 0}
+              />
+            ) : null}
+          </div>
         </div>
       )}
 
@@ -1307,13 +1340,15 @@ function MealSection({
 }
 
 function ScheduleCard({
-  supplement, checked, interactive, onToggle, onEdit,
+  supplement, checked, interactive, onToggle, onEdit, timeLabel,
 }: {
   supplement: Supplement;
   checked: boolean;
   interactive: boolean;
   onToggle: () => void;
   onEdit: () => void;
+  /** When set, renders the reminder time on the entry (used by My Schedule reminders). */
+  timeLabel?: string | null;
 }) {
   const nameColor = checked ? TEXT_TER : TEXT;
   return (
@@ -1342,7 +1377,7 @@ function ScheduleCard({
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{
           fontFamily: SANS, fontSize: 15, fontWeight: 500, color: nameColor,
-          marginBottom: supplement.dose ? 4 : 0,
+          marginBottom: supplement.dose || timeLabel ? 4 : 0,
           transition: "color 160ms",
         }}>
           {supplement.name}
@@ -1350,6 +1385,16 @@ function ScheduleCard({
         {supplement.dose && (
           <div style={{ fontFamily: SANS, fontSize: 13, color: TEXT_TER }}>
             {supplement.dose}
+          </div>
+        )}
+        {timeLabel && (
+          <div style={{
+            display: "inline-flex", alignItems: "center", gap: 5,
+            marginTop: supplement.dose ? 4 : 0,
+            fontFamily: SANS, fontSize: 13, color: SAGE,
+          }}>
+            <Clock size={12} strokeWidth={1.8} aria-hidden />
+            {timeLabel}
           </div>
         )}
       </div>
@@ -1360,6 +1405,39 @@ function ScheduleCard({
         </svg>
       </span>
     </div>
+  );
+}
+
+// ── Reminders section (My Schedule) ───────────────────────────────────────────
+function ReminderSection({
+  items, interactive, reminderNow, onToggle, onEdit,
+}: {
+  items: Supplement[];
+  interactive: boolean;
+  reminderNow: Date;
+  onToggle: (s: Supplement) => void;
+  onEdit: (s: Supplement) => void;
+}) {
+  return (
+    <section style={{ marginBottom: 24 }}>
+      <div style={{
+        fontFamily: SANS, fontSize: 10, fontWeight: 600, letterSpacing: "1.5px",
+        color: SAGE, textTransform: "uppercase", marginBottom: 12,
+      }}>
+        Reminders
+      </div>
+      {items.map((s) => (
+        <ScheduleCard
+          key={s.id}
+          supplement={s}
+          checked={interactive && isTakenToday(s.last_taken_at, reminderNow)}
+          interactive={interactive}
+          timeLabel={formatReminderTime(s.reminder_time)}
+          onToggle={() => onToggle(s)}
+          onEdit={() => onEdit(s)}
+        />
+      ))}
+    </section>
   );
 }
 
