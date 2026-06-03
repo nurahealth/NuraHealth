@@ -13,6 +13,7 @@ import {
   type DashboardMetric,
 } from "@/lib/dashboardData";
 import MetricChart from "@/components/dashboard/MetricChart";
+import SleepDepthChart from "@/components/dashboard/SleepDepthChart";
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
 const TEXT = "var(--nura-text-primary)";
@@ -264,7 +265,9 @@ function MetricCard({ metric, onClick }: { metric: DashboardMetric; onClick: () 
 
       {/* Visualization */}
       <div style={{ marginTop: 14, marginBottom: 14, flex: 1 }}>
-        <MetricChart data={metric.chart} />
+        {metric.sleepDepth
+          ? <SleepDepthChart data={metric.sleepDepth} />
+          : <MetricChart data={metric.chart} />}
       </div>
 
       {/* Footer caption + status */}

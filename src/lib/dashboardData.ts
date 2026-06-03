@@ -78,6 +78,26 @@ export interface MetricChartData {
   ramp: ChartRamp;
 }
 
+// ── Sleep depth chart (the Sleep card's bespoke overnight chart) ─────────────
+/** One stage shown in the duration row beneath the sleep depth chart. */
+export interface SleepDepthStage {
+  /** "Deep" | "REM" | "Light" | "Awake". */
+  label: string;
+  /** Pre-formatted duration, e.g. "1h 22m". */
+  duration: string;
+  /** Swatch / depth-band color (a --nura-* token or rgba expression). */
+  color: string;
+}
+
+export interface SleepDepthChartData {
+  /** Per-sample sleep depth 0–1 across the night; bar height = depth, color by band. */
+  depth: number[];
+  /** Stage-duration row beneath the chart. */
+  stages: SleepDepthStage[];
+  /** Evenly-spaced time axis labels under the chart. */
+  axisLabels: string[];
+}
+
 // ── Metric card ──────────────────────────────────────────────────────────────
 export interface DashboardMetric {
   /** Route slug — links to /dashboard/[id]. */
@@ -94,6 +114,8 @@ export interface DashboardMetric {
   viz: MetricViz;
   /** Rich bar-chart data rendered by every metric card. */
   chart: MetricChartData;
+  /** Sleep-only: bespoke overnight depth chart (bars + wave line) for the Sleep card. */
+  sleepDepth?: SleepDepthChartData;
 }
 
 // ── Bottom insight card ──────────────────────────────────────────────────────
@@ -178,6 +200,22 @@ const DASHBOARD_DATA: DashboardData = {
         readings: dayReadings(40, 0, [[2, 2, 70], [5, 3, 88], [9, 2.2, 62]]),
         baseline: [70, 82, 60, 8, 2, 2, 2, 2],
         floor: 0, ceiling: 100, gridlines: [30, 60, 90], ramp: "higherBetter",
+      },
+      sleepDepth: {
+        // Per-sample sleep depth across the night (0–1). Bar height = depth;
+        // color by band: deep ≥0.78 · light ≥0.5 · REM ≥0.3 · awake below.
+        depth: [
+          0.22, 0.45, 0.7, 0.88, 0.95, 0.9, 0.74, 0.58, 0.5, 0.56,
+          0.7, 0.84, 0.8, 0.62, 0.44, 0.38, 0.46, 0.6, 0.74, 0.68,
+          0.5, 0.36, 0.34, 0.46, 0.58, 0.52, 0.4, 0.3, 0.16, 0.2,
+        ],
+        stages: [
+          { label: "Deep", duration: "1h 22m", color: "var(--nura-sleep-deep)" },
+          { label: "REM", duration: "1h 48m", color: "var(--nura-teal)" },
+          { label: "Light", duration: "4h 02m", color: "var(--nura-sage)" },
+          { label: "Awake", duration: "0h 20m", color: "rgba(var(--nura-fg-rgb),0.4)" },
+        ],
+        axisLabels: ["11p", "1a", "3a", "5a", "7a"],
       },
     },
     {
