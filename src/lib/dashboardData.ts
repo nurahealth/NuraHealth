@@ -873,3 +873,87 @@ const STEPS_DETAIL: StepsDetail = {
 export function getStepsDetail(): StepsDetail {
   return STEPS_DETAIL;
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Active Energy detail (the /dashboard/active-energy deep-dive view)
+//
+// Sample Apple Watch data for now. `moveGoal` defaults to 750; when HealthKit
+// activity-summary reads are added later this gets the user's real Move goal.
+// ─────────────────────────────────────────────────────────────────────────────
+/** One day in the "This week" active-energy bar chart. */
+export interface ActiveEnergyWeekDay {
+  /** Single-letter weekday label (M/T/W…). */
+  label: string;
+  /** kcal burned that day. */
+  value: number;
+  /** The current day — rendered brighter + bold. */
+  isToday?: boolean;
+}
+
+export interface ActiveEnergyDetail {
+  source: SourceId;
+  /** One-line subtitle under the h1. */
+  subtitle: string;
+  /** kcal burned today (the hero gauge value). */
+  activeEnergy: number;
+  /** Apple Watch Move goal (kcal). */
+  moveGoal: number;
+  /** Resting energy burned today (kcal). */
+  restingEnergy: number;
+  /** Total burn today = active + resting (kcal). */
+  totalBurn: number;
+  /** Exercise minutes today. */
+  exerciseMinutes: number;
+  /** Caption under the "Today" chart title. */
+  rangeCaption: string;
+  /** 34-point intraday active-energy series (kcal/hr). */
+  todayHourly: number[];
+  /** Coarse series driving the dashed average curve. */
+  todayBaseline: number[];
+  /** Plotted y-range + gridlines for the "Today" chart. */
+  todayFloor: number;
+  todayCeil: number;
+  todayGridlines: number[];
+  /** Plotted y-range for the weekly bar chart. */
+  weekFloor: number;
+  weekCeil: number;
+  week: ActiveEnergyWeekDay[];
+  insight: string;
+}
+
+const ACTIVE_ENERGY_DETAIL: ActiveEnergyDetail = {
+  source: "apple-watch",
+  subtitle: "Your calories burned moving today",
+  activeEnergy: 612,
+  moveGoal: 750,
+  restingEnergy: 1540,
+  totalBurn: 2152,
+  exerciseMinutes: 52,
+  rangeCaption: "Active calories burned through the day",
+  todayHourly: [
+    3, 2, 2, 3, 2, 3, 4, 6, 14, 28, 42, 55, 48, 70, 88, 96, 82,
+    104, 116, 128, 118, 96, 72, 60, 52, 46, 38, 44, 36, 28, 20, 14, 10, 8,
+  ],
+  todayBaseline: [4, 10, 30, 72, 108, 90, 50, 34],
+  todayFloor: 0,
+  todayCeil: 150,
+  todayGridlines: [40, 80, 120],
+  weekFloor: 0,
+  weekCeil: 1000,
+  week: [
+    { label: "M", value: 690 },
+    { label: "T", value: 820 },
+    { label: "W", value: 540 },
+    { label: "T", value: 760 },
+    { label: "F", value: 610 },
+    { label: "S", value: 900 },
+    { label: "S", value: 612, isToday: true },
+  ],
+  insight:
+    "You're 138 kcal from closing your Move ring with the evening still ahead — a brisk 20-minute walk would get you there. You've hit your 750 goal on three days this week, and your 52 active minutes today are already trending above your weekly average.",
+};
+
+/** Returns the Active Energy detail payload (sample Apple Watch data for now). */
+export function getActiveEnergyDetail(): ActiveEnergyDetail {
+  return ACTIVE_ENERGY_DETAIL;
+}
