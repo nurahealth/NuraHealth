@@ -7,6 +7,7 @@ import NuraPageShell from "@/components/NuraPageShell";
 import {
   getDashboardData,
   getStepsDetail,
+  getActiveEnergyDetail,
   SOURCE_LABEL,
   type MetricStatus,
   type ConnectedSource,
@@ -15,6 +16,7 @@ import {
 } from "@/lib/dashboardData";
 import MetricChart from "@/components/dashboard/MetricChart";
 import SleepDepthChart from "@/components/dashboard/SleepDepthChart";
+import ActiveEnergyTodayChart from "@/components/dashboard/ActiveEnergyTodayChart";
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
 const TEXT = "var(--nura-text-primary)";
@@ -236,6 +238,17 @@ function MetricCard({ metric, onClick }: { metric: DashboardMetric; onClick: () 
     ? `${steps.tiles[0].value}${steps.tiles[0].unit} · ${steps.tiles[1].value} flights · ${steps.kcal} kcal · ${steps.tiles[2].value}${steps.tiles[2].unit}`
     : "";
 
+  // Active Energy gets the same detailed intraday chart as its detail page,
+  // plus a "to go" callout, a total · resting · exercise strip, and a
+  // "{percent}% of your {goal} goal" footer.
+  const isActiveEnergy = metric.id === "active-energy";
+  const ae = isActiveEnergy ? getActiveEnergyDetail() : null;
+  const aeToGoal = ae ? Math.max(0, ae.moveGoal - ae.activeEnergy) : 0;
+  const aePct = ae ? Math.round((ae.activeEnergy / ae.moveGoal) * 100) : 0;
+  const aeStrip = ae
+    ? `${ae.totalBurn.toLocaleString("en-US")} total · ${ae.restingEnergy.toLocaleString("en-US")} resting · ${ae.exerciseMinutes} min`
+    : "";
+
   return (
     <div
       className="dash-card"
@@ -261,7 +274,7 @@ function MetricCard({ metric, onClick }: { metric: DashboardMetric; onClick: () 
           {display}
         </span>
         {showUnit && <span style={{ fontFamily: SANS, fontSize: 13, color: TEXT_SEC }}>{metric.unit}</span>}
-        {metric.delta && (
+        {metric.delta && !isActiveEnergy && (
           <span style={{
             fontFamily: SANS, fontSize: 12, fontWeight: 600,
             color: metric.delta.dir === "up" ? "var(--nura-optimal)" : SAGE,
@@ -275,13 +288,20 @@ function MetricCard({ metric, onClick }: { metric: DashboardMetric; onClick: () 
             {fmtNumber(remaining)} to go
           </span>
         )}
+        {isActiveEnergy && aeToGoal > 0 && (
+          <span style={{ fontFamily: SANS, fontSize: 12, fontWeight: 600, color: "var(--nura-amber)" }}>
+            {fmtNumber(aeToGoal)} to go
+          </span>
+        )}
       </div>
 
       {/* Visualization */}
       <div style={{ marginTop: 14, marginBottom: 14, flex: 1 }}>
         {metric.sleepDepth
           ? <SleepDepthChart data={metric.sleepDepth} />
-          : <MetricChart data={metric.chart} highTech={isSteps} />}
+          : isActiveEnergy && ae
+            ? <ActiveEnergyTodayChart d={ae} height={140} />
+            : <MetricChart data={metric.chart} highTech={isSteps} />}
       </div>
 
       {/* Steps stat strip — distance · flights · kcal · active time */}
@@ -291,10 +311,19 @@ function MetricCard({ metric, onClick }: { metric: DashboardMetric; onClick: () 
         </div>
       )}
 
+      {/* Active Energy stat strip — total · resting · exercise */}
+      {isActiveEnergy && (
+        <div style={{ fontFamily: SANS, fontSize: 11.5, color: TEXT_TER, letterSpacing: "0.2px", marginBottom: 12 }}>
+          {aeStrip}
+        </div>
+      )}
+
       {/* Footer caption + status */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginTop: "auto" }}>
-        <span style={{ fontFamily: SANS, fontSize: 11.5, color: TEXT_TER, lineHeight: 1.4 }}>{metric.caption}</span>
-        <span style={{ flexShrink: 0 }}><StatusPill status={metric.status} size="sm" /></span>
+        <span style={{ fontFamily: SANS, fontSize: 11.5, color: TEXT_TER, lineHeight: 1.4 }}>
+          {isActiveEnergy && ae ? `${aePct}% of your ${ae.moveGoal} goal` : metric.caption}
+        </span>
+        <span style={{ flexShrink: 0 }}><StatusPill status={isActiveEnergy ? "good" : metric.status} size="sm" /></span>
       </div>
     </div>
   );
