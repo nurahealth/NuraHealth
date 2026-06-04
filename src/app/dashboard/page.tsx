@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase";
 import NuraPageShell from "@/components/NuraPageShell";
 import {
   getDashboardData,
+  getStepsDetail,
   SOURCE_LABEL,
   type MetricStatus,
   type ConnectedSource,
@@ -223,9 +224,17 @@ function ReadinessCard({ readiness }: { readiness: Readiness }) {
 
 // ── 4 · Metric card ──────────────────────────────────────────────────────────────
 function MetricCard({ metric, onClick }: { metric: DashboardMetric; onClick: () => void }) {
-  const s = STATUS[metric.status];
   const display = metric.displayValue ?? fmtNumber(metric.value);
   const showUnit = !metric.displayValue && metric.unit;
+
+  // Steps gets an elevated, opt-in treatment: a "to go" goal callout, a
+  // distance · flights · kcal · active strip, and the high-tech intraday chart.
+  const isSteps = metric.id === "steps";
+  const steps = isSteps ? getStepsDetail() : null;
+  const remaining = steps ? Math.max(0, steps.goal - steps.steps) : 0;
+  const statStrip = steps
+    ? `${steps.tiles[0].value}${steps.tiles[0].unit} · ${steps.tiles[1].value} flights · ${steps.kcal} kcal · ${steps.tiles[2].value}${steps.tiles[2].unit}`
+    : "";
 
   return (
     <div
@@ -261,14 +270,26 @@ function MetricCard({ metric, onClick }: { metric: DashboardMetric; onClick: () 
             {metric.delta.dir === "up" ? "▲" : "▼"}{metric.delta.value}
           </span>
         )}
+        {isSteps && remaining > 0 && (
+          <span style={{ fontFamily: SANS, fontSize: 12, fontWeight: 600, color: "var(--nura-amber)" }}>
+            {fmtNumber(remaining)} to go
+          </span>
+        )}
       </div>
 
       {/* Visualization */}
       <div style={{ marginTop: 14, marginBottom: 14, flex: 1 }}>
         {metric.sleepDepth
           ? <SleepDepthChart data={metric.sleepDepth} />
-          : <MetricChart data={metric.chart} />}
+          : <MetricChart data={metric.chart} highTech={isSteps} />}
       </div>
+
+      {/* Steps stat strip — distance · flights · kcal · active time */}
+      {isSteps && (
+        <div style={{ fontFamily: SANS, fontSize: 11.5, color: TEXT_TER, letterSpacing: "0.2px", marginBottom: 12 }}>
+          {statStrip}
+        </div>
+      )}
 
       {/* Footer caption + status */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginTop: "auto" }}>

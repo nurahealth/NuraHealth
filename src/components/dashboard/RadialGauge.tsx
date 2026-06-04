@@ -18,6 +18,12 @@ interface Props {
   gradientTo?: string;
   /** RGB triplet for the arc + number glow (defaults to teal). */
   glowRgb?: string;
+  /** Formats the center count-up number (defaults to a plain integer). */
+  format?: (n: number) => string;
+  /** Center number font size in px (defaults to ~32% of `size`). */
+  valueFontSize?: number;
+  /** Vertical gap between the number and the label in px (defaults to 2). */
+  labelGap?: number;
 }
 
 export default function RadialGauge({
@@ -29,6 +35,9 @@ export default function RadialGauge({
   gradientFrom = "var(--nura-teal)",
   gradientTo = "var(--nura-sage)",
   glowRgb = "93,204,174",
+  format = (n) => String(n),
+  valueFontSize,
+  labelGap = 2,
 }: Props) {
   const rawId = useId();
   const gid = `gauge-${rawId.replace(/[^a-zA-Z0-9]/g, "")}`;
@@ -93,14 +102,14 @@ export default function RadialGauge({
       </svg>
       <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
         <span style={{
-          fontFamily: SANS, fontSize: Math.round(size * 0.32), fontWeight: 800,
+          fontFamily: SANS, fontSize: valueFontSize ?? Math.round(size * 0.32), fontWeight: 800,
           letterSpacing: "-1.5px", lineHeight: 1, color: "var(--nura-text-primary)",
           textShadow: `0 0 18px rgba(${glowRgb},0.35)`,
         }}>
-          {num}
+          {format(num)}
         </span>
         {label && (
-          <span style={{ fontFamily: SANS, fontSize: 11, color: "var(--nura-text-tertiary)", marginTop: 2, letterSpacing: "0.5px" }}>
+          <span style={{ fontFamily: SANS, fontSize: 11, color: "var(--nura-text-tertiary)", marginTop: labelGap, letterSpacing: "0.5px" }}>
             {label}
           </span>
         )}

@@ -780,3 +780,96 @@ const HEART_RATE_DETAIL: HeartRateDetail = {
 export function getHeartRateDetail(): HeartRateDetail {
   return HEART_RATE_DETAIL;
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Steps detail (the /dashboard/steps deep-dive view)
+//
+// The intraday "Today" chart reuses the existing `steps` metric's `chart` (read
+// via getMetric("steps")), so the detail page renders the SAME vivid MetricChart
+// as the dashboard card. Only the surrounding detail data lives here.
+// ─────────────────────────────────────────────────────────────────────────────
+/** A small stat tile under the hero (Distance / Flights / Active). */
+export interface StepsTile {
+  label: string;
+  value: string;
+  /** Optional trailing unit, e.g. " mi" or "m". */
+  unit: string;
+}
+
+/** One day in the "This week" bar chart. */
+export interface StepsWeekDay {
+  /** Single-letter weekday label (M/T/W…). */
+  label: string;
+  value: number;
+  /** The current day — rendered brighter + bold. */
+  isToday?: boolean;
+}
+
+export interface StepsDetail {
+  source: SourceId;
+  /** One-line subtitle under the h1. */
+  subtitle: string;
+  /** Today's step count (the goal-ring hero value). */
+  steps: number;
+  /** Daily step goal. */
+  goal: number;
+  /** Hero status pill text. */
+  pill: string;
+  /** Distance / Flights / Active tiles. */
+  tiles: StepsTile[];
+  /** Active energy burned today (kcal) — shown in the dashboard card stat strip. */
+  kcal: number;
+  /** Caption under the "Today" chart title. */
+  rangeCaption: string;
+  /** Pre-formatted weekly summary values. */
+  weekTotal: string;
+  weekAvg: string;
+  goalHit: string;
+  /** Daily goal — drives the dashed goal line + teal/gold bar coloring. */
+  weekGoal: number;
+  /** Plotted y-range for the weekly bar chart. */
+  weekFloor: number;
+  weekCeil: number;
+  /** Y-axis gridline values + edge labels (in steps; rendered as "5k"/"15k"). */
+  weekGridlines: number[];
+  week: StepsWeekDay[];
+  insight: string;
+}
+
+const STEPS_DETAIL: StepsDetail = {
+  source: "apple-health",
+  subtitle: "Your movement across today",
+  steps: 8420,
+  goal: 10000,
+  pill: "84% to goal · on track",
+  tiles: [
+    { label: "Distance", value: "3.8", unit: " mi" },
+    { label: "Flights", value: "12", unit: "" },
+    { label: "Active", value: "1h 20", unit: "m" },
+  ],
+  kcal: 612,
+  rangeCaption: "Steps logged through the day",
+  weekTotal: "69,120",
+  weekAvg: "9,874",
+  goalHit: "3 of 7",
+  weekGoal: 10000,
+  weekFloor: 0,
+  weekCeil: 15000,
+  weekGridlines: [5000, 15000],
+  week: [
+    { label: "M", value: 8400 },
+    { label: "T", value: 11200 },
+    { label: "W", value: 7600 },
+    { label: "T", value: 12100 },
+    { label: "F", value: 9200 },
+    { label: "S", value: 12200 },
+    { label: "S", value: 8420, isToday: true },
+  ],
+  insight:
+    "You're 1,580 steps from your goal with the evening still ahead — an after-dinner walk would close it easily. You've cleared 10,000 on three days this week, and your daily average of 9,874 is sitting right at target.",
+};
+
+/** Returns the Steps detail payload (sample Apple Health data for now). */
+export function getStepsDetail(): StepsDetail {
+  return STEPS_DETAIL;
+}
