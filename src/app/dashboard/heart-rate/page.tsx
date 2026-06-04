@@ -77,7 +77,7 @@ export default function HeartRateDetailPage() {
             {d.live}<small style={{ fontSize: 20, fontWeight: 600, color: MUTED, letterSpacing: 0 }}>bpm</small>
           </div>
           <div style={{ display: "inline-flex", alignItems: "center", gap: 7, marginTop: 8, fontSize: 12, letterSpacing: "1.2px", textTransform: "uppercase", color: MUTED }}>
-            <span style={{ width: 8, height: 8, borderRadius: "50%", background: CORAL, boxShadow: "0 0 8px var(--nura-alert)", animation: "hr-beat 1.1s ease-in-out infinite" }} />
+            <span style={{ width: 8, height: 8, borderRadius: "50%", flex: "none", marginTop: -1, transformOrigin: "center", background: CORAL, boxShadow: "0 0 8px var(--nura-alert)", animation: "hr-beat 1.1s ease-in-out infinite" }} />
             {d.liveLabel}
           </div>
 
