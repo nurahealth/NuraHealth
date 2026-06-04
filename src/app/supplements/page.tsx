@@ -1136,8 +1136,8 @@ function StackCard({
     flashSaved();
   };
 
-  const handleTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value; // "HH:MM" or ""
+  // Custom on-brand picker hands back an "HH:MM" 24-hour string (same format as before).
+  const handleTimeSelect = (value: string) => {
     setReminderTime(value || "08:00");
     onSaveReminder({ reminder_time: value || null, reminder_enabled: true });
     flashSaved();
@@ -1202,17 +1202,7 @@ function StackCard({
               display: "flex", alignItems: "center", gap: 10, marginTop: 10,
               animation: "nura-fade-in 160ms ease both",
             }}>
-              <input
-                type="time"
-                value={reminderTime}
-                onChange={handleTimeChange}
-                aria-label="Reminder time"
-                style={{
-                  padding: "7px 10px", borderRadius: 10,
-                  background: SURFACE, border: `0.5px solid ${BORDER}`,
-                  color: TEXT, fontFamily: SANS, fontSize: 13, outline: "none",
-                }}
-              />
+              <TimePicker value={reminderTime} onChange={handleTimeSelect} />
               {saved && (
                 <span style={{
                   display: "inline-flex", alignItems: "center", gap: 4,
@@ -1233,6 +1223,188 @@ function StackCard({
           <path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4Z" />
         </svg>
       </span>
+    </div>
+  );
+}
+
+// ── Custom on-brand time picker (replaces the native <input type="time">) ─────
+// Renders/stores the value in the SAME "HH:MM" 24-hour format; only the UI changes.
+function TimePicker({ value, onChange }: { value: string; onChange: (hhmm: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  const mins = reminderTimeMinutes(value);
+  const total = mins ?? 8 * 60; // fallback 08:00 if blank/malformed
+  const h24 = Math.floor(total / 60);
+  const minute = total % 60;
+  const period: "AM" | "PM" = h24 < 12 ? "AM" : "PM";
+  const hour12 = h24 % 12 === 0 ? 12 : h24 % 12;
+  const label =
+    formatReminderTime(value) ??
+    formatReminderTime(`${String(h24).padStart(2, "0")}:${String(minute).padStart(2, "0")}`) ??
+    "8:00 AM";
+
+  // Close on outside click / Escape.
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  // Build the "HH:MM" 24-hour string from the 12-hour parts and emit it.
+  const emit = (nHour12: number, nMin: number, nPer: "AM" | "PM") => {
+    let h = nHour12 % 12;          // 12 → 0
+    if (nPer === "PM") h += 12;     // PM → +12 (12 PM stays 12)
+    const hhmm = `${String(h).padStart(2, "0")}:${String(nMin).padStart(2, "0")}`;
+    onChange(hhmm);
+  };
+
+  const hourOpts = Array.from({ length: 12 }, (_, i) => ({ value: i + 1, label: String(i + 1) }));
+  const minOpts = Array.from({ length: 12 }, (_, i) => ({ value: i * 5, label: String(i * 5).padStart(2, "0") }));
+  const perOpts: { value: "AM" | "PM"; label: string }[] = [
+    { value: "AM", label: "AM" }, { value: "PM", label: "PM" },
+  ];
+
+  return (
+    <div ref={ref} style={{ position: "relative" }}>
+      {/* Resting pill — friendly 12-hour label */}
+      <button
+        type="button"
+        aria-haspopup="dialog"
+        aria-expanded={open}
+        aria-label={`Reminder time, ${label}`}
+        onClick={() => setOpen((o) => !o)}
+        onMouseEnter={(e) => { if (!open) e.currentTarget.style.borderColor = TEXT_TER; }}
+        onMouseLeave={(e) => { if (!open) e.currentTarget.style.borderColor = BORDER; }}
+        style={{
+          display: "inline-flex", alignItems: "center", gap: 7,
+          padding: "7px 11px", borderRadius: 8,
+          background: SURFACE,
+          border: `0.5px solid ${open ? `rgba(var(--nura-sage-rgb),0.55)` : BORDER}`,
+          color: TEXT, fontFamily: SANS, fontSize: 13, cursor: "pointer",
+          transition: "border-color 160ms",
+        }}
+      >
+        <Clock size={13} strokeWidth={1.8} aria-hidden style={{ color: SAGE }} />
+        {label}
+        <svg
+          width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"
+          style={{ color: TEXT_TER, transform: open ? "rotate(180deg)" : "none", transition: "transform 160ms" }}
+          aria-hidden
+        >
+          <path d="M6 9l6 6 6-6" />
+        </svg>
+      </button>
+
+      {/* Custom popover — never the native dropdown */}
+      {open && (
+        <div
+          role="dialog"
+          aria-label="Choose reminder time"
+          style={{
+            position: "absolute", top: "calc(100% + 8px)", left: 0, zIndex: 30,
+            background: "var(--nura-bg)", border: `0.5px solid ${BORDER}`,
+            borderRadius: 12, padding: 10,
+            boxShadow: "0 12px 32px rgba(0,0,0,0.28), 0 4px 10px rgba(0,0,0,0.18)",
+            animation: "nura-fade-in 140ms ease both",
+          }}
+        >
+          <style>{`.nura-time-col::-webkit-scrollbar{width:0;height:0;}.nura-time-col{scrollbar-width:none;}`}</style>
+          <div style={{ display: "flex", gap: 6 }}>
+            <TimeColumn label="Hr" options={hourOpts} selected={hour12} onPick={(h) => emit(h, minute, period)} />
+            <TimeColumn label="Min" options={minOpts} selected={minute} onPick={(m) => emit(hour12, m, period)} />
+            <TimeColumn label="" options={perOpts} selected={period} onPick={(p) => emit(hour12, minute, p)} />
+          </div>
+          <button
+            type="button"
+            onClick={() => setOpen(false)}
+            onMouseEnter={(e) => { e.currentTarget.style.background = SAGE_HOV; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = SAGE; }}
+            style={{
+              width: "100%", marginTop: 8, padding: "8px 0", borderRadius: 8, border: "none",
+              background: SAGE, color: SAGE_ON, fontFamily: SANS, fontSize: 12, fontWeight: 500,
+              cursor: "pointer", transition: "background 160ms",
+            }}
+          >
+            Done
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function TimeColumn<T extends string | number>({
+  label, options, selected, onPick,
+}: {
+  label: string;
+  options: { value: T; label: string }[];
+  selected: T;
+  onPick: (v: T) => void;
+}) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const didInit = useRef(false);
+  const idx = options.findIndex((o) => o.value === selected);
+
+  // Center the selected option once, when the popover opens.
+  useEffect(() => {
+    if (didInit.current) return;
+    didInit.current = true;
+    const el = scrollRef.current;
+    if (!el || idx < 0) return;
+    const ITEM = 36; // 34px min height + 2px gap
+    el.scrollTop = Math.max(0, idx * ITEM - el.clientHeight / 2 + ITEM / 2);
+  });
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", minWidth: 46 }}>
+      <div style={{
+        fontFamily: SANS, fontSize: 9, fontWeight: 600, letterSpacing: "1px",
+        textTransform: "uppercase", color: TEXT_TER, textAlign: "center", marginBottom: 6,
+      }}>
+        {label || " "}
+      </div>
+      <div
+        ref={scrollRef}
+        className="nura-time-col"
+        style={{
+          maxHeight: 168, overflowY: "auto",
+          display: "flex", flexDirection: "column", gap: 2,
+        }}
+      >
+        {options.map((o) => {
+          const sel = o.value === selected;
+          return (
+            <button
+              key={String(o.value)}
+              type="button"
+              aria-pressed={sel}
+              onClick={() => onPick(o.value)}
+              onMouseEnter={(e) => { e.currentTarget.style.background = sel ? SAGE_HOV : `rgba(var(--nura-sage-rgb),0.12)`; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = sel ? SAGE : "transparent"; }}
+              style={{
+                appearance: "none", border: "none", cursor: "pointer",
+                minHeight: 34, padding: "8px 14px", borderRadius: 8,
+                background: sel ? SAGE : "transparent",
+                color: sel ? SAGE_ON : TEXT_SEC,
+                fontFamily: SANS, fontSize: 13, fontWeight: sel ? 600 : 400,
+                transition: "background 140ms, color 140ms", lineHeight: 1,
+              }}
+            >
+              {o.label}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }
