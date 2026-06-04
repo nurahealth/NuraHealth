@@ -719,3 +719,64 @@ const RECOVERY_DETAIL: RecoveryDetail = {
 export function getRecoveryDetail(): RecoveryDetail {
   return RECOVERY_DETAIL;
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Heart Rate detail (the /dashboard/heart-rate deep-dive view)
+//
+// The intraday chart reuses the existing `heart-rate` metric's `chart` (read via
+// getMetric("heart-rate")), so the detail page renders the SAME vivid MetricChart
+// as the dashboard card. Only the surrounding detail data lives here.
+// ─────────────────────────────────────────────────────────────────────────────
+/** One heart-rate training zone row. */
+export interface HeartRateZone {
+  name: string;
+  /** BPM range label, e.g. "150+ bpm" or "110–150". */
+  range: string;
+  /** Time spent in zone today, e.g. "1h 42m". */
+  duration: string;
+  /** Share of the day (0–100), drives the proportional bar width. */
+  pct: number;
+  /** Zone color (an existing --nura-* token). */
+  color: string;
+}
+
+export interface HeartRateDetail {
+  source: SourceId;
+  /** One-line subtitle under the h1. */
+  subtitle: string;
+  /** Large live BPM value. */
+  live: number;
+  /** Live indicator label, e.g. "Live · Apple Watch". */
+  liveLabel: string;
+  resting: number;
+  average: number;
+  max: number;
+  /** Caption under the "Today" chart title. */
+  rangeCaption: string;
+  zones: HeartRateZone[];
+  insight: string;
+}
+
+const HEART_RATE_DETAIL: HeartRateDetail = {
+  source: "apple-watch",
+  subtitle: "Your continuous heart rate today",
+  live: 72,
+  liveLabel: "Live · Apple Watch",
+  resting: 54,
+  average: 78,
+  max: 138,
+  rangeCaption: "Continuous · range 52–138 bpm",
+  zones: [
+    { name: "Peak", range: "150+ bpm", duration: "0h 18m", pct: 3, color: "var(--nura-alert)" },
+    { name: "Cardio", range: "110–150", duration: "1h 42m", pct: 8, color: "var(--nura-amber)" },
+    { name: "Fat burn", range: "70–110", duration: "5h 20m", pct: 22, color: "var(--nura-good)" },
+    { name: "Resting", range: "52–70", duration: "16h 10m", pct: 67, color: "var(--nura-optimal)" },
+  ],
+  insight:
+    "You spent most of today at rest with one solid cardio block around midday. Your resting rate of 54 is low and steady — a good marker of cardiovascular fitness.",
+};
+
+/** Returns the Heart Rate detail payload (sample Apple Watch data for now). */
+export function getHeartRateDetail(): HeartRateDetail {
+  return HEART_RATE_DETAIL;
+}
