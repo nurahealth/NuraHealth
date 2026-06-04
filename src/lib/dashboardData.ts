@@ -623,3 +623,99 @@ const MOVEMENT_DETAIL: MovementDetail = {
 export function getMovementDetail(): MovementDetail {
   return MOVEMENT_DETAIL;
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// HRV / Recovery detail (the /dashboard/hrv deep-dive view)
+// ─────────────────────────────────────────────────────────────────────────────
+/** The zone-band HRV line chart shown on the Recovery detail page. */
+export interface HrvTrendChart {
+  /** 7 daily HRV samples (ms), oldest → newest. */
+  values: number[];
+  /** Optimal-zone bounds [low, high] in ms (the shaded band). */
+  zone: [number, number];
+  /** Rolling-average line value (ms, dashed). */
+  average: number;
+  /** Plotted y-range. */
+  floor: number;
+  ceil: number;
+  /** Y-axis gridline values + edge labels. */
+  gridlines: number[];
+  /** Weekday x-axis labels. */
+  axisLabels: string[];
+  /** Header current value + delta (ms). */
+  current: number;
+  delta: number;
+}
+
+/** A small stat tile beneath the HRV chart (baseline / resting HR / balance). */
+export interface RecoveryStatTile {
+  label: string;
+  value: string;
+  /** Optional trailing unit, e.g. " ms". */
+  unit?: string;
+  /** Optional accent color token for the value (e.g. Balance "Even"). */
+  accent?: string;
+}
+
+/** One "What's driving recovery" row. */
+export interface RecoveryDriver {
+  name: string;
+  /** Lead status text before the bolded qualifier, e.g. "Above baseline". */
+  detail: string;
+  /** Bolded qualifier word, e.g. "strong" | "solid" | "watch". */
+  qualifier: string;
+  /** Status level → drives the qualifier color + bar fill (emerald/sage/gold). */
+  level: "strong" | "solid" | "watch";
+  /** Bar fill percentage (0–100). */
+  pct: number;
+}
+
+export interface RecoveryDetail {
+  source: SourceId;
+  /** Recovery score (0–100). */
+  score: number;
+  /** One-line subtitle under the h1. */
+  subtitle: string;
+  /** Hero status pill text. */
+  pill: string;
+  hrv: HrvTrendChart;
+  tiles: RecoveryStatTile[];
+  drivers: RecoveryDriver[];
+  insight: string;
+}
+
+const RECOVERY_DETAIL: RecoveryDetail = {
+  source: "oura",
+  score: 82,
+  subtitle: "Your nervous system's readiness today",
+  pill: "Well recovered · ready for strain",
+  hrv: {
+    values: [48, 55, 42, 60, 52, 68, 62],
+    zone: [50, 90],
+    average: 58,
+    floor: 30,
+    ceil: 100,
+    gridlines: [40, 70, 100],
+    axisLabels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+    current: 62,
+    delta: 8,
+  },
+  tiles: [
+    { label: "7-day baseline", value: "58", unit: " ms" },
+    { label: "Resting HR", value: "54", unit: " bpm" },
+    { label: "Balance", value: "Even", accent: "var(--nura-optimal)" },
+  ],
+  drivers: [
+    { name: "HRV trend", detail: "Above baseline", qualifier: "strong", level: "strong", pct: 84 },
+    { name: "Resting heart rate", detail: "Low", qualifier: "strong", level: "strong", pct: 80 },
+    { name: "Sleep", detail: "7h 32m", qualifier: "solid", level: "solid", pct: 76 },
+    { name: "Prior-day strain", detail: "Moderate", qualifier: "watch", level: "watch", pct: 52 },
+  ],
+  insight:
+    "Your HRV is sitting above your 7-day baseline and resting heart rate is low — your nervous system has recovered well. Today's a good day to push a little harder if you want to.",
+};
+
+/** Returns the HRV / Recovery detail payload (sample Oura data for now). */
+export function getRecoveryDetail(): RecoveryDetail {
+  return RECOVERY_DETAIL;
+}
