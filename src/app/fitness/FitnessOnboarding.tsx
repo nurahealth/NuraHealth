@@ -5,6 +5,7 @@ import {
   BG, TEXT, TEXT_SEC, TEXT_TER, BORDER, SAGE, SAGE_HOV, SAGE_ON, SANS, MONO,
   GLOBAL_CSS, Icon, StepQuestion, Hint, FieldLabel, SegmentedControl,
   ChipToggle, GoalCard, ProgressBar, WelcomeCanvas, DoneCheck,
+  STEP_SHELL_STYLE, STEP_SHELL_CENTERED_STYLE,
   type GoalOption,
 } from '@/components/onboarding/kit';
 import { saveFitnessOnboarding, type FitnessProfileData } from './actions';
@@ -121,7 +122,7 @@ function Step2Goal({ value, onSelect, animKey }: {
   value: string; onSelect: (id: string) => void; animKey: number;
 }) {
   return (
-    <div key={animKey} style={{ minWidth: '100%', padding: '8px 0 24px', animation: 'step-in 450ms ease 200ms both' }}>
+    <div key={animKey} style={STEP_SHELL_STYLE}>
       <StepQuestion text="What's your main goal?" active />
       <Hint text="Pick the one that matters most right now." />
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
@@ -139,7 +140,7 @@ function Step3Experience({ value, onChange, animKey }: {
   value: string; onChange: (v: string) => void; animKey: number;
 }) {
   return (
-    <div key={animKey} style={{ minWidth: '100%', padding: '8px 0 24px', animation: 'step-in 450ms ease 200ms both' }}>
+    <div key={animKey} style={STEP_SHELL_STYLE}>
       <StepQuestion text="How experienced are you?" active />
       <Hint text="This sets the starting intensity NŪRA suggests." />
       <FieldLabel>Experience level</FieldLabel>
@@ -153,7 +154,7 @@ function Step4Equipment({ value, onToggle, animKey }: {
   value: string[]; onToggle: (e: string) => void; animKey: number;
 }) {
   return (
-    <div key={animKey} style={{ minWidth: '100%', padding: '8px 0 24px', animation: 'step-in 450ms ease 200ms both' }}>
+    <div key={animKey} style={STEP_SHELL_STYLE}>
       <div style={{ fontSize: 22, fontWeight: 600, color: TEXT, fontFamily: SANS, marginBottom: 6, letterSpacing: '-0.3px' }}>
         What do you have access to?
       </div>
@@ -172,7 +173,7 @@ function Step5Days({ value, onChange, animKey }: {
   value: string; onChange: (v: string) => void; animKey: number;
 }) {
   return (
-    <div key={animKey} style={{ minWidth: '100%', padding: '8px 0 24px', animation: 'step-in 450ms ease 200ms both' }}>
+    <div key={animKey} style={STEP_SHELL_STYLE}>
       <StepQuestion text="How many days a week?" active />
       <Hint text="Be realistic — consistency beats ambition." />
       <FieldLabel>Training days per week</FieldLabel>
@@ -186,7 +187,7 @@ function Step6Limitations({ value, onChange, animKey }: {
   value: string; onChange: (v: string) => void; animKey: number;
 }) {
   return (
-    <div key={animKey} style={{ minWidth: '100%', padding: '8px 0 24px', animation: 'step-in 450ms ease 200ms both' }}>
+    <div key={animKey} style={STEP_SHELL_STYLE}>
       <div style={{ fontSize: 22, fontWeight: 600, color: TEXT, fontFamily: SANS, marginBottom: 6, letterSpacing: '-0.3px' }}>
         Anything to work around?
       </div>
@@ -220,11 +221,7 @@ function Step7Done({ state, animKey }: { state: FitState; animKey: number }) {
   const echo = parts.length ? `${parts.join(', ')} — let's get to work.` : "Your plan is ready — let's get to work.";
 
   return (
-    <div key={animKey} style={{
-      minWidth: '100%', padding: '8px 0 24px',
-      display: 'flex', flexDirection: 'column', alignItems: 'center',
-      textAlign: 'center', animation: 'step-in 450ms ease 200ms both',
-    }}>
+    <div key={animKey} style={STEP_SHELL_CENTERED_STYLE}>
       <DoneCheck />
 
       <h2 style={{ fontSize: 26, fontWeight: 600, color: TEXT, fontFamily: SANS, margin: '0 0 10px', letterSpacing: '-0.4px' }}>
@@ -313,12 +310,14 @@ export default function FitnessOnboarding({ initial, onComplete }: {
   const trackStyle: React.CSSProperties = {
     display: 'flex',
     width: '100%',
+    flex: 1,
+    minHeight: 0,
     transform: `translateX(-${(step - 1) * 100}%)`,
     transition: 'transform 550ms cubic-bezier(.32,.72,.34,1.01)',
     willChange: 'transform',
   };
   const slideStyle: React.CSSProperties = {
-    minWidth: '100%', width: '100%', flexShrink: 0, minHeight: '100%', overflowY: 'auto',
+    minWidth: '100%', width: '100%', flexShrink: 0, height: '100%', overflowY: 'auto',
   };
   const stepLabel = String(step).padStart(2, '0') + ' / ' + String(TOTAL_STEPS).padStart(2, '0');
 
@@ -348,7 +347,7 @@ export default function FitnessOnboarding({ initial, onComplete }: {
         </div>
 
         {/* Slide track */}
-        <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ flex: 1, minHeight: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
           <div style={trackStyle}>
             <div style={slideStyle}>
               <Step1Welcome onNext={next} animKey={animKeys[0]} />
