@@ -146,8 +146,7 @@ export default function ActiveEnergyTodayChart({ d, height = 170 }: { d: ActiveE
         {/* KCAL / HR unit label, top-left */}
         <text x={1} y={11} fill={`rgba(${INK},0.42)`} style={{ fontFamily: SANS, fontSize: 8.5, fontWeight: 600, letterSpacing: "1px" }}>KCAL / HR</text>
 
-        {/* Peak readout — glowing dot + label */}
-        <circle cx={peakX.toFixed(1)} cy={peakY.toFixed(1)} r={3.4} fill={`rgb(${CORAL_RGB})`} style={{ filter: `drop-shadow(0 0 6px rgba(${CORAL_RGB},0.95))` }} />
+        {/* Peak readout — glowing label */}
         <text x={labelX.toFixed(1)} y={labelY.toFixed(1)} textAnchor="middle" fill={`rgb(${INK})`} style={{ fontFamily: SANS, fontSize: 9.5, fontWeight: 700, letterSpacing: "0.5px", filter: `drop-shadow(0 0 5px rgba(${CORAL_RGB},0.6))` }}>
           {peakLabel}
         </text>
