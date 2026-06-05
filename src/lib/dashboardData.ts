@@ -213,7 +213,7 @@ const DASHBOARD_DATA: DashboardData = {
           { label: "Deep", duration: "1h 22m", color: "var(--nura-sleep-deep)" },
           { label: "REM", duration: "1h 48m", color: "var(--nura-teal)" },
           { label: "Light", duration: "4h 02m", color: "var(--nura-sage)" },
-          { label: "Awake", duration: "0h 20m", color: "rgba(var(--nura-fg-rgb),0.4)" },
+          { label: "Awake", duration: "0h 20m", color: "#d3a253" },
         ],
         axisLabels: ["11p", "1a", "3a", "5a", "7a"],
       },
@@ -422,6 +422,24 @@ export interface SleepCycles {
   pattern: ("full" | "partial")[];
 }
 
+export interface SleepNight {
+  /** Per-segment stage code on the 11p–7a timeline: "D" deep · "R" REM · "L" light · "A" awake. */
+  stageSeq: ("D" | "R" | "L" | "A")[];
+  /** Nighttime heart rate (bpm), one value per stage segment (same timeline as `stageSeq`). */
+  heartRate: number[];
+  /** Heart-rate variability (ms), one value per stage segment (same timeline as `stageSeq`). */
+  hrv: number[];
+  /** Evenly-spaced x-axis labels shared by the hypnogram + HR + HRV charts. */
+  axisLabels: string[];
+}
+
+export interface SleepVital {
+  label: string;
+  value: string;
+  /** Small trailing unit, e.g. " bpm", " /min", " min". */
+  unit: string;
+}
+
 export interface SleepDetail {
   source: SourceId;
   /** Sleep Index score (0–100). */
@@ -436,6 +454,12 @@ export interface SleepDetail {
   stages: SleepStageDetail[];
   hypnogram: SleepHypnogram;
   cycles: SleepCycles;
+  /** Pill under the hero gauge, e.g. "7h 42m · above your 7h goal". */
+  heroPill: string;
+  /** Nighttime time-series — hypnogram stages, HR and HRV on one 11p–7a timeline. */
+  night: SleepNight;
+  /** Overnight vitals tiles (resting HR · respiratory rate · sleep latency). */
+  vitals: SleepVital[];
   insight: string;
 }
 
@@ -492,8 +516,35 @@ const SLEEP_DETAIL: SleepDetail = {
     summary: "4 full · 1 partial",
     pattern: ["full", "full", "partial", "full", "full"],
   },
+  heroPill: "7h 42m · above your 7h goal",
+  night: {
+    // Deep front-loaded into the first cycles, REM lengthening toward morning,
+    // light dominant, brief awakenings scattered late. HR and HRV share this
+    // exact 11p–7a timeline so all three night charts line up.
+    stageSeq: [
+      "L", "L", "L", "D", "D", "D", "L", "R", "L", "L", "L", "L", "D", "D", "L",
+      "L", "R", "R", "L", "L", "L", "L", "R", "L", "R", "R", "L", "L", "L", "L",
+      "R", "R", "R", "A", "L", "L", "L", "L", "R", "R", "A", "L", "L", "L", "R", "L",
+    ],
+    heartRate: [
+      60, 57, 53, 49, 47, 46, 47, 49, 48, 47, 46, 47, 45, 44, 46, 48, 50, 51, 49,
+      48, 49, 50, 52, 51, 53, 54, 52, 51, 52, 53, 55, 56, 54, 58, 55, 54, 55, 56,
+      57, 58, 62, 57, 56, 58, 60, 61,
+    ],
+    hrv: [
+      40, 48, 58, 70, 82, 88, 84, 76, 80, 83, 86, 82, 88, 90, 84, 78, 74, 70, 72,
+      74, 70, 68, 64, 66, 60, 58, 62, 64, 60, 58, 54, 52, 56, 46, 54, 56, 52, 50,
+      48, 46, 40, 50, 52, 48, 44, 42,
+    ],
+    axisLabels: ["11p", "1a", "3a", "5a", "7a"],
+  },
+  vitals: [
+    { label: "Resting HR", value: "44", unit: " bpm" },
+    { label: "Respiratory", value: "14.2", unit: " /min" },
+    { label: "Latency", value: "9", unit: " min" },
+  ],
   insight:
-    "Strong night — your deep sleep landed a touch under your sweet spot, but consistency and timing were dialed in. Skin temperature dropped below baseline, which usually tracks with good recovery. Keep the cool room and early wind-down going.",
+    "You fell asleep fast and banked most of your deep sleep in the first two cycles — right when your heart rate bottomed out at 44 bpm and HRV peaked near 90 ms. REM stretched longer toward morning, which supports memory and mood. The couple of brief awakenings before waking are normal. A strong, restorative night.",
 };
 
 /** Returns the Sleep detail payload (sample Oura data for now). */
