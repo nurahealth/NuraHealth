@@ -6,6 +6,7 @@ import AuroraBackground from "@/components/dashboard/AuroraBackground";
 import RadialGauge from "@/components/dashboard/RadialGauge";
 import GlassCard from "@/components/dashboard/GlassCard";
 import MetricChart from "@/components/dashboard/MetricChart";
+import { smooth } from "@/components/dashboard/ActiveEnergyTodayChart";
 
 // ── Tokens ──────────────────────────────────────────────────────────────────
 const TEXT = "var(--nura-text-primary)";
@@ -79,7 +80,7 @@ export default function StepsDetailPage() {
         <div className="st-reveal" style={{ animationDelay: ".05s", color: MUTED, fontSize: 14, marginBottom: 6 }}>{d.subtitle}</div>
 
         {/* Hero — goal-progress ring + status pill */}
-        <div className="st-reveal" style={{ animationDelay: ".1s", display: "flex", flexDirection: "column", alignItems: "center", padding: "14px 0 6px" }}>
+        <div className="st-reveal" style={{ animationDelay: ".1s", display: "flex", flexDirection: "column", alignItems: "center", padding: "14px 0 18px" }}>
           <RadialGauge
             value={d.steps}
             max={d.goal}
@@ -94,7 +95,7 @@ export default function StepsDetailPage() {
             glowRgb="var(--nura-amber-rgb)"
           />
           <span style={{
-            display: "inline-flex", alignItems: "center", gap: 6, marginTop: 12,
+            display: "inline-flex", alignItems: "center", gap: 6, marginTop: 18,
             padding: "6px 15px", borderRadius: 999, fontSize: 12, fontWeight: 600, letterSpacing: "0.5px",
             color: GOLD, border: "1px solid rgba(var(--nura-amber-rgb),0.4)",
           }}>
@@ -144,6 +145,9 @@ export default function StepsDetailPage() {
           </div>
         </GlassCard>
 
+        {/* Pace vs your usual — today's cumulative steps against a typical day */}
+        <StepsPaceCard d={d} />
+
         {/* This week */}
         <GlassCard className="st-reveal" style={{ animationDelay: ".34s", marginTop: 16 }}>
           <div style={{ fontSize: 15, fontWeight: 600 }}>This week</div>
@@ -158,6 +162,9 @@ export default function StepsDetailPage() {
 
           <StepsWeekChart d={d} />
         </GlassCard>
+
+        {/* Movement — active vs sedentary across the waking hours */}
+        <StepsMovementCard d={d} />
 
         {/* NŪRA insight */}
         <GlassCard className="st-reveal" style={{ animationDelay: ".42s", marginTop: 16, borderRadius: 20, padding: 17, position: "relative", overflow: "hidden" }}>
@@ -220,5 +227,166 @@ function StepsWeekChart({ d }: { d: StepsDetail }) {
         );
       })}
     </svg>
+  );
+}
+
+// Literal teal/gold — matches the reference mockup and the page's existing
+// data-strip, which also reaches for #5dccae / #d3a253 directly.
+const TEAL_HEX = "#5dccae";
+const GOLD_HEX = "#d3a253";
+
+// ── Card 1 · Pace vs your usual ───────────────────────────────────────────────
+// How today's cumulative steps are tracking against a typical day: a lead line
+// with the live delta, a cumulative line chart (today solid teal vs usual dashed
+// off-white, with the "ahead" gap shaded teal), a key row, and a week-over-week
+// compare row.
+function StepsPaceCard({ d }: { d: StepsDetail }) {
+  const last = d.paceToday.length - 1;
+  const todaySteps = d.paceToday[last];
+  const usualSteps = d.paceUsual[last];
+  const delta = todaySteps - usualSteps;
+  const ahead = delta >= 0;
+
+  const pct = d.lastWeekStepTotal
+    ? Math.round(((d.thisWeekStepTotal - d.lastWeekStepTotal) / d.lastWeekStepTotal) * 100)
+    : 0;
+  const up = pct >= 0;
+
+  return (
+    <GlassCard className="st-reveal" style={{ animationDelay: ".22s", marginTop: 16 }}>
+      <div style={{ fontSize: 15, fontWeight: 600 }}>Pace vs your usual</div>
+      <div style={{ fontSize: 12.5, color: MUTED, margin: "3px 0 8px" }}>How today is tracking against a typical day</div>
+
+      <div style={{ display: "flex", alignItems: "baseline", gap: 9, margin: "10px 0 4px" }}>
+        <span style={{ fontSize: 30, fontWeight: 700, letterSpacing: "-1px", color: ahead ? TEAL_HEX : GOLD_HEX }}>
+          {ahead ? "▲" : "▼"} {Math.abs(delta).toLocaleString("en-US")}
+        </span>
+        <span style={{ fontSize: 13, color: MUTED }}>{ahead ? "ahead of" : "behind"} your usual pace by now</span>
+      </div>
+
+      <StepsPaceChart d={d} />
+
+      <div style={{ display: "flex", justifyContent: "space-between", padding: "0 2px", marginTop: 6, fontSize: 10, color: FAINT }}>
+        <span>12a</span><span>6a</span><span>12p</span><span>6p</span><span>now</span>
+      </div>
+
+      {/* Key — today (solid) vs usual (dashed) */}
+      <div style={{ display: "flex", gap: 16, marginTop: 12, paddingTop: 12, borderTop: "1px solid rgba(235,230,216,0.07)", fontSize: 12, color: MUTED }}>
+        <span style={{ display: "flex", alignItems: "center", gap: 7 }}>
+          <span style={{ width: 16, height: 0, borderTop: `2px solid ${TEAL_HEX}`, borderRadius: 2 }} />
+          <span><b style={{ color: TEXT, fontWeight: 700 }}>Today</b> · {todaySteps.toLocaleString("en-US")}</span>
+        </span>
+        <span style={{ display: "flex", alignItems: "center", gap: 7 }}>
+          <span style={{ width: 16, height: 0, borderTop: "2px dashed rgba(235,230,216,0.5)", borderRadius: 2 }} />
+          <span><b style={{ color: TEXT, fontWeight: 700 }}>Usual</b> · {usualSteps.toLocaleString("en-US")}</span>
+        </span>
+      </div>
+
+      {/* Week over week */}
+      <div style={{ display: "flex", alignItems: "center", gap: 7, marginTop: 13, paddingTop: 13, borderTop: "1px solid rgba(235,230,216,0.07)", fontSize: 13, color: MUTED }}>
+        <span style={{ color: up ? TEAL_HEX : GOLD_HEX, fontWeight: 700 }}>{up ? "▲" : "▼"} {Math.abs(pct)}%</span>
+        <span>this week ({d.thisWeekStepTotal.toLocaleString("en-US")}) vs last week ({d.lastWeekStepTotal.toLocaleString("en-US")})</span>
+      </div>
+    </GlassCard>
+  );
+}
+
+// Cumulative pace chart — today's solid teal line over the usual dashed
+// off-white line, with the gap between them shaded faint teal and a glowing dot
+// at today's current point. Stretches to fill the card width (preserveAspectRatio
+// "none"); the 12a→now axis labels are rendered by the card.
+function StepsPaceChart({ d }: { d: StepsDetail }) {
+  const W = 376, top = 12, bot = 128, plotH = bot - top;
+  const today = d.paceToday, usual = d.paceUsual;
+  const n = today.length, max = d.paceMax || 1;
+  const xOf = (i: number) => i * (W / (n - 1));
+  const yOf = (v: number) => top + (1 - v / max) * plotH;
+
+  const tp: [number, number][] = today.map((v, i) => [xOf(i), yOf(v)]);
+  const up: [number, number][] = usual.map((v, i) => [xOf(i), yOf(v)]);
+
+  // Shade the "ahead" gap: today's curve, then back along usual (reversed), closed.
+  let gap = `${smooth(tp)} L${up[n - 1][0].toFixed(1)},${up[n - 1][1].toFixed(1)}`;
+  for (let i = n - 2; i >= 0; i--) gap += ` L${up[i][0].toFixed(1)},${up[i][1].toFixed(1)}`;
+  gap += " Z";
+
+  return (
+    <svg width="100%" height={150} viewBox={`0 0 ${W} 150`} preserveAspectRatio="none" style={{ display: "block" }}>
+      <path d={gap} fill="rgba(93,204,174,0.10)" />
+      <path d={smooth(up)} fill="none" stroke="rgba(235,230,216,0.5)" strokeWidth={1.6} strokeDasharray="4 5" strokeLinecap="round" />
+      <path d={smooth(tp)} fill="none" stroke={TEAL_HEX} strokeWidth={2.2} strokeLinecap="round" style={{ filter: "drop-shadow(0 0 4px rgba(93,204,174,0.5))" }} />
+      <circle cx={tp[n - 1][0].toFixed(1)} cy={tp[n - 1][1].toFixed(1)} r={3.2} fill={TEAL_HEX} style={{ filter: "drop-shadow(0 0 6px #5dccae)" }} />
+    </svg>
+  );
+}
+
+// ── Card 2 · Movement ─────────────────────────────────────────────────────────
+// Active vs sedentary through the waking hours: a strip of per-hour blocks (teal
+// when active, faint when sedentary), three duration tiles, and a mini-insight.
+function StepsMovementCard({ d }: { d: StepsDetail }) {
+  const wakingHours = d.movementHours.length;
+  const activeHours = d.movementHours.filter((s) => s === "a").length;
+  const stats = [
+    { k: "Active", v: d.activeTime },
+    { k: "Sedentary", v: d.sedentaryTime },
+    { k: "Longest sit", v: d.longestSit },
+  ];
+
+  return (
+    <GlassCard className="st-reveal" style={{ animationDelay: ".40s", marginTop: 16 }}>
+      <div style={{ fontSize: 15, fontWeight: 600 }}>Movement</div>
+      <div style={{ fontSize: 12.5, color: MUTED, margin: "3px 0 8px" }}>Active vs sedentary through your waking hours</div>
+
+      {/* Per-hour strip */}
+      <div style={{ display: "flex", gap: 3, marginTop: 14 }}>
+        {d.movementHours.map((s, i) => (
+          <div
+            key={i}
+            style={{
+              flex: 1, height: 30, borderRadius: 4,
+              background: s === "a" ? `linear-gradient(180deg, #7fe0c6, ${TEAL_HEX})` : "rgba(235,230,216,0.07)",
+              boxShadow: s === "a" ? "0 0 8px rgba(93,204,174,0.35)" : undefined,
+            }}
+          />
+        ))}
+      </div>
+      <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6, fontSize: 10, color: FAINT }}>
+        <span>6a</span><span>12p</span><span>6p</span><span>10p</span>
+      </div>
+
+      {/* Duration tiles */}
+      <div style={{ display: "flex", gap: 10, marginTop: 16 }}>
+        {stats.map((t) => (
+          <div key={t.k} style={{ flex: 1, background: "rgba(235,230,216,0.03)", border: "1px solid var(--nura-glass-line)", borderRadius: 14, padding: 12 }}>
+            <div style={{ fontSize: 10, letterSpacing: "0.7px", textTransform: "uppercase", color: FAINT, fontWeight: 600 }}>{t.k}</div>
+            <div style={{ fontSize: 18, fontWeight: 700, marginTop: 5, letterSpacing: "-0.4px" }}><Duration value={t.v} /></div>
+          </div>
+        ))}
+      </div>
+
+      {/* Mini-insight */}
+      <div style={{ display: "flex", gap: 9, alignItems: "flex-start", marginTop: 14, paddingTop: 13, borderTop: "1px solid rgba(235,230,216,0.07)", fontSize: 12.5, lineHeight: 1.45, color: MUTED }}>
+        <span style={{ width: 6, height: 6, borderRadius: "50%", background: TEAL_HEX, marginTop: 5, flex: "none", boxShadow: "0 0 7px #5dccae" }} />
+        <span>
+          You moved during <b style={{ color: TEXT, fontWeight: 700 }}>{activeHours} of {wakingHours}</b> waking hours. Your longest unbroken sit was{" "}
+          <b style={{ color: TEXT, fontWeight: 700 }}>{d.longestSit}</b> around {d.longestSitWhen} — a 5-minute walk in that window would break it up and is where most easy wins hide.
+        </span>
+      </div>
+    </GlassCard>
+  );
+}
+
+// Render a duration string like "6h 40m" with the unit letters set smaller and
+// muted, e.g. 6h 40m → 6<small>h</small> 40<small>m</small>.
+function Duration({ value }: { value: string }) {
+  const parts = value.split(/(\d+)/).filter(Boolean);
+  return (
+    <>
+      {parts.map((p, i) =>
+        /\d/.test(p)
+          ? <span key={i}>{p}</span>
+          : <small key={i} style={{ fontSize: 11, color: MUTED, fontWeight: 600 }}>{p}</small>
+      )}
+    </>
   );
 }

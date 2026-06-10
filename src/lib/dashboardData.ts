@@ -884,6 +884,23 @@ export interface StepsDetail {
   /** Y-axis gridline values + edge labels (in steps; rendered as "5k"/"15k"). */
   weekGridlines: number[];
   week: StepsWeekDay[];
+  /** Pace card — today's cumulative steps sampled 12a→now (the last point is "now"). */
+  paceToday: number[];
+  /** Pace card — the user's typical cumulative steps at each matching sample point. */
+  paceUsual: number[];
+  /** Pace card — y-max for the cumulative chart (a touch above the day's total). */
+  paceMax: number;
+  /** This-week / last-week step totals — drive the week-over-week compare row. */
+  thisWeekStepTotal: number;
+  lastWeekStepTotal: number;
+  /** Movement card — active ("a") / sedentary ("s") state per waking hour (~6a→10p). */
+  movementHours: ("a" | "s")[];
+  /** Movement card — formatted active / sedentary / longest-sit durations. */
+  activeTime: string;
+  sedentaryTime: string;
+  longestSit: string;
+  /** When the longest unbroken sit happened, e.g. "early afternoon". */
+  longestSitWhen: string;
   insight: string;
 }
 
@@ -916,6 +933,16 @@ const STEPS_DETAIL: StepsDetail = {
     { label: "S", value: 12200 },
     { label: "S", value: 8420, isToday: true },
   ],
+  paceToday: [0, 0, 0, 0, 0, 40, 120, 300, 620, 900, 1300, 1800, 2400, 3000, 3600, 4400, 5200, 6100, 7000, 7700, 8200, 8420],
+  paceUsual: [0, 0, 0, 0, 30, 90, 220, 460, 820, 1200, 1700, 2200, 2800, 3400, 4000, 4700, 5400, 6100, 6800, 7300, 7700, 7880],
+  paceMax: 8800,
+  thisWeekStepTotal: 69120,
+  lastWeekStepTotal: 62300,
+  movementHours: ["s", "s", "a", "a", "s", "a", "s", "s", "a", "a", "s", "a", "a", "a", "s", "a"],
+  activeTime: "6h 40m",
+  sedentaryTime: "9h 20m",
+  longestSit: "2h 10m",
+  longestSitWhen: "early afternoon",
   insight:
     "You're 1,580 steps from your goal with the evening still ahead — an after-dinner walk would close it easily. You've cleared 10,000 on three days this week, and your daily average of 9,874 is sitting right at target.",
 };

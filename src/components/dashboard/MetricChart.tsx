@@ -209,8 +209,7 @@ export default function MetricChart({
             </text>
           ))}
 
-          {/* Peak readout — glowing dot + label */}
-          <circle cx={peakX.toFixed(1)} cy={peakY.toFixed(1)} r={3.4} fill={`rgb(${TEAL})`} style={{ filter: `drop-shadow(0 0 6px rgba(${TEAL},0.95))` }} />
+          {/* Peak readout — label (peak dot removed) */}
           <text
             x={labelX.toFixed(1)} y={labelY.toFixed(1)} textAnchor="middle"
             fill={`rgb(${INK})`} style={{ fontFamily: SANS, fontSize: 9.5, fontWeight: 700, letterSpacing: "0.5px", filter: `drop-shadow(0 0 5px rgba(${TEAL},0.6))` }}
