@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NŪRA — Health plan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0b0c; --text:#ebe6d8; --muted:rgba(235,230,216,0.58); --faint:rgba(235,230,216,0.32);
+    --sage:#9bb0a5; --teal:#5dccae; --blue:#5aa0e6; --rose:#f0a890; --gold:#d3a253; --coral:#e8745a; --mauve:#a98fc4;
+    --glass:rgba(22,25,27,0.55); --glass-line:rgba(235,230,216,0.10);
+  }
+  *{box-sizing:border-box; margin:0; padding:0; -webkit-font-smoothing:antialiased; font-variant-numeric:tabular-nums;}
+  body{font-family:'Inter',sans-serif; background:var(--bg); min-height:100vh; color:var(--text); position:relative; overflow-x:hidden; padding:28px 0;}
+  .aurora{position:fixed; inset:0; pointer-events:none; z-index:0; background:radial-gradient(72% 34% at 50% 6%, rgba(155,176,165,0.12) 0%, rgba(93,204,174,0.04) 44%, rgba(10,11,12,0) 72%);}
+  .grain{position:fixed; inset:0; pointer-events:none; z-index:1; opacity:.05; mix-blend-mode:overlay; background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");}
+  .page{position:relative; z-index:2; width:412px; max-width:100%; margin:0 auto; padding:0 16px;}
+
+  .card{position:relative; background:var(--glass); -webkit-backdrop-filter:blur(24px) saturate(1.2); backdrop-filter:blur(24px) saturate(1.2); border:1px solid var(--glass-line); border-radius:24px; padding:20px 16px 16px; overflow:hidden; box-shadow:inset 0 1px 0 rgba(235,230,216,0.10), 0 22px 60px rgba(0,0,0,.45);}
+  .head{display:flex; align-items:flex-start; justify-content:space-between; padding:0 4px;}
+  .ttl{font-family:'Fraunces',Georgia,serif; font-size:23px; letter-spacing:-.2px;} .ttl .em{font-style:italic; color:var(--sage);}
+  .sub{font-size:12px; color:var(--muted); margin-top:4px; line-height:1.45;}
+  .badge{font-size:9.5px; font-weight:700; letter-spacing:.8px; text-transform:uppercase; color:var(--sage); border:1px solid rgba(155,176,165,0.4); padding:5px 10px; border-radius:999px; background:rgba(155,176,165,0.07); white-space:nowrap;}
+
+  .target{display:flex; align-items:center; gap:13px; margin:18px 4px 4px;}
+  .t-end{text-align:center; flex:none;} .t-end .k{font-size:9px; letter-spacing:.8px; text-transform:uppercase; color:var(--faint); font-weight:600;}
+  .t-end .v{font-size:22px; font-weight:700; letter-spacing:-.5px;} .t-end .v.sage{color:var(--sage);}
+  .t-bar{flex:1; position:relative; height:8px; border-radius:999px; background:rgba(235,230,216,0.08);}
+  .t-fill{position:absolute; left:0; top:0; height:100%; border-radius:999px; background:linear-gradient(90deg,#9bb0a5,#5dccae);}
+  .t-goal{position:absolute; top:-4px; width:3px; height:16px; border-radius:2px; background:var(--sage); box-shadow:0 0 7px var(--sage);}
+  .t-cap{font-size:11px; color:var(--faint); text-align:center; margin-top:7px;}
+
+  .focus{margin:16px 0 4px; padding:0 2px;}
+  .focus-k{font-size:10px; letter-spacing:1.2px; text-transform:uppercase; color:var(--sage); font-weight:700; margin-bottom:9px;}
+  .chips{display:flex; flex-wrap:wrap; gap:7px;}
+  .chip{font-size:12px; font-weight:600; color:var(--text); padding:7px 12px; border-radius:999px; background:rgba(155,176,165,0.1); border:1px solid rgba(155,176,165,0.22);}
+
+  .dom{border-top:1px solid rgba(235,230,216,0.07);}
+  .dom-head{display:flex; gap:12px; align-items:center; padding:13px 2px; cursor:pointer;}
+  .dom-ic{flex:none; width:34px; height:34px; border-radius:11px; display:flex; align-items:center; justify-content:center;}
+  .dom-ic svg{width:17px; height:17px; fill:none; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round;}
+  .dom-main{flex:1; min-width:0;} .dom-title{font-size:14px; font-weight:700;} .dom-sum{font-size:12px; color:var(--muted); margin-top:2px;}
+  .dom-chev{width:16px;height:16px;stroke:var(--faint);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transition:transform .2s;flex:none;}
+  .dom.open .dom-chev{transform:rotate(180deg);}
+  .dom-body{display:none; padding:0 2px 15px 46px;} .dom.open .dom-body{display:block;}
+  .lifts{font-size:10px; font-weight:600; letter-spacing:.3px; color:var(--faint); margin-bottom:11px;} .lifts b{color:var(--muted);}
+  .step{display:flex; gap:10px; align-items:flex-start; padding:6px 0;}
+  .step .ck{width:16px; height:16px; border-radius:50%; border:1.6px solid rgba(155,176,165,0.5); margin-top:1px; flex:none;}
+  .step .tx{font-size:12.8px; line-height:1.45; color:rgba(235,230,216,0.82);} .step .tx b{color:var(--text); font-weight:600;}
+  .dom-link{display:inline-flex; align-items:center; gap:5px; margin-top:11px; font-size:12px; font-weight:600; color:var(--sage);}
+  .dom-link svg{width:13px;height:13px;stroke:var(--sage);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+
+  .proj{margin-top:6px; padding:14px 16px; border-top:1px solid rgba(235,230,216,0.07); font-size:12.5px; line-height:1.5; color:var(--muted);} .proj b{color:var(--sage); font-weight:700;}
+</style>
+</head>
+<body>
+<div class="aurora"></div>
+<div class="grain"></div>
+<div class="page">
+  <div class="card">
+    <div class="head"><div><div class="ttl">Your health <span class="em">plan</span></div><div class="sub">An in-depth protocol to raise your Health Score — built from your readings, refreshed each week.</div></div><div class="badge">Personalized</div></div>
+
+    <div class="target">
+      <div class="t-end"><div class="k">Now</div><div class="v">84</div></div>
+      <div class="t-bar"><div class="t-fill" id="tfill"></div><div class="t-goal" id="tgoal"></div></div>
+      <div class="t-end"><div class="k">Target</div><div class="v sage">90</div></div>
+    </div>
+    <div class="t-cap">Your 4-week target if you stay consistent</div>
+
+    <div class="focus">
+      <div class="focus-k">This week's focus</div>
+      <div class="chips"><span class="chip">Post-meal walks</span><span class="chip">Earlier, lighter dinners</span><span class="chip">Magnesium nightly</span></div>
+    </div>
+
+    <div id="domains"></div>
+
+    <div class="proj">Stay consistent with this and your readings project a Health Score near <b>90</b> within four weeks — driven mostly by lifting Activity and steadying Metabolic.</div>
+  </div>
+</div>
+
+<script>
+  const hex=h=>({r:parseInt(h.slice(1,3),16),g:parseInt(h.slice(3,5),16),b:parseInt(h.slice(5,7),16)});
+  const hexA=(h,a)=>{const c=hex(h);return`rgba(${c.r},${c.g},${c.b},${a})`;};
+
+  // target bar (scale 70..95)
+  const sc=v=>((v-70)/25*100);
+  document.getElementById('tfill').style.width=sc(84).toFixed(1)+'%';
+  document.getElementById('tgoal').style.left=sc(90).toFixed(1)+'%';
+
+  const ICONS={
+    leaf:'<path d="M5 21c0-9 7-16 16-16 0 9-7 16-16 16z"/><path d="M9 17c2-4 5-6 8-7"/>',
+    pill:'<rect x="3.5" y="8.5" width="17" height="7" rx="3.5" transform="rotate(-35 12 12)"/><line x1="12" y1="6" x2="12" y2="18" transform="rotate(-35 12 12)"/>',
+    drop:'<path d="M12 3s6 7 6 11a6 6 0 01-12 0c0-4 6-11 6-11z"/>',
+    activity:'<path d="M3 12h4l2.5-7 4 14 2.5-7H21"/>',
+    moon:'<path d="M21 12.8A9 9 0 1111.2 3 7 7 0 0021 12.8z"/>',
+    wind:'<path d="M3 8h11a3 3 0 100-6 3 3 0 00-2.8 2"/><path d="M3 16h15a3 3 0 110 6 3 3 0 01-2.8-2"/><path d="M3 12h7"/>'
+  };
+  const DOM=[
+    {ic:'leaf',c:'#5dccae',title:'Nutrition',sum:'Anti-inflammatory, protein-forward eating.',lifts:'Metabolic · Heart',steps:[
+      'Build each meal around a <b>palm of protein</b> and two fists of vegetables.',
+      'Add omega-3 rich foods — wild salmon, sardines, walnuts, flax — about 3× a week.',
+      'Finish eating <b>~3 hours before bed</b> and keep dinners on the lighter side.',
+      'Cut added sugar and refined carbs, especially in the evening.']},
+    {ic:'pill',c:'#9bb0a5',title:'Supplements',sum:'A simple, targeted daily stack.',lifts:'Recovery · Sleep',link:'View options in your Lab',steps:[
+      '<b>Magnesium glycinate</b> in the evening — supports deep sleep and calm.',
+      '<b>Omega-3 (EPA/DHA)</b> with a meal — supports heart and recovery.',
+      '<b>Vitamin D3 + K2</b> — test your levels first, then dose to target.',
+      '<b>Ashwagandha (KSM-66)</b> in the evening if stress runs high.']},
+    {ic:'drop',c:'#a98fc4',title:'Essential oils',sum:'Aromatherapy for calm and recovery.',lifts:'Sleep · Resilience',steps:[
+      'Diffuse <b>lavender</b> in the bedroom ~30 min before sleep.',
+      'Use <b>frankincense or cedarwood</b> during your evening wind-down.',
+      '<b>Peppermint</b> in the morning for alertness and focus.',
+      '<b>Eucalyptus</b> in the shower to support easy breathing.']},
+    {ic:'activity',c:'#d3a253',title:'Movement',sum:'Build a daily activity base.',lifts:'Activity · Heart',steps:[
+      'Walk <b>10–15 min after meals</b> — steadies blood sugar and adds steps.',
+      '2–3 easy <b>zone-2 cardio</b> sessions a week (conversational pace, 30–40 min).',
+      'One <b>strength session</b> for muscle and metabolic health.',
+      'Break up long sitting — stand or move every hour.']},
+    {ic:'moon',c:'#5aa0e6',title:'Sleep',sum:'Protect a consistent, restorative night.',lifts:'Recovery · Resilience',steps:[
+      'Fixed <b>lights-out near 10:45pm</b>, even on weekends.',
+      'Dim screens and lights <b>30–60 min before bed</b>.',
+      'Keep the room cool (~65°F) and fully dark.',
+      'Get <b>morning sunlight</b> within an hour of waking to anchor your rhythm.']},
+    {ic:'wind',c:'#f0a890',title:'Stress & mind',sum:'Downregulate every day.',lifts:'Resilience · Recovery',steps:[
+      '<b>5 minutes of slow breathing</b> (longer exhales) once a day.',
+      'Get outside daylight — especially morning sun.',
+      'Protect one evening wind-down block with no work.',
+      'Keep one true <b>rest day</b> a week from hard training.']},
+  ];
+  function render(){
+    document.getElementById('domains').innerHTML=DOM.map((d,i)=>`
+      <div class="dom" data-i="${i}">
+        <div class="dom-head">
+          <div class="dom-ic" style="background:${hexA(d.c,0.13)};border:1px solid ${hexA(d.c,0.26)}"><svg viewBox="0 0 24 24" style="stroke:${d.c}">${ICONS[d.ic]}</svg></div>
+          <div class="dom-main"><div class="dom-title">${d.title}</div><div class="dom-sum">${d.sum}</div></div>
+          <svg class="dom-chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div class="dom-body">
+          <div class="lifts">LIFTS · <b>${d.lifts}</b></div>
+          ${d.steps.map(s=>`<div class="step"><span class="ck"></span><span class="tx">${s}</span></div>`).join('')}
+          ${d.link?`<div class="dom-link">${d.link}<svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>`:''}
+        </div>
+      </div>`).join('');
+    document.querySelectorAll('.dom').forEach(el=>el.querySelector('.dom-head').addEventListener('click',()=>el.classList.toggle('open')));
+  }
+  render();
+</script>
+</body>
+</html>
