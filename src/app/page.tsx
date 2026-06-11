@@ -304,8 +304,8 @@ export default function Home() {
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         .nura-content {
           width: 100%;
-          max-width: 340px;
-          padding: 0 24px;
+          max-width: 100%;
+          padding: 0 16px;
           display: flex;
           flex-direction: column;
           align-items: stretch;
