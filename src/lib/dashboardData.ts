@@ -1303,3 +1303,96 @@ const OVERALL_HEALTH: OverallHealth = {
 export function getOverallHealth(): OverallHealth {
   return OVERALL_HEALTH;
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Health Plan (the dashboard's "Your health plan" section)
+//
+// A personalized protocol to raise the Health Score. SAMPLE seeds for now — in
+// production the focus chips, domain steps, and projection are AI-generated /
+// derived from the user's readings. `steps` and `projection` may contain trusted
+// <b> emphasis markup (seed content, never user input).
+// ─────────────────────────────────────────────────────────────────────────────
+export interface HealthPlanDomain {
+  key: string;
+  /** Icon key — leaf | pill | drop | activity | moon | wind. */
+  icon: string;
+  color: string;
+  title: string;
+  summary: string;
+  /** Which pillars this domain lifts, e.g. "Metabolic · Heart". */
+  lifts: string;
+  /** In-depth checklist steps (may contain trusted <b> markup). */
+  steps: string[];
+  /** Optional CTA route (e.g. /lab) + label. */
+  link?: string;
+  linkLabel?: string;
+}
+
+export interface HealthPlan {
+  subtitle: string;
+  /** Current Health Score + 4-week target, on a scaleMin…scaleMax bar. */
+  now: number;
+  target: number;
+  scaleMin: number;
+  scaleMax: number;
+  targetCaption: string;
+  /** "This week's focus" chips. */
+  focus: string[];
+  domains: HealthPlanDomain[];
+  /** Closing projection line (may contain trusted <b> markup). */
+  projection: string;
+}
+
+const HEALTH_PLAN: HealthPlan = {
+  subtitle: "An in-depth protocol to raise your Health Score — built from your readings, refreshed each week.",
+  now: 84,
+  target: 90,
+  scaleMin: 70,
+  scaleMax: 95,
+  targetCaption: "Your 4-week target if you stay consistent",
+  focus: ["Post-meal walks", "Earlier, lighter dinners", "Magnesium nightly"],
+  domains: [
+    { key: "nutrition", icon: "leaf", color: "#5dccae", title: "Nutrition", summary: "Anti-inflammatory, protein-forward eating.", lifts: "Metabolic · Heart", steps: [
+      "Build each meal around a <b>palm of protein</b> and two fists of vegetables.",
+      "Add omega-3 rich foods — wild salmon, sardines, walnuts, flax — about 3× a week.",
+      "Finish eating <b>~3 hours before bed</b> and keep dinners on the lighter side.",
+      "Cut added sugar and refined carbs, especially in the evening.",
+    ] },
+    { key: "supplements", icon: "pill", color: "#9bb0a5", title: "Supplements", summary: "A simple, targeted daily stack.", lifts: "Recovery · Sleep", link: "/lab", linkLabel: "View options in your Lab", steps: [
+      "<b>Magnesium glycinate</b> in the evening — supports deep sleep and calm.",
+      "<b>Omega-3 (EPA/DHA)</b> with a meal — supports heart and recovery.",
+      "<b>Vitamin D3 + K2</b> — test your levels first, then dose to target.",
+      "<b>Ashwagandha (KSM-66)</b> in the evening if stress runs high.",
+    ] },
+    { key: "essential-oils", icon: "drop", color: "#a98fc4", title: "Essential oils", summary: "Aromatherapy for calm and recovery.", lifts: "Sleep · Resilience", link: "/lab", linkLabel: "View options in your Lab", steps: [
+      "Diffuse <b>lavender</b> in the bedroom ~30 min before sleep.",
+      "Use <b>frankincense or cedarwood</b> during your evening wind-down.",
+      "<b>Peppermint</b> in the morning for alertness and focus.",
+      "<b>Eucalyptus</b> in the shower to support easy breathing.",
+    ] },
+    { key: "movement", icon: "activity", color: "#d3a253", title: "Movement", summary: "Build a daily activity base.", lifts: "Activity · Heart", steps: [
+      "Walk <b>10–15 min after meals</b> — steadies blood sugar and adds steps.",
+      "2–3 easy <b>zone-2 cardio</b> sessions a week (conversational pace, 30–40 min).",
+      "One <b>strength session</b> for muscle and metabolic health.",
+      "Break up long sitting — stand or move every hour.",
+    ] },
+    { key: "sleep", icon: "moon", color: "#5aa0e6", title: "Sleep", summary: "Protect a consistent, restorative night.", lifts: "Recovery · Resilience", steps: [
+      "Fixed <b>lights-out near 10:45pm</b>, even on weekends.",
+      "Dim screens and lights <b>30–60 min before bed</b>.",
+      "Keep the room cool (~65°F) and fully dark.",
+      "Get <b>morning sunlight</b> within an hour of waking to anchor your rhythm.",
+    ] },
+    { key: "stress", icon: "wind", color: "#f0a890", title: "Stress & mind", summary: "Downregulate every day.", lifts: "Resilience · Recovery", steps: [
+      "<b>5 minutes of slow breathing</b> (longer exhales) once a day.",
+      "Get outside daylight — especially morning sun.",
+      "Protect one evening wind-down block with no work.",
+      "Keep one true <b>rest day</b> a week from hard training.",
+    ] },
+  ],
+  projection: "Stay consistent with this and your readings project a Health Score near <b>90</b> within four weeks — driven mostly by lifting Activity and steadying Metabolic.",
+};
+
+/** Returns the Health Plan payload (sample seed values for now). */
+export function getHealthPlan(): HealthPlan {
+  return HEALTH_PLAN;
+}

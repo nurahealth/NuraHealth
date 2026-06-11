@@ -21,6 +21,7 @@ import ActiveEnergyTodayChart from "@/components/dashboard/ActiveEnergyTodayChar
 import RestingHrZoneBar from "@/components/dashboard/RestingHrZoneBar";
 import BodyTempCardRing from "@/components/dashboard/BodyTempCardRing";
 import OverallHealthCard from "@/components/dashboard/OverallHealthCard";
+import HealthPlanCard from "@/components/dashboard/HealthPlanCard";
 import { useTemperatureUnitStore, fmtMagUnit, deviationDirection } from "@/lib/temperatureUnit";
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
@@ -80,13 +81,13 @@ export default function DashboardPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router]);
 
-  if (authLoading) return <NuraPageShell maxWidth={860}><div /></NuraPageShell>;
+  if (authLoading) return <NuraPageShell maxWidth={480}><div /></NuraPageShell>;
 
   const now = new Date();
   const dateLabel = now.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
 
   return (
-    <NuraPageShell maxWidth={860}>
+    <NuraPageShell maxWidth={480}>
       <style>{`
         .dash-grid { display: grid; grid-template-columns: 1fr; gap: 14px; }
         @media (min-width: 640px) { .dash-grid { grid-template-columns: 1fr 1fr; gap: 16px; } }
@@ -113,7 +114,10 @@ export default function DashboardPage() {
         {data.sources.map((s) => <SourcePill key={s.id} source={s} />)}
       </div>
 
-      {/* 3 — Overall Health (replaces the old Readiness hero) */}
+      {/* 3 — Health Plan (sits directly above Overall Health) */}
+      <HealthPlanCard />
+
+      {/* 4 — Overall Health (replaces the old Readiness hero) */}
       <OverallHealthCard />
 
       {/* 4 — Metric grid */}

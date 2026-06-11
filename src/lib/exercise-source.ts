@@ -1,4 +1,4 @@
-// SERVER-ONLY. Central adapter for the external exercise catalog (currently WorkoutX).
+// SERVER-ONLY. Central adapter for the WorkoutX exercise catalog.
 //
 // To swap the data source later, change ONLY this file:
 //   • BASE_URL / authHeaders()  — where & how we call the provider
@@ -21,50 +21,57 @@ export interface ExerciseRecord {
   difficulty: string | null;
 }
 
-/**
- * Best-effort raw shape from WorkoutX. Field names mirror common exercise/GIF
- * APIs; the mapper is defensive about alternates so a provider tweak only
- * requires editing mapExercise(), not callers.
- */
+/** Raw exercise as returned by WorkoutX GET /v1/exercises (inside `data`). */
 interface RawExercise {
-  id?: string | number;
-  exerciseId?: string | number;
-  name?: string;
-  target?: string;
-  targetMuscles?: unknown;
-  secondaryMuscles?: unknown;
+  id: string | number;
+  name: string;
   bodyPart?: string;
-  bodyParts?: unknown;
+  target?: string;
+  secondaryMuscles?: unknown;
   equipment?: string;
-  equipments?: unknown;
   gifUrl?: string;
-  gif_url?: string;
   instructions?: unknown;
   difficulty?: string;
-  [key: string]: unknown;
 }
 
-// Provider endpoint. Override via env to point at the real WorkoutX host/path
-// without touching code. Default mirrors a RapidAPI-style host.
-const BASE_URL = (process.env.WORKOUTX_BASE_URL ?? 'https://workoutx.p.rapidapi.com').replace(/\/+$/, '');
-const PAGE_SIZE = 100;
-const MAX_PAGES = 1000; // hard safety stop (≈100k exercises)
+/** Envelope WorkoutX wraps the list in: { total, count, data: [...] }. */
+interface ListResponse {
+  total?: number;
+  count?: number;
+  data?: RawExercise[];
+}
 
-function requireApiKey(): string {
+const BASE_URL = (process.env.WORKOUTX_BASE_URL ?? 'https://api.workoutxapp.com').replace(/\/+$/, '');
+// Larger pages ⇒ fewer requests ⇒ stays well under the free 500/month quota.
+const PAGE_SIZE = 100;
+const MAX_PAGES = 1000; // hard safety stop
+// WorkoutX free tier: 30 requests / 60s. Space requests to stay under that
+// (~27/min) and back off when a 429 says the window is already full.
+const THROTTLE_MS = 2200;
+const MAX_RETRIES = 5;
+
+const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
+
+/** How long to wait after a 429, from Retry-After header or `resetAt` body, capped. */
+function rateLimitWaitMs(res: Response, body: { resetAt?: string } | null): number {
+  const retryAfter = res.headers.get('retry-after');
+  if (retryAfter && Number.isFinite(Number(retryAfter))) {
+    return Math.min(Math.max(Number(retryAfter) * 1000, 1000), 65000);
+  }
+  if (body?.resetAt) {
+    const delta = new Date(body.resetAt).getTime() - Date.now();
+    if (Number.isFinite(delta)) return Math.min(Math.max(delta + 500, 1000), 65000);
+  }
+  return 5000;
+}
+
+function authHeaders(): Record<string, string> {
   const key = process.env.WORKOUTX_API_KEY;
   if (!key) {
     throw new Error('WORKOUTX_API_KEY is not set — required to ingest the exercise catalog');
   }
-  return key;
-}
-
-function authHeaders(): Record<string, string> {
-  const key = requireApiKey();
-  // RapidAPI-style auth. If WorkoutX uses a plain bearer token instead, swap to:
-  //   return { Authorization: `Bearer ${key}` };
   return {
-    'x-rapidapi-key': key,
-    'x-rapidapi-host': new URL(BASE_URL).host,
+    'X-WorkoutX-Key': key,
     accept: 'application/json',
   };
 }
@@ -76,78 +83,82 @@ const asStringArray = (v: unknown): string[] =>
       ? [v]
       : [];
 
-const firstString = (...vals: unknown[]): string | null => {
-  for (const v of vals) {
-    if (typeof v === 'string' && v.trim() !== '') return v;
-    if (Array.isArray(v) && typeof v[0] === 'string' && v[0].trim() !== '') return v[0];
-  }
-  return null;
-};
+const cleanString = (v: unknown): string | null =>
+  typeof v === 'string' && v.trim() !== '' ? v : null;
 
 /**
- * THE central mapping function. One place to remap when the source changes.
+ * THE central mapping function — one place to remap when the source changes.
  * Returns null for records missing the minimum required fields (id + name).
  */
 export function mapExercise(raw: RawExercise): ExerciseRecord | null {
-  const rawId = raw.id ?? raw.exerciseId;
-  if (rawId === undefined || rawId === null || !raw.name) return null;
-
-  // target_muscles: prefer an explicit array, else the single `target`.
-  const target = raw.targetMuscles !== undefined ? asStringArray(raw.targetMuscles) : asStringArray(raw.target);
-
+  if (raw.id === undefined || raw.id === null || !raw.name) return null;
   return {
-    id: String(rawId),
+    id: String(raw.id),
     name: String(raw.name),
-    target_muscles: target,
+    // WorkoutX exposes a single `target` muscle — wrap it into our array column.
+    target_muscles: asStringArray(raw.target),
     secondary_muscles: asStringArray(raw.secondaryMuscles),
-    body_part: firstString(raw.bodyPart, raw.bodyParts),
-    equipment: firstString(raw.equipment, raw.equipments),
-    gif_url: firstString(raw.gifUrl, raw.gif_url),
+    body_part: cleanString(raw.bodyPart),
+    equipment: cleanString(raw.equipment),
+    gif_url: cleanString(raw.gifUrl),
     instructions: asStringArray(raw.instructions),
-    difficulty: firstString(raw.difficulty),
+    difficulty: cleanString(raw.difficulty),
   };
 }
 
-/** Extract the array of raw rows from whatever envelope the API returns. */
-function extractRows(json: unknown): RawExercise[] {
-  if (Array.isArray(json)) return json as RawExercise[];
-  if (json && typeof json === 'object') {
-    const obj = json as Record<string, unknown>;
-    for (const key of ['data', 'exercises', 'results', 'items']) {
-      if (Array.isArray(obj[key])) return obj[key] as RawExercise[];
-    }
-  }
-  return [];
-}
-
 /**
- * Pull the full catalog, paginating until a short/empty page is returned.
- * Returns mapped, source-shape-agnostic records (callers dedupe + upsert).
+ * Pull the full catalog via the paginated LIST endpoint:
+ *   GET /v1/exercises?limit=&offset=  →  { total, count, data: [...] }
+ * Advances `offset` until we've fetched `total` rows (one request per page,
+ * never one-per-exercise), so a full ingest is ~total/PAGE_SIZE requests.
  */
 export async function fetchAllExercises(
-  opts?: { onPage?: (info: { page: number; received: number; total: number }) => void },
+  opts?: { onPage?: (info: { offset: number; received: number; total: number }) => void },
 ): Promise<ExerciseRecord[]> {
   const out: ExerciseRecord[] = [];
+  let offset = 0;
+  let total = Number.POSITIVE_INFINITY;
 
   for (let page = 0; page < MAX_PAGES; page++) {
-    const offset = page * PAGE_SIZE;
-    const url = `${BASE_URL}/exercises?limit=${PAGE_SIZE}&offset=${offset}`;
+    if (offset >= total) break;
 
-    const res = await fetch(url, { headers: authHeaders(), cache: 'no-store' });
-    if (!res.ok) {
-      const body = await res.text().catch(() => '');
-      throw new Error(`WorkoutX request failed (${res.status}) at offset ${offset}: ${body.slice(0, 300)}`);
+    const url = `${BASE_URL}/v1/exercises?limit=${PAGE_SIZE}&offset=${offset}`;
+
+    // Fetch one page, retrying with backoff while the rate-limit window is full.
+    let json: ListResponse | null = null;
+    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+      const res = await fetch(url, { headers: authHeaders(), cache: 'no-store' });
+
+      if (res.status === 429) {
+        const body = (await res.json().catch(() => null)) as { resetAt?: string } | null;
+        if (attempt === MAX_RETRIES) {
+          throw new Error(`WorkoutX rate limit not clearing at offset ${offset} after ${MAX_RETRIES} retries`);
+        }
+        await sleep(rateLimitWaitMs(res, body));
+        continue;
+      }
+      if (!res.ok) {
+        const body = await res.text().catch(() => '');
+        throw new Error(`WorkoutX request failed (${res.status}) at offset ${offset}: ${body.slice(0, 300)}`);
+      }
+      json = (await res.json()) as ListResponse;
+      break;
     }
 
-    const rows = extractRows(await res.json());
+    const rows = Array.isArray(json?.data) ? json!.data! : [];
+    if (typeof json?.total === 'number') total = json.total;
+
     for (const r of rows) {
       const mapped = mapExercise(r);
       if (mapped) out.push(mapped);
     }
 
-    opts?.onPage?.({ page, received: rows.length, total: out.length });
+    opts?.onPage?.({ offset, received: rows.length, total: Number.isFinite(total) ? total : out.length });
 
-    if (rows.length < PAGE_SIZE) break; // last page
+    if (rows.length === 0) break;      // nothing more to read
+    offset += rows.length;             // advance by what this page returned
+
+    if (offset < total) await sleep(THROTTLE_MS); // proactive throttle between pages
   }
 
   return out;
