@@ -9,16 +9,19 @@ import {
   getStepsDetail,
   getActiveEnergyDetail,
   getRestingHrDetail,
+  getBodyTempDetail,
   SOURCE_LABEL,
   type MetricStatus,
   type ConnectedSource,
-  type Readiness,
   type DashboardMetric,
 } from "@/lib/dashboardData";
 import MetricChart from "@/components/dashboard/MetricChart";
 import SleepDepthChart from "@/components/dashboard/SleepDepthChart";
 import ActiveEnergyTodayChart from "@/components/dashboard/ActiveEnergyTodayChart";
 import RestingHrZoneBar from "@/components/dashboard/RestingHrZoneBar";
+import BodyTempCardRing from "@/components/dashboard/BodyTempCardRing";
+import OverallHealthCard from "@/components/dashboard/OverallHealthCard";
+import { useTemperatureUnitStore, fmtMagUnit, deviationDirection } from "@/lib/temperatureUnit";
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
 const TEXT = "var(--nura-text-primary)";
@@ -27,7 +30,6 @@ const TEXT_TER = "var(--nura-text-tertiary)";
 const BORDER = "var(--nura-border)";
 const CARD = "var(--nura-card)";
 const SAGE = "var(--nura-sage)";
-const SAGE_RGB = "var(--nura-sage-rgb)";
 const SANS = "'Inter', system-ui, sans-serif";
 
 const STATUS: Record<MetricStatus, { color: string; rgb: string; label: string }> = {
@@ -60,8 +62,12 @@ export default function DashboardPage() {
   const router = useRouter();
   const [authLoading, setAuthLoading] = useState(true);
   const [firstName, setFirstName] = useState<string>("");
+  const initUnit = useTemperatureUnitStore((s) => s.initUnit);
 
   const data = getDashboardData();
+
+  // Hydrate the temperature-unit preference from storage / locale on mount.
+  useEffect(() => { initUnit(); }, [initUnit]);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -107,8 +113,8 @@ export default function DashboardPage() {
         {data.sources.map((s) => <SourcePill key={s.id} source={s} />)}
       </div>
 
-      {/* 3 — Readiness hero */}
-      <ReadinessCard readiness={data.readiness} />
+      {/* 3 — Overall Health (replaces the old Readiness hero) */}
+      <OverallHealthCard />
 
       {/* 4 — Metric grid */}
       <div className="dash-grid" style={{ marginTop: 16 }}>
@@ -162,70 +168,6 @@ function StatusPill({ status, size = "md" }: { status: MetricStatus; size?: "sm"
   );
 }
 
-// ── 3 · Readiness hero card ─────────────────────────────────────────────────────
-function ReadinessCard({ readiness }: { readiness: Readiness }) {
-  const max = Math.max(...readiness.week.map((d) => d.value), 100);
-
-  return (
-    <div style={{
-      position: "relative", overflow: "hidden",
-      borderRadius: 22, padding: 22,
-      background: `radial-gradient(120% 95% at 25% 0%, rgba(var(--nura-optimal-rgb),0.13), rgba(var(--nura-sage-rgb),0.04) 42%, transparent 72%), ${CARD}`,
-      border: `0.5px solid ${BORDER}`,
-    }}>
-      {/* Top row: label + status */}
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
-        <div style={{ ...EYEBROW, color: SAGE, paddingTop: 6 }}>Readiness</div>
-        <StatusPill status={readiness.status} />
-      </div>
-
-      {/* Score */}
-      <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginTop: 6 }}>
-        <span style={{
-          fontFamily: SANS, fontWeight: 600, color: TEXT, lineHeight: 1,
-          fontSize: "clamp(56px, 13vw, 76px)", letterSpacing: "-0.03em",
-        }}>
-          {readiness.score}
-        </span>
-        <span style={{ fontFamily: SANS, fontSize: 18, fontWeight: 500, color: TEXT_TER }}>/100</span>
-      </div>
-
-      {/* Summary */}
-      <p style={{ fontFamily: SANS, fontSize: 13.5, color: TEXT_SEC, margin: "10px 0 0", lineHeight: 1.55, maxWidth: 460 }}>
-        {readiness.summary}
-      </p>
-
-      {/* 7-day strip */}
-      <div style={{ display: "flex", alignItems: "flex-end", gap: 10, marginTop: 22, height: 92 }}>
-        {readiness.week.map((d, i) => {
-          const h = Math.max(8, (d.value / max) * 70);
-          return (
-            <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
-              <span style={{
-                fontFamily: SANS, fontSize: 10, fontWeight: 600,
-                color: d.isToday ? TEXT : TEXT_TER,
-              }}>
-                {d.value}
-              </span>
-              <div style={{
-                width: "100%", maxWidth: 26, height: h, borderRadius: 6,
-                background: d.isToday ? "#ffffff" : `rgba(${SAGE_RGB},0.22)`,
-              }} />
-              <span style={{
-                fontFamily: SANS, fontSize: 9.5, letterSpacing: "0.4px",
-                color: d.isToday ? TEXT_SEC : TEXT_TER,
-                fontWeight: d.isToday ? 600 : 400,
-              }}>
-                {d.day}
-              </span>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
 // ── 4 · Metric card ──────────────────────────────────────────────────────────────
 function MetricCard({ metric, onClick }: { metric: DashboardMetric; onClick: () => void }) {
   // Resting HR gets a bespoke treatment: value + daily delta, a zone bar (no
@@ -233,6 +175,12 @@ function MetricCard({ metric, onClick }: { metric: DashboardMetric; onClick: () 
   const isRestingHr = metric.id === "resting-hr";
   const rhr = isRestingHr ? getRestingHrDetail() : null;
   const rhrBelow = rhr ? rhr.baseline - rhr.value : 0;
+
+  // Body Temp gets a bespoke treatment: a cool→warm deviation ring (value in the
+  // center, no top value row) and a "7-day {avg} · within range" footer.
+  const isBodyTemp = metric.id === "body-temperature";
+  const bt = isBodyTemp ? getBodyTempDetail() : null;
+  const tempUnit = useTemperatureUnitStore((s) => s.unit);
 
   const display = isRestingHr && rhr ? String(rhr.value) : metric.displayValue ?? fmtNumber(metric.value);
   const showUnit = isRestingHr ? true : !metric.displayValue && metric.unit;
@@ -276,8 +224,8 @@ function MetricCard({ metric, onClick }: { metric: DashboardMetric; onClick: () 
         <span style={{ ...EYEBROW, fontSize: 9, color: TEXT_TER }}>{SOURCE_LABEL[metric.source]}</span>
       </div>
 
-      {/* Value + delta */}
-      <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginTop: 12 }}>
+      {/* Value + delta (Body Temp shows its value in the ring center instead) */}
+      <div style={{ display: isBodyTemp ? "none" : "flex", alignItems: "baseline", gap: 8, marginTop: 12 }}>
         <span style={{ fontFamily: SANS, fontSize: 30, fontWeight: 600, color: TEXT, lineHeight: 1, letterSpacing: "-0.02em" }}>
           {display}
         </span>
@@ -309,14 +257,16 @@ function MetricCard({ metric, onClick }: { metric: DashboardMetric; onClick: () 
       </div>
 
       {/* Visualization */}
-      <div style={{ marginTop: 14, marginBottom: 14, flex: 1, display: isRestingHr ? "flex" : undefined, alignItems: isRestingHr ? "center" : undefined }}>
-        {isRestingHr && rhr
-          ? <RestingHrZoneBar value={rhr.value} min={rhr.zoneMin} max={rhr.zoneMax} labels={rhr.zoneLabels} />
-          : metric.sleepDepth
-            ? <SleepDepthChart data={metric.sleepDepth} />
-            : isActiveEnergy && ae
-              ? <ActiveEnergyTodayChart d={ae} height={140} />
-              : <MetricChart data={metric.chart} highTech={isSteps} />}
+      <div style={{ marginTop: 14, marginBottom: 14, flex: 1, display: (isRestingHr || isBodyTemp) ? "flex" : undefined, alignItems: (isRestingHr || isBodyTemp) ? "center" : undefined }}>
+        {isBodyTemp && bt
+          ? <BodyTempCardRing devC={bt.tonight} unit={tempUnit} normalRange={bt.normalRange} />
+          : isRestingHr && rhr
+            ? <RestingHrZoneBar value={rhr.value} min={rhr.zoneMin} max={rhr.zoneMax} labels={rhr.zoneLabels} />
+            : metric.sleepDepth
+              ? <SleepDepthChart data={metric.sleepDepth} />
+              : isActiveEnergy && ae
+                ? <ActiveEnergyTodayChart d={ae} height={140} />
+                : <MetricChart data={metric.chart} highTech={isSteps} />}
       </div>
 
       {/* Steps stat strip — distance · flights · kcal · active time */}
@@ -333,27 +283,38 @@ function MetricCard({ metric, onClick }: { metric: DashboardMetric; onClick: () 
         </div>
       )}
 
-      {/* Footer caption + status */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginTop: "auto" }}>
-        <span style={{ fontFamily: SANS, fontSize: 11.5, color: TEXT_TER, lineHeight: 1.4 }}>
-          {isRestingHr && rhr
-            ? `${rhrBelow} bpm below your baseline`
-            : isActiveEnergy && ae ? `${aePct}% of your ${ae.moveGoal} goal` : metric.caption}
-        </span>
-        <span style={{ flexShrink: 0 }}>
-          {isRestingHr && rhr ? (
-            <span style={{
-              ...EYEBROW, fontSize: 9, color: "var(--nura-teal)", padding: "3px 8px", borderRadius: 999,
-              background: "rgba(var(--nura-teal-rgb),0.12)", border: "0.5px solid rgba(var(--nura-teal-rgb),0.35)",
-              whiteSpace: "nowrap",
-            }}>
-              {rhr.status}
-            </span>
-          ) : (
-            <StatusPill status={isActiveEnergy ? "good" : metric.status} size="sm" />
-          )}
-        </span>
-      </div>
+      {/* Footer — Body Temp uses a centered "7-day {avg} · within range" line */}
+      {isBodyTemp && bt ? (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 7, marginTop: "auto", fontFamily: SANS, fontSize: 11.5, color: TEXT_SEC }}>
+          <span style={{ width: 5, height: 5, borderRadius: "50%", background: "var(--nura-teal)", boxShadow: "0 0 6px var(--nura-teal)" }} />
+          <span>
+            {deviationDirection(bt.avg7) === "at"
+              ? <>7-day avg <b style={{ color: TEXT, fontWeight: 700 }}>right at baseline</b> · within range</>
+              : <>7-day avg <b style={{ color: TEXT, fontWeight: 700 }}>{fmtMagUnit(bt.avg7, tempUnit)} {deviationDirection(bt.avg7)}</b> · within range</>}
+          </span>
+        </div>
+      ) : (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginTop: "auto" }}>
+          <span style={{ fontFamily: SANS, fontSize: 11.5, color: TEXT_TER, lineHeight: 1.4 }}>
+            {isRestingHr && rhr
+              ? `${rhrBelow} bpm below your baseline`
+              : isActiveEnergy && ae ? `${aePct}% of your ${ae.moveGoal} goal` : metric.caption}
+          </span>
+          <span style={{ flexShrink: 0 }}>
+            {isRestingHr && rhr ? (
+              <span style={{
+                ...EYEBROW, fontSize: 9, color: "var(--nura-teal)", padding: "3px 8px", borderRadius: 999,
+                background: "rgba(var(--nura-teal-rgb),0.12)", border: "0.5px solid rgba(var(--nura-teal-rgb),0.35)",
+                whiteSpace: "nowrap",
+              }}>
+                {rhr.status}
+              </span>
+            ) : (
+              <StatusPill status={isActiveEnergy ? "good" : metric.status} size="sm" />
+            )}
+          </span>
+        </div>
+      )}
     </div>
   );
 }

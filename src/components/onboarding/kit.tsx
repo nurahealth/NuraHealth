@@ -352,14 +352,14 @@ export function GoalCard({ goal, selected, onSelect, shaking }: {
 }
 
 // ─── Step container ──────────────────────────────────────────────────────────
-// Fills the full height of the slide area and vertically centers a step's
-// content, so sparse steps feel as immersive as content-dense ones. `minHeight`
-// (not a fixed height) lets tall steps grow and scroll within the slide instead
-// of clipping. Shared so every step uses the same frame rather than a one-off.
+// Stacks a step's content at the TOP of the slide (heading → fields → in-flow
+// footer) so items group together, with any leftover space falling at the
+// bottom. Content-height (no forced fill / centering) lets tall steps scroll
+// within the slide. Shared so every step uses the same frame, not a one-off.
 export const STEP_SHELL_STYLE: CSSProperties = {
-  minWidth: '100%', minHeight: '100%',
-  display: 'flex', flexDirection: 'column', justifyContent: 'center',
-  padding: '24px 0 40px',
+  minWidth: '100%',
+  display: 'flex', flexDirection: 'column',
+  padding: '24px 0 0',
   animation: 'step-in 450ms ease 200ms both',
 };
 

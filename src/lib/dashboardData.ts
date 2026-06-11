@@ -282,7 +282,7 @@ const DASHBOARD_DATA: DashboardData = {
       },
     },
     {
-      id: "body-temp",
+      id: "body-temperature",
       name: "Body Temp",
       source: "oura",
       value: 0.3,
@@ -1120,4 +1120,186 @@ const RESTING_HR_DETAIL: RestingHrDetail = {
 /** Returns the Resting Heart Rate detail payload (sample Oura data for now). */
 export function getRestingHrDetail(): RestingHrDetail {
   return RESTING_HR_DETAIL;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Body Temperature detail (the /dashboard/body-temperature deep-dive view)
+//
+// Body temperature here is a DEVIATION from the user's personal baseline, not an
+// absolute temperature. ALL values below are stored in °C deviations; the UI
+// converts to °F as a DELTA (×1.8, no +32) via src/lib/temperatureUnit. Sample
+// Oura data for now; a real source can implement getBodyTempDetail() unchanged.
+// ─────────────────────────────────────────────────────────────────────────────
+export interface BodyTempDetail {
+  source: SourceId;
+  /** One-line subtitle under the h1. */
+  subtitle: string;
+  /** Tonight's deviation from baseline (°C) — hero value + Tonight tile. */
+  tonight: number;
+  /** 7-day average deviation (°C) — tile + card footer. */
+  avg7: number;
+  /** 30-day low / high deviation (°C) — the "30-day range" tile. */
+  low30: number;
+  high30: number;
+  /** Baseline deviation (always 0) — the dashed reference line. */
+  baseline: number;
+  /** Normal-range band [low, high] (°C) — shaded teal on the trend chart. */
+  normalRange: [number, number];
+  /** The notable mid-month spike (°C) — used in the captions / insight threshold. */
+  spike: number;
+  /** 30 nightly deviations (°C), oldest → today (last point is today). */
+  month: number[];
+  /** 7 nightly deviations (°C), oldest → today — the 7D view. */
+  week: number[];
+  /** Tonight's overnight deviation curve (°C), 12a → now — the 1D view. */
+  today: number[];
+  /** 4 weekly average deviations (°C), oldest → last week. */
+  weeklyAvg: number[];
+  /** Y-axis tick deviations (°C) for the 7D / 30D charts. */
+  monthTicks: number[];
+  /** Y-axis tick deviations (°C) for the 1D chart. */
+  dayTicks: number[];
+}
+
+const BODY_TEMP_DETAIL: BodyTempDetail = {
+  source: "oura",
+  subtitle: "Your skin temperature deviation tonight",
+  tonight: -0.2,
+  avg7: -0.1,
+  low30: -0.4,
+  high30: 0.5,
+  baseline: 0,
+  normalRange: [-0.3, 0.3],
+  spike: 0.5,
+  // 30 nightly deviations (°C), oldest → today; steady & slightly cool with a
+  // single +0.5 spike mid-month (a poor night's sleep), settling cool to −0.2.
+  month: [
+    0.0, 0.1, -0.1, 0.0, 0.2, 0.1, -0.1, 0.0, 0.3, 0.1,
+    0.0, -0.2, -0.1, 0.0, 0.1, -0.1, 0.5, 0.3, 0.1, 0.0,
+    -0.1, -0.2, -0.1, 0.0, -0.2, -0.1, -0.2, -0.3, -0.1, -0.2,
+  ],
+  // Last 7 nights, oldest → today.
+  week: [-0.1, 0.0, -0.2, -0.1, -0.2, -0.3, -0.2],
+  // Tonight's overnight curve, 12a → now: dips to an early-morning low then eases.
+  today: [0.1, 0.0, -0.1, -0.2, -0.3, -0.4, -0.3, -0.2, -0.1, -0.1, -0.2],
+  // 4 weekly averages, oldest → last week (drifting cool; last is coolest).
+  weeklyAvg: [0.1, -0.1, -0.1, -0.2],
+  monthTicks: [-0.4, 0, 0.4],
+  dayTicks: [-0.4, -0.2, 0, 0.2],
+};
+
+/** Returns the Body Temperature detail payload (sample Oura data for now). */
+export function getBodyTempDetail(): BodyTempDetail {
+  return BODY_TEMP_DETAIL;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Overall Health (the dashboard's top "Overall health" section)
+//
+// A single Health Score blended from six pillars, plus a personalized plan. All
+// values below are SAMPLE seeds — the scores, health age/percentile, and plan
+// copy will later be derived/generated from the user's real data; the UI only
+// reads these typed shapes.
+// ─────────────────────────────────────────────────────────────────────────────
+export type HealthTrend = "up" | "down" | "flat";
+
+export interface HealthPillar {
+  key: string;
+  label: string;
+  score: number;
+  trend: HealthTrend;
+  /** Pillar accent color (hex). */
+  color: string;
+  /** Angle (deg) of the pillar's spoke on the ring. */
+  ang: number;
+  /** One-line summary — also the "What it measures" field. */
+  measures: string;
+  /** Which metrics / devices feed this pillar. */
+  builtFrom: string;
+  /** Plain-language interpretation of the current score. */
+  reading: string;
+}
+
+export interface HealthPlanItem {
+  /** Icon key — maps to an inline SVG chip in the card. */
+  icon: string;
+  color: string;
+  title: string;
+  /** Always-visible one-line summary. */
+  summary: string;
+  /** Personalized guidance shown when expanded. */
+  body: string;
+  /** Optional CTA link (e.g. Supplements → /lab). */
+  link?: string;
+  linkLabel?: string;
+}
+
+export interface OverallHealth {
+  score: number;
+  /** Week-over-week change in the score (signed). */
+  weeklyTrend: number;
+  status: string;
+  pillars: HealthPillar[];
+  healthAge: { value: number; note: string };
+  percentile: { value: string; note: string };
+  bestPillar: { label: string; note: string };
+  plan: HealthPlanItem[];
+}
+
+const OVERALL_HEALTH: OverallHealth = {
+  score: 84,
+  weeklyTrend: 3,
+  status: "Thriving",
+  pillars: [
+    { key: "recovery", label: "Recovery", score: 88, trend: "up", color: "#5dccae", ang: -90,
+      measures: "How well your nervous system has bounced back.",
+      builtFrom: "Overnight HRV, resting & sleeping heart rate.",
+      reading: "Strong — your body is well-prepared for stress and training today." },
+    { key: "heart", label: "Heart", score: 82, trend: "up", color: "#f0a890", ang: -30,
+      measures: "Your cardiovascular health and efficiency.",
+      builtFrom: "Resting & active heart rate, HRV, heart-rate recovery.",
+      reading: "Solid — your heart is working efficiently. Keep regular aerobic work in your week." },
+    { key: "metabolic", label: "Metabolic", score: 79, trend: "flat", color: "#e0a23e", ang: 30,
+      measures: "How your body manages energy and temperature.",
+      builtFrom: "Body-temperature deviation, respiratory rate, recovery balance.",
+      reading: "Good, with a little room. Steady night-to-night — no red flags." },
+    { key: "activity", label: "Activity", score: 74, trend: "down", color: "#d3a253", ang: 90,
+      measures: "Your daily movement and exercise load.",
+      builtFrom: "Steps, active energy, workouts, sedentary time.",
+      reading: "Your lowest pillar. More daily movement here lifts every other score." },
+    { key: "sleep", label: "Sleep", score: 86, trend: "up", color: "#5aa0e6", ang: 150,
+      measures: "The quantity and quality of your sleep.",
+      builtFrom: "Total sleep, deep & REM time, efficiency, timing.",
+      reading: "Strong — restorative sleep is doing much of the heavy lifting in your recovery." },
+    { key: "resilience", label: "Resilience", score: 84, trend: "up", color: "#9bb0a5", ang: 210,
+      measures: "Your capacity to handle stress over time.",
+      builtFrom: "HRV trend, sleep consistency, recovery patterns.",
+      reading: "Robust — you're adapting well to your current load." },
+  ],
+  healthAge: { value: 38, note: "4 yrs younger" },
+  percentile: { value: "Top 18%", note: "for your age" },
+  bestPillar: { label: "Recovery", note: "88 · strong" },
+  plan: [
+    { icon: "move", color: "#d3a253", title: "Move more",
+      summary: "Activity is your one lagging pillar at 74.",
+      body: "Activity is your one lagging pillar at 74. A daily 20-minute walk and landing closer to 9k steps would lift your score faster than anything else." },
+    { icon: "moon", color: "#5aa0e6", title: "Lock a consistent bedtime",
+      summary: "Your sleep timing drifts late.",
+      body: "Your sleep timing drifts late. A consistent bedtime — even on weekends — would push Recovery and Resilience higher still." },
+    { icon: "fork", color: "#5dccae", title: "Eating habits",
+      summary: "Anchor protein and fiber earlier in the day.",
+      body: "Front-loading protein and fiber earlier in the day steadies energy and supports your Metabolic pillar. Aim for a protein-forward breakfast and keep dinners lighter and earlier." },
+    { icon: "sugar", color: "#e0a23e", title: "Ease off added sugar",
+      summary: "Trim the evening sweets and sugary drinks.",
+      body: "Added sugar late in the day nudges your overnight temperature and heart rate up, which can blunt recovery. Cutting back on evening sweets and sugary drinks is an easy win for Metabolic and Recovery." },
+    { icon: "pill", color: "#f0a890", title: "Supplements",
+      summary: "A couple of targeted basics could help.",
+      body: "Based on your readings, magnesium for sleep depth and omega-3s for cardiovascular support are worth a look. Nothing here is essential — they're small levers on pillars you're already doing well on.",
+      link: "/lab", linkLabel: "View options in your Lab →" },
+  ],
+};
+
+/** Returns the Overall Health payload (sample seed values for now). */
+export function getOverallHealth(): OverallHealth {
+  return OVERALL_HEALTH;
 }

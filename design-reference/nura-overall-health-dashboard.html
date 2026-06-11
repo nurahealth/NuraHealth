@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NŪRA — Overall Health dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fraunces:ital,opsz,wght@0,9..144,400;1,9..144,500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0b0c; --text:#ebe6d8; --muted:rgba(235,230,216,0.58); --faint:rgba(235,230,216,0.32);
+    --sage:#9bb0a5; --teal:#5dccae; --blue:#5aa0e6; --rose:#f0a890; --gold:#d3a253; --coral:#e8745a; --amber:#e0a23e;
+    --glass:rgba(22,25,27,0.55); --glass-line:rgba(235,230,216,0.10);
+  }
+  *{box-sizing:border-box; margin:0; padding:0; -webkit-font-smoothing:antialiased; font-variant-numeric:tabular-nums;}
+  body{font-family:'Inter',sans-serif; background:var(--bg); min-height:100vh; color:var(--text); position:relative; overflow-x:hidden; padding:28px 0;}
+  .aurora{position:fixed; inset:0; pointer-events:none; z-index:0; background:radial-gradient(68% 36% at 50% 18%, rgba(93,204,174,0.13) 0%, rgba(155,176,165,0.05) 44%, rgba(10,11,12,0) 72%);}
+  .grain{position:fixed; inset:0; pointer-events:none; z-index:1; opacity:.05; mix-blend-mode:overlay; background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");}
+  .page{position:relative; z-index:2; width:412px; max-width:100%; margin:0 auto; padding:0 16px;}
+
+  .card{position:relative; background:var(--glass); -webkit-backdrop-filter:blur(24px) saturate(1.2); backdrop-filter:blur(24px) saturate(1.2); border:1px solid var(--glass-line); border-radius:24px; padding:20px 16px 18px; overflow:hidden; box-shadow:inset 0 1px 0 rgba(235,230,216,0.10), 0 22px 60px rgba(0,0,0,.45);}
+  .card::before{content:""; position:absolute; left:50%; top:120px; width:300px; height:300px; transform:translate(-50%,-50%); pointer-events:none; background:radial-gradient(circle, rgba(93,204,174,0.12) 0%, rgba(93,204,174,0) 62%);}
+  .head{display:flex; align-items:flex-start; justify-content:space-between; padding:0 4px; position:relative;}
+  .ttl{font-family:'Fraunces',Georgia,serif; font-size:22px; letter-spacing:-.2px;} .ttl .em{font-style:italic; color:var(--sage);}
+  .sub{font-size:12px; color:var(--faint); margin-top:3px;}
+  .badge{font-size:10px; font-weight:700; letter-spacing:.8px; text-transform:uppercase; color:var(--teal); border:1px solid rgba(93,204,174,0.4); padding:5px 11px; border-radius:999px; background:rgba(93,204,174,0.07); white-space:nowrap;}
+  .hero{position:relative;} .hero svg{width:100%; height:auto; display:block;}
+
+  .explainer{font-size:12.5px; line-height:1.5; color:var(--muted); margin-top:2px; padding:0 4px;}
+  .explainer b{color:var(--text); font-weight:600;}
+  .hint{font-size:11px; color:var(--sage); font-weight:600; text-align:center; margin-top:12px; letter-spacing:.2px;}
+
+  .pillars{margin-top:6px;}
+  .pill{border-top:1px solid rgba(235,230,216,0.07);}
+  .pill-head{display:flex; align-items:center; gap:11px; padding:13px 2px; cursor:pointer;}
+  .pill-head .dot{width:9px; height:9px; border-radius:50%; flex:none;}
+  .pill-head .nm{font-size:14px; font-weight:700; flex:1;}
+  .pill-head .sc{font-size:15px; font-weight:700;} .pill-head .tr{font-size:9px; margin-left:3px;}
+  .pill-head .chev{width:16px; height:16px; stroke:var(--faint); fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; transition:transform .2s; flex:none;}
+  .pill.open .chev{transform:rotate(180deg);}
+  .pill-sum{font-size:12px; color:var(--muted); margin:-6px 0 0 20px; padding-bottom:11px;}
+  .pill-body{display:none; padding:2px 2px 15px 20px;}
+  .pill.open .pill-body{display:block;}
+  .pb-row{margin-bottom:11px;} .pb-row:last-child{margin-bottom:0;}
+  .pb-k{font-size:9.5px; letter-spacing:1px; text-transform:uppercase; color:var(--faint); font-weight:700; margin-bottom:3px;}
+  .pb-v{font-size:13px; line-height:1.5; color:rgba(235,230,216,0.82);} .pb-v b{color:var(--text); font-weight:600;}
+
+  .statstrip{display:flex; margin-top:8px; border-top:1px solid rgba(235,230,216,0.08); border-bottom:1px solid rgba(235,230,216,0.08);}
+  .stat{flex:1; text-align:center; padding:12px 6px;} .stat + .stat{border-left:1px solid rgba(235,230,216,0.07);}
+  .stat .k{font-size:9px; letter-spacing:.8px; text-transform:uppercase; color:var(--faint); font-weight:600;}
+  .stat .v{font-size:18px; font-weight:700; margin-top:4px; letter-spacing:-.4px;}
+  .stat .x{font-size:10px; color:var(--teal); font-weight:600; margin-top:2px;} .stat .x.mut{color:var(--faint);}
+  .improve{margin-top:14px; padding:15px; border-radius:16px; border:1px solid rgba(211,162,83,0.22); background:linear-gradient(135deg, rgba(211,162,83,0.08), rgba(232,116,90,0.03));}
+  .imp-title{font-size:10.5px; letter-spacing:1.4px; text-transform:uppercase; color:var(--gold); font-weight:700;}
+  .imp-item{display:flex; gap:11px; align-items:flex-start; margin-top:11px;} .imp-item .d{width:8px;height:8px;border-radius:50%;margin-top:5px;flex:none;}
+  .imp-item .it{font-size:13px; line-height:1.48; color:rgba(235,230,216,0.85);} .imp-item .it b{color:var(--text); font-weight:700;}
+</style>
+</head>
+<body>
+<div class="aurora"></div>
+<div class="grain"></div>
+<div class="page">
+  <div class="card">
+    <div class="head"><div><div class="ttl">Overall <span class="em">health</span></div><div class="sub">A complete read on how your body's doing · ▲ 3 this week</div></div><div class="badge">Thriving</div></div>
+    <div class="hero"><svg id="hero" viewBox="0 0 390 372"></svg></div>
+    <div class="explainer"><b>Your Health Score</b> is a weighted blend of six pillars — your single best read on how your whole body is doing right now.</div>
+    <div class="hint" id="hint">Tap a pillar to see what it means ↓</div>
+
+    <div class="pillars" id="pillars"></div>
+
+    <div class="statstrip">
+      <div class="stat"><div class="k">Health age</div><div class="v">38</div><div class="x">4 yrs younger</div></div>
+      <div class="stat"><div class="k">Percentile</div><div class="v">Top 18%</div><div class="x mut">for your age</div></div>
+      <div class="stat"><div class="k">Best pillar</div><div class="v">Recovery</div><div class="x">88 · strong</div></div>
+    </div>
+    <div class="improve">
+      <div class="imp-title">What to improve</div>
+      <div class="imp-item"><span class="d" style="background:var(--gold)"></span><div class="it"><b>Activity is your one lagging pillar at 74.</b> A daily 20-minute walk and landing closer to 9k steps would lift your score faster than anything else.</div></div>
+      <div class="imp-item"><span class="d" style="background:var(--blue)"></span><div class="it"><b>Your sleep timing drifts late.</b> A consistent bedtime would push Recovery and Resilience higher still.</div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const hex=h=>({r:parseInt(h.slice(1,3),16),g:parseInt(h.slice(3,5),16),b:parseInt(h.slice(5,7),16)});
+  const lerp=(a,b,t)=>Math.round(a+(b-a)*t);
+  const light=(h,a)=>{const c=hex(h);return`rgb(${lerp(c.r,255,a)},${lerp(c.g,255,a)},${lerp(c.b,255,a)})`;};
+  function colorAt(t,stops){t=Math.max(0,Math.min(1,t));for(let i=0;i<stops.length-1;i++){const[s0,c0]=stops[i],[s1,c1]=stops[i+1];if(t>=s0&&t<=s1){const k=(t-s0)/((s1-s0)||1),A=hex(c0),B=hex(c1);return`rgb(${lerp(A.r,B.r,k)},${lerp(A.g,B.g,k)},${lerp(A.b,B.b,k)})`;}}return stops[stops.length-1][1];}
+
+  const cx=195, cy=184, SCORE=84, frac0=SCORE/100;
+  const ramp=[[0,'#9bb0a5'],[0.45,'#5dccae'],[1,'#5aa0e6']];
+  const tArrow=t=>t==='up'?'▲':t==='down'?'▼':'–', tCol=t=>t==='up'?'#5dccae':t==='down'?'#e8745a':'rgba(235,230,216,0.4)';
+
+  const PILL=[
+    {key:'recovery',l:'Recovery',s:88,c:'#5dccae',ang:-90,t:'up',sum:'How well your nervous system has bounced back.',from:'Overnight HRV, resting & sleeping heart rate.',read:'Strong — your body is well-prepared for stress and training today.'},
+    {key:'heart',l:'Heart',s:82,c:'#f0a890',ang:-30,t:'up',sum:'Your cardiovascular health and efficiency.',from:'Resting & active heart rate, HRV, heart-rate recovery.',read:'Solid — your heart is working efficiently. Keep regular aerobic work in your week.'},
+    {key:'metabolic',l:'Metabolic',s:79,c:'#e0a23e',ang:30,t:'flat',sum:'How your body manages energy and temperature.',from:'Body-temperature deviation, respiratory rate, recovery balance.',read:'Good, with a little room. Steady night-to-night — no red flags.'},
+    {key:'activity',l:'Activity',s:74,c:'#d3a253',ang:90,t:'down',sum:'Your daily movement and exercise load.',from:'Steps, active energy, workouts, sedentary time.',read:'Your lowest pillar. More daily movement here lifts every other score.'},
+    {key:'sleep',l:'Sleep',s:86,c:'#5aa0e6',ang:150,t:'up',sum:'The quantity and quality of your sleep.',from:'Total sleep, deep & REM time, efficiency, timing.',read:'Strong — restorative sleep is doing much of the heavy lifting in your recovery.'},
+    {key:'resilience',l:'Resilience',s:84,c:'#9bb0a5',ang:210,t:'up',sum:'Your capacity to handle stress over time.',from:'HRV trend, sleep consistency, recovery patterns.',read:"Robust — you're adapting well to your current load."},
+  ];
+
+  function renderHero(sel){
+    const defs=`<defs>
+      <radialGradient id="core" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="rgba(93,204,174,0.22)"/><stop offset="60%" stop-color="rgba(93,204,174,0.06)"/><stop offset="100%" stop-color="rgba(93,204,174,0)"/></radialGradient>
+      <linearGradient id="parc" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#9bb0a5"/><stop offset="55%" stop-color="#5dccae"/><stop offset="100%" stop-color="#5aa0e6"/></linearGradient>
+      <linearGradient id="num" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#ffffff"/><stop offset="100%" stop-color="#cfe0d6"/></linearGradient></defs>`;
+    let depth=`<circle cx="${cx}" cy="${cy}" r="118" fill="url(#core)"/><circle cx="${cx}" cy="${cy}" r="100" fill="none" stroke="rgba(235,230,216,0.045)"/><circle cx="${cx}" cy="${cy}" r="110" fill="none" stroke="rgba(235,230,216,0.03)"/>`;
+    let odots='';for(let i=0;i<72;i++){const a=i/72*2*Math.PI;odots+=`<circle cx="${(cx+114*Math.cos(a)).toFixed(1)}" cy="${(cy+114*Math.sin(a)).toFixed(1)}" r="${i%6===0?1.1:0.7}" fill="rgba(235,230,216,0.16)"/>`;}
+    odots=`<g>${odots}<animateTransform attributeName="transform" type="rotate" from="0 ${cx} ${cy}" to="360 ${cx} ${cy}" dur="90s" repeatCount="indefinite"/></g>`;
+    let ring='';const N=168;
+    for(let i=0;i<N;i++){const frac=i/N,a=frac*2*Math.PI-Math.PI/2;const seed=(Math.sin(i*0.5)*0.5+0.5)*0.55+(Math.sin(i*1.7+1)*0.5+0.5)*0.45;const inner=66,outer=inner+4+seed*12,bright=frac<=frac0;const col=bright?colorAt(frac/frac0,ramp):'rgba(235,230,216,0.10)';const op=bright?(0.32+seed*0.55):0.5;const x1=cx+inner*Math.cos(a),y1=cy+inner*Math.sin(a),x2=cx+outer*Math.cos(a),y2=cy+outer*Math.sin(a);ring+=`<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="${col}" stroke-width="1.8" stroke-linecap="round" opacity="${(sel?op*0.5:op).toFixed(2)}"/>`;if(bright&&seed>0.82&&!sel)ring+=`<circle cx="${x2.toFixed(1)}" cy="${y2.toFixed(1)}" r="1.3" fill="${light(col,0.45)}" opacity="0.9"/>`;}
+    ring=`<g style="filter:drop-shadow(0 0 5px rgba(93,204,174,0.28))">${ring}</g>`;
+    const pr=60,circ=2*Math.PI*pr,vis=circ*frac0;const headA=(-90+360*frac0)*Math.PI/180,hx=cx+pr*Math.cos(headA),hy=cy+pr*Math.sin(headA);
+    const arc=`<circle cx="${cx}" cy="${cy}" r="${pr}" fill="none" stroke="rgba(235,230,216,0.06)" stroke-width="3"/><circle cx="${cx}" cy="${cy}" r="${pr}" fill="none" stroke="url(#parc)" stroke-width="3.2" stroke-linecap="round" stroke-dasharray="${vis.toFixed(1)} ${circ.toFixed(1)}" transform="rotate(-90 ${cx} ${cy})" style="filter:drop-shadow(0 0 5px rgba(93,204,174,0.55))" opacity="${sel?0.5:1}"/><circle cx="${hx.toFixed(1)}" cy="${hy.toFixed(1)}" r="3.4" fill="#fff" style="filter:drop-shadow(0 0 7px #5dccae)"><animate attributeName="opacity" values="1;0.45;1" dur="2.6s" repeatCount="indefinite"/></circle>`;
+    const cnum = sel ? `<text x="${cx}" y="${cy-2}" text-anchor="middle" font-family="Inter" font-size="32" font-weight="700" fill="${PILL.find(p=>p.key===sel).c}">${PILL.find(p=>p.key===sel).s}</text><text x="${cx}" y="${cy+18}" text-anchor="middle" font-family="Inter" font-size="9" font-weight="700" letter-spacing="1.4" fill="rgba(235,230,216,0.5)">${PILL.find(p=>p.key===sel).l.toUpperCase()}</text>`
+      : `<text x="${cx}" y="${cy+5}" text-anchor="middle" font-family="Inter" font-size="54" font-weight="700" fill="url(#num)" style="filter:drop-shadow(0 0 20px rgba(93,204,174,0.4))">${SCORE}</text><text x="${cx}" y="${cy+27}" text-anchor="middle" font-family="Inter" font-size="9" font-weight="700" letter-spacing="1.8" fill="rgba(235,230,216,0.45)">HEALTH SCORE</text>`;
+    let calls='';
+    PILL.forEach(d=>{const a=d.ang*Math.PI/180,ca=Math.cos(a),sa=Math.sin(a);const on=!sel||sel===d.key;const o=on?1:0.25;const big=sel===d.key;
+      calls+=`<line x1="${(cx+64*ca).toFixed(1)}" y1="${(cy+64*sa).toFixed(1)}" x2="${(cx+(big?86:82)*ca).toFixed(1)}" y2="${(cy+(big?86:82)*sa).toFixed(1)}" stroke="${d.c}" stroke-width="${big?3:2.2}" stroke-linecap="round" opacity="${(0.85*o).toFixed(2)}"/>`;
+      calls+=`<line x1="${(cx+92*ca).toFixed(1)}" y1="${(cy+92*sa).toFixed(1)}" x2="${(cx+110*ca).toFixed(1)}" y2="${(cy+110*sa).toFixed(1)}" stroke="${d.c}" stroke-width="1.3" opacity="${(0.45*o).toFixed(2)}"/>`;
+      calls+=`<circle cx="${(cx+92*ca).toFixed(1)}" cy="${(cy+92*sa).toFixed(1)}" r="${big?3.4:2.4}" fill="${d.c}" opacity="${o}" style="filter:drop-shadow(0 0 ${big?7:4}px ${d.c})"/>`;
+      const lx=cx+120*ca,ly=cy+120*sa,anchor=Math.abs(ca)<0.2?'middle':(ca>0?'start':'end'),vy=sa<-0.2?ly-3:ly;
+      calls+=`<text x="${lx.toFixed(1)}" y="${vy.toFixed(1)}" text-anchor="${anchor}" font-family="Inter" font-size="17.5" font-weight="700" fill="${d.c}" opacity="${o}">${d.s}<tspan font-size="9" dx="3" dy="-5" fill="${tCol(d.t)}">${tArrow(d.t)}</tspan></text><text x="${lx.toFixed(1)}" y="${(vy+11).toFixed(1)}" text-anchor="${anchor}" font-family="Inter" font-size="8.5" font-weight="600" letter-spacing="0.6" fill="rgba(235,230,216,0.5)" opacity="${o}">${d.l.toUpperCase()}</text>`;});
+    document.getElementById('hero').innerHTML=defs+depth+odots+ring+arc+cnum+calls;
+  }
+
+  let selected=null;
+  function renderPillars(){
+    document.getElementById('pillars').innerHTML=PILL.map(p=>`
+      <div class="pill ${selected===p.key?'open':''}" data-k="${p.key}">
+        <div class="pill-head"><span class="dot" style="background:${p.c}"></span><span class="nm">${p.l}</span><span class="sc" style="color:${p.c}">${p.s}<span class="tr" style="color:${tCol(p.t)}">${tArrow(p.t)}</span></span><svg class="chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></div>
+        <div class="pill-sum">${p.sum}</div>
+        <div class="pill-body">
+          <div class="pb-row"><div class="pb-k">What it measures</div><div class="pb-v">${p.sum}</div></div>
+          <div class="pb-row"><div class="pb-k">Built from</div><div class="pb-v">${p.from}</div></div>
+          <div class="pb-row"><div class="pb-k">Your reading · ${p.s}</div><div class="pb-v">${p.read}</div></div>
+        </div>
+      </div>`).join('');
+    document.querySelectorAll('.pill').forEach(el=>el.querySelector('.pill-head').addEventListener('click',()=>{
+      const k=el.dataset.k; selected = selected===k ? null : k;
+      document.getElementById('hint').style.display = selected ? 'none' : 'block';
+      renderPillars(); renderHero(selected);
+    }));
+  }
+
+  renderHero(null); renderPillars();
+</script>
+</body>
+</html>

@@ -5,33 +5,48 @@ import dynamic from 'next/dynamic';
 import { useThemeStore } from '@/lib/themeStore';
 import {
   BG, TEXT, TEXT_SEC, TEXT_TER, BORDER, SAGE, SAGE_HOV, SAGE_ON, SANS, MONO,
-  GLOBAL_CSS, Icon, StepQuestion, Hint, FieldLabel, SegmentedControl,
-  ChipToggle, GoalCard, ProgressBar, DoneCheck,
+  GLOBAL_CSS, StepQuestion, Hint, FieldLabel, SegmentedControl,
+  DoneCheck,
   STEP_SHELL_STYLE, STEP_SHELL_CENTERED_STYLE,
-  type GoalOption,
 } from '@/components/onboarding/kit';
+import { Dumbbell, Flame, Weight, Activity, PersonStanding, Sparkles, Building2, Home, Spline, Users } from 'lucide-react';
 import { saveFitnessOnboarding, type FitnessProfileData } from './actions';
 
 const TOTAL_STEPS = 7;
 
+// ─── Design-system palette (explicit, per spec) ──────────────────────────────
+const SAGE_HEX = '#9bb0a5';
+const SAGE_HOVER = '#abc0b5';
+const DARK = '#0d0d0e';
+const OFF = '235,230,216';               // off-white rgb (#ebe6d8)
+const TILE_BG = `rgba(${OFF},0.045)`;
+const TILE_BORDER = `rgba(${OFF},0.12)`;
+const TILE_LABEL = `rgba(${OFF},0.92)`;
+const TILE_DESC = `rgba(${OFF},0.5)`;
+
+// Fitness-only overrides. The shared GLOBAL_CSS presses every button to
+// scale(.97); the CTA / back instead nudge down 1px (higher specificity wins).
+const FIT_CSS = `
+  .fit-press:active { transform: translateY(1px) !important; }
+  .fit-tile { outline: none; }
+  .fit-tile:focus { outline: none; }
+  .fit-tile:focus-visible { outline: 2px solid rgba(155,176,165,0.55); outline-offset: 2px; }
+`;
+
 // BodyScan hero uses WebGL/canvas — load client-side only.
 const BodyScan = dynamic(() => import('@/components/BodyScan'), { ssr: false });
 
-// ─── Fitness goal icons (kit Icon wrapper — 22px, 1.5 stroke) ────────────────
-const MuscleIcon = () => <Icon><path d="M3 14c2-1 3-1 4 0l3 3M14 4l1 5 5 1M14 4c-2 1-2 3-1 5l3 6c1 2 3 3 5 2"/><circle cx="6" cy="11" r="1.4"/></Icon>;
-const FlameIcon = () => <Icon><path d="M12 3c1 4 4 5 4 9a4 4 0 0 1-8 0c0-2 1-3 2-4M12 21a4 4 0 0 0 4-4c0-2-2-3-4-6-2 3-4 4-4 6a4 4 0 0 0 4 4z"/></Icon>;
-const DumbbellIcon = () => <Icon><path d="M4 9v6M7 6.5v11M7 12h10M17 6.5v11M20 9v6"/></Icon>;
-const PulseIcon = () => <Icon><path d="M3 12h4l2-6 4 12 2-6h6"/></Icon>;
-const StretchIcon = () => <Icon><circle cx="12" cy="4" r="1.4"/><path d="M12 6v6m0 0l-4 8m4-8l4 8M7 9l5 1 5-1"/></Icon>;
-const SparkIcon = () => <Icon><path d="M12 3l1.6 4.8L18 9l-4.4 1.2L12 15l-1.6-4.8L6 9l4.4-1.2L12 3z"/></Icon>;
+// ─── Fitness goals (lucide icons, sage) ──────────────────────────────────────
+type IconCmp = React.ComponentType<{ size?: number; strokeWidth?: number; color?: string; style?: React.CSSProperties }>;
+interface FitGoal { id: string; Icon: IconCmp; label: string; desc: string }
 
-const FITNESS_GOALS: GoalOption[] = [
-  { id: 'muscle',    icon: <MuscleIcon />,   label: 'Build muscle' },
-  { id: 'fat',       icon: <FlameIcon />,    label: 'Lose fat' },
-  { id: 'strength',  icon: <DumbbellIcon />, label: 'Build strength' },
-  { id: 'endurance', icon: <PulseIcon />,    label: 'Improve endurance' },
-  { id: 'mobility',  icon: <StretchIcon />,  label: 'Mobility & flexibility' },
-  { id: 'general',   icon: <SparkIcon />,    label: 'General fitness' },
+const FITNESS_GOALS: FitGoal[] = [
+  { id: 'muscle',    Icon: Dumbbell,       label: 'Build muscle',           desc: 'Add size' },
+  { id: 'fat',       Icon: Flame,          label: 'Lose fat',               desc: 'Lean out and drop weight' },
+  { id: 'strength',  Icon: Weight,         label: 'Build strength',         desc: 'Get stronger, lift heavier' },
+  { id: 'endurance', Icon: Activity,       label: 'Improve endurance',      desc: 'Boost stamina and cardio' },
+  { id: 'mobility',  Icon: PersonStanding, label: 'Mobility & flexibility', desc: 'Move better, stay loose' },
+  { id: 'general',   Icon: Sparkles,       label: 'General fitness',        desc: 'Stay healthy and active' },
 ];
 
 export const GOAL_LABELS: Record<string, string> = Object.fromEntries(
@@ -39,8 +54,18 @@ export const GOAL_LABELS: Record<string, string> = Object.fromEntries(
 );
 
 const EXPERIENCE_OPTIONS = ['Beginner', 'Intermediate', 'Advanced'];
-const EQUIPMENT_OPTIONS = ['Full gym', 'Home equipment', 'Bodyweight only', 'Resistance bands', 'Dumbbells only'];
 const DAYS_OPTIONS = ['1', '2', '3', '4', '5', '6', '7'];
+
+// Equipment tiles — id matches the stored value; icons all visually distinct
+// (building/facility for Full gym, never a dumbbell).
+const EQUIPMENT: FitGoal[] = [
+  { id: 'Full gym',         Icon: Building2,      label: 'Full gym',         desc: 'Machines & free weights' },
+  { id: 'Home equipment',   Icon: Home,           label: 'Home equipment',   desc: 'A few basics at home' },
+  { id: 'Bodyweight only',  Icon: PersonStanding, label: 'Bodyweight only',  desc: 'No equipment needed' },
+  { id: 'Resistance bands', Icon: Spline,         label: 'Resistance bands', desc: 'Loops or tubes' },
+  { id: 'Dumbbells only',   Icon: Dumbbell,       label: 'Dumbbells only',   desc: 'Adjustable or fixed' },
+  { id: 'Group classes',    Icon: Users,          label: 'Group classes',    desc: 'Studio, gym, or online classes' },
+];
 
 interface FitState {
   primary_goal: string;
@@ -187,7 +212,56 @@ function Step1Welcome({ onNext, animKey }: { onNext: () => void; animKey: number
   );
 }
 
-// ─── Step 2: Primary goal (single-select goal cards) ─────────────────────────
+// ─── Shared selectable tile (goal cards + equipment) ─────────────────────────
+function OptionTile({ icon: Icon, label, desc, selected, onToggle }: {
+  icon: IconCmp; label: string; desc: string; selected: boolean; onToggle: () => void;
+}) {
+  const [hover, setHover] = useState(false);
+  return (
+    <button type="button" className="fit-tile" onClick={onToggle}
+      onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}
+      style={{
+        position: 'relative', width: '100%', textAlign: 'left', cursor: 'pointer',
+        appearance: 'none', WebkitAppearance: 'none', fontFamily: SANS,
+        padding: '14px 14px 15px', borderRadius: 16,
+        border: `1px solid ${selected || hover ? SAGE_HEX : TILE_BORDER}`,
+        background: selected ? SAGE_HEX : TILE_BG,
+        boxShadow: selected ? '0 8px 24px rgba(155,176,165,0.22)' : 'none',
+        color: selected ? DARK : TILE_LABEL,
+        transition: 'background 160ms ease, border-color 160ms ease, box-shadow 160ms ease',
+        display: 'flex', flexDirection: 'column', gap: 9,
+      }}>
+      {/* circular check — fills on select */}
+      <span style={{
+        position: 'absolute', top: 11, right: 11, width: 20, height: 20, borderRadius: '50%',
+        background: selected ? DARK : 'transparent',
+        border: selected ? 'none' : `1px solid rgba(${OFF},0.22)`,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        transition: 'all 160ms ease',
+      }}>
+        {selected && (
+          <svg width="11" height="11" viewBox="0 0 12 12" fill="none"
+            stroke={SAGE_HEX} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M2 6l3 3 5-5" strokeDasharray="14" strokeDashoffset="14"
+              style={{ animation: 'check-draw 280ms ease forwards' }} />
+          </svg>
+        )}
+      </span>
+      <Icon size={22} strokeWidth={1.7} color={selected ? DARK : SAGE_HEX}
+        style={{ width: 22, height: 22, flexShrink: 0 }} />
+      <span style={{ display: 'block' }}>
+        <span style={{ display: 'block', fontSize: 13.5, fontWeight: 600, lineHeight: 1.25, color: selected ? DARK : TILE_LABEL }}>
+          {label}
+        </span>
+        <span style={{ display: 'block', fontSize: 11.5, lineHeight: 1.35, marginTop: 3, color: selected ? 'rgba(13,13,14,0.62)' : TILE_DESC }}>
+          {desc}
+        </span>
+      </span>
+    </button>
+  );
+}
+
+// ─── Step 2: Primary goal (single-select) ────────────────────────────────────
 function Step2Goal({ value, onSelect, animKey }: {
   value: string; onSelect: (id: string) => void; animKey: number;
 }) {
@@ -195,10 +269,10 @@ function Step2Goal({ value, onSelect, animKey }: {
     <div key={animKey} style={STEP_SHELL_STYLE}>
       <StepQuestion text="What's your main goal?" active />
       <Hint text="Pick the one that matters most right now." />
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+      <div style={{ marginTop: 10, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
         {FITNESS_GOALS.map(g => (
-          <GoalCard key={g.id} goal={g} selected={value === g.id}
-            onSelect={() => onSelect(value === g.id ? '' : g.id)} shaking={false} />
+          <OptionTile key={g.id} icon={g.Icon} label={g.label} desc={g.desc}
+            selected={value === g.id} onToggle={() => onSelect(value === g.id ? '' : g.id)} />
         ))}
       </div>
     </div>
@@ -219,19 +293,28 @@ function Step3Experience({ value, onChange, animKey }: {
   );
 }
 
-// ─── Step 4: Equipment (chip-pill multi-select) ──────────────────────────────
+// ─── Step 4: Equipment (multi-select tile grid) ──────────────────────────────
 function Step4Equipment({ value, onToggle, animKey }: {
   value: string[]; onToggle: (e: string) => void; animKey: number;
 }) {
+  const count = value.length;
   return (
     <div key={animKey} style={STEP_SHELL_STYLE}>
       <div style={{ fontSize: 22, fontWeight: 600, color: TEXT, fontFamily: SANS, marginBottom: 6, letterSpacing: '-0.3px' }}>
         What do you have access to?
       </div>
       <Hint text="Select all that apply — NŪRA only programs what you can use." />
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-        {EQUIPMENT_OPTIONS.map(e => (
-          <ChipToggle key={e} label={e} selected={value.includes(e)} onToggle={() => onToggle(e)} />
+      <div style={{
+        fontSize: 11, fontFamily: MONO, letterSpacing: '1.5px', color: SAGE_HEX,
+        textTransform: 'uppercase', marginTop: 2, marginBottom: 14, minHeight: 14,
+        opacity: count ? 1 : 0, transition: 'opacity 160ms ease',
+      }}>
+        {count} selected
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+        {EQUIPMENT.map(e => (
+          <OptionTile key={e.id} icon={e.Icon} label={e.label} desc={e.desc}
+            selected={value.includes(e.id)} onToggle={() => onToggle(e.id)} />
         ))}
       </div>
     </div>
@@ -324,6 +407,115 @@ function Step7Done({ state, animKey }: { state: FitState; animKey: number }) {
   );
 }
 
+// ─── Thin segmented progress bar ─────────────────────────────────────────────
+function FitProgressBar({ step, total }: { step: number; total: number }) {
+  return (
+    <div style={{ display: 'flex', gap: 5, marginBottom: 18 }}>
+      {Array.from({ length: total }, (_, i) => (
+        <div key={i} style={{
+          flex: 1, height: 3, borderRadius: 99,
+          background: i + 1 <= step ? SAGE_HEX : `rgba(${OFF},0.12)`,
+          transition: 'background 260ms ease',
+        }} />
+      ))}
+    </div>
+  );
+}
+
+// ─── In-flow footer (back / Continue|Save / Skip) ────────────────────────────
+// Lives inside each step's slide (steps 2+), directly below the content, so the
+// buttons sit right under the cards instead of pinned to the screen bottom.
+function StepFooter({ step, isEdit, error, submitting, hovCta, setHovCta, onBack, onNext, onSubmit }: {
+  step: number; isEdit: boolean; error: string; submitting: boolean;
+  hovCta: boolean; setHovCta: (v: boolean) => void;
+  onBack: () => void; onNext: () => void; onSubmit: () => void;
+}) {
+  const backDisabled = step <= (isEdit ? 2 : 1);
+  return (
+    <div style={{ marginTop: 28, paddingBottom: 24 }}>
+      {error && (
+        <div style={{
+          marginBottom: 12, padding: '10px 14px', borderRadius: 10,
+          background: 'rgba(220,80,80,0.10)', border: '0.5px solid rgba(220,80,80,0.4)',
+          color: '#e08a8a', fontFamily: SANS, fontSize: 12, lineHeight: 1.5,
+        }}>
+          {error}
+        </div>
+      )}
+      <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+        <button className="fit-press" onClick={onBack} disabled={backDisabled} style={{
+          width: 54, height: 54, borderRadius: 14, flexShrink: 0,
+          background: `rgba(${OFF},0.04)`, border: `1px solid rgba(${OFF},0.14)`,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          cursor: backDisabled ? 'not-allowed' : 'pointer', color: `rgba(${OFF},0.85)`,
+          opacity: backDisabled ? 0.4 : 1, transition: 'border-color 160ms ease',
+        }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M19 12H5M11 6l-6 6 6 6"/>
+          </svg>
+        </button>
+
+        {step < TOTAL_STEPS ? (
+          <button
+            className="fit-press"
+            onClick={onNext}
+            onMouseEnter={() => setHovCta(true)}
+            onMouseLeave={() => setHovCta(false)}
+            style={{
+              flex: 1, height: 54, borderRadius: 14, border: 'none', cursor: 'pointer',
+              background: hovCta ? SAGE_HOVER : SAGE_HEX, color: DARK,
+              fontFamily: SANS, fontSize: 15, fontWeight: 600,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+              boxShadow: hovCta ? '0 12px 40px rgba(155,176,165,0.38)' : '0 10px 34px rgba(155,176,165,0.28)',
+              transition: 'background 160ms ease, box-shadow 160ms ease',
+            }}
+          >
+            Continue
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M5 12h14M13 6l6 6-6 6"/>
+            </svg>
+          </button>
+        ) : (
+          <button
+            className="fit-press"
+            onClick={onSubmit}
+            disabled={submitting}
+            onMouseEnter={() => setHovCta(true)}
+            onMouseLeave={() => setHovCta(false)}
+            style={{
+              flex: 1, height: 54, borderRadius: 14, border: 'none',
+              cursor: submitting ? 'not-allowed' : 'pointer',
+              background: hovCta && !submitting ? SAGE_HOVER : SAGE_HEX, color: DARK,
+              fontFamily: SANS, fontSize: 15, fontWeight: 600,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+              boxShadow: submitting ? 'none' : hovCta ? '0 12px 40px rgba(155,176,165,0.38)' : '0 10px 34px rgba(155,176,165,0.28)',
+              transition: 'background 160ms ease, box-shadow 160ms ease', opacity: submitting ? 0.7 : 1,
+            }}
+          >
+            {submitting ? 'Saving...' : isEdit ? 'Save changes' : 'Enter Fitness'}
+            {!submitting && (
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M5 12h14M13 6l6 6-6 6"/>
+              </svg>
+            )}
+          </button>
+        )}
+      </div>
+
+      {step >= 2 && step < TOTAL_STEPS && (
+        <button onClick={onNext} style={{
+          display: 'block', width: '100%', marginTop: 16,
+          background: 'none', border: 'none', cursor: 'pointer',
+          fontFamily: MONO, fontSize: 9.5, letterSpacing: '2.5px', color: `rgba(${OFF},0.4)`,
+          textTransform: 'uppercase', textAlign: 'center', padding: '6px 0',
+        }}>
+          SKIP THIS STEP
+        </button>
+      )}
+    </div>
+  );
+}
+
 // ─── Flow orchestrator ────────────────────────────────────────────────────────
 export default function FitnessOnboarding({ initial, onComplete }: {
   initial?: FitnessProfileData | null;
@@ -392,10 +584,16 @@ export default function FitnessOnboarding({ initial, onComplete }: {
   const stepLabel = String(step).padStart(2, '0') + ' / ' + String(TOTAL_STEPS).padStart(2, '0');
 
   return (
-    <div style={{ minHeight: '100dvh', background: BG, fontFamily: SANS, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+    <div style={{ position: 'relative', height: '100dvh', background: BG, fontFamily: SANS, display: 'flex', flexDirection: 'column', alignItems: 'center', overflow: 'hidden' }}>
       <style>{GLOBAL_CSS}</style>
+      <style>{FIT_CSS}</style>
 
-      <div style={{ width: '100%', maxWidth: 480, flex: 1, display: 'flex', flexDirection: 'column', padding: '0 20px' }}>
+      {/* Faint drifting sage plexus behind every step */}
+      <div style={{ position: 'absolute', inset: 0, zIndex: 0, opacity: 0.4, pointerEvents: 'none' }}>
+        <WelcomePlexus />
+      </div>
+
+      <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: 480, flex: 1, display: 'flex', flexDirection: 'column', padding: '0 20px' }}>
         {/* Top bar */}
         <div style={{ paddingTop: 20, paddingBottom: 0, flexShrink: 0 }}>
           {isEdit && (
@@ -413,7 +611,7 @@ export default function FitnessOnboarding({ initial, onComplete }: {
               {stepLabel}
             </span>
           </div>
-          <ProgressBar step={step} total={TOTAL_STEPS} />
+          <FitProgressBar step={step} total={TOTAL_STEPS} />
         </div>
 
         {/* Slide track */}
@@ -424,106 +622,30 @@ export default function FitnessOnboarding({ initial, onComplete }: {
             </div>
             <div style={slideStyle}>
               <Step2Goal value={state.primary_goal} onSelect={id => update('primary_goal', id)} animKey={animKeys[1]} />
+              <StepFooter step={2} isEdit={isEdit} error={error} submitting={submitting} hovCta={hovCta} setHovCta={setHovCta} onBack={back} onNext={next} onSubmit={handleSubmit} />
             </div>
             <div style={slideStyle}>
               <Step3Experience value={state.experience_level} onChange={v => update('experience_level', v)} animKey={animKeys[2]} />
+              <StepFooter step={3} isEdit={isEdit} error={error} submitting={submitting} hovCta={hovCta} setHovCta={setHovCta} onBack={back} onNext={next} onSubmit={handleSubmit} />
             </div>
             <div style={slideStyle}>
               <Step4Equipment value={state.equipment} onToggle={toggleEquipment} animKey={animKeys[3]} />
+              <StepFooter step={4} isEdit={isEdit} error={error} submitting={submitting} hovCta={hovCta} setHovCta={setHovCta} onBack={back} onNext={next} onSubmit={handleSubmit} />
             </div>
             <div style={slideStyle}>
               <Step5Days value={state.days_per_week} onChange={v => update('days_per_week', v)} animKey={animKeys[4]} />
+              <StepFooter step={5} isEdit={isEdit} error={error} submitting={submitting} hovCta={hovCta} setHovCta={setHovCta} onBack={back} onNext={next} onSubmit={handleSubmit} />
             </div>
             <div style={slideStyle}>
               <Step6Limitations value={state.limitations} onChange={v => update('limitations', v)} animKey={animKeys[5]} />
+              <StepFooter step={6} isEdit={isEdit} error={error} submitting={submitting} hovCta={hovCta} setHovCta={setHovCta} onBack={back} onNext={next} onSubmit={handleSubmit} />
             </div>
             <div style={slideStyle}>
               <Step7Done state={state} animKey={animKeys[6]} />
+              <StepFooter step={7} isEdit={isEdit} error={error} submitting={submitting} hovCta={hovCta} setHovCta={setHovCta} onBack={back} onNext={next} onSubmit={handleSubmit} />
             </div>
           </div>
         </div>
-
-        {/* Bottom controls (steps 2-TOTAL_STEPS) */}
-        {step > 1 && (
-          <div style={{ flexShrink: 0, paddingBottom: 40 }}>
-            {error && (
-              <div style={{
-                marginBottom: 12, padding: '10px 14px', borderRadius: 10,
-                background: 'rgba(220,80,80,0.10)', border: '0.5px solid rgba(220,80,80,0.4)',
-                color: '#e08a8a', fontFamily: SANS, fontSize: 12, lineHeight: 1.5,
-              }}>
-                {error}
-              </div>
-            )}
-            <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-              <button onClick={back} disabled={step <= (isEdit ? 2 : 1)} style={{
-                width: 44, height: 44, borderRadius: 12, flexShrink: 0,
-                background: 'var(--nura-surface-elevated)', border: `1px solid ${BORDER}`,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                cursor: step <= (isEdit ? 2 : 1) ? 'not-allowed' : 'pointer', color: TEXT_SEC,
-                opacity: step <= (isEdit ? 2 : 1) ? 0.4 : 1,
-              }}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M19 12H5M11 6l-6 6 6 6"/>
-                </svg>
-              </button>
-
-              {step < TOTAL_STEPS ? (
-                <button
-                  onClick={next}
-                  onMouseEnter={() => setHovCta(true)}
-                  onMouseLeave={() => setHovCta(false)}
-                  style={{
-                    flex: 1, height: 50, borderRadius: 14, border: 'none', cursor: 'pointer',
-                    background: hovCta ? SAGE_HOV : SAGE, color: SAGE_ON,
-                    fontFamily: SANS, fontSize: 15, fontWeight: 600,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-                    transition: 'background 200ms',
-                  }}
-                >
-                  Continue
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M5 12h14M13 6l6 6-6 6"/>
-                  </svg>
-                </button>
-              ) : (
-                <button
-                  onClick={handleSubmit}
-                  disabled={submitting}
-                  onMouseEnter={() => setHovCta(true)}
-                  onMouseLeave={() => setHovCta(false)}
-                  style={{
-                    flex: 1, height: 50, borderRadius: 14, border: 'none',
-                    cursor: submitting ? 'not-allowed' : 'pointer',
-                    background: hovCta && !submitting ? SAGE_HOV : SAGE,
-                    color: SAGE_ON, fontFamily: SANS, fontSize: 15, fontWeight: 600,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-                    transition: 'background 200ms', opacity: submitting ? 0.7 : 1,
-                  }}
-                >
-                  {submitting ? 'Saving...' : isEdit ? 'Save changes' : 'Enter Fitness'}
-                  {!submitting && (
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M5 12h14M13 6l6 6-6 6"/>
-                    </svg>
-                  )}
-                </button>
-              )}
-            </div>
-
-            {/* Skip (steps 2 through second-to-last) */}
-            {step >= 2 && step < TOTAL_STEPS && (
-              <button onClick={next} style={{
-                display: 'block', width: '100%', marginTop: 14,
-                background: 'none', border: 'none', cursor: 'pointer',
-                fontFamily: MONO, fontSize: 9, letterSpacing: '2px', color: TEXT_TER,
-                textTransform: 'uppercase', textAlign: 'center', padding: '4px 0',
-              }}>
-                SKIP THIS STEP
-              </button>
-            )}
-          </div>
-        )}
       </div>
     </div>
   );
