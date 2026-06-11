@@ -305,7 +305,7 @@ export default function Home() {
         .nura-content {
           width: 100%;
           max-width: 100%;
-          padding: 0 16px;
+          padding: 0 12px;
           display: flex;
           flex-direction: column;
           align-items: stretch;
