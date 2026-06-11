@@ -237,8 +237,8 @@ const DASHBOARD_DATA: DashboardData = {
     {
       id: "resting-hr",
       name: "Resting HR",
-      source: "apple-watch",
-      value: 54,
+      source: "oura",
+      value: 52,
       unit: "bpm",
       delta: { value: 2, dir: "down" },
       status: "good",
@@ -1034,4 +1034,90 @@ const ACTIVE_ENERGY_DETAIL: ActiveEnergyDetail = {
 /** Returns the Active Energy detail payload (sample Apple Watch data for now). */
 export function getActiveEnergyDetail(): ActiveEnergyDetail {
   return ACTIVE_ENERGY_DETAIL;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Resting Heart Rate detail (the /dashboard/resting-hr deep-dive view)
+//
+// Resting HR has no goal, so there's no ring — the hero is a big value plus a
+// zone bar. Sample Oura data for now; a real source can implement
+// getRestingHrDetail() without the detail UI changing.
+// ─────────────────────────────────────────────────────────────────────────────
+export interface RestingHrDetail {
+  source: SourceId;
+  /** One-line subtitle under the h1. */
+  subtitle: string;
+  /** Today's resting HR (bpm) — the hero value. */
+  value: number;
+  /** Change vs yesterday (bpm, positive = lower today) — card "▼ n vs yesterday". */
+  dayDelta: number;
+  /** Resting-HR status word, e.g. "Excellent" (drives the hero pill). */
+  status: string;
+  /** 7-day average resting HR (bpm) — tile. */
+  avg7: number;
+  /** 30-day lowest resting HR (bpm) — tile. */
+  low30: number;
+  /** Personal baseline resting HR (bpm) — tile + dashed reference line. */
+  baseline: number;
+  /** Zone-bar scale bounds (bpm) — the gradient bar maps zoneMin→zoneMax. */
+  zoneMin: number;
+  zoneMax: number;
+  /** Zone labels under the gradient bar, left (lowest/best) → right. */
+  zoneLabels: string[];
+  /** ~30 daily resting-HR readings (bpm), oldest → today (last point is today). */
+  month: number[];
+  /** 7 daily resting-HR readings (bpm), oldest → today — the 7D trend view. */
+  week: number[];
+  /** Today's intraday resting HR (bpm), 12a → now — the 1D trend view. */
+  today: number[];
+  /** Typical-range band [low, high] (bpm) shaded on the trend chart. */
+  typicalRange: [number, number];
+  /** Y-axis gridline/tick values for the trend chart (bpm). */
+  monthGridlines: number[];
+  /** Month trend delta (bpm, positive) — shown as "▼ {n} bpm" in the trend badge. */
+  monthTrendDelta: number;
+  /** Four weekly averages (bpm), oldest → last week (last bar highlighted). */
+  weeklyAvg: number[];
+  insight: string;
+}
+
+const RESTING_HR_DETAIL: RestingHrDetail = {
+  source: "oura",
+  subtitle: "Your resting heart rate today",
+  value: 52,
+  dayDelta: 2,
+  status: "Excellent",
+  avg7: 54,
+  low30: 48,
+  baseline: 56,
+  zoneMin: 40,
+  zoneMax: 80,
+  zoneLabels: ["Athlete", "Excellent", "Good", "Average"],
+  // 30 daily readings, oldest → today; a gentle downward drift below baseline
+  // (56 → 52, a 4 bpm month trend), a 48 bpm low mid-month, today resting at 52.
+  month: [
+    56, 57, 55, 56, 54, 57, 55, 54, 56, 53,
+    55, 54, 52, 55, 53, 51, 54, 52, 50, 53,
+    51, 49, 48, 51, 50, 53, 51, 50, 51, 52,
+  ],
+  // Last 7 days, oldest → today (55 → 52, a 3 bpm week trend).
+  week: [55, 54, 54, 53, 53, 52, 52],
+  // Today's intraday resting HR, 12a → now: settles overnight to a ~5a low of
+  // 48, climbs through the day, eases back to 52 now.
+  today: [
+    54, 53, 52, 51, 49, 48, 49, 51, 53, 55,
+    56, 55, 54, 55, 54, 53, 54, 53, 52, 53,
+    52, 53, 52, 52,
+  ],
+  typicalRange: [51, 57],
+  monthGridlines: [50, 55, 60],
+  monthTrendDelta: 4,
+  weeklyAvg: [57, 55, 54, 53],
+  insight:
+    "A resting heart rate of 52 bpm sits comfortably below your 56 baseline — a strong marker of cardiovascular fitness and good recovery. The gentle downward drift over the past month is exactly what you want to see: your heart is doing more with each beat, helped by your consistent sleep and training. Keep an eye out for any sudden jump of 5+ bpm above baseline, which often flags illness, poor sleep, or under-recovery a day or two before you feel it.",
+};
+
+/** Returns the Resting Heart Rate detail payload (sample Oura data for now). */
+export function getRestingHrDetail(): RestingHrDetail {
+  return RESTING_HR_DETAIL;
 }

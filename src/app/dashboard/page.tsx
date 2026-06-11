@@ -8,6 +8,7 @@ import {
   getDashboardData,
   getStepsDetail,
   getActiveEnergyDetail,
+  getRestingHrDetail,
   SOURCE_LABEL,
   type MetricStatus,
   type ConnectedSource,
@@ -17,6 +18,7 @@ import {
 import MetricChart from "@/components/dashboard/MetricChart";
 import SleepDepthChart from "@/components/dashboard/SleepDepthChart";
 import ActiveEnergyTodayChart from "@/components/dashboard/ActiveEnergyTodayChart";
+import RestingHrZoneBar from "@/components/dashboard/RestingHrZoneBar";
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
 const TEXT = "var(--nura-text-primary)";
@@ -226,8 +228,14 @@ function ReadinessCard({ readiness }: { readiness: Readiness }) {
 
 // ── 4 · Metric card ──────────────────────────────────────────────────────────────
 function MetricCard({ metric, onClick }: { metric: DashboardMetric; onClick: () => void }) {
-  const display = metric.displayValue ?? fmtNumber(metric.value);
-  const showUnit = !metric.displayValue && metric.unit;
+  // Resting HR gets a bespoke treatment: value + daily delta, a zone bar (no
+  // chart), and a "{n} bpm below your baseline" footer with an "Excellent" pill.
+  const isRestingHr = metric.id === "resting-hr";
+  const rhr = isRestingHr ? getRestingHrDetail() : null;
+  const rhrBelow = rhr ? rhr.baseline - rhr.value : 0;
+
+  const display = isRestingHr && rhr ? String(rhr.value) : metric.displayValue ?? fmtNumber(metric.value);
+  const showUnit = isRestingHr ? true : !metric.displayValue && metric.unit;
 
   // Steps gets an elevated, opt-in treatment: a "to go" goal callout, a
   // distance · flights · kcal · active strip, and the high-tech intraday chart.
@@ -274,13 +282,18 @@ function MetricCard({ metric, onClick }: { metric: DashboardMetric; onClick: () 
           {display}
         </span>
         {showUnit && <span style={{ fontFamily: SANS, fontSize: 13, color: TEXT_SEC }}>{metric.unit}</span>}
-        {metric.delta && !isActiveEnergy && (
+        {metric.delta && !isActiveEnergy && !isRestingHr && (
           <span style={{
             fontFamily: SANS, fontSize: 12, fontWeight: 600,
             color: metric.delta.dir === "up" ? "var(--nura-optimal)" : SAGE,
             display: "inline-flex", alignItems: "center", gap: 2,
           }}>
             {metric.delta.dir === "up" ? "▲" : "▼"}{metric.delta.value}
+          </span>
+        )}
+        {isRestingHr && rhr && (
+          <span style={{ fontFamily: SANS, fontSize: 12, fontWeight: 600, color: "var(--nura-teal)" }}>
+            ▼ {rhr.dayDelta} vs yesterday
           </span>
         )}
         {isSteps && remaining > 0 && (
@@ -296,12 +309,14 @@ function MetricCard({ metric, onClick }: { metric: DashboardMetric; onClick: () 
       </div>
 
       {/* Visualization */}
-      <div style={{ marginTop: 14, marginBottom: 14, flex: 1 }}>
-        {metric.sleepDepth
-          ? <SleepDepthChart data={metric.sleepDepth} />
-          : isActiveEnergy && ae
-            ? <ActiveEnergyTodayChart d={ae} height={140} />
-            : <MetricChart data={metric.chart} highTech={isSteps} />}
+      <div style={{ marginTop: 14, marginBottom: 14, flex: 1, display: isRestingHr ? "flex" : undefined, alignItems: isRestingHr ? "center" : undefined }}>
+        {isRestingHr && rhr
+          ? <RestingHrZoneBar value={rhr.value} min={rhr.zoneMin} max={rhr.zoneMax} labels={rhr.zoneLabels} />
+          : metric.sleepDepth
+            ? <SleepDepthChart data={metric.sleepDepth} />
+            : isActiveEnergy && ae
+              ? <ActiveEnergyTodayChart d={ae} height={140} />
+              : <MetricChart data={metric.chart} highTech={isSteps} />}
       </div>
 
       {/* Steps stat strip — distance · flights · kcal · active time */}
@@ -321,9 +336,23 @@ function MetricCard({ metric, onClick }: { metric: DashboardMetric; onClick: () 
       {/* Footer caption + status */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginTop: "auto" }}>
         <span style={{ fontFamily: SANS, fontSize: 11.5, color: TEXT_TER, lineHeight: 1.4 }}>
-          {isActiveEnergy && ae ? `${aePct}% of your ${ae.moveGoal} goal` : metric.caption}
+          {isRestingHr && rhr
+            ? `${rhrBelow} bpm below your baseline`
+            : isActiveEnergy && ae ? `${aePct}% of your ${ae.moveGoal} goal` : metric.caption}
         </span>
-        <span style={{ flexShrink: 0 }}><StatusPill status={isActiveEnergy ? "good" : metric.status} size="sm" /></span>
+        <span style={{ flexShrink: 0 }}>
+          {isRestingHr && rhr ? (
+            <span style={{
+              ...EYEBROW, fontSize: 9, color: "var(--nura-teal)", padding: "3px 8px", borderRadius: 999,
+              background: "rgba(var(--nura-teal-rgb),0.12)", border: "0.5px solid rgba(var(--nura-teal-rgb),0.35)",
+              whiteSpace: "nowrap",
+            }}>
+              {rhr.status}
+            </span>
+          ) : (
+            <StatusPill status={isActiveEnergy ? "good" : metric.status} size="sm" />
+          )}
+        </span>
       </div>
     </div>
   );

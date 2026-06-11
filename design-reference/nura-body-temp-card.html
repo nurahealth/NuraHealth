@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NŪRA — Body Temp card</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --text:#ebe6d8; --muted:rgba(235,230,216,0.55); --faint:rgba(235,230,216,0.30);
+    --cool:#5aa0e6; --teal:#5dccae; --gold:#d3a253; --coral:#e8745a;
+    --glass:rgba(22,25,27,0.5); --glass-line:rgba(235,230,216,0.10);
+  }
+  *{box-sizing:border-box; margin:0; padding:0; -webkit-font-smoothing:antialiased; font-variant-numeric:tabular-nums;}
+  body{font-family:'Inter',sans-serif; background:#08090a; min-height:100vh; color:var(--text);
+    display:flex; align-items:center; justify-content:center; padding:40px; position:relative; overflow-x:hidden;}
+  .aurora{position:fixed; inset:0; pointer-events:none; z-index:0;
+    background:radial-gradient(70% 50% at 50% 30%, rgba(93,204,174,0.12) 0%, rgba(90,160,230,0.05) 40%, rgba(10,11,12,0) 72%);}
+  .grain{position:fixed; inset:0; pointer-events:none; z-index:1; opacity:.05; mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");}
+
+  .card{position:relative; z-index:2; width:210px; background:var(--glass);
+    -webkit-backdrop-filter:blur(22px) saturate(1.15); backdrop-filter:blur(22px) saturate(1.15);
+    border:1px solid var(--glass-line); border-radius:22px; padding:16px 16px 18px;
+    box-shadow:inset 0 1px 0 rgba(235,230,216,0.10), 0 20px 55px rgba(0,0,0,.4);}
+  .head{display:flex; align-items:center; justify-content:space-between; margin-bottom:4px;}
+  .label{font-size:13px; font-weight:600; letter-spacing:.2px;}
+  .src{font-size:9.5px; letter-spacing:.8px; text-transform:uppercase; color:var(--faint); font-weight:600;}
+
+  .ringwrap{position:relative; width:100%; display:flex; justify-content:center; margin-top:2px;}
+  .ringwrap svg{width:168px; height:168px;}
+  .center{position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; pointer-events:none;}
+  .center .val{display:flex; align-items:baseline; gap:2px;}
+  .center .val .n{font-size:34px; font-weight:700; letter-spacing:-1.5px; line-height:.9; filter:drop-shadow(0 0 16px rgba(93,204,174,0.3));}
+  .center .val .deg{font-size:16px; font-weight:600; color:var(--muted);}
+  .center .cap{font-size:9.5px; letter-spacing:.9px; text-transform:uppercase; color:var(--faint); font-weight:600; margin-top:5px;}
+  .center .status{font-size:11px; font-weight:700; color:var(--teal); margin-top:6px; letter-spacing:.2px;}
+
+  .foot{display:flex; align-items:center; justify-content:center; gap:7px; margin-top:8px; font-size:11px; color:var(--muted);}
+  .foot .dot{width:5px; height:5px; border-radius:50%; background:var(--teal); box-shadow:0 0 6px var(--teal);}
+  .foot b{color:var(--text); font-weight:700;}
+</style>
+</head>
+<body>
+<div class="aurora"></div>
+<div class="grain"></div>
+
+<div class="card">
+  <div class="head"><div class="label">Body Temp</div><div class="src">Oura</div></div>
+  <div class="ringwrap">
+    <svg id="ring" viewBox="0 0 180 180"></svg>
+    <div class="center">
+      <div class="val"><span class="n">−0.2</span><span class="deg">°</span></div>
+      <div class="cap">from baseline</div>
+      <div class="status">Normal</div>
+    </div>
+  </div>
+  <div class="foot"><span class="dot"></span><span>7-day <b>−0.1°</b> · within range</span></div>
+</div>
+
+<script>
+  const cx=90, cy=92, r=66, START=135, SWEEP=270; // 270° arc, gap at bottom
+  const pol=(a)=>({x:cx+r*Math.cos(a*Math.PI/180), y:cy+r*Math.sin(a*Math.PI/180)});
+  // value on a −1 .. +1 deviation scale
+  const value=-0.2, t=(value-(-1))/2;            // 0..1 along the arc
+  const aVal=START+SWEEP*t;                        // marker angle
+  const aBase=START+SWEEP*0.5;                     // baseline (0°) sits at top
+
+  const circ=2*Math.PI*r, vis=circ*(SWEEP/360);
+  const m=pol(aVal), b=pol(aBase);
+
+  document.getElementById('ring').innerHTML=`
+    <defs>
+      <linearGradient id="zone" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0%" stop-color="#5aa0e6"/>
+        <stop offset="40%" stop-color="#5dccae"/>
+        <stop offset="72%" stop-color="#d3a253"/>
+        <stop offset="100%" stop-color="#e8745a"/>
+      </linearGradient>
+      <filter id="g" x="-60%" y="-60%" width="220%" height="220%">
+        <feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+    </defs>
+    <!-- faint full track -->
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="rgba(235,230,216,0.07)" stroke-width="9"
+      stroke-linecap="round" stroke-dasharray="${vis.toFixed(1)} ${circ.toFixed(1)}"
+      transform="rotate(${START} ${cx} ${cy})"/>
+    <!-- gradient zone track -->
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="url(#zone)" stroke-width="9" stroke-opacity="0.85"
+      stroke-linecap="round" stroke-dasharray="${vis.toFixed(1)} ${circ.toFixed(1)}"
+      transform="rotate(${START} ${cx} ${cy})"/>
+    <!-- baseline notch at top -->
+    <circle cx="${b.x.toFixed(1)}" cy="${b.y.toFixed(1)}" r="2" fill="rgba(235,230,216,0.5)"/>
+    <text x="${cx}" y="${(cy-r-9).toFixed(1)}" text-anchor="middle" font-family="Inter" font-size="8.5" font-weight="600" fill="rgba(235,230,216,0.4)" letter-spacing="0.5">BASELINE</text>
+    <!-- current reading marker -->
+    <circle cx="${m.x.toFixed(1)}" cy="${m.y.toFixed(1)}" r="8" fill="#08090a" stroke="rgba(93,204,174,0.5)" stroke-width="1"/>
+    <circle cx="${m.x.toFixed(1)}" cy="${m.y.toFixed(1)}" r="4.5" fill="#ebe6d8" filter="url(#g)"/>
+    <!-- end-of-scale hints -->
+    <text x="14" y="150" font-family="Inter" font-size="8.5" fill="rgba(90,160,230,0.7)" font-weight="600">COOL</text>
+    <text x="166" y="150" text-anchor="end" font-family="Inter" font-size="8.5" fill="rgba(232,116,90,0.7)" font-weight="600">WARM</text>
+  `;
+</script>
+</body>
+</html>

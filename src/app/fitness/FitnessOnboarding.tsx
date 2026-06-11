@@ -1,16 +1,21 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
+import dynamic from 'next/dynamic';
+import { useThemeStore } from '@/lib/themeStore';
 import {
   BG, TEXT, TEXT_SEC, TEXT_TER, BORDER, SAGE, SAGE_HOV, SAGE_ON, SANS, MONO,
   GLOBAL_CSS, Icon, StepQuestion, Hint, FieldLabel, SegmentedControl,
-  ChipToggle, GoalCard, ProgressBar, WelcomeCanvas, DoneCheck,
+  ChipToggle, GoalCard, ProgressBar, DoneCheck,
   STEP_SHELL_STYLE, STEP_SHELL_CENTERED_STYLE,
   type GoalOption,
 } from '@/components/onboarding/kit';
 import { saveFitnessOnboarding, type FitnessProfileData } from './actions';
 
 const TOTAL_STEPS = 7;
+
+// BodyScan hero uses WebGL/canvas — load client-side only.
+const BodyScan = dynamic(() => import('@/components/BodyScan'), { ssr: false });
 
 // ─── Fitness goal icons (kit Icon wrapper — 22px, 1.5 stroke) ────────────────
 const MuscleIcon = () => <Icon><path d="M3 14c2-1 3-1 4 0l3 3M14 4l1 5 5 1M14 4c-2 1-2 3-1 5l3 6c1 2 3 3 5 2"/><circle cx="6" cy="11" r="1.4"/></Icon>;
@@ -64,35 +69,95 @@ export function fitStateFromData(data: FitnessProfileData | null): FitState {
   };
 }
 
+// ─── Welcome plexus (drifting particles only — no DNA helix) ─────────────────
+// Scoped to this screen so the shared WelcomeCanvas (which also draws a helix)
+// stays untouched on every other onboarding step/flow.
+function WelcomePlexus() {
+  const ref = useRef<HTMLCanvasElement>(null);
+  const theme = useThemeStore((s) => s.theme);
+
+  useEffect(() => {
+    const canvas = ref.current;
+    if (!canvas) return;
+
+    const sageRgb = theme === 'light' ? '125,147,133' : '155,176,165';
+    const boost = theme === 'light' ? 1.5 : 1;
+
+    const dpr = window.devicePixelRatio || 1;
+    const W = canvas.offsetWidth;
+    const H = canvas.offsetHeight;
+    canvas.width = W * dpr;
+    canvas.height = H * dpr;
+    const ctx = canvas.getContext('2d')!;
+    ctx.scale(dpr, dpr);
+
+    const particles = Array.from({ length: 28 }, () => {
+      const a = Math.random() * Math.PI * 2;
+      return {
+        x: Math.random() * W, y: Math.random() * H,
+        vx: Math.cos(a) * 0.25, vy: Math.sin(a) * 0.25,
+        r: 0.5 + Math.random() * 1.1,
+      };
+    });
+
+    let raf = 0;
+    const draw = () => {
+      ctx.clearRect(0, 0, W, H);
+      for (let i = 0; i < particles.length; i++) {
+        const p = particles[i];
+        p.x += p.vx; p.y += p.vy;
+        if (p.x < 0 || p.x > W) p.vx *= -1;
+        if (p.y < 0 || p.y > H) p.vy *= -1;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${sageRgb},${0.38 * boost})`;
+        ctx.fill();
+        for (let j = i + 1; j < particles.length; j++) {
+          const q = particles[j];
+          const dx = p.x - q.x, dy = p.y - q.y;
+          const d = Math.sqrt(dx * dx + dy * dy);
+          if (d < 95) {
+            ctx.beginPath();
+            ctx.moveTo(p.x, p.y); ctx.lineTo(q.x, q.y);
+            ctx.strokeStyle = `rgba(${sageRgb},${(1 - d / 95) * 0.16 * boost})`;
+            ctx.lineWidth = 0.5; ctx.stroke();
+          }
+        }
+      }
+      raf = requestAnimationFrame(draw);
+    };
+    draw();
+    return () => cancelAnimationFrame(raf);
+  }, [theme]);
+
+  return (
+    <canvas ref={ref} style={{
+      position: 'absolute', inset: 0, width: '100%', height: '100%',
+      pointerEvents: 'none',
+    }} />
+  );
+}
+
 // ─── Step 1: Welcome ──────────────────────────────────────────────────────────
 function Step1Welcome({ onNext, animKey }: { onNext: () => void; animKey: number }) {
   const [hover, setHover] = useState(false);
   return (
-    <div key={animKey} style={{
-      position: 'relative', minWidth: '100%', minHeight: '100%',
-      display: 'flex', flexDirection: 'column', alignItems: 'center',
-      justifyContent: 'center', padding: '40px 32px 56px', overflow: 'hidden',
+    <div key={animKey} className="min-h-[100svh] flex flex-col items-center px-7 pt-[5vh]" style={{
+      position: 'relative', width: '100%', overflow: 'hidden',
       animation: 'step-in 450ms ease 200ms both',
     }}>
-      <WelcomeCanvas />
-      <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', width: '100%' }}>
-        <div style={{ position: 'relative', width: 88, height: 88, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 32 }}>
-          <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', border: '1px solid rgba(var(--nura-sage-rgb),0.25)', animation: 'ripple 2.8s ease-out infinite' }} />
-          <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', border: '1px solid rgba(var(--nura-sage-rgb),0.15)', animation: 'ripple 2.8s ease-out 1.4s infinite' }} />
-          <div style={{
-            width: 88, height: 88, borderRadius: '50%', background: BG,
-            border: '0.5px solid rgba(var(--nura-sage-rgb),0.45)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            animation: 'heartbeat 2.8s ease-in-out infinite', position: 'relative', zIndex: 1,
-            color: SAGE,
-          }}>
-            <DumbbellIcon />
-          </div>
-        </div>
+      <WelcomePlexus />
+
+      {/* Copy block — centered: heading, subtext, CTA */}
+      <div style={{
+        position: 'relative', zIndex: 1,
+        display: 'flex', flexDirection: 'column', alignItems: 'center',
+        textAlign: 'center', width: '100%',
+      }}>
         <h1 style={{ fontSize: 30, fontWeight: 500, color: TEXT, fontFamily: SANS, margin: '0 0 12px', letterSpacing: '-0.6px', lineHeight: 1.2 }}>
           Let&apos;s build your training.
         </h1>
-        <p style={{ fontSize: 14, color: TEXT_SEC, maxWidth: 280, margin: '0 auto 36px', lineHeight: 1.65, fontFamily: SANS }}>
+        <p style={{ fontSize: 14, color: TEXT_SEC, maxWidth: 280, margin: '0 auto 24px', lineHeight: 1.65, fontFamily: SANS }}>
           A few quick questions so NŪRA can shape fitness around your goals, gear, and schedule — takes 30 seconds.
         </p>
         <button
@@ -112,6 +177,11 @@ function Step1Welcome({ onNext, animKey }: { onNext: () => void; animKey: number
             <path d="M5 12h14M13 6l6 6-6 6"/>
           </svg>
         </button>
+      </div>
+
+      {/* Hero — explicit, non-collapsing height so the canvas always has room */}
+      <div className="w-full h-[54vh] mt-10 flex items-center justify-center" style={{ position: 'relative', zIndex: 1, background: 'transparent' }}>
+        <BodyScan autoRotate />
       </div>
     </div>
   );

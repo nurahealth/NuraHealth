@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, Suspense } from 'react';
+import dynamic from 'next/dynamic';
 import { useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { saveOnboarding, type OnboardingData } from './actions';
@@ -12,6 +13,9 @@ import {
 } from '@/components/onboarding/kit';
 
 const TOTAL_STEPS = 7;
+
+// BodyScan hero uses WebGL/canvas — load client-side only.
+const BodyScan = dynamic(() => import('@/components/BodyScan'), { ssr: false });
 
 
 // ─── Unit conversion ──────────────────────────────────────────────────────────
@@ -143,17 +147,13 @@ function Step1Welcome({ onNext, animKey }: { onNext: () => void; animKey: number
     }}>
       <WelcomeCanvas />
       <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', width: '100%' }}>
-        <div style={{ position: 'relative', width: 88, height: 88, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 32 }}>
-          <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', border: '1px solid rgba(var(--nura-sage-rgb),0.25)', animation: 'ripple 2.8s ease-out infinite' }} />
-          <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', border: '1px solid rgba(var(--nura-sage-rgb),0.15)', animation: 'ripple 2.8s ease-out 1.4s infinite' }} />
-          <div style={{
-            width: 88, height: 88, borderRadius: '50%', background: BG,
-            border: '0.5px solid rgba(var(--nura-sage-rgb),0.45)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            animation: 'heartbeat 2.8s ease-in-out infinite', position: 'relative', zIndex: 1,
-          }}>
-            <span style={{ fontFamily: SANS, fontWeight: 600, fontSize: 19, color: '#ffffff', letterSpacing: "0.16em" }}>NŪRA</span>
-          </div>
+        <div style={{
+          width: '100%', height: 'clamp(380px, 56vh, 440px)',
+          marginBottom: 24,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          background: 'transparent',
+        }}>
+          <BodyScan />
         </div>
         <h1 style={{ fontSize: 30, fontWeight: 500, color: TEXT, fontFamily: SANS, margin: '0 0 12px', letterSpacing: '-0.6px', lineHeight: 1.2 }}>
           Hi, I&apos;m NŪRA
