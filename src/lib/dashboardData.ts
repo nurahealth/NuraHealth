@@ -116,6 +116,13 @@ export interface DashboardMetric {
   chart: MetricChartData;
   /** Sleep-only: bespoke overnight depth chart (bars + wave line) for the Sleep card. */
   sleepDepth?: SleepDepthChartData;
+  /**
+   * Explicit data-availability gate (default: present). Set false when the
+   * connected platform returns no readings for this metric — e.g. Blood Pressure
+   * for the many users with no BP source. The dashboard hides such cards and
+   * drops them from the Customize sheet until real data exists.
+   */
+  dataAvailable?: boolean;
 }
 
 // ── Bottom insight card ──────────────────────────────────────────────────────
@@ -342,6 +349,72 @@ const DASHBOARD_DATA: DashboardData = {
         readings: dayReadings(40, 0.01, [[11, 3, 0.16], [20, 5, 0.3], [30, 3, 0.42], [37, 2, 0.22]]),
         baseline: [0.02, 0.1, 0.28, 0.4, 0.5, 0.36, 0.22, 0.12],
         floor: 0, ceiling: 0.6, gridlines: [0.1, 0.3, 0.5], ramp: "higherBetter",
+      },
+    },
+    {
+      id: "blood-oxygen",
+      name: "Blood Oxygen",
+      source: "oura",
+      value: 97,
+      unit: "%",
+      status: "optimal",
+      caption: "Stayed in your healthy range overnight",
+      viz: { kind: "sparkline", points: [96, 97, 98, 97, 96, 97, 97] },
+      chart: {
+        readings: [97, 97, 98, 97, 96, 97, 98, 97, 96, 95, 94, 95, 97, 98, 97, 97, 96, 97, 98, 98, 97, 96, 95, 94, 95, 96, 97, 98, 97, 97, 98, 97],
+        baseline: [97, 96, 97, 97, 96, 97, 97, 97],
+        floor: 90, ceiling: 100, gridlines: [90, 95, 100], ramp: "higherBetter",
+      },
+    },
+    {
+      id: "respiratory-rate",
+      name: "Respiratory Rate",
+      source: "oura",
+      value: 14.2,
+      displayValue: "14.2",
+      unit: "br/min",
+      status: "good",
+      caption: "Right on your baseline",
+      viz: { kind: "sparkline", points: [14.4, 14.2, 14.0, 14.3, 14.2, 14.1, 14.2] },
+      chart: {
+        readings: [14.4, 14.2, 14.0, 14.3, 14.5, 14.2, 13.9, 14.1, 14.4, 14.6, 14.3, 14.0, 13.8, 14.1, 14.3, 14.5, 14.2, 14.0, 14.2, 14.4, 14.3, 14.1, 13.9, 14.2, 14.4, 14.3, 14.1, 14.0, 14.2, 14.3, 14.2, 14.1],
+        baseline: [14.3, 14.2, 14.3, 14.2, 14.3, 14.2, 14.2, 14.2],
+        floor: 12, ceiling: 17, gridlines: [12, 14, 16], ramp: "higherBetter",
+      },
+    },
+    {
+      id: "cardio-fitness",
+      name: "Cardio Fitness",
+      source: "apple-watch",
+      value: 48,
+      unit: "ml/kg·min",
+      delta: { value: 1.5, dir: "up" },
+      status: "good",
+      caption: "Above average for your age & sex",
+      viz: { kind: "mini-bars", bars: [45.5, 46, 46.2, 46.8, 47.3, 48] },
+      chart: {
+        readings: [45.5, 46, 46.2, 46.8, 47.3, 48],
+        baseline: [45.5, 46.2, 47, 48],
+        floor: 44, ceiling: 49, gridlines: [45, 47, 49], ramp: "higherBetter",
+      },
+    },
+    {
+      id: "blood-pressure",
+      name: "Blood Pressure",
+      source: "apple-health",
+      value: 118,
+      displayValue: "118/76",
+      unit: "mmHg",
+      status: "good",
+      caption: "Tracked from your health platform",
+      // Gated OFF by default — most users have no BP source. Flip to true (or
+      // remove) once the connected platform actually returns BP readings.
+      dataAvailable: false,
+      viz: { kind: "sparkline", points: [122, 120, 119, 118, 117, 118] },
+      chart: {
+        readings: [122, 120, 119, 121, 118, 117, 119, 120, 118, 116, 119, 118],
+        baseline: [120, 119, 118, 118],
+        floor: 60, ceiling: 140, gridlines: [80, 100, 120], ramp: "lowerBetter",
       },
     },
   ],
@@ -1395,4 +1468,158 @@ const HEALTH_PLAN: HealthPlan = {
 /** Returns the Health Plan payload (sample seed values for now). */
 export function getHealthPlan(): HealthPlan {
   return HEALTH_PLAN;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// New metric cards — Blood Oxygen (SpO2), Respiratory Rate, Cardio Fitness (VO2).
+// Sample values for now; real values come from the connected device's SpO2 /
+// respiratory-rate / VO2-max streams. Shapes are read by the bespoke cards.
+// ─────────────────────────────────────────────────────────────────────────────
+export interface BloodOxygenDetail {
+  source: SourceId;
+  /** Overnight average SpO2 (%). */
+  avgPct: number;
+  /** Lowest overnight reading (%). */
+  lowestPct: number;
+  /** Overnight SpO2 trace across the 11p–7a sleep window. */
+  overnight: number[];
+  floor: number;
+  ceil: number;
+  ticks: number[];
+  /** Healthy-range band [low, high] (%). */
+  band: [number, number];
+  axisLabels: string[];
+  statusLabel: string;
+}
+
+const BLOOD_OXYGEN_DETAIL: BloodOxygenDetail = {
+  source: "oura",
+  avgPct: 97,
+  lowestPct: 94,
+  overnight: [97, 97, 98, 97, 96, 97, 98, 97, 96, 95, 94, 95, 97, 98, 97, 97, 96, 97, 98, 98, 97, 96, 95, 94, 95, 96, 97, 98, 97, 97, 98, 97],
+  floor: 90,
+  ceil: 100,
+  ticks: [90, 95, 100],
+  band: [95, 100],
+  axisLabels: ["11p", "1a", "3a", "5a", "7a"],
+  statusLabel: "Normal",
+};
+
+/** Returns the Blood Oxygen (SpO2) detail payload (sample data for now). */
+export function getBloodOxygenDetail(): BloodOxygenDetail {
+  return BLOOD_OXYGEN_DETAIL;
+}
+
+export interface RespiratoryDetail {
+  source: SourceId;
+  /** Overnight average respiratory rate (br/min). */
+  avg: number;
+  /** The user's personal baseline (br/min) — the dashed reference line. */
+  baseline: number;
+  /** Overnight respiratory-rate trace across the 11p–7a sleep window. */
+  overnight: number[];
+  floor: number;
+  ceil: number;
+  ticks: number[];
+  /** Healthy-range band [low, high] (br/min). */
+  band: [number, number];
+  axisLabels: string[];
+  statusLabel: string;
+}
+
+const RESPIRATORY_DETAIL: RespiratoryDetail = {
+  source: "oura",
+  avg: 14.2,
+  baseline: 14.3,
+  overnight: [14.4, 14.2, 14.0, 14.3, 14.5, 14.2, 13.9, 14.1, 14.4, 14.6, 14.3, 14.0, 13.8, 14.1, 14.3, 14.5, 14.2, 14.0, 14.2, 14.4, 14.3, 14.1, 13.9, 14.2, 14.4, 14.3, 14.1, 14.0, 14.2, 14.3, 14.2, 14.1],
+  floor: 12,
+  ceil: 17,
+  ticks: [12, 14, 16],
+  band: [12, 16],
+  axisLabels: ["11p", "1a", "3a", "5a", "7a"],
+  statusLabel: "Normal",
+};
+
+/** Returns the Respiratory Rate detail payload (sample data for now). */
+export function getRespiratoryDetail(): RespiratoryDetail {
+  return RESPIRATORY_DETAIL;
+}
+
+export interface CardioFitnessDetail {
+  source: SourceId;
+  /** VO2 max (ml/kg·min). */
+  vo2: number;
+  /** Change over the last 3 months (ml/kg·min, signed). */
+  delta3mo: number;
+  /** Classification zone scale bounds (ml/kg·min). */
+  zoneMin: number;
+  zoneMax: number;
+  /** Zone labels left→right (worst→best). */
+  zoneLabels: string[];
+  /** Index of the active (current) zone in zoneLabels. */
+  activeZone: number;
+  /** Multi-month VO2 trend (oldest → now). */
+  trend: number[];
+  trendMonths: string[];
+  trendFloor: number;
+  trendCeil: number;
+  /** Plain-language classification, e.g. "Above average". */
+  classification: string;
+  statusLabel: string;
+}
+
+const CARDIO_FITNESS_DETAIL: CardioFitnessDetail = {
+  source: "apple-watch",
+  vo2: 48,
+  delta3mo: 1.5,
+  zoneMin: 20,
+  zoneMax: 60,
+  zoneLabels: ["Low", "Below avg", "Above avg", "High"],
+  activeZone: 2,
+  trend: [45.5, 46, 46.2, 46.8, 47.3, 48],
+  trendMonths: ["Jan", "", "Mar", "", "May", "Now"],
+  trendFloor: 44,
+  trendCeil: 49,
+  classification: "Above average",
+  statusLabel: "Above avg",
+};
+
+/** Returns the Cardio Fitness (VO2 max) detail payload (sample data for now). */
+export function getCardioFitnessDetail(): CardioFitnessDetail {
+  return CARDIO_FITNESS_DETAIL;
+}
+
+export interface BloodPressureDetail {
+  source: SourceId;
+  /** Latest reading (mmHg). */
+  systolic: number;
+  diastolic: number;
+  /** Recent systolic / diastolic readings, oldest → latest. */
+  systolicTrend: number[];
+  diastolicTrend: number[];
+  /** Standard ACC/AHA reference thresholds (mmHg). */
+  sysThreshold: number;
+  diaThreshold: number;
+  /** Plotted y-range (mmHg). */
+  floor: number;
+  ceil: number;
+  axisLabels: string[];
+}
+
+const BLOOD_PRESSURE_DETAIL: BloodPressureDetail = {
+  source: "apple-health",
+  systolic: 118,
+  diastolic: 76,
+  systolicTrend: [122, 120, 119, 121, 118, 117, 119, 120, 118, 116, 119, 118],
+  diastolicTrend: [80, 78, 77, 79, 76, 75, 77, 78, 76, 75, 77, 76],
+  sysThreshold: 120,
+  diaThreshold: 80,
+  floor: 60,
+  ceil: 140,
+  axisLabels: ["3 wk", "2 wk", "1 wk", "now"],
+};
+
+/** Returns the Blood Pressure detail payload (sample data; a trend, not a diagnosis). */
+export function getBloodPressureDetail(): BloodPressureDetail {
+  return BLOOD_PRESSURE_DETAIL;
 }

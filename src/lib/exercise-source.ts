@@ -113,7 +113,12 @@ export function mapExercise(raw: RawExercise): ExerciseRecord | null {
  * never one-per-exercise), so a full ingest is ~total/PAGE_SIZE requests.
  */
 export async function fetchAllExercises(
-  opts?: { onPage?: (info: { offset: number; received: number; total: number }) => void },
+  opts?: {
+    onPage?: (info: { offset: number; received: number; total: number }) => void;
+    // Awaited once per page with that page's mapped rows. Persist here so a run
+    // that is cut short (maxDuration / quota) still keeps the pages it fetched.
+    onRows?: (rows: ExerciseRecord[]) => Promise<void>;
+  },
 ): Promise<ExerciseRecord[]> {
   const out: ExerciseRecord[] = [];
   let offset = 0;
@@ -148,12 +153,14 @@ export async function fetchAllExercises(
     const rows = Array.isArray(json?.data) ? json!.data! : [];
     if (typeof json?.total === 'number') total = json.total;
 
+    const pageRows: ExerciseRecord[] = [];
     for (const r of rows) {
       const mapped = mapExercise(r);
-      if (mapped) out.push(mapped);
+      if (mapped) { out.push(mapped); pageRows.push(mapped); }
     }
 
     opts?.onPage?.({ offset, received: rows.length, total: Number.isFinite(total) ? total : out.length });
+    if (pageRows.length && opts?.onRows) await opts.onRows(pageRows); // persist this page now
 
     if (rows.length === 0) break;      // nothing more to read
     offset += rows.length;             // advance by what this page returned

@@ -22,6 +22,12 @@ import RestingHrZoneBar from "@/components/dashboard/RestingHrZoneBar";
 import BodyTempCardRing from "@/components/dashboard/BodyTempCardRing";
 import OverallHealthCard from "@/components/dashboard/OverallHealthCard";
 import HealthPlanCard from "@/components/dashboard/HealthPlanCard";
+import CustomizeSheet from "@/components/dashboard/CustomizeSheet";
+import BloodOxygenCard from "@/components/dashboard/BloodOxygenCard";
+import RespiratoryRateCard from "@/components/dashboard/RespiratoryRateCard";
+import CardioFitnessCard from "@/components/dashboard/CardioFitnessCard";
+import BloodPressureCard from "@/components/dashboard/BloodPressureCard";
+import { useDashboardVisibility, useDashboardPrefs } from "@/lib/dashboardVisibility";
 import { useTemperatureUnitStore, fmtMagUnit, deviationDirection } from "@/lib/temperatureUnit";
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
@@ -64,11 +70,17 @@ export default function DashboardPage() {
   const [authLoading, setAuthLoading] = useState(true);
   const [firstName, setFirstName] = useState<string>("");
   const initUnit = useTemperatureUnitStore((s) => s.initUnit);
+  const vis = useDashboardVisibility();
+  const loadPrefs = useDashboardPrefs((s) => s.load);
+  const [customizeOpen, setCustomizeOpen] = useState(false);
 
   const data = getDashboardData();
 
   // Hydrate the temperature-unit preference from storage / locale on mount.
   useEffect(() => { initUnit(); }, [initUnit]);
+
+  // Load the user's hidden-metrics preference on mount (shared visibility store).
+  useEffect(() => { loadPrefs(); }, [loadPrefs]);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -94,6 +106,7 @@ export default function DashboardPage() {
         .dash-card { transition: border-color 180ms, transform 180ms; }
         .dash-card:hover { border-color: rgba(var(--nura-sage-rgb),0.35) !important; transform: translateY(-2px); }
         .dash-cta:hover { color: var(--nura-sage-hover) !important; }
+        .dash-customize:hover { border-color: rgba(var(--nura-sage-rgb),0.4) !important; color: var(--nura-text-primary) !important; }
       `}</style>
 
       {/* 1 — Date eyebrow + greeting */}
@@ -120,18 +133,49 @@ export default function DashboardPage() {
       {/* 4 — Overall Health (replaces the old Readiness hero) */}
       <OverallHealthCard />
 
-      {/* 4 — Metric grid */}
+      {/* 5 — Metric grid (only cards that have data AND aren't hidden) */}
       <div className="dash-grid" style={{ marginTop: 16 }}>
-        {data.metrics.map((m) => (
-          <MetricCard key={m.id} metric={m} onClick={() => router.push(`/dashboard/${m.id}`)} />
-        ))}
+        {vis.visible.map((m) => {
+          const go = () => router.push(`/dashboard/${m.id}`);
+          if (m.id === "blood-oxygen") return <BloodOxygenCard key={m.id} metric={m} onClick={go} />;
+          if (m.id === "respiratory-rate") return <RespiratoryRateCard key={m.id} metric={m} onClick={go} />;
+          if (m.id === "cardio-fitness") return <CardioFitnessCard key={m.id} metric={m} onClick={go} />;
+          if (m.id === "blood-pressure") return <BloodPressureCard key={m.id} metric={m} onClick={go} />;
+          return <MetricCard key={m.id} metric={m} onClick={go} />;
+        })}
       </div>
 
-      {/* 5 — NŪRA insight */}
+      {/* 6 — Customize (quiet, full-width; opens the show/hide sheet) */}
+      <button
+        onClick={() => setCustomizeOpen(true)}
+        className="dash-customize"
+        style={{
+          width: "100%", marginTop: 14, padding: "13px 0", borderRadius: 14, cursor: "pointer",
+          display: "flex", alignItems: "center", justifyContent: "center", gap: 9,
+          background: "transparent", border: `1px solid ${BORDER}`,
+          fontFamily: SANS, fontSize: 13.5, fontWeight: 600, color: TEXT_SEC, transition: "border-color 160ms, color 160ms",
+        }}
+      >
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="4" y1="8" x2="20" y2="8" /><circle cx="9" cy="8" r="2.4" fill="var(--nura-bg)" />
+          <line x1="4" y1="16" x2="20" y2="16" /><circle cx="15" cy="16" r="2.4" fill="var(--nura-bg)" />
+        </svg>
+        Customize dashboard
+      </button>
+
+      {/* 7 — NŪRA insight */}
       <InsightCard
         text={data.insight.text}
         ctaLabel={data.insight.ctaLabel}
         onCta={() => router.push(data.insight.ctaHref)}
+      />
+
+      <CustomizeSheet
+        open={customizeOpen}
+        onClose={() => setCustomizeOpen(false)}
+        available={vis.available}
+        hidden={vis.hidden}
+        onToggle={vis.toggle}
       />
     </NuraPageShell>
   );

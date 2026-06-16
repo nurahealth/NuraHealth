@@ -24,40 +24,35 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: 'FORBIDDEN — valid x-ingest-key required' }, { status: 403 });
   }
 
-  try {
-    // 1. Pull the full catalog from the source (paginated, mapped centrally).
-    const fetched = await fetchAllExercises();
+  // Upsert EACH page as it arrives so a run cut short by maxDuration/quota still
+  // persists everything it fetched (idempotent on id).
+  const seen = new Set<string>();
+  let upserted = 0;
+  const stampedNow = new Date().toISOString();
 
-    // 2. Dedupe by id (the API may repeat rows across page boundaries).
-    const byId = new Map<string, ExerciseRecord>();
-    for (const ex of fetched) byId.set(ex.id, ex);
-    const rows = [...byId.values()];
-
-    // 3. Idempotent upsert via the service role (bypasses RLS) in batches.
-    const stampedNow = new Date().toISOString();
-    let upserted = 0;
-    for (let i = 0; i < rows.length; i += UPSERT_BATCH) {
-      const chunk = rows.slice(i, i + UPSERT_BATCH).map((r) => ({ ...r, updated_at: stampedNow }));
-      const { error } = await supabaseAdmin
-        .from('exercises')
-        .upsert(chunk, { onConflict: 'id' });
-      if (error) {
-        return NextResponse.json(
-          { error: `Upsert failed at row ${i}: ${error.message}`, upserted },
-          { status: 500 },
-        );
-      }
+  async function upsertPage(pageRows: ExerciseRecord[]): Promise<void> {
+    const fresh = pageRows.filter((r) => !seen.has(r.id));
+    fresh.forEach((r) => seen.add(r.id));
+    for (let i = 0; i < fresh.length; i += UPSERT_BATCH) {
+      const chunk = fresh.slice(i, i + UPSERT_BATCH).map((r) => ({ ...r, updated_at: stampedNow }));
+      const { error } = await supabaseAdmin.from('exercises').upsert(chunk, { onConflict: 'id' });
+      if (error) throw new Error(`Upsert failed (offset chunk ${i}): ${error.message}`);
       upserted += chunk.length;
     }
+  }
+
+  try {
+    const fetched = await fetchAllExercises({ onRows: upsertPage });
 
     return NextResponse.json({
       ok: true,
       fetched: fetched.length,
-      distinct: rows.length,
+      distinct: seen.size,
       upserted,
     });
   } catch (err) {
+    // Pages already upserted are persisted; report how far we got.
     const message = err instanceof Error ? err.message : 'Unknown error';
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ error: message, upserted, distinct: seen.size }, { status: 500 });
   }
 }
