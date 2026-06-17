@@ -3,7 +3,7 @@
 import type { User } from "@supabase/supabase-js";
 
 const SAGE = "var(--nura-sage)";
-const SANS = "'Inter', system-ui, sans-serif";
+const SANS = "var(--font-inter), system-ui, sans-serif";
 
 interface Props {
   user: User | null;

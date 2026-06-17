@@ -18,7 +18,7 @@ import { hex } from "@/components/dashboard/ActiveEnergyTodayChart";
 // the user's two lowest pillars + score + target).
 // ─────────────────────────────────────────────────────────────────────────────
 
-const SANS = "'Inter', system-ui, sans-serif";
+const SANS = "var(--font-inter), system-ui, sans-serif";
 const SERIF = "'Fraunces', Georgia, serif";
 const TEXT = "#ebe6d8";
 const MUTED = "rgba(235,230,216,0.58)";

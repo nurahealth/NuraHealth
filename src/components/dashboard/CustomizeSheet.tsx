@@ -10,7 +10,7 @@ import { hex } from "@/components/dashboard/ActiveEnergyTodayChart";
 // via the shared store; the live count + row dimming reflect the change at once.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const SANS = "'Inter', system-ui, sans-serif";
+const SANS = "var(--font-inter), system-ui, sans-serif";
 const SERIF = "'Fraunces', Georgia, serif";
 const TEXT = "#ebe6d8";
 const MUTED = "rgba(235,230,216,0.58)";
@@ -37,7 +37,7 @@ const META: Record<string, { color: string; icon: string }> = {
   "blood-oxygen": { color: "#5dccae", icon: "drop" },
   "respiratory-rate": { color: "#a98fc4", icon: "lungs" },
   "cardio-fitness": { color: "#d3a253", icon: "activity" },
-  "blood-pressure": { color: "#e8745a", icon: "heart" },
+  "blood-pressure": { color: "#c47d8e", icon: "gauge" },
 };
 const FALLBACK = { color: SAGE, icon: "dot" };
 
@@ -55,6 +55,7 @@ function MetricIcon({ name, color }: { name: string; color: string }) {
     drop: <path d="M12 3s6 7 6 11a6 6 0 01-12 0c0-4 6-11 6-11z" />,
     lungs: <><path d="M12 4v8" /><path d="M8 8c-2 1-3 3-3 6v3a2 2 0 002 2c1.5 0 2-1 2-2.5V11c0-2-1-3-3-3z" /><path d="M16 8c2 1 3 3 3 6v3a2 2 0 01-2 2c-1.5 0-2-1-2-2.5V11c0-2 1-3 3-3z" /></>,
     activity: <path d="M3 12h4l2.5-7 4 14 2.5-7H21" />,
+    gauge: <><path d="M4 18a8 8 0 0116 0" /><path d="M12 18l4.5-4.5" /></>,
     dot: <circle cx="12" cy="12" r="6" />,
   };
   return <svg {...c}>{paths[name] ?? paths.dot}</svg>;

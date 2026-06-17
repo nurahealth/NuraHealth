@@ -20,7 +20,7 @@ export const SAGE = 'var(--nura-sage)';
 export const SAGE_HOV = 'var(--nura-sage-hover)';
 export const SAGE_ON = 'var(--nura-bg)';
 export const SAGE_RGB = 'var(--nura-sage-rgb)';
-export const SANS = "'Inter', system-ui, sans-serif";
+export const SANS = "var(--font-inter), system-ui, sans-serif";
 export const MONO = "'JetBrains Mono', monospace";
 
 // ─── CSS keyframes (injected once per flow) ──────────────────────────────────

@@ -14,7 +14,7 @@ const CREAM = "#ebe6d8";
 const MUTED = "rgba(235,230,216,0.62)";
 const FAINT = "rgba(235,230,216,0.45)";
 const HAIR = "rgba(235,230,216,0.1)";
-const SANS = "'Inter', system-ui, sans-serif";
+const SANS = "var(--font-inter), system-ui, sans-serif";
 
 // Built-in example state — rendered whenever real data is missing so the view
 // never silently vanishes during development.

@@ -11,7 +11,7 @@ import type { ActiveEnergyDetail } from "@/lib/dashboardData";
 // "avg" tag, a "KCAL / HR" unit label, a glowing peak readout, and a faint
 // dashed "now" marker at the right edge.
 
-const SANS = "'Inter', system-ui, sans-serif";
+const SANS = "var(--font-inter), system-ui, sans-serif";
 const INK = "235,230,216"; // warm off-white (matches --nura-fg-rgb in dark)
 const CORAL_RGB = "232,116,90";
 const AMBER_RGB = "224,162,62";

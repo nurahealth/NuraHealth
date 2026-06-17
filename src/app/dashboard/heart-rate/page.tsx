@@ -12,7 +12,7 @@ const MUTED = "var(--nura-text-secondary)";
 const FAINT = "var(--nura-text-tertiary)";
 const CORAL = "var(--nura-alert)";
 const INK = "var(--nura-fg-rgb)"; // warm off-white in dark mode
-const SANS = "'Inter', system-ui, sans-serif";
+const SANS = "var(--font-inter), system-ui, sans-serif";
 
 // Warm coral/amber ambient so this reads as the cardiovascular page.
 const CORAL_AURORA =

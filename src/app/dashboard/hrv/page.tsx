@@ -13,7 +13,7 @@ const FAINT = "var(--nura-text-tertiary)";
 const EMERALD = "var(--nura-optimal)";
 const SAGE = "var(--nura-sage)";
 const INK = "var(--nura-fg-rgb)"; // warm off-white in dark mode
-const SANS = "'Inter', system-ui, sans-serif";
+const SANS = "var(--font-inter), system-ui, sans-serif";
 
 // Status level → color token (emerald = strong, sage = solid, gold = watch).
 const LEVEL_COLOR: Record<RecoveryDriver["level"], string> = {

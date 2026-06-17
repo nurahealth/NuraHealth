@@ -1,5 +1,6 @@
 import React from "react";
 
+const SANS = "var(--font-inter), system-ui, sans-serif";
 const OX = "#4fc4d6";
 const CREAM = "#ebe6d8";
 const FAINT = "rgba(235,230,216,0.45)";
@@ -27,7 +28,7 @@ function smoothPath(pts) {
 
 function Frame({ children, guides }) {
   return (
-    <svg viewBox="0 0 340 216" style={{ display: "block", width: "100%", shapeRendering: "geometricPrecision" }}>
+    <svg viewBox="0 0 340 216" style={{ display: "block", width: "100%", shapeRendering: "geometricPrecision", fontFamily: SANS }}>
       <rect x="44" y={yFor(100)} width="276" height={yFor(95) - yFor(100)} fill={BAND} />
       <g stroke="rgba(235,230,216,0.045)">
         {guides.map((gx, i) => (<line key={i} x1={gx} y1="48" x2={gx} y2="190" />))}
@@ -85,7 +86,7 @@ export default function BloodOxygenTrends({
   const n7area = `${n7path} L ${n7[n7.length - 1][0]} ${yFor(90)} L ${n7[0][0]} ${yFor(90)} Z`;
 
   return (
-    <div style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif", color: CREAM }}>
+    <div style={{ fontFamily: SANS, color: CREAM }}>
       <div style={{ marginBottom: 30 }}>
         <SectionHead label="Last night" note="SpO₂ through the night — normal is 95% and up" avg={nightAvg} />
         <Frame guides={timeX}>

@@ -3,65 +3,15 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { GOAL_LABELS } from './FitnessOnboarding';
+import { mapProgram, PROGRAM_SELECT, type CatalogEx, type Program, type WEx, type Workout } from './planData';
+import ExerciseDetail from './ExerciseDetail';
+import ExerciseMedia, { CLIP_BG } from './ExerciseMedia';
 
 // ── Palette (NŪRA) ───────────────────────────────────────────────────────────
 const SAGE = '#9bb0a5';
 const OFF = '235,230,216'; // off-white rgb (#ebe6d8)
-const SANS = "'Inter', system-ui, sans-serif";
+const SANS = "var(--font-inter), system-ui, sans-serif";
 const MONO = "'JetBrains Mono', monospace";
-
-// ── Types (shape of the DB read) ─────────────────────────────────────────────
-type CatalogEx = {
-  id: string;
-  name: string;
-  target_muscles: string[] | null;
-  secondary_muscles: string[] | null;
-  body_part: string | null;
-  equipment: string | null;
-  gif_url: string | null;
-};
-
-type WEx = {
-  id: string;
-  position: number;
-  sets: number | null;
-  reps: string | null;
-  rest_seconds: number | null;
-  notes: string | null;
-  exercise: CatalogEx | null;
-};
-
-type Workout = {
-  id: string;
-  day_index: number;
-  title: string | null;
-  focus: string | null;
-  is_rest: boolean;
-  sort_order: number;
-  exercises: WEx[];
-};
-
-type Program = {
-  id: string;
-  goal: string | null;
-  split_type: string | null;
-  days_per_week: number | null;
-  status: string;
-  limitations: string | null;
-  workouts: Workout[];
-};
-
-// PostgREST embedded read. "order" is a reserved word → alias it to `position`.
-const PROGRAM_SELECT = `
-  id, goal, split_type, days_per_week, status, limitations,
-  program_workouts (
-    id, day_index, title, focus, is_rest, sort_order,
-    workout_exercises (
-      id, position:"order", sets, reps, rest_seconds, notes,
-      exercise:exercises ( id, name, target_muscles, secondary_muscles, body_part, equipment, gif_url )
-    )
-  )
-`;
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 const lc = (s: string | null | undefined) => (s ?? '').toLowerCase();
@@ -99,45 +49,6 @@ function candidatesFor(ex: CatalogEx | null, catalog: CatalogEx[]): CatalogEx[] 
 function goalLabel(goal: string | null): string {
   if (!goal) return 'Training';
   return GOAL_LABELS[goal] ?? goal;
-}
-
-// Sort + normalise the raw embedded rows into our typed Program.
-function mapProgram(row: Record<string, unknown>): Program {
-  const workoutsRaw = (row.program_workouts as Record<string, unknown>[] | null) ?? [];
-  const workouts: Workout[] = workoutsRaw
-    .map((w) => {
-      const exRaw = (w.workout_exercises as Record<string, unknown>[] | null) ?? [];
-      const exercises: WEx[] = exRaw
-        .map((e) => ({
-          id: e.id as string,
-          position: (e.position as number) ?? 0,
-          sets: (e.sets as number | null) ?? null,
-          reps: (e.reps as string | null) ?? null,
-          rest_seconds: (e.rest_seconds as number | null) ?? null,
-          notes: (e.notes as string | null) ?? null,
-          exercise: (e.exercise as CatalogEx | null) ?? null,
-        }))
-        .sort((a, b) => a.position - b.position);
-      return {
-        id: w.id as string,
-        day_index: (w.day_index as number) ?? 0,
-        title: (w.title as string | null) ?? null,
-        focus: (w.focus as string | null) ?? null,
-        is_rest: !!(w.is_rest as boolean),
-        sort_order: (w.sort_order as number) ?? 0,
-        exercises,
-      };
-    })
-    .sort((a, b) => a.day_index - b.day_index);
-  return {
-    id: row.id as string,
-    goal: (row.goal as string | null) ?? null,
-    split_type: (row.split_type as string | null) ?? null,
-    days_per_week: (row.days_per_week as number | null) ?? null,
-    status: (row.status as string) ?? 'active',
-    limitations: (row.limitations as string | null) ?? null,
-    workouts,
-  };
 }
 
 // ── Icons ────────────────────────────────────────────────────────────────────
@@ -308,11 +219,12 @@ function ExerciseEditor({
 
 // ── Exercise row ─────────────────────────────────────────────────────────────
 function ExerciseRow({
-  we, open, onToggle, catalog, onPatch, onSwap, onRemove,
+  we, open, onToggle, onOpenDetail, catalog, onPatch, onSwap, onRemove,
 }: {
   we: WEx;
   open: boolean;
   onToggle: () => void;
+  onOpenDetail: () => void;
   catalog: CatalogEx[];
   onPatch: (patch: { sets: number; reps: string; rest_seconds: number }) => Promise<string | null>;
   onSwap: (next: CatalogEx) => Promise<string | null>;
@@ -331,21 +243,30 @@ function ExerciseRow({
           transition: 'background 140ms ease',
         }}
       >
-        <div style={{ minWidth: 0, flex: 1 }}>
-          <div style={{ fontSize: 14, fontWeight: 500, color: `rgb(${OFF})`, lineHeight: 1.3 }}>
-            {name}
-          </div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2px 8px', marginTop: 4 }}>
-            <span style={{ fontSize: 11.5, fontFamily: MONO, letterSpacing: '0.3px', color: SAGE }}>
-              {prescription(we)}
+        <button
+          type="button"
+          onClick={onOpenDetail}
+          style={{ appearance: 'none', textAlign: 'left', border: 'none', background: 'transparent', padding: 0, minWidth: 0, flex: 1, cursor: 'pointer', color: 'inherit', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 11 }}
+        >
+          <span style={{ width: 40, height: 40, borderRadius: 9, overflow: 'hidden', flexShrink: 0, background: CLIP_BG, border: '1px solid rgba(155,176,165,0.2)' }}>
+            {we.exercise?.gif_url && <ExerciseMedia src={we.exercise.gif_url} alt={name} fit="cover" thumb />}
+          </span>
+          <span style={{ minWidth: 0 }}>
+            <span style={{ display: 'block', fontSize: 14, fontWeight: 500, color: `rgb(${OFF})`, lineHeight: 1.3 }}>
+              {name}
             </span>
-            {muscleLabel(we.exercise) && (
-              <span style={{ fontSize: 11.5, color: `rgba(${OFF},0.42)` }}>
-                {muscleLabel(we.exercise)}
+            <span style={{ display: 'flex', flexWrap: 'wrap', gap: '2px 8px', marginTop: 4 }}>
+              <span style={{ fontSize: 11.5, fontFamily: MONO, letterSpacing: '0.3px', color: SAGE }}>
+                {prescription(we)}
               </span>
-            )}
-          </div>
-        </div>
+              {muscleLabel(we.exercise) && (
+                <span style={{ fontSize: 11.5, color: `rgba(${OFF},0.42)` }}>
+                  {muscleLabel(we.exercise)}
+                </span>
+              )}
+            </span>
+          </span>
+        </button>
         <button
           type="button"
           onClick={onToggle}
@@ -378,7 +299,7 @@ function ExerciseRow({
 
 // ── Day card ─────────────────────────────────────────────────────────────────
 function DayCard({
-  workout, index, catalog, openExId, setOpenExId, onPatch, onSwap, onRemove,
+  workout, index, catalog, openExId, setOpenExId, onPatch, onSwap, onRemove, onOpenDetail,
 }: {
   workout: Workout;
   index: number;
@@ -388,6 +309,7 @@ function DayCard({
   onPatch: (weId: string, patch: { sets: number; reps: string; rest_seconds: number }) => Promise<string | null>;
   onSwap: (weId: string, next: CatalogEx) => Promise<string | null>;
   onRemove: (weId: string) => Promise<string | null>;
+  onOpenDetail: (we: WEx) => void;
 }) {
   const focus = workout.focus || workout.title || 'Training';
 
@@ -456,6 +378,7 @@ function DayCard({
             catalog={catalog}
             open={openExId === we.id}
             onToggle={() => setOpenExId(openExId === we.id ? null : we.id)}
+            onOpenDetail={() => onOpenDetail(we)}
             onPatch={(patch) => onPatch(we.id, patch)}
             onSwap={(next) => onSwap(we.id, next)}
             onRemove={() => onRemove(we.id)}
@@ -524,6 +447,7 @@ export default function WorkoutPlan() {
   const [error, setError] = useState<string | null>(null);
   const [openExId, setOpenExId] = useState<string | null>(null);
   const [confirmRegen, setConfirmRegen] = useState(false);
+  const [detailEx, setDetailEx] = useState<WEx | null>(null);
 
   // Load the active program + the catalog (for swaps).
   const load = useCallback(async () => {
@@ -696,9 +620,20 @@ export default function WorkoutPlan() {
               onPatch={patchExercise}
               onSwap={swapExercise}
               onRemove={removeExercise}
+              onOpenDetail={setDetailEx}
             />
           ))}
         </div>
+      )}
+
+      {detailEx?.exercise && (
+        <ExerciseDetail
+          exerciseId={detailEx.exercise.id}
+          sets={detailEx.sets}
+          reps={detailEx.reps}
+          rest_seconds={detailEx.rest_seconds}
+          onClose={() => setDetailEx(null)}
+        />
       )}
     </div>
   );

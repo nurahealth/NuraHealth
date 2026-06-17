@@ -12,7 +12,7 @@ import { hex, light, smooth } from "@/components/dashboard/ActiveEnergyTodayChar
 const TEXT = "var(--nura-text-primary)";
 const MUTED = "var(--nura-text-secondary)";
 const FAINT = "var(--nura-text-tertiary)";
-const SANS = "'Inter', system-ui, sans-serif";
+const SANS = "var(--font-inter), system-ui, sans-serif";
 const INK = "235,230,216"; // warm off-white (matches --nura-fg-rgb in dark)
 
 // Stage palette — shared by the hypnogram, the legend and the HR/HRV shading so

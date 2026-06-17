@@ -5,7 +5,7 @@
 // crisp at any size (small browse cards → large detail header) with a
 // consistent stroke weight and a proportional progress arc.
 
-const SANS = "'Inter', system-ui, sans-serif";
+const SANS = "var(--font-inter), system-ui, sans-serif";
 const FG_RGB = "var(--nura-fg-rgb)";
 
 const SAGE = "var(--nura-sage)"; // >= 80

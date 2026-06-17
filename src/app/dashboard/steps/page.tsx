@@ -15,7 +15,7 @@ const FAINT = "var(--nura-text-tertiary)";
 const GOLD = "var(--nura-amber)";
 const TEAL = "var(--nura-teal)";
 const INK = "var(--nura-fg-rgb)"; // warm off-white in dark mode
-const SANS = "'Inter', system-ui, sans-serif";
+const SANS = "var(--font-inter), system-ui, sans-serif";
 
 // Warm gold ambient so this reads as the movement / steps page.
 const GOLD_AURORA =

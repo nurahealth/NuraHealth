@@ -5,7 +5,7 @@ import { useEffect, useId, useRef, useState } from "react";
 // Animated radial score gauge: a gradient arc that sweeps in on mount plus a
 // count-up number in the center. Reused by every metric detail hero.
 
-const SANS = "'Inter', system-ui, sans-serif";
+const SANS = "var(--font-inter), system-ui, sans-serif";
 
 interface Props {
   value: number;

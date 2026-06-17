@@ -15,7 +15,7 @@ import type { SleepDepthChartData } from "@/lib/dashboardData";
 //
 // No overlay line and no crest dots — purely the stage bars.
 
-const SANS = "'Inter', system-ui, sans-serif";
+const SANS = "var(--font-inter), system-ui, sans-serif";
 const INK = "var(--nura-fg-rgb)"; // warm off-white in dark mode
 
 // Stage palette (literal hexes so the per-bar gradients can lighten them).

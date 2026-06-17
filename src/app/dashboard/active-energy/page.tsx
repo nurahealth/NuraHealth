@@ -16,7 +16,7 @@ const AMBER = "var(--nura-amber)";
 const EMERALD = "var(--nura-optimal)";
 const INK = "235,230,216"; // warm off-white (matches --nura-fg-rgb in dark)
 const AMBER_RGB = "224,162,62";
-const SANS = "'Inter', system-ui, sans-serif";
+const SANS = "var(--font-inter), system-ui, sans-serif";
 
 // Warm amber/coral ambient so this reads as the energy / activity page.
 const AMBER_AURORA =

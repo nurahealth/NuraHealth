@@ -9,7 +9,7 @@ import { ChevronDown } from "lucide-react";
 
 const TEXT = "var(--nura-text-primary)";
 const TEXT_TER = "var(--nura-text-tertiary)";
-const SANS = "'Inter', system-ui, sans-serif";
+const SANS = "var(--font-inter), system-ui, sans-serif";
 
 export default function CollapsibleSection({
   title,

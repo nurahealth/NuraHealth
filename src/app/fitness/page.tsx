@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import NuraPageShell from '@/components/NuraPageShell';
 import FitnessOnboarding from './FitnessOnboarding';
-import FitnessHome from './FitnessHome';
+import FitnessDashboard from './FitnessDashboard';
 import type { FitnessProfileData } from './actions';
 
 interface FitnessRow {
@@ -89,5 +89,7 @@ export default function FitnessPage() {
     return <NuraPageShell title="Fitness" maxWidth={760}><div /></NuraPageShell>;
   }
 
-  return <FitnessHome profile={profile} onEdit={() => setEditing(true)} />;
+  // The Fitness tab renders the dashboard (1:1 port of the design reference),
+  // wired to the user's real active program.
+  return <FitnessDashboard />;
 }

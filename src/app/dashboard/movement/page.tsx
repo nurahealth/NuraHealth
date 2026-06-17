@@ -14,7 +14,7 @@ const MUTED = "var(--nura-text-secondary)";
 const FAINT = "var(--nura-text-tertiary)";
 const AMBER = "var(--nura-amber)";
 const SAGE = "var(--nura-sage)";
-const SANS = "'Inter', system-ui, sans-serif";
+const SANS = "var(--font-inter), system-ui, sans-serif";
 
 const AMBER_AURORA =
   "radial-gradient(80% 60% at 50% -6%, rgba(224,162,62,0.30), transparent 60%)," +

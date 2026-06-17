@@ -24,7 +24,7 @@ import type { MetricChartData } from "@/lib/dashboardData";
 // average curve, and a glowing peak readout. When false (the default) the chart
 // renders exactly as before — Heart Rate and every other card are untouched.
 
-const SANS = "'Inter', system-ui, sans-serif";
+const SANS = "var(--font-inter), system-ui, sans-serif";
 const INK = "235,230,216"; // warm-white, matches --nura-fg-rgb (dark)
 const TEAL = "93,204,174";  // --nura-teal, for high-tech glows / hotspot
 

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import NuraPageShell from '@/components/NuraPageShell';
 import { GOAL_LABELS } from './FitnessOnboarding';
 import MuscleMap from './MuscleMap';
@@ -13,7 +14,7 @@ const TEXT_TER = 'var(--nura-text-tertiary)';
 const BORDER = 'var(--nura-border)';
 const SAGE = 'var(--nura-sage)';
 const SAGE_HOV = 'var(--nura-sage-hover)';
-const SANS = "'Inter', system-ui, sans-serif";
+const SANS = "var(--font-inter), system-ui, sans-serif";
 const MONO = "'JetBrains Mono', monospace";
 
 // ── Icons (kit-matched: 18px, 1.5 stroke) ──────────────────────────────────────
@@ -51,8 +52,24 @@ export default function FitnessHome({ profile, onEdit }: {
   const days = profile.days_per_week != null ? `${profile.days_per_week} / week` : '—';
   const equipment = profile.equipment.length ? profile.equipment.join(' · ') : '—';
 
+  const calendarLink = (
+    <Link
+      href="/fitness/calendar"
+      aria-label="Training calendar"
+      style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'center', width: 38, height: 38,
+        borderRadius: 11, color: SAGE, textDecoration: 'none',
+        background: 'rgba(var(--nura-sage-rgb),0.1)', border: '0.5px solid rgba(var(--nura-sage-rgb),0.4)',
+      }}
+    >
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="4.5" width="18" height="16" rx="2.5" /><path d="M3 9h18M8 2.5v4M16 2.5v4" />
+      </svg>
+    </Link>
+  );
+
   return (
-    <NuraPageShell title="Fitness" maxWidth={940}>
+    <NuraPageShell title="Fitness" maxWidth={940} rightAction={calendarLink}>
       {/* Heading */}
       <div style={{ marginBottom: 22 }}>
         <h1 style={{ fontSize: 26, fontWeight: 600, color: TEXT, fontFamily: SANS, margin: '0 0 6px', letterSpacing: '-0.5px' }}>

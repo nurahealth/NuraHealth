@@ -20,11 +20,17 @@ const TABLE = "dashboard_preferences";
 /** Layer 1 — metrics whose source is connected and that return data. */
 export function getAvailableMetrics(): DashboardMetric[] {
   const d = getDashboardData();
+  // In development we never silently drop a metric card for lack of live data:
+  // any chart-bearing metric stays visible (rendering its example values) so it
+  // also shows up in Customize and can be toggled. Production keeps the strict
+  // auto-hide gate, so cards still disappear when their source returns nothing.
+  const devShowAll = process.env.NODE_ENV !== "production";
   return d.metrics.filter((m) => {
     const src = d.sources.find((s) => s.id === m.source);
     // Source connected, the metric returns data, and it isn't explicitly gated
     // off for lack of readings (e.g. Blood Pressure with no BP source).
-    return Boolean(src?.connected) && Boolean(m.chart) && m.dataAvailable !== false;
+    const available = Boolean(src?.connected) && Boolean(m.chart) && m.dataAvailable !== false;
+    return available || (devShowAll && Boolean(m.chart));
   });
 }
 

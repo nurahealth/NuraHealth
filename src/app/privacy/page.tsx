@@ -6,7 +6,7 @@ const TEXT = "var(--nura-text-primary)";
 const TEXT_BODY = "rgba(var(--nura-fg-rgb),0.85)";
 const TEXT_SEC = "var(--nura-text-secondary)";
 const SAGE = "var(--nura-sage)";
-const SANS = "'Inter', system-ui, sans-serif";
+const SANS = "var(--font-inter), system-ui, sans-serif";
 
 type Block =
   | { type: "p"; text: string }

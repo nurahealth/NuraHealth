@@ -1,89 +1,91 @@
 "use client";
 
-import { useId } from "react";
-import { getBloodPressureDetail, type DashboardMetric } from "@/lib/dashboardData";
-import MetricCardShell from "@/components/dashboard/MetricCardShell";
-import { smooth, hexA } from "@/components/dashboard/cardChartHelpers";
+import { type DashboardMetric, getBloodPressureDetail, SOURCE_LABEL } from "@/lib/dashboardData";
+import { hexA } from "@/components/dashboard/cardChartHelpers";
+import {
+  bpCategory, bpFooterMessage, BP_COLOR,
+  systolicPct, diastolicPct, SYS_GRADIENT, DIA_GRADIENT,
+} from "@/lib/bloodPressure";
 
-const CORAL = "#e8745a";
+const SANS = "var(--font-inter), system-ui, sans-serif";
 const TEXT = "var(--nura-text-primary)";
+const TEXT_SEC = "var(--nura-text-secondary)";
+const TEXT_TER = "var(--nura-text-tertiary)";
+const CARD = "var(--nura-card)";
+const BORDER = "var(--nura-border)";
+const FAINT = "rgba(235,230,216,0.45)";
 
-// ACC/AHA classification from the latest reading. Colored by severity (calm →
-// coral) — the card itself is coral-accented.
-function classifyBP(sys: number, dia: number): { label: string; color: string } {
-  if (sys >= 140 || dia >= 90) return { label: "Stage 2", color: "#e8745a" };
-  if (sys >= 130 || dia >= 80) return { label: "Stage 1", color: "#e0a23e" };
-  if (sys >= 120) return { label: "Elevated", color: "#d3a253" };
-  return { label: "Normal", color: "#5dccae" };
+const EYEBROW: React.CSSProperties = {
+  fontFamily: SANS, fontSize: 10, fontWeight: 600, letterSpacing: "1.6px", textTransform: "uppercase",
+};
+
+// Slim in-card meter: muted full-word label + cream value, then a gradient track
+// with a faint ceiling tick and a cream marker (haloed against the card bg).
+function CardMeter({ name, value, gradient, tickPct, pct }: { name: string; value: number; gradient: string; tickPct: number; pct: number }) {
+  return (
+    <div style={{ marginTop: 14 }}>
+      <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 7 }}>
+        <span style={{ fontFamily: SANS, fontSize: 12, color: TEXT_SEC }}>{name}</span>
+        <span style={{ fontFamily: SANS, fontSize: 13, fontWeight: 600, color: TEXT }}>{value}</span>
+      </div>
+      <div style={{ position: "relative", height: 7 }}>
+        <div style={{ position: "absolute", inset: 0, borderRadius: 999, background: gradient }} />
+        <div style={{ position: "absolute", top: -1, left: `${tickPct}%`, transform: "translateX(-50%)", width: 1.5, height: 9, borderRadius: 1, background: "rgba(13,13,14,0.5)" }} />
+        <div style={{ position: "absolute", top: "50%", left: `${pct.toFixed(1)}%`, transform: "translate(-50%,-50%)", width: 4, height: 15, borderRadius: 2.5, background: "#ebe6d8", boxShadow: `0 0 0 2.5px ${CARD}` }} />
+      </div>
+    </div>
+  );
 }
 
-// Blood Pressure card — systolic + diastolic dual-line trend over recent readings
-// with dashed reference thresholds (120/80). A TREND from the connected health
-// platform, framed explicitly as non-clinical (not a diagnostic reading).
+// Compact Blood Pressure dashboard tile — two-value readout + stacked systolic /
+// diastolic range meters + a status-driven category pill. Taps to the detail view.
 export default function BloodPressureCard({ metric, onClick }: { metric: DashboardMetric; onClick: () => void }) {
   const d = getBloodPressureDetail();
-  const rawId = useId();
-  const uid = rawId.replace(/[^a-zA-Z0-9]/g, "");
-  const cls = classifyBP(d.systolic, d.diastolic);
-
-  const W = 340, H = 150, padL = 4, padR = 30, padT = 14, padB = 24;
-  const n = d.systolicTrend.length;
-  const lo = d.floor, hi = d.ceil;
-  const xAt = (i: number) => padL + (i / (n - 1)) * (W - padL - padR);
-  const yAt = (v: number) => padT + (1 - (v - lo) / (hi - lo)) * (H - padT - padB);
-  const sysPts: [number, number][] = d.systolicTrend.map((v, i) => [xAt(i), yAt(v)]);
-  const diaPts: [number, number][] = d.diastolicTrend.map((v, i) => [xAt(i), yAt(v)]);
-  const sysLine = smooth(sysPts);
-  const diaLine = smooth(diaPts);
+  const cat = bpCategory(d.systolic, d.diastolic);
+  const color = BP_COLOR[cat];
 
   return (
-    <MetricCardShell
-      name={metric.name}
-      source={metric.source}
+    <div
+      className="dash-card"
+      role="link"
+      tabIndex={0}
       onClick={onClick}
-      value="118/76"
-      unit="mmHg"
-      caption={<>From your health platform — a <b style={{ color: TEXT, fontWeight: 600 }}>trend</b>, not a diagnosis.</>}
-      pillLabel={cls.label}
-      pillColor={cls.color}
+      onKeyDown={(e) => { if (e.key === "Enter") onClick(); }}
+      style={{
+        background: CARD, border: `0.5px solid ${BORDER}`, borderRadius: 18,
+        padding: 18, cursor: "pointer", display: "flex", flexDirection: "column",
+        minHeight: 248,
+      }}
     >
-      <svg viewBox={`0 0 ${W} ${H}`} style={{ display: "block", width: "100%", height: "auto", overflow: "visible" }}>
-        <defs>
-          <linearGradient id={`sys${uid}`} x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0" stopColor={hexA(CORAL, 0.55)} />
-            <stop offset="1" stopColor={CORAL} />
-          </linearGradient>
-        </defs>
+      {/* Header */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+        <span style={{ ...EYEBROW, color: TEXT_SEC }}>{metric.name}</span>
+        <span style={{ ...EYEBROW, fontSize: 9, color: TEXT_TER }}>{SOURCE_LABEL[d.source]}</span>
+      </div>
 
-        {/* Dashed reference thresholds (120 systolic, 80 diastolic) + right-edge ticks */}
-        {[
-          { v: d.sysThreshold, tag: "SYS" },
-          { v: d.diaThreshold, tag: "DIA" },
-        ].map(({ v, tag }) => {
-          const y = yAt(v);
-          return (
-            <g key={tag}>
-              <line x1={padL} y1={y.toFixed(1)} x2={W - padR} y2={y.toFixed(1)} stroke={hexA(CORAL, 0.4)} strokeWidth={1.2} strokeDasharray="4 4" />
-              <text x={W - padR + 5} y={(y + 3).toFixed(1)} fontSize={9} fill="rgba(235,230,216,0.40)">{v}</text>
-              <text x={padL + 2} y={(y - 4).toFixed(1)} fontSize={8} fontWeight={700} letterSpacing="0.6" fill="rgba(235,230,216,0.42)">{tag}</text>
-            </g>
-          );
-        })}
+      {/* Readout */}
+      <div style={{ display: "flex", alignItems: "baseline", gap: 7, marginTop: 12 }}>
+        <span style={{ fontFamily: SANS, fontSize: 40, fontWeight: 600, color: TEXT, lineHeight: 1, letterSpacing: "-0.02em" }}>
+          {d.systolic}<span style={{ color: FAINT }}>/</span>{d.diastolic}
+        </span>
+        <span style={{ fontFamily: SANS, fontSize: 13, color: TEXT_SEC }}>mmHg</span>
+      </div>
 
-        {/* Diastolic (lighter) + systolic (solid coral) trend lines */}
-        <path d={diaLine} fill="none" stroke={hexA(CORAL, 0.55)} strokeWidth={1.8} strokeLinecap="round" />
-        <path d={sysLine} fill="none" stroke={`url(#sys${uid})`} strokeWidth={2.4} strokeLinecap="round" />
-        <circle cx={sysPts[n - 1][0].toFixed(1)} cy={sysPts[n - 1][1].toFixed(1)} r={3.2} fill={CORAL} />
-        <circle cx={diaPts[n - 1][0].toFixed(1)} cy={diaPts[n - 1][1].toFixed(1)} r={2.6} fill={hexA(CORAL, 0.7)} />
+      {/* Meters */}
+      <CardMeter name="Systolic" value={d.systolic} gradient={SYS_GRADIENT} tickPct={33.3} pct={systolicPct(d.systolic)} />
+      <CardMeter name="Diastolic" value={d.diastolic} gradient={DIA_GRADIENT} tickPct={50} pct={diastolicPct(d.diastolic)} />
 
-        {/* X-axis labels */}
-        {d.axisLabels.map((l, k) => {
-          const x = padL + (k / (d.axisLabels.length - 1)) * (W - padL - padR);
-          return (
-            <text key={k} x={x.toFixed(1)} y={H - 6} fontSize={9} fill="rgba(235,230,216,0.40)" textAnchor={k === 0 ? "start" : k === d.axisLabels.length - 1 ? "end" : "middle"}>{l}</text>
-          );
-        })}
-      </svg>
-    </MetricCardShell>
+      {/* Footer — category one-liner + outlined status pill */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginTop: "auto", paddingTop: 16 }}>
+        <span style={{ fontFamily: SANS, fontSize: 11.5, color: TEXT_TER, lineHeight: 1.4 }}>{bpFooterMessage(cat)}</span>
+        <span style={{
+          ...EYEBROW, fontSize: 9, color, padding: "3px 8px", borderRadius: 999,
+          background: hexA(color, 0.12), border: `0.5px solid ${hexA(color, 0.35)}`,
+          whiteSpace: "nowrap", flexShrink: 0,
+        }}>
+          {cat}
+        </span>
+      </div>
+    </div>
   );
 }

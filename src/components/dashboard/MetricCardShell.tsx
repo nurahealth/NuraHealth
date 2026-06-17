@@ -10,7 +10,7 @@ import { hexA } from "@/components/dashboard/cardChartHelpers";
 // Cardio Fitness cards so they match the rest of the grid without modifying any
 // existing card. The `.dash-card` hover comes from the dashboard page's styles.
 
-const SANS = "'Inter', system-ui, sans-serif";
+const SANS = "var(--font-inter), system-ui, sans-serif";
 const TEXT = "var(--nura-text-primary)";
 const TEXT_SEC = "var(--nura-text-secondary)";
 const TEXT_TER = "var(--nura-text-tertiary)";

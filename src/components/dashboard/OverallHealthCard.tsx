@@ -11,7 +11,7 @@ import { hex, lerp, light } from "@/components/dashboard/ActiveEnergyTodayChart"
 // and an expandable "What to improve" plan. Matches the Overall Health mockup.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const SANS = "'Inter', system-ui, sans-serif";
+const SANS = "var(--font-inter), system-ui, sans-serif";
 const SERIF = "'Fraunces', Georgia, serif";
 const TEXT = "#ebe6d8";
 const MUTED = "rgba(235,230,216,0.58)";

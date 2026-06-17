@@ -37,7 +37,7 @@ const TEXT_TER = "var(--nura-text-tertiary)";
 const BORDER = "var(--nura-border)";
 const CARD = "var(--nura-card)";
 const SAGE = "var(--nura-sage)";
-const SANS = "'Inter', system-ui, sans-serif";
+const SANS = "var(--font-inter), system-ui, sans-serif";
 
 const STATUS: Record<MetricStatus, { color: string; rgb: string; label: string }> = {
   optimal: { color: "var(--nura-optimal)", rgb: "var(--nura-optimal-rgb)", label: "Optimal" },

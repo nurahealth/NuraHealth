@@ -13,7 +13,7 @@ const TEXT = "var(--nura-text-primary)";
 const MUTED = "var(--nura-text-secondary)";
 const FAINT = "var(--nura-text-tertiary)";
 const INK = "235,230,216"; // warm off-white (matches --nura-fg-rgb in dark)
-const SANS = "'Inter', system-ui, sans-serif";
+const SANS = "var(--font-inter), system-ui, sans-serif";
 
 // Rose accents — resting HR reads as a warm, calm cardiovascular page.
 const ROSE = "#f0a890";

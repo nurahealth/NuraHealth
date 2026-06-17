@@ -24,7 +24,7 @@ export interface GeneratorProfile {
 export interface PlannedExercise {
   exercise_id: string;
   name: string;
-  order: number;
+  sort_order: number;
   sets: number;
   reps: string;
   rest_seconds: number;
@@ -57,13 +57,13 @@ export interface GeneratedProgram {
 // ── Rules ────────────────────────────────────────────────────────────────────
 
 // Sets are stored as a single int (the table column is int); reps keep the range.
-const GOAL_PRESCRIPTION: Record<string, { sets: number; reps: string; rest: number }> = {
-  muscle:    { sets: 4, reps: '8-12',  rest: 75 },  // spec: 3–4 sets
-  fat:       { sets: 3, reps: '12-15', rest: 40 },
-  strength:  { sets: 5, reps: '4-6',   rest: 150 }, // spec: 4–5 sets
-  endurance: { sets: 3, reps: '15-20', rest: 30 },  // spec: 2–3 sets
-  mobility:  { sets: 2, reps: '10-15', rest: 30 },  // spec line was garbled; 30s rest given
-  general:   { sets: 3, reps: '10-12', rest: 60 },
+const GOAL_PRESCRIPTION: Record<string, { sets: number; reps: string; rest_seconds: number }> = {
+  muscle:    { sets: 4, reps: '8-12',  rest_seconds: 75 },  // spec: 3–4 sets
+  fat:       { sets: 3, reps: '12-15', rest_seconds: 40 },
+  strength:  { sets: 5, reps: '4-6',   rest_seconds: 150 }, // spec: 4–5 sets
+  endurance: { sets: 3, reps: '15-20', rest_seconds: 30 },  // spec: 2–3 sets
+  mobility:  { sets: 2, reps: '10-15', rest_seconds: 30 },  // spec line was garbled; 30s rest given
+  general:   { sets: 3, reps: '10-12', rest_seconds: 60 },
 };
 
 const GOAL_ALIAS: Record<string, string> = {
@@ -270,17 +270,24 @@ export function generateProgram(profile: GeneratorProfile, catalog: CatalogExerc
       workouts.push({ day_index: d, title: 'Rest', focus: 'Rest', is_rest: true, sort_order: d, exercises: [] });
       continue;
     }
-    const picks = focus === 'Full Body'
+    let picks = focus === 'Full Body'
       ? pickFullBody(safeCatalog, perWorkout, allowed, programUsed)
       : pickForFocus(safeCatalog, focus, perWorkout, allowed, programUsed);
+
+    // Hard guarantee: a training day must never be empty when the catalog has
+    // anything in it. If every preference tier missed (thin/partial catalog),
+    // fall back to ANY available exercises so we never emit an all-rest plan.
+    if (picks.length === 0 && safeCatalog.length > 0) {
+      picks = safeCatalog.slice(0, Math.max(1, Math.min(perWorkout, safeCatalog.length)));
+    }
 
     const exercises: PlannedExercise[] = picks.map((ex, i) => ({
       exercise_id: ex.id,
       name: ex.name,
-      order: i + 1,
+      sort_order: i + 1,
       sets: presc.sets,
       reps: presc.reps,
-      rest_seconds: presc.rest,
+      rest_seconds: presc.rest_seconds,
       notes: null,
       target_muscles: ex.target_muscles ?? [],
       body_part: ex.body_part ?? null,

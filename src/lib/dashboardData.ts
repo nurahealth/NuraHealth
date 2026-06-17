@@ -1477,32 +1477,58 @@ export function getHealthPlan(): HealthPlan {
 // ─────────────────────────────────────────────────────────────────────────────
 export interface BloodOxygenDetail {
   source: SourceId;
-  /** Overnight average SpO2 (%). */
+  /** Overnight average SpO2 (%) — also the dashed personal-average line. */
   avgPct: number;
   /** Lowest overnight reading (%). */
   lowestPct: number;
-  /** Overnight SpO2 trace across the 11p–7a sleep window. */
+  /** Last night's average (%) — hero + tile. */
+  lastNight: number;
+  /** 7-day average (%) — tile. */
+  avg7: number;
+  /** Overnight SpO2 trace across the 11p–7a sleep window (1D trend). */
   overnight: number[];
+  /** Nightly averages — 7D and 30D trend views. */
+  sevenDay: number[];
+  thirtyDay: number[];
   floor: number;
   ceil: number;
   ticks: number[];
   /** Healthy-range band [low, high] (%). */
   band: [number, number];
   axisLabels: string[];
+  /** Hero zone-bar scale bounds (%) — Low → Healthy. */
+  zoneMin: number;
+  zoneMax: number;
+  /** "Nightly lows" card — each of the last 7 nights' lowest reading + its label. */
+  nightlyLows: number[];
+  nightlyLowLabels: string[];
   statusLabel: string;
+  /** Hero breathing-regularity pill text. */
+  breathingPill: string;
 }
 
 const BLOOD_OXYGEN_DETAIL: BloodOxygenDetail = {
   source: "oura",
   avgPct: 97,
   lowestPct: 94,
-  overnight: [97, 97, 98, 97, 96, 97, 98, 97, 96, 95, 94, 95, 97, 98, 97, 97, 96, 97, 98, 98, 97, 96, 95, 94, 95, 96, 97, 98, 97, 97, 98, 97],
+  lastNight: 97,
+  avg7: 97,
+  // Calm hourly-ish overnight curve: holds ~96–97% with two gentle broad dips
+  // toward 95%. (Real per-minute SpO2 is downsampled to points like these.)
+  overnight: [97, 96.8, 95.9, 95.4, 96.2, 97, 96.7, 95.5, 96.2, 97],
+  sevenDay: [97, 96, 97, 98, 97, 96, 97],
+  thirtyDay: [97, 96, 97, 98, 96, 95, 97, 98, 97, 96, 97, 98, 97, 96, 95, 96, 97, 98, 97, 97, 96, 97, 98, 97, 96, 97, 98, 97, 96, 97],
   floor: 90,
   ceil: 100,
   ticks: [90, 95, 100],
   band: [95, 100],
   axisLabels: ["11p", "1a", "3a", "5a", "7a"],
+  zoneMin: 88,
+  zoneMax: 100,
+  nightlyLows: [96, 97, 95, 94, 96, 95, 94],
+  nightlyLowLabels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Last night"],
   statusLabel: "Normal",
+  breathingPill: "Optimal breathing regularity",
 };
 
 /** Returns the Blood Oxygen (SpO2) detail payload (sample data for now). */
@@ -1525,6 +1551,14 @@ export interface RespiratoryDetail {
   band: [number, number];
   axisLabels: string[];
   statusLabel: string;
+  /** Seven-night average (br/min) — the "Last 7 nights" summary value. */
+  weekAvg: number;
+  /** Personal baseline range [low, high] (br/min) — the lavender band in the
+   *  detail charts and the explainer copy. */
+  baselineRange: [number, number];
+  /** Per-night averages for the last 7 nights, oldest → last night. The final
+   *  entry is last night and is highlighted in the trend chart. */
+  sevenNight: { label: string; avg: number }[];
 }
 
 const RESPIRATORY_DETAIL: RespiratoryDetail = {
@@ -1538,6 +1572,17 @@ const RESPIRATORY_DETAIL: RespiratoryDetail = {
   band: [12, 16],
   axisLabels: ["11p", "1a", "3a", "5a", "7a"],
   statusLabel: "Normal",
+  weekAvg: 14.1,
+  baselineRange: [13.5, 15.0],
+  sevenNight: [
+    { label: "Mon", avg: 14.0 },
+    { label: "Tue", avg: 14.3 },
+    { label: "Wed", avg: 13.9 },
+    { label: "Thu", avg: 14.1 },
+    { label: "Fri", avg: 14.2 },
+    { label: "Sat", avg: 13.9 },
+    { label: "Last", avg: 14.2 },
+  ],
 };
 
 /** Returns the Respiratory Rate detail payload (sample data for now). */
@@ -1604,6 +1649,12 @@ export interface BloodPressureDetail {
   floor: number;
   ceil: number;
   axisLabels: string[];
+  /** Seven-day average systolic / diastolic (mmHg). */
+  avgSys: number;
+  avgDia: number;
+  /** The last 7 readings, oldest → last. Each carries its own systolic +
+   *  diastolic; the final entry is the latest reading (highlighted). */
+  readings: { label: string; sys: number; dia: number }[];
 }
 
 const BLOOD_PRESSURE_DETAIL: BloodPressureDetail = {
@@ -1617,6 +1668,17 @@ const BLOOD_PRESSURE_DETAIL: BloodPressureDetail = {
   floor: 60,
   ceil: 140,
   axisLabels: ["3 wk", "2 wk", "1 wk", "now"],
+  avgSys: 119,
+  avgDia: 77,
+  readings: [
+    { label: "Mon", sys: 120, dia: 78 },
+    { label: "Tue", sys: 121, dia: 79 },
+    { label: "Wed", sys: 118, dia: 76 },
+    { label: "Thu", sys: 122, dia: 79 },
+    { label: "Fri", sys: 119, dia: 77 },
+    { label: "Sat", sys: 117, dia: 75 },
+    { label: "Last", sys: 118, dia: 76 },
+  ],
 };
 
 /** Returns the Blood Pressure detail payload (sample data; a trend, not a diagnosis). */

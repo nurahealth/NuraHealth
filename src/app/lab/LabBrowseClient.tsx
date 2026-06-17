@@ -14,7 +14,7 @@ const SAGE = "var(--nura-sage)";
 const SAGE_ON = "var(--nura-sage-bg-on)";
 const SAGE_RGB = "var(--nura-sage-rgb)";
 const FG_RGB = "var(--nura-fg-rgb)";
-const SANS = "'Inter', system-ui, sans-serif";
+const SANS = "var(--font-inter), system-ui, sans-serif";
 const SERIF = "'DM Serif Display', Georgia, serif";
 
 // ── Types ───────────────────────────────────────────────────────────────────

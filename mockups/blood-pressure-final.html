@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>NŪRA · Blood Pressure</title>
+<style>
+  :root{
+    --bg:#0d0d0e; --surface:rgba(235,230,216,0.04); --cream:#ebe6d8;
+    --muted:rgba(235,230,216,0.62); --faint:rgba(235,230,216,0.45); --hair:rgba(235,230,216,0.1);
+    --sysline:#cf8fa0; --dialine:#8fa6cf;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;background:var(--bg);}
+  body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Segoe UI",sans-serif;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;color:var(--cream);}
+  .page{max-width:392px;margin:0 auto;padding:max(env(safe-area-inset-top),14px) 16px max(env(safe-area-inset-bottom),28px);display:flex;flex-direction:column;gap:14px;}
+  .lead{font-size:10.5px;letter-spacing:0.14em;text-transform:uppercase;color:var(--faint);margin:8px 2px -4px;}
+  .eyebrow-lbl{font-size:10px;font-weight:600;letter-spacing:1.6px;text-transform:uppercase;}
+
+  /* ── PART A · COMPACT TILE ─────────────────────────────────────────── */
+  .tile{background:var(--surface);border:0.5px solid var(--hair);border-radius:18px;padding:18px;cursor:pointer;display:flex;flex-direction:column;}
+  .tile-hd{display:flex;align-items:baseline;justify-content:space-between;}
+  .tile-hd .name{color:var(--muted);}
+  .tile-hd .src{font-size:9px;color:var(--faint);font-weight:600;letter-spacing:1.6px;text-transform:uppercase;}
+  .tile-val{margin-top:11px;font-size:40px;font-weight:600;letter-spacing:-0.02em;line-height:1;color:var(--cream);}
+  .tile-val .slash{color:var(--faint);}
+  .tile-val .unit{font-size:13px;font-weight:500;color:var(--muted);margin-left:7px;letter-spacing:0;}
+  .tmeter{margin-top:14px;}
+  .tmeter:first-of-type{margin-top:16px;}
+  .tmeter-hd{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:7px;}
+  .tmeter-hd .n{font-size:12px;color:var(--muted);}
+  .tmeter-hd .v{font-size:13px;font-weight:600;color:var(--cream);}
+  .ttrack-wrap{position:relative;height:7px;}
+  .ttrack{position:absolute;inset:0;border-radius:999px;}
+  .ttick{position:absolute;top:-1px;width:1.5px;height:9px;background:rgba(13,13,14,0.5);border-radius:1px;transform:translateX(-50%);}
+  .tmark{position:absolute;top:50%;width:4px;height:15px;border-radius:2.5px;background:var(--cream);transform:translate(-50%,-50%);box-shadow:0 0 0 2.5px var(--surface),0 0 0 3px var(--bg);}
+  .tile-ft{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:16px;}
+  .tile-ft .msg{font-size:11.5px;color:var(--faint);line-height:1.4;}
+  .pill-sm{font-size:9px;font-weight:600;letter-spacing:1.6px;text-transform:uppercase;padding:3px 8px;border-radius:999px;white-space:nowrap;flex-shrink:0;}
+
+  /* ── PART B · DETAIL VIEW ──────────────────────────────────────────── */
+  .hdr{display:flex;align-items:center;justify-content:space-between;}
+  .back{width:34px;height:34px;border-radius:50%;flex-shrink:0;background:var(--surface);border:0.5px solid var(--hair);display:flex;align-items:center;justify-content:center;color:var(--cream);cursor:pointer;}
+  .hdr-title{font-size:15px;font-weight:500;}
+  .hdr-src{font-size:11px;letter-spacing:0.18em;color:var(--faint);text-transform:uppercase;}
+  .hero{display:flex;flex-direction:column;align-items:center;text-align:center;}
+  .eyebrow{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.18em;margin-bottom:6px;}
+  .readout{font-size:54px;font-weight:600;letter-spacing:-1.5px;line-height:1;color:var(--cream);}
+  .readout .slash{color:var(--faint);}
+  .subline{font-size:12px;color:var(--faint);margin-top:8px;}
+  .block{background:var(--surface);border:0.5px solid var(--hair);border-radius:18px;}
+  .meters{padding:18px 18px 16px;display:flex;flex-direction:column;gap:22px;}
+  .meter-hd{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:13px;}
+  .meter-hd .name{font-size:13px;color:var(--muted);}
+  .meter-hd .rt b{color:var(--cream);font-weight:600;font-size:14px;}
+  .meter-hd .rt .cat{font-size:12px;font-weight:600;margin-left:6px;}
+  .track-wrap{position:relative;height:9px;}
+  .track{position:absolute;inset:0;border-radius:999px;}
+  .tick{position:absolute;top:-1px;width:2px;height:11px;background:rgba(13,13,14,0.55);border-radius:1px;transform:translateX(-50%);}
+  .marker{position:absolute;top:50%;width:5px;height:19px;border-radius:3px;background:var(--cream);transform:translate(-50%,-50%);box-shadow:0 0 0 3px var(--bg);}
+  .mval{position:absolute;bottom:16px;font-size:11px;font-weight:600;color:var(--cream);transform:translateX(-50%);white-space:nowrap;}
+  .nums{position:relative;height:14px;margin-top:9px;}
+  .nums span{position:absolute;top:0;font-size:10px;color:var(--faint);}
+  .keywrap{border-top:0.5px solid var(--hair);margin-top:4px;padding-top:15px;}
+  .keygrid{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px;}
+  .keyrow{display:flex;align-items:center;gap:8px;font-size:12px;}
+  .keyrow .kd{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+  .keyrow b{color:var(--cream);font-weight:600;}
+  .keyrow .rng{color:var(--faint);}
+  .pillwrap{display:flex;justify-content:center;}
+  .pill{display:inline-flex;align-items:center;gap:7px;padding:7px 14px;border-radius:30px;font-size:12.5px;font-weight:600;}
+  .pill .dot{width:6px;height:6px;border-radius:50%;}
+  .card{padding:20px 18px 15px;}
+  .card-hd{display:flex;align-items:baseline;justify-content:space-between;}
+  .card-hd .t{font-size:15px;font-weight:500;}
+  .card-hd .avg{font-size:13px;color:var(--muted);}
+  .card-hd .avg b{color:var(--cream);font-weight:600;}
+  .chart{width:100%;height:auto;display:block;overflow:visible;margin-top:8px;}
+  .legend{display:flex;align-items:center;justify-content:center;gap:16px;margin-top:8px;flex-wrap:wrap;}
+  .legend span{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:var(--faint);}
+  .lsw{width:16px;height:2.5px;border-radius:2px;}
+  .ldash{width:16px;height:0;border-top:1.5px dashed var(--faint);}
+  .strip{display:flex;}
+  .cell{flex:1;padding:14px 10px;text-align:center;}
+  .cell + .cell{border-left:0.5px solid var(--hair);}
+  .cell .v{font-size:18px;font-weight:600;color:var(--cream);letter-spacing:-0.2px;}
+  .cell .k{font-size:11px;color:var(--faint);margin-top:3px;}
+  .about{padding:4px 18px;}
+  .beat{padding:16px 0;}
+  .beat + .beat{border-top:0.5px solid var(--hair);}
+  .beat .lbl{font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:0.12em;margin-bottom:7px;}
+  .beat .body{font-size:13.5px;line-height:1.62;color:var(--muted);}
+  .beat .body b{color:var(--cream);font-weight:500;}
+  .caveat{display:flex;align-items:center;gap:6px;padding:13px 0 4px;border-top:0.5px solid var(--hair);font-size:11px;color:var(--faint);}
+  .caveat svg{flex-shrink:0;}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- ░░ PART A — COMPACT DASHBOARD TILE ░░ -->
+  <div class="lead">Part A · dashboard grid tile</div>
+  <div class="tile" id="tile">
+    <div class="tile-hd">
+      <span class="name eyebrow-lbl">Blood pressure</span>
+      <span class="src">Apple Health</span>
+    </div>
+    <div class="tile-val" id="tile-val"></div>
+    <div class="tmeter" id="tmeter-sys"></div>
+    <div class="tmeter" id="tmeter-dia"></div>
+    <div class="tile-ft">
+      <span class="msg" id="tile-msg"></span>
+      <span class="pill-sm" id="tile-pill"></span>
+    </div>
+  </div>
+
+  <!-- ░░ PART B — DETAIL VIEW ░░ -->
+  <div class="lead">Part B · detail view</div>
+
+  <div class="hdr">
+    <div class="back" aria-label="Back"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></div>
+    <div class="hdr-title">Blood pressure</div>
+    <div class="hdr-src">Apple Health</div>
+  </div>
+
+  <div class="hero">
+    <div class="eyebrow" id="eyebrow"></div>
+    <div class="readout" id="readout"></div>
+    <div class="subline">systolic / diastolic · mmHg</div>
+  </div>
+
+  <div class="block meters">
+    <div class="meter" id="meter-sys"></div>
+    <div class="meter" id="meter-dia"></div>
+    <div class="keywrap">
+      <div class="keygrid">
+        <div class="keyrow"><span class="kd" style="background:#6ea862"></span><b>Normal</b><span class="rng">under 120/80</span></div>
+        <div class="keyrow"><span class="kd" style="background:#d9c45e"></span><b>Elevated</b><span class="rng">120–129</span></div>
+        <div class="keyrow"><span class="kd" style="background:#d99a55"></span><b>Stage 1</b><span class="rng">130–139 / 80–89</span></div>
+        <div class="keyrow"><span class="kd" style="background:#c75f5f"></span><b>Stage 2</b><span class="rng">140+ / 90+</span></div>
+      </div>
+    </div>
+    <div class="pillwrap"><div class="pill" id="pill"><span class="dot"></span><span class="ptxt"></span></div></div>
+  </div>
+
+  <div class="block card">
+    <div class="card-hd">
+      <span class="t">Last 7 readings</span>
+      <span class="avg">avg <b id="r-avg"></b> mmHg</span>
+    </div>
+    <svg class="chart" viewBox="0 0 340 184" id="readChart"></svg>
+    <div class="legend">
+      <span><i class="lsw" style="background:var(--sysline)"></i>systolic</span>
+      <span><i class="lsw" style="background:var(--dialine)"></i>diastolic</span>
+      <span><i class="ldash"></i>normal ceiling</span>
+    </div>
+  </div>
+
+  <div class="block strip">
+    <div class="cell"><div class="v" id="s-latest"></div><div class="k">Latest</div></div>
+    <div class="cell"><div class="v" id="s-avg"></div><div class="k">7-day avg</div></div>
+    <div class="cell"><div class="v" id="s-cat"></div><div class="k">Category</div></div>
+  </div>
+
+  <div class="block about">
+    <div class="beat"><div class="lbl" id="lbl1">What it is</div><div class="body">Blood pressure is the force your blood exerts against your artery walls — <b>systolic</b> (heart beating) over <b>diastolic</b> (heart resting), measured in mmHg.</div></div>
+    <div class="beat"><div class="lbl" id="lbl2">Your numbers</div><div class="body" id="about-nums"></div></div>
+    <div class="beat"><div class="lbl" id="lbl3">What it means</div><div class="body" id="about-means"></div></div>
+    <div class="caveat">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7.5v.5"/></svg>
+      <span>Context, not a diagnosis — discuss any sustained changes with a clinician.</span>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── EXAMPLE / FALLBACK DATA ───────────────────────────────────────────────────
+const DATA = {
+  systolic: 118, diastolic: 76,
+  avgSys: 119, avgDia: 77,
+  history: [
+    {label:'Mon', sys:120, dia:78},
+    {label:'Tue', sys:121, dia:79},
+    {label:'Wed', sys:118, dia:76},
+    {label:'Thu', sys:122, dia:79},
+    {label:'Fri', sys:119, dia:77},
+    {label:'Sat', sys:117, dia:75},
+    {label:'Last', sys:118, dia:76},
+  ],
+};
+
+// ── Category logic — worse of systolic & diastolic ────────────────────────────
+const SEV = { 'Normal':0, 'Elevated':1, 'Stage 1':2, 'Stage 2':3 };
+const CAT_COLOR = { 'Normal':'#6ea862', 'Elevated':'#d9c45e', 'Stage 1':'#d99a55', 'Stage 2':'#c75f5f' };
+const sysCat = s => s>=140 ? 'Stage 2' : s>=130 ? 'Stage 1' : s>=120 ? 'Elevated' : 'Normal';
+const diaCat = d => d>=90 ? 'Stage 2' : d>=80 ? 'Stage 1' : 'Normal';
+const worse  = (a,b) => SEV[a] >= SEV[b] ? a : b;
+const clampPct = p => Math.max(0, Math.min(100, p));
+function hexA(hex,a){const n=parseInt(hex.slice(1),16);return `rgba(${(n>>16)&255},${(n>>8)&255},${n&255},${a})`;}
+
+const NS='http://www.w3.org/2000/svg';
+function el(t,a,txt){const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);if(txt!=null)e.textContent=txt;return e;}
+
+const SYS_GRAD = '#6ea862 0%,#6ea862 33%,#d9c45e 46%,#d99a55 62%,#cf7a6a 82%,#c75f5f 100%';
+const DIA_GRAD = '#6ea862 0%,#6ea862 50%,#d9c45e 61%,#d99a55 74%,#cf7a6a 88%,#c75f5f 100%';
+const sysPctFn = v => (v-90)/90*100;
+const diaPctFn = v => (v-50)/60*100;
+
+const sCat = sysCat(DATA.systolic), dCat = diaCat(DATA.diastolic);
+const category = worse(sCat, dCat);
+const catColor = CAT_COLOR[category];
+const FOOTER_MSG = {
+  'Normal':   'Both under your 120/80 ceiling',
+  'Elevated': 'Systolic creeping above 120',
+  'Stage 1':  'Above your 120/80 ceiling',
+  'Stage 2':  'Well above your 120/80 ceiling',
+};
+
+// ── PART A · compact tile ─────────────────────────────────────────────────────
+document.getElementById('tile-val').innerHTML = DATA.systolic + '<span class="slash">/</span>' + DATA.diastolic + '<span class="unit">mmHg</span>';
+function tileMeter(elId, name, value, gradient, tickPct, pctFn){
+  const pct = clampPct(pctFn(value));
+  document.getElementById(elId).innerHTML = `
+    <div class="tmeter-hd"><span class="n">${name}</span><span class="v">${value}</span></div>
+    <div class="ttrack-wrap">
+      <div class="ttrack" style="background:linear-gradient(90deg,${gradient})"></div>
+      <div class="ttick" style="left:${tickPct}%"></div>
+      <div class="tmark" style="left:${pct}%"></div>
+    </div>`;
+}
+tileMeter('tmeter-sys','Systolic',DATA.systolic,SYS_GRAD,33.3,sysPctFn);
+tileMeter('tmeter-dia','Diastolic',DATA.diastolic,DIA_GRAD,50,diaPctFn);
+document.getElementById('tile-msg').textContent = FOOTER_MSG[category];
+const tpill = document.getElementById('tile-pill');
+tpill.textContent = category.toUpperCase();
+tpill.style.color = catColor;
+tpill.style.background = hexA(catColor,0.12);
+tpill.style.border = `0.5px solid ${hexA(catColor,0.35)}`;
+
+// ── PART B · hero ─────────────────────────────────────────────────────────────
+const eb = document.getElementById('eyebrow'); eb.textContent = category; eb.style.color = catColor;
+document.getElementById('readout').innerHTML = DATA.systolic + '<span class="slash">/</span>' + DATA.diastolic;
+
+// ── PART B · range meters ──────────────────────────────────────────────────────
+function rangeMeter(elId, name, value, cat, gradient, ticks, nums, pctFn){
+  const pct = clampPct(pctFn(value));
+  document.getElementById(elId).innerHTML = `
+    <div class="meter-hd">
+      <span class="name">${name}</span>
+      <span class="rt"><b>${value}</b><span class="cat" style="color:${CAT_COLOR[cat]}">${cat}</span></span>
+    </div>
+    <div class="track-wrap">
+      <div class="mval" style="left:${pct}%">${value}</div>
+      <div class="track" style="background:linear-gradient(90deg,${gradient})"></div>
+      ${ticks.map(t=>`<div class="tick" style="left:${t}%"></div>`).join('')}
+      <div class="marker" style="left:${pct}%"></div>
+    </div>
+    <div class="nums">${nums.map(([n,p])=>{
+        const tf = p===0 ? 'translateX(0)' : p===100 ? 'translateX(-100%)' : 'translateX(-50%)';
+        return `<span style="left:${p}%;transform:${tf}">${n}</span>`;
+      }).join('')}</div>`;
+}
+rangeMeter('meter-sys','Systolic',DATA.systolic,sCat,SYS_GRAD,[33.3,44.4,55.6],
+  [[90,0],[120,33.3],[130,44.4],[140,55.6],[160,77.8],[180,100]],sysPctFn);
+rangeMeter('meter-dia','Diastolic',DATA.diastolic,dCat,DIA_GRAD,[50,66.7],
+  [[50,0],[70,33.3],[80,50],[90,66.7],[100,83.3],[110,100]],diaPctFn);
+
+// ── PART B · pill ───────────────────────────────────────────────────────────
+const pill = document.getElementById('pill');
+pill.style.border = `0.5px solid ${hexA(catColor,0.45)}`;
+pill.style.background = hexA(catColor,0.1);
+pill.style.color = 'var(--cream)';
+pill.querySelector('.dot').style.background = catColor;
+pill.querySelector('.ptxt').textContent = `${category} blood pressure`;
+
+// ── PART B · strip + explainer ────────────────────────────────────────────────
+document.getElementById('s-latest').textContent = `${DATA.systolic}/${DATA.diastolic}`;
+document.getElementById('s-avg').textContent = `${DATA.avgSys}/${DATA.avgDia}`;
+const sc = document.getElementById('s-cat'); sc.textContent = category; sc.style.color = catColor;
+document.getElementById('r-avg').textContent = `${DATA.avgSys}/${DATA.avgDia}`;
+['lbl1','lbl2','lbl3'].forEach(id => document.getElementById(id).style.color = catColor);
+document.getElementById('about-nums').innerHTML =
+  `Your latest reading was <b>${DATA.systolic}/${DATA.diastolic}</b> and your 7-day average is <b>${DATA.avgSys}/${DATA.avgDia}</b> — `+
+  (category==='Normal'
+    ? `both under the <b>120/80</b> ceiling, which keeps you in the <b>Normal</b> range.`
+    : `which places you in the <b>${category}</b> range relative to the <b>120/80</b> ceiling.`);
+const meansLead = {
+  'Normal':   'Staying under 120/80 means your heart and vessels aren’t being overworked.',
+  'Elevated': 'Sitting in the Elevated band means pressure is creeping up but isn’t yet high — a cue to watch habits, not to worry.',
+  'Stage 1':  'Landing in Stage 1 means pressure is consistently above the healthy ceiling and worth addressing.',
+  'Stage 2':  'Reaching Stage 2 means pressure is well above the healthy ceiling and worth discussing with a clinician.',
+}[category];
+document.getElementById('about-means').innerHTML =
+  `${meansLead} The first step up is <b>Elevated</b> (120–129 systolic); a single reading only matters as part of a trend, `+
+  `since pressure swings with stress, caffeine, salt, sleep, and time of day.`;
+
+// ── PART B · last 7 readings chart ────────────────────────────────────────────
+(function(){
+  const svg = document.getElementById('readChart');
+  const X0=34, X1=314, top=22, bot=150, LO=60, HI=160;
+  const yOf = v => top + (1-(v-LO)/(HI-LO))*(bot-top);
+  const h = DATA.history, n = h.length;
+  const xOf = i => X0 + i*(X1-X0)/(n-1);
+  [140,100].forEach(v=>{
+    svg.appendChild(el('line',{x1:X0,y1:yOf(v),x2:X1,y2:yOf(v),stroke:'rgba(235,230,216,0.06)','stroke-width':1}));
+    svg.appendChild(el('text',{x:26,y:(yOf(v)+3).toFixed(1),'text-anchor':'end','font-size':10,fill:'rgba(235,230,216,0.45)'},v));
+  });
+  [[120,'#cf8fa0'],[80,'#8fa6cf']].forEach(([v,c])=>{
+    svg.appendChild(el('line',{x1:X0,y1:yOf(v),x2:X1,y2:yOf(v),stroke:hexA(c,0.55),'stroke-width':1.2,'stroke-dasharray':'4 4'}));
+    svg.appendChild(el('text',{x:X1+2,y:(yOf(v)+3).toFixed(1),'text-anchor':'start','font-size':9,fill:hexA(c,0.85)},v));
+  });
+  const sysPts = h.map((p,i)=>[xOf(i),yOf(p.sys)]);
+  const diaPts = h.map((p,i)=>[xOf(i),yOf(p.dia)]);
+  const poly = pts => pts.map(p=>`${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(' ');
+  svg.appendChild(el('polyline',{points:poly(diaPts),fill:'none',stroke:'#8fa6cf','stroke-width':2.5,'stroke-linecap':'round','stroke-linejoin':'round'}));
+  svg.appendChild(el('polyline',{points:poly(sysPts),fill:'none',stroke:'#cf8fa0','stroke-width':2.5,'stroke-linecap':'round','stroke-linejoin':'round'}));
+  h.forEach((p,i)=>{
+    const last = i===n-1;
+    const [sx,sy]=sysPts[i], [dx,dy]=diaPts[i];
+    if(last){
+      svg.appendChild(el('circle',{cx:sx.toFixed(1),cy:sy.toFixed(1),r:4.5,fill:'#ebe6d8',stroke:'#0d0d0e','stroke-width':2}));
+      svg.appendChild(el('circle',{cx:dx.toFixed(1),cy:dy.toFixed(1),r:4.5,fill:'#ebe6d8',stroke:'#0d0d0e','stroke-width':2}));
+      svg.appendChild(el('text',{x:sx.toFixed(1),y:(sy-9).toFixed(1),'text-anchor':'middle','font-size':11,'font-weight':600,fill:'#ebe6d8'},p.sys));
+      svg.appendChild(el('text',{x:dx.toFixed(1),y:(dy+15).toFixed(1),'text-anchor':'middle','font-size':11,'font-weight':600,fill:'#ebe6d8'},p.dia));
+    }else{
+      svg.appendChild(el('circle',{cx:sx.toFixed(1),cy:sy.toFixed(1),r:2.6,fill:'#cf8fa0'}));
+      svg.appendChild(el('circle',{cx:dx.toFixed(1),cy:dy.toFixed(1),r:2.6,fill:'#8fa6cf'}));
+      svg.appendChild(el('text',{x:sx.toFixed(1),y:(sy-8).toFixed(1),'text-anchor':'middle','font-size':9.5,fill:'rgba(235,230,216,0.6)'},p.sys));
+      svg.appendChild(el('text',{x:dx.toFixed(1),y:(dy+14).toFixed(1),'text-anchor':'middle','font-size':9.5,fill:'rgba(235,230,216,0.6)'},p.dia));
+    }
+    svg.appendChild(el('text',{x:xOf(i).toFixed(1),y:174,'text-anchor':'middle','font-size':10,fill:'rgba(235,230,216,0.45)'},p.label));
+  });
+})();
+</script>
+</body>
+</html>

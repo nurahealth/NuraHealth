@@ -33,15 +33,25 @@ export async function POST(): Promise<NextResponse> {
   // 3. Generate (pure logic; always returns a usable plan).
   const plan = generateProgram(profile as GeneratorProfile, (catalog ?? []) as CatalogExercise[]);
 
-  // 4. Archive any existing active program for this user.
-  const { error: archErr } = await supabase
-    .from('fitness_programs')
-    .update({ status: 'archived' })
-    .eq('user_id', user.id)
-    .eq('status', 'active');
-  if (archErr) return NextResponse.json({ error: `Archive failed: ${archErr.message}` }, { status: 500 });
+  // 3b. Diagnostics: how many exercises got matched into each day. If the catalog
+  // is non-empty but training days come back empty, that's the bug to chase.
+  const trainingDays = plan.workouts.filter((w) => !w.is_rest);
+  const totalMatched = trainingDays.reduce((n, w) => n + w.exercises.length, 0);
+  console.log(
+    `[generate-program] user=${user.id} catalog=${catalog?.length ?? 0} ` +
+    `split="${plan.split_type}" days=${plan.days_per_week} ` +
+    `training=${trainingDays.length} totalExercises=${totalMatched}`,
+  );
+  for (const w of plan.workouts) {
+    console.log(
+      `[generate-program]   day ${w.day_index}: ${w.is_rest ? 'REST' : `focus="${w.focus}"`} ` +
+      `→ ${w.exercises.length} exercise(s)`,
+    );
+  }
 
-  // 5. Insert the new program.
+  // 4. Insert the new program FIRST (status active). We only archive the previous
+  // active program once this one is fully built, so a failure never leaves the
+  // user with an empty / all-rest plan as their active program.
   const { data: prog, error: progErr } = await supabase
     .from('fitness_programs')
     .insert({
@@ -56,7 +66,14 @@ export async function POST(): Promise<NextResponse> {
     .single();
   if (progErr) return NextResponse.json({ error: `Program insert failed: ${progErr.message}` }, { status: 500 });
 
-  // 6. Insert workouts, get their ids back, map by day_index.
+  // Roll back the just-created program (cascade drops workouts + exercises) so a
+  // mid-build failure can't strand a broken active program.
+  const rollback = async (msg: string, status = 500) => {
+    await supabase.from('fitness_programs').delete().eq('id', prog.id);
+    return NextResponse.json({ error: msg }, { status });
+  };
+
+  // 5. Insert workouts, get their ids back, map by day_index.
   const { data: workoutRows, error: wErr } = await supabase
     .from('program_workouts')
     .insert(
@@ -70,18 +87,18 @@ export async function POST(): Promise<NextResponse> {
       })),
     )
     .select('id, day_index');
-  if (wErr) return NextResponse.json({ error: `Workout insert failed: ${wErr.message}` }, { status: 500 });
+  if (wErr) return rollback(`Workout insert failed: ${wErr.message}`);
 
   const workoutIdByDay = new Map<number, string>((workoutRows ?? []).map((w) => [w.day_index as number, w.id as string]));
 
-  // 7. Insert workout_exercises.
+  // 6. Insert workout_exercises.
   const exerciseRows = plan.workouts.flatMap((w) => {
     const workoutId = workoutIdByDay.get(w.day_index);
     if (!workoutId) return [];
     return w.exercises.map((ex) => ({
       workout_id: workoutId,
       exercise_id: ex.exercise_id,
-      order: ex.order,
+      sort_order: ex.sort_order,
       sets: ex.sets,
       reps: ex.reps,
       rest_seconds: ex.rest_seconds,
@@ -90,8 +107,19 @@ export async function POST(): Promise<NextResponse> {
   });
   if (exerciseRows.length) {
     const { error: exErr } = await supabase.from('workout_exercises').insert(exerciseRows);
-    if (exErr) return NextResponse.json({ error: `Exercise insert failed: ${exErr.message}` }, { status: 500 });
+    if (exErr) return rollback(`Exercise insert failed: ${exErr.message}`);
   }
+  console.log(`[generate-program] inserted ${exerciseRows.length} workout_exercises for program ${prog.id}`);
+
+  // 7. Now that the new program is fully built, archive the user's OTHER active
+  // programs (everything except the one we just created).
+  const { error: archErr } = await supabase
+    .from('fitness_programs')
+    .update({ status: 'archived' })
+    .eq('user_id', user.id)
+    .eq('status', 'active')
+    .neq('id', prog.id);
+  if (archErr) return rollback(`Archive failed: ${archErr.message}`);
 
   // 8. Return the full plan.
   return NextResponse.json({

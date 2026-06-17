@@ -5,7 +5,7 @@ import NuraPlexus from "./NuraPlexus";
 
 const BG = "var(--nura-bg)";
 const TEXT = "var(--nura-text-primary)";
-const SANS = "'Inter', system-ui, sans-serif";
+const SANS = "var(--font-inter), system-ui, sans-serif";
 
 interface Props {
   children: React.ReactNode;
