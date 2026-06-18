@@ -5,6 +5,7 @@ import { getHeartRateDetail, getMetric } from "@/lib/dashboardData";
 import AuroraBackground from "@/components/dashboard/AuroraBackground";
 import GlassCard from "@/components/dashboard/GlassCard";
 import MetricChart from "@/components/dashboard/MetricChart";
+import MetricEducation, { type MetricEducationItem } from "@/components/dashboard/MetricEducation";
 
 // ── Tokens ──────────────────────────────────────────────────────────────────
 const TEXT = "var(--nura-text-primary)";
@@ -13,6 +14,7 @@ const FAINT = "var(--nura-text-tertiary)";
 const CORAL = "var(--nura-alert)";
 const INK = "var(--nura-fg-rgb)"; // warm off-white in dark mode
 const SANS = "var(--font-inter), system-ui, sans-serif";
+const bStyle: React.CSSProperties = { color: TEXT, fontWeight: 600 };
 
 // Warm coral/amber ambient so this reads as the cardiovascular page.
 const CORAL_AURORA =
@@ -33,6 +35,31 @@ export default function HeartRateDetailPage() {
   const router = useRouter();
   const d = getHeartRateDetail();
   const chart = getMetric("heart-rate")?.chart; // reuse the dashboard card's chart data
+
+  // Educational rows for the shared "Understanding your heart rate" section.
+  // "Your number" is built from the same values the hero + tiles use.
+  const eduItems: MetricEducationItem[] = [
+    {
+      label: "What it is",
+      body: "This is your heart rate across the whole day — resting stretches, activity spikes, and everything in between — measured continuously by your watch. It shows how your heart responds to everything you do.",
+    },
+    {
+      label: "Why it matters",
+      body: "Watching heart rate through the day shows how hard your heart works at rest versus during effort, and how quickly it settles afterward. A heart that climbs efficiently and recovers fast is a sign of good fitness.",
+    },
+    {
+      label: "Your number",
+      body: <>Today your heart rate has ranged from <b style={bStyle}>{d.resting} bpm</b> to <b style={bStyle}>{d.max} bpm</b>, averaging around <b style={bStyle}>{d.average} bpm</b>. A typical resting range is <b style={bStyle}>60–100 bpm</b>, climbing into the 100s–150s+ during exercise — and how fast it drops afterward is one of the clearest fitness signals.</>,
+    },
+    {
+      label: "What moves it",
+      body: "Activity, stress, caffeine, heat, hydration, sleep, and emotion all push it up moment to moment. Fitness lowers your resting and working rates over time and speeds recovery.",
+    },
+    {
+      label: "Keep in mind",
+      body: "Brief spikes during the day are normal and healthy. Look at the overall pattern — how it rises with effort and recovers at rest — rather than any single high reading.",
+    },
+  ];
 
   return (
     <div style={{
@@ -133,6 +160,11 @@ export default function HeartRateDetailPage() {
           <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "2.5px", color: CORAL, textTransform: "uppercase" }}>NŪRA</div>
           <p style={{ fontSize: 13.5, lineHeight: 1.6, marginTop: 9 }}>{d.insight}</p>
         </GlassCard>
+
+        {/* Understanding (shared MetricEducation) */}
+        <div className="hr-reveal" style={{ animationDelay: ".44s", marginTop: 16 }}>
+          <MetricEducation accent={CORAL} title="Understanding your heart rate" items={eduItems} />
+        </div>
       </div>
     </div>
   );
