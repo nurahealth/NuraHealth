@@ -41,11 +41,13 @@ async function ensureBucket() {
   if (!res.ok) throw new Error(`bucket create failed (${res.status}): ${await res.text()}`);
 }
 
-// All exercises whose demo source is a WorkoutX gif (paginated).
-async function allCandidates() {
+// All exercises whose demo source is a WorkoutX gif (paginated). Includes
+// demo_gif_url when the column exists so resume can skip already-recorded rows.
+async function allCandidates(withUrl) {
+  const select = withUrl ? 'id,gif_url,demo_gif_url' : 'id,gif_url';
   const out = [];
   for (let offset = 0; ; offset += 1000) {
-    const res = await fetch(`${URL_}/rest/v1/exercises?select=id,gif_url&gif_url=like.*workoutxapp*&limit=1000&offset=${offset}`, { headers: supa });
+    const res = await fetch(`${URL_}/rest/v1/exercises?select=${select}&gif_url=like.*workoutxapp*&limit=1000&offset=${offset}`, { headers: supa });
     if (!res.ok) throw new Error(`candidate fetch failed (${res.status}): ${await res.text()}`);
     const page = await res.json();
     out.push(...page);
@@ -109,48 +111,48 @@ async function patchUrl(id) {
 // ── run ───────────────────────────────────────────────────────────────────────
 await ensureBucket();
 const canSave = await columnExists();
-const candidates = await allCandidates();
+const candidates = await allCandidates(canSave);
 const stored = await alreadyStored();
-const todo = candidates.filter((r) => !stored.has(r.id));
 const total = candidates.length;
 
-console.log(`Catalog: ${total} WorkoutX-gif exercises | already stored: ${stored.size} | to download: ${todo.length}`);
-console.log(`demo_gif_url column: ${canSave ? 'present — will save URLs' : 'MISSING — downloads only; apply the migration then re-run to populate it'}\n`);
+// Resume-safe "done": file in storage AND (no column → fine; column → URL recorded).
+const isDone = (r) => stored.has(r.id) && (!canSave || !!r.demo_gif_url);
+const pending = candidates.filter((r) => !isDone(r));
+const skipped = total - pending.length;
 
-let ok = 0, failed = 0, savedCol = 0;
+console.log(`Catalog: ${total} WorkoutX-gif exercises | already done: ${skipped} | to process: ${pending.length}`);
+console.log(`demo_gif_url column: ${canSave ? 'present — saving URLs' : 'MISSING — storing gifs only; apply the migration then re-run to populate URLs'}\n`);
+
+let downloaded = 0, savedCol = 0, failed = 0, processed = 0;
 const failures = [];
-let done = stored.size; // count toward the catalog-wide progress
 
-for (let i = 0; i < todo.length; i++) {
-  const row = todo[i];
+for (let i = 0; i < pending.length; i++) {
+  const row = pending[i];
   const started = Date.now();
+  let didFetch = false;
   try {
-    const bytes = await fetchGif(row.gif_url);
-    await upload(row.id, bytes);
-    ok++;
-    if (canSave && await patchUrl(row.id)) savedCol++;
+    if (!stored.has(row.id)) {                 // download only if not already stored
+      const bytes = await fetchGif(row.gif_url); // retries 3× internally, throws on give-up
+      await upload(row.id, bytes);
+      downloaded++; didFetch = true;
+    }
+    if (canSave && !row.demo_gif_url && await patchUrl(row.id)) savedCol++;
   } catch (e) {
     failed++; failures.push(row.id);
     console.log(`  ✗ ${row.id}: ${e.message} — skipped`);
   }
-  done++;
-  if (ok % 25 === 0 && ok > 0) console.log(`  ${done} / ${total} downloaded (${ok} new this run, ${failed} failed)`);
-  const elapsed = Date.now() - started;
-  if (i < todo.length - 1 && elapsed < PACE_MS) await sleep(PACE_MS - elapsed);
-}
-
-// If the column exists, make sure previously-stored rows (e.g. the sample) are recorded too.
-if (canSave) {
-  for (const row of candidates) {
-    if (todo.includes(row)) continue; // already patched above when newly downloaded
-    if (await patchUrl(row.id)) savedCol++;
+  processed++;
+  if (processed % 25 === 0) console.log(`  ${skipped + processed} / ${total} done (${downloaded} downloaded, ${savedCol} url-saved, ${failed} failed)`);
+  if (didFetch && i < pending.length - 1) {     // pace only when we actually called WorkoutX
+    const elapsed = Date.now() - started;
+    if (elapsed < PACE_MS) await sleep(PACE_MS - elapsed);
   }
 }
 
 console.log(`\n══════════════ BACKFILL COMPLETE ══════════════`);
 console.log(`Catalog WorkoutX-gif exercises : ${total}`);
-console.log(`Newly downloaded this run      : ${ok}`);
-console.log(`Skipped (already stored)       : ${stored.size}`);
-console.log(`Failed                         : ${failed}${failures.length ? ' — ' + failures.join(', ') : ''}`);
-console.log(`demo_gif_url saved             : ${canSave ? savedCol : 'n/a (column missing)'}`);
-console.log(`Total now in storage           : ${stored.size + ok}`);
+console.log(`Succeeded (downloaded this run): ${downloaded}`);
+console.log(`Skipped (already done)         : ${skipped}`);
+console.log(`demo_gif_url saved this run    : ${canSave ? savedCol : 'n/a (column missing)'}`);
+console.log(`Failed (${failures.length})${failures.length ? ': ' + failures.join(', ') : ''}`);
+console.log(`Total now in storage           : ${stored.size + downloaded}`);
