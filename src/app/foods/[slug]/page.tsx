@@ -5,6 +5,7 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 import NuraPageShell from "@/components/NuraPageShell";
 import { ArrowLeft, Leaf } from "lucide-react";
 import { sageGradient } from "@/lib/sageGradient";
+import { resolveBack, withFrom, type RawSearchParam } from "@/lib/backNav";
 import SaveButton from "./SaveButton";
 import { RecipeCard, type Recipe } from "../../recipes/RecipesBrowseClient";
 
@@ -41,8 +42,17 @@ function pretty(t: string): string {
   return t.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-export default async function FoodDetailPage({ params }: { params: Promise<{ slug: string }> }) {
+export default async function FoodDetailPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<{ from?: RawSearchParam; label?: RawSearchParam }>;
+}) {
   const { slug } = await params;
+  const sp = await searchParams;
+  // Default back = the foods grid; overridden when we arrived from a recipe.
+  const back = resolveBack(sp, { href: "/foods", label: "Foods" });
 
   const supabase = await createSupabaseServerClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -110,9 +120,9 @@ export default async function FoodDetailPage({ params }: { params: Promise<{ slu
     <NuraPageShell maxWidth={860}>
       <div style={{ display: "flex", flexDirection: "column", gap: 26 }}>
 
-        {/* Back */}
-        <Link href="/foods" style={{ display: "inline-flex", alignItems: "center", gap: 6, fontFamily: SANS, fontSize: 13, fontWeight: 600, color: TEXT_SEC, textDecoration: "none", alignSelf: "flex-start" }}>
-          <ArrowLeft size={15} /> Foods
+        {/* Back — context-aware: foods grid, or the recipe we arrived from */}
+        <Link href={back.href} style={{ display: "inline-flex", alignItems: "center", gap: 6, fontFamily: SANS, fontSize: 13, fontWeight: 600, color: TEXT_SEC, textDecoration: "none", alignSelf: "flex-start", maxWidth: "100%" }}>
+          <ArrowLeft size={15} style={{ flexShrink: 0 }} /> <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{back.label}</span>
         </Link>
 
         {/* Hero */}
@@ -202,7 +212,7 @@ export default async function FoodDetailPage({ params }: { params: Promise<{ slu
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
               {pairsWith.map((p) =>
                 linkable.has(p) ? (
-                  <Link key={p} href={`/foods/${p}`} className="fd-pair" style={{ fontFamily: SANS, fontSize: 12.5, fontWeight: 600, color: SAGE, background: `rgba(${SAGE_RGB},0.12)`, border: `0.5px solid rgba(${SAGE_RGB},0.3)`, borderRadius: 999, padding: "6px 13px", textDecoration: "none" }}>
+                  <Link key={p} href={withFrom(`/foods/${p}`, `/foods/${ing.slug}`, ing.name)} className="fd-pair" style={{ fontFamily: SANS, fontSize: 12.5, fontWeight: 600, color: SAGE, background: `rgba(${SAGE_RGB},0.12)`, border: `0.5px solid rgba(${SAGE_RGB},0.3)`, borderRadius: 999, padding: "6px 13px", textDecoration: "none" }}>
                     {pretty(p)}
                   </Link>
                 ) : (
@@ -221,7 +231,7 @@ export default async function FoodDetailPage({ params }: { params: Promise<{ slu
           <section>
             <h2 style={heading}>Found in these recipes</h2>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(168px, 1fr))", gap: 14 }}>
-              {foundIn.map((r) => <RecipeCard key={r.id} r={r} />)}
+              {foundIn.map((r) => <RecipeCard key={r.id} r={r} from={`/foods/${ing.slug}`} fromLabel={ing.name} />)}
             </div>
           </section>
         )}

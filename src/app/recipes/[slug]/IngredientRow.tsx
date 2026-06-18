@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { ChevronDown, ArrowRight } from "lucide-react";
+import { withFrom } from "@/lib/backNav";
 
 const TEXT = "var(--nura-text-primary)";
 const TEXT_SEC = "var(--nura-text-secondary)";
@@ -32,7 +33,17 @@ function pretty(t: string): string {
 // A single expandable ingredient row. Collapsed: name + amount + system tag.
 // Expanded: a concise cellular note (primary compound + first explainer block,
 // or the context note / tagline as a fallback) plus a link to the full profile.
-export default function IngredientRow({ ing }: { ing: RecipeIngredient }) {
+// `fromPath`/`fromLabel` describe the originating recipe so the food page's back
+// button can return here labeled with the recipe name.
+export default function IngredientRow({
+  ing,
+  fromPath,
+  fromLabel,
+}: {
+  ing: RecipeIngredient;
+  fromPath?: string;
+  fromLabel?: string;
+}) {
   const [open, setOpen] = useState(false);
 
   const hasDetail = !!(ing.explainerBody || ing.contextNote || ing.tagline || ing.primaryCompound);
@@ -101,7 +112,11 @@ export default function IngredientRow({ ing }: { ing: RecipeIngredient }) {
               )}
               {ing.slug && (
                 <Link
-                  href={`/foods/${ing.slug}`}
+                  href={
+                    fromPath
+                      ? withFrom(`/foods/${ing.slug}`, fromPath, fromLabel ?? "Recipe")
+                      : `/foods/${ing.slug}`
+                  }
                   style={{ display: "inline-flex", alignItems: "center", gap: 5, marginTop: 12, fontFamily: SANS, fontSize: 12.5, fontWeight: 600, color: SAGE, textDecoration: "none" }}
                 >
                   Full food profile <ArrowRight size={13} />

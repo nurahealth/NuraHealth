@@ -7,6 +7,7 @@ import {
   UtensilsCrossed, ArrowRight, Globe,
 } from "lucide-react";
 import { sageGradient } from "@/lib/sageGradient";
+import { withFrom } from "@/lib/backNav";
 
 // ── Design tokens (locked NŪRA system) ─────────────────────────────────────────
 const TEXT = "var(--nura-text-primary)";
@@ -68,11 +69,13 @@ function categoryLabel(v: string): string {
 }
 
 // ── Recipe card (reused on detail page too) ───────────────────────────────────
-export function RecipeCard({ r }: { r: Recipe }) {
+// `from`/`fromLabel` (optional) let a calling page (e.g. an ingredient page's
+// "Found in these recipes") make the recipe's back button return to it.
+export function RecipeCard({ r, from, fromLabel }: { r: Recipe; from?: string; fromLabel?: string }) {
   const primaryGoal = r.goal_tags[0];
   return (
     <Link
-      href={`/recipes/${r.slug}`}
+      href={from ? withFrom(`/recipes/${r.slug}`, from, fromLabel ?? "Back") : `/recipes/${r.slug}`}
       className="rx-card"
       style={{
         display: "flex", flexDirection: "column",

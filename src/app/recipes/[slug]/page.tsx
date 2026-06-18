@@ -5,6 +5,7 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 import NuraPageShell from "@/components/NuraPageShell";
 import { ArrowLeft, Clock, Users, Leaf } from "lucide-react";
 import { sageGradient } from "@/lib/sageGradient";
+import { resolveBack, type RawSearchParam } from "@/lib/backNav";
 import SaveButton from "./SaveButton";
 import IngredientRow, { type RecipeIngredient } from "./IngredientRow";
 
@@ -63,8 +64,16 @@ function categoryLabel(v: string): string {
   return v.charAt(0).toUpperCase() + v.slice(1);
 }
 
-export default async function RecipeDetailPage({ params }: { params: Promise<{ slug: string }> }) {
+export default async function RecipeDetailPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<{ from?: RawSearchParam; label?: RawSearchParam }>;
+}) {
   const { slug } = await params;
+  const sp = await searchParams;
+  const back = resolveBack(sp, { href: "/recipes", label: "Recipes" });
 
   const supabase = await createSupabaseServerClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -123,9 +132,9 @@ export default async function RecipeDetailPage({ params }: { params: Promise<{ s
     <NuraPageShell maxWidth={860}>
       <div style={{ display: "flex", flexDirection: "column", gap: 26 }}>
 
-        {/* Back */}
-        <Link href="/recipes" style={{ display: "inline-flex", alignItems: "center", gap: 6, fontFamily: SANS, fontSize: 13, fontWeight: 600, color: TEXT_SEC, textDecoration: "none", alignSelf: "flex-start" }}>
-          <ArrowLeft size={15} /> Recipes
+        {/* Back — context-aware (recipes grid, or the food we arrived from) */}
+        <Link href={back.href} style={{ display: "inline-flex", alignItems: "center", gap: 6, fontFamily: SANS, fontSize: 13, fontWeight: 600, color: TEXT_SEC, textDecoration: "none", alignSelf: "flex-start", maxWidth: "100%" }}>
+          <ArrowLeft size={15} style={{ flexShrink: 0 }} /> <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{back.label}</span>
         </Link>
 
         {/* Hero */}
@@ -198,7 +207,14 @@ export default async function RecipeDetailPage({ params }: { params: Promise<{ s
             </div>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              {ingredients.map((ing, i) => <IngredientRow key={`${ing.slug ?? "x"}-${i}`} ing={ing} />)}
+              {ingredients.map((ing, i) => (
+                <IngredientRow
+                  key={`${ing.slug ?? "x"}-${i}`}
+                  ing={ing}
+                  fromPath={`/recipes/${recipe.slug}`}
+                  fromLabel={recipe.title}
+                />
+              ))}
             </div>
           )}
         </section>
