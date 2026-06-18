@@ -101,6 +101,11 @@ export function mapProgram(row: Record<string, unknown>): Program {
 export type ExerciseFull = CatalogEx & {
   instructions: string[] | null;
   difficulty: string | null;
+  // Self-hosted WorkoutX gif demo. Optional: the column is added by
+  // 20260617000002_exercises_demo_gif_url.sql. Once that migration is applied,
+  // add `demo_gif_url` to the select below and the detail screen prefers it over
+  // the deterministic public-bucket path.
+  demo_gif_url?: string | null;
 };
 
 export async function loadExercise(id: string): Promise<ExerciseFull | null> {

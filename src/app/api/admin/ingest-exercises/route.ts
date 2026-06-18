@@ -28,13 +28,14 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   // persists everything it fetched (idempotent on id).
   const seen = new Set<string>();
   let upserted = 0;
-  const stampedNow = new Date().toISOString();
 
   async function upsertPage(pageRows: ExerciseRecord[]): Promise<void> {
     const fresh = pageRows.filter((r) => !seen.has(r.id));
     fresh.forEach((r) => seen.add(r.id));
     for (let i = 0; i < fresh.length; i += UPSERT_BATCH) {
-      const chunk = fresh.slice(i, i + UPSERT_BATCH).map((r) => ({ ...r, updated_at: stampedNow }));
+      // The live table tracks `created_at` (defaulted by the DB); there is no
+      // `updated_at` column, so the row is upserted as-is.
+      const chunk = fresh.slice(i, i + UPSERT_BATCH);
       const { error } = await supabaseAdmin.from('exercises').upsert(chunk, { onConflict: 'id' });
       if (error) throw new Error(`Upsert failed (offset chunk ${i}): ${error.message}`);
       upserted += chunk.length;

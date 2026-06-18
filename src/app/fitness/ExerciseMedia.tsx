@@ -14,7 +14,8 @@ export function posterFor(src: string | null | undefined): string | undefined {
   return undefined;
 }
 
-const isVideo = (src: string) => /\.(mp4|webm)(\?|$)/i.test(src);
+// A MoveKit 3D demo ships as a video clip; anything else (e.g. a WorkoutX gif) is not.
+export const isVideo = (src: string) => /\.(mp4|webm)(\?|$)/i.test(src);
 
 // The MoveKit clips' own studio backdrop (warm off-white). Used as the media
 // element's background so any object-fit:contain letterbox is filled to match

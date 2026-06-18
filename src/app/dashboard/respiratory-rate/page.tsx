@@ -3,6 +3,7 @@
 import { useId } from "react";
 import { useRouter } from "next/navigation";
 import { getRespiratoryDetail, SOURCE_LABEL, type RespiratoryDetail } from "@/lib/dashboardData";
+import MetricEducation, { type MetricEducationItem } from "@/components/dashboard/MetricEducation";
 
 // ── Tokens (purple identity — never sage) ─────────────────────────────────────
 const BG = "#0d0d0e";
@@ -97,13 +98,6 @@ export default function RespiratoryRateDetailPage() {
   const status = statusFor(position);
   const band = `${bLo.toFixed(1)}–${bHi.toFixed(1)}`;
 
-  const meansLead =
-    position < 0.35
-      ? "Because last night sat just below your baseline band, your breathing was relaxed — typically a mark of deep, restful recovery."
-      : position <= 0.65
-        ? "Because last night landed right in the middle of that band, your breathing was steady — a sign of good overnight recovery."
-        : "Because last night ran above your baseline band, your breathing was elevated — worth keeping an eye on over the next few nights.";
-
   return (
     <div style={{ minHeight: "100dvh", background: BG, color: CREAM, fontFamily: SANS, WebkitFontSmoothing: "antialiased" }}>
       <style>{`
@@ -173,33 +167,42 @@ export default function RespiratoryRateDetailPage() {
           <StripCell v={band} k="Baseline" />
         </section>
 
-        {/* 6 — ABOUT */}
-        <section className="block" style={{ ...blockStyle, padding: "4px 18px" }}>
-          <Beat label="What it is">
-            Respiratory rate is simply how many breaths you take per minute. NŪRA reads it from your Oura ring <b style={bStyle}>while you sleep</b>, when breathing is steadiest and unaffected by movement — making it a clean window into how hard your body is working to recover.
-          </Beat>
-          <Beat label="Your average">
-            Last night you averaged <b style={bStyle}>{value.toFixed(1)} br/min</b>, and across the past week you&apos;ve held a <b style={bStyle}>{d.weekAvg.toFixed(1)}</b> average. Your personal baseline is <b style={bStyle}>{band} br/min</b> — the band your body settles into on a normal, well-recovered night.
-          </Beat>
-          <Beat label="What it means">
-            {meansLead} Keep an eye out for a sustained rise of <b style={bStyle}>1–2 br/min</b> above baseline: it often appears a day before you feel anything, flagging an oncoming illness, late alcohol, a hard training day, or a warm room.
-          </Beat>
-          <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "13px 0 4px", borderTop: `0.5px solid ${HAIR}`, fontSize: 11, color: FAINT }}>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><circle cx="12" cy="12" r="9" /><path d="M12 11v5M12 7.5v.5" /></svg>
-            <span>Context, not a diagnosis.</span>
-          </div>
-        </section>
+        {/* 6 — UNDERSTANDING (shared MetricEducation) */}
+        <MetricEducation accent="#b9a0e6" title="Understanding your respiratory rate" items={RR_EDU_ITEMS} />
 
       </div>
     </div>
   );
 }
 
+// Educational rows for the shared "Understanding your respiratory rate" section.
+const RR_EDU_ITEMS: MetricEducationItem[] = [
+  {
+    label: "What it is",
+    body: "Respiratory rate is how many breaths you take per minute, measured overnight while you're at rest. It's a quiet but sensitive window into how your body is recovering — your nervous system, lungs, and metabolism all shape it.",
+  },
+  {
+    label: "Why it matters",
+    body: "A steady overnight breathing rate is a sign your body is at ease. A sudden, sustained rise can be one of the earliest signals something's shifting — illness, poor recovery, stress, or alcohol — often before you feel it.",
+  },
+  {
+    label: "Your number",
+    body: "Most healthy adults rest around 12–20 breaths per minute, and overnight it usually sits lower and steady. What matters most is your own baseline staying consistent night to night.",
+  },
+  {
+    label: "What moves it",
+    body: "Fever or infection, hard late training, alcohol, heat, stress, and altitude can nudge it up. Good sleep and consistent recovery bring it back down.",
+  },
+  {
+    label: "Keep in mind",
+    body: "This is a wellness signal, not a diagnosis. Watch for changes from your normal rather than reacting to any single night.",
+  },
+];
+
 // ── Shared style fragments ────────────────────────────────────────────────────
 const blockStyle: React.CSSProperties = { background: SURFACE, border: `0.5px solid ${HAIR}`, borderRadius: 18, padding: "20px 18px 15px" };
 const cardHd: React.CSSProperties = { display: "flex", alignItems: "baseline", justifyContent: "space-between" };
 const noteStyle: React.CSSProperties = { fontSize: 12, color: FAINT, margin: "5px 0 2px", lineHeight: 1.5 };
-const bStyle: React.CSSProperties = { color: CREAM, fontWeight: 500 };
 
 function Legend({ first }: { first: string }) {
   return (
@@ -219,15 +222,6 @@ function StripCell({ v, k, first }: { v: string; k: string; first?: boolean }) {
     <div style={{ flex: 1, padding: "14px 10px", textAlign: "center", borderLeft: first ? "none" : `0.5px solid ${HAIR}` }}>
       <div style={{ fontSize: 18, fontWeight: 600, color: CREAM, letterSpacing: "-0.2px" }}>{v}</div>
       <div style={{ fontSize: 11, color: FAINT, marginTop: 3 }}>{k}</div>
-    </div>
-  );
-}
-
-function Beat({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div style={{ padding: "16px 0", borderTop: label === "What it is" ? "none" : `0.5px solid ${HAIR}` }}>
-      <div style={{ fontSize: 10.5, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.12em", color: ACCENT, marginBottom: 7 }}>{label}</div>
-      <div style={{ fontSize: 13.5, lineHeight: 1.62, color: MUTED }}>{children}</div>
     </div>
   );
 }

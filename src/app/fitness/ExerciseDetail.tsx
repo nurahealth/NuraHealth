@@ -2,7 +2,11 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { loadExercise, type ExerciseFull } from './planData';
-import ExerciseMedia, { CLIP_BG } from './ExerciseMedia';
+import ExerciseMedia, { CLIP_BG, isVideo } from './ExerciseMedia';
+
+// Self-hosted demo store (public bucket). WorkoutX gifs are downloaded here so the
+// demo box keeps working after the WorkoutX subscription is cancelled.
+const DEMO_BUCKET = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/exercise-demos`;
 
 // ── Palette (ported verbatim from design-reference/exercise-howto.html) ───────
 const BG = '#0d0d0e';
@@ -49,11 +53,13 @@ export default function ExerciseDetail({ exerciseId, sets, reps, rest_seconds, o
 
   const setCount = Math.max(1, sets ?? 3);
   const [done, setDone] = useState<boolean[]>(() => Array(setCount).fill(false));
-  const [gifFailed, setGifFailed] = useState(false);
+  // Demo source preference: MoveKit clip → self-hosted WorkoutX gif → placeholder.
+  // demoIdx walks that list; onError advances to the next candidate.
+  const [demoIdx, setDemoIdx] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
-    setGifFailed(false);
+    setDemoIdx(0);
     (async () => {
       const row = await loadExercise(exerciseId);
       if (cancelled) return;
@@ -68,6 +74,19 @@ export default function ExerciseDetail({ exerciseId, sets, reps, rest_seconds, o
   const primary = ex?.target_muscles ?? [];
   const secondary = ex?.secondary_muscles ?? [];
   const instructions = useMemo(() => (ex?.instructions ?? []).filter(Boolean), [ex]);
+
+  // Ordered demo candidates: (1) MoveKit 3D clip if present, then (2) the
+  // self-hosted WorkoutX gif (saved demo_gif_url, else the deterministic public
+  // path). GIFs use object-fit:contain so the full square frame shows on the
+  // card's off-white backdrop; MoveKit clips keep cover (they match the aspect).
+  const demoSources = useMemo(() => {
+    const list: { src: string; fit: 'cover' | 'contain' }[] = [];
+    if (ex?.gif_url && isVideo(ex.gif_url)) list.push({ src: ex.gif_url, fit: 'cover' });
+    const gif = ex?.demo_gif_url ?? (ex?.id ? `${DEMO_BUCKET}/${ex.id}.gif` : null);
+    if (gif) list.push({ src: gif, fit: 'contain' });
+    return list;
+  }, [ex]);
+  const activeDemo = demoSources[demoIdx] ?? null;
 
   const setsReps = sets != null && reps ? `${sets} × ${fmtReps(reps)}` : '—';
   const restVal = rest_seconds != null ? `${rest_seconds}s` : '—';
@@ -117,9 +136,9 @@ export default function ExerciseDetail({ exerciseId, sets, reps, rest_seconds, o
           position: 'relative', borderRadius: DEMO.radius, overflow: 'hidden', aspectRatio: DEMO.aspect,
           marginBottom: 18, background: DEMO.bg, border: `1px solid ${DEMO.border}`,
         }}>
-          {ex?.gif_url && !gifFailed ? (
+          {activeDemo ? (
             <div style={{ position: 'absolute', inset: 0, zIndex: 1 }}>
-              <ExerciseMedia src={ex.gif_url} alt={ex.name} fit="cover" onError={() => setGifFailed(true)} />
+              <ExerciseMedia key={activeDemo.src} src={activeDemo.src} alt={ex?.name ?? ''} fit={activeDemo.fit} onError={() => setDemoIdx((i) => i + 1)} />
             </div>
           ) : (
             <div style={{ position: 'absolute', inset: 0, zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>

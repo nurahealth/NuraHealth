@@ -7,6 +7,7 @@ import AuroraBackground from "@/components/dashboard/AuroraBackground";
 import RadialGauge from "@/components/dashboard/RadialGauge";
 import GlassCard from "@/components/dashboard/GlassCard";
 import { hex, light, smooth } from "@/components/dashboard/ActiveEnergyTodayChart";
+import MetricEducation, { type MetricEducationItem } from "@/components/dashboard/MetricEducation";
 
 // ── Tokens ──────────────────────────────────────────────────────────────────
 const TEXT = "var(--nura-text-primary)";
@@ -287,10 +288,39 @@ export default function SleepDetailPage() {
           <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: "1.4px", color: DEEP, textTransform: "uppercase" }}>NŪRA insight</div>
           <p style={{ fontSize: 14, lineHeight: 1.55, marginTop: 8, color: `rgba(${INK},0.85)` }}>{d.insight}</p>
         </div>
+
+        {/* 10 · Understanding (shared MetricEducation) */}
+        <div className="s-reveal" style={{ animationDelay: ".62s", marginTop: 16 }}>
+          <MetricEducation accent={DEEP} title="Understanding your sleep" items={SLEEP_EDU_ITEMS} />
+        </div>
       </div>
     </div>
   );
 }
+
+// Educational rows for the shared "Understanding your sleep" section.
+const SLEEP_EDU_ITEMS: MetricEducationItem[] = [
+  {
+    label: "What it is",
+    body: "Sleep tracking breaks your night into stages — deep, REM, light, and awake — from movement and heart-rate patterns. Together they show not just how long you slept, but how restorative it actually was.",
+  },
+  {
+    label: "Why it matters",
+    body: "Sleep is when your body repairs tissue, consolidates memory, and resets your hormones and immune system. Nearly every other number on this dashboard rides on it — recovery, heart rate, mood, and metabolism all depend on good sleep.",
+  },
+  {
+    label: "Your number",
+    body: "Most adults do best with 7–9 hours and a healthy mix of deep and REM. But consistency matters as much as total hours — steady bed and wake times keep your body clock aligned.",
+  },
+  {
+    label: "What moves it",
+    body: "Late screens, heavy late meals, stress, and irregular schedules fragment sleep and cut deep and REM. A cool, dark room and a wind-down routine protect it.",
+  },
+  {
+    label: "Keep in mind",
+    body: "Stage estimates from a wearable are approximate. Use them to spot patterns across your nights, not to chase a perfect-looking graph.",
+  },
+];
 
 // ── Shared x-axis row ─────────────────────────────────────────────────────────
 function Axis({ labels }: { labels: string[] }) {

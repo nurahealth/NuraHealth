@@ -19,6 +19,15 @@ export interface ExerciseRecord {
   gif_url: string | null;
   instructions: string[];
   difficulty: string | null;
+  // Richer fields from the paid WorkoutX plan. Columns added by
+  // 20260617000001_exercises_richer_fields.sql; the ingest drops any of these
+  // that the live table does not yet have, so it never errors on a missing column.
+  category: string | null;
+  mechanic: string | null;
+  force: string | null;
+  met: number | null;
+  calories_per_minute: number | null;
+  description: string | null;
 }
 
 /** Raw exercise as returned by WorkoutX GET /v1/exercises (inside `data`). */
@@ -32,6 +41,12 @@ interface RawExercise {
   gifUrl?: string;
   instructions?: unknown;
   difficulty?: string;
+  category?: string;
+  mechanic?: string;
+  force?: string;
+  met?: unknown;
+  caloriesPerMinute?: unknown;
+  description?: string;
 }
 
 /** Envelope WorkoutX wraps the list in: { total, count, data: [...] }. */
@@ -86,6 +101,12 @@ const asStringArray = (v: unknown): string[] =>
 const cleanString = (v: unknown): string | null =>
   typeof v === 'string' && v.trim() !== '' ? v : null;
 
+const cleanNumber = (v: unknown): number | null => {
+  if (typeof v === 'number' && Number.isFinite(v)) return v;
+  if (typeof v === 'string' && v.trim() !== '' && Number.isFinite(Number(v))) return Number(v);
+  return null;
+};
+
 /**
  * THE central mapping function — one place to remap when the source changes.
  * Returns null for records missing the minimum required fields (id + name).
@@ -103,6 +124,12 @@ export function mapExercise(raw: RawExercise): ExerciseRecord | null {
     gif_url: cleanString(raw.gifUrl),
     instructions: asStringArray(raw.instructions),
     difficulty: cleanString(raw.difficulty),
+    category: cleanString(raw.category),
+    mechanic: cleanString(raw.mechanic),
+    force: cleanString(raw.force),
+    met: cleanNumber(raw.met),
+    calories_per_minute: cleanNumber(raw.caloriesPerMinute),
+    description: cleanString(raw.description),
   };
 }
 

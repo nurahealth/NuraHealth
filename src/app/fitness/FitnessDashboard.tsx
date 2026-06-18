@@ -146,6 +146,29 @@ function AddSheet({ workout, catalog, onPick, onClose, busy }: {
   onPick: (c: CatalogEx) => void; onClose: () => void; busy: boolean;
 }) {
   const [groupKey, setGroupKey] = useState<string | null>(null);
+  const [visible, setVisible] = useState(false); // drives the fade + scale enter/exit
+
+  // Animated dismissal: play the exit transition, then actually unmount via onClose.
+  const closeRef = useRef(onClose);
+  useEffect(() => { closeRef.current = onClose; }, [onClose]);
+  const requestClose = useCallback(() => {
+    setVisible(false);
+    setTimeout(() => closeRef.current(), 200);
+  }, []);
+
+  // While open: enter animation, Escape-to-close, and a background scroll lock.
+  useEffect(() => {
+    const raf = requestAnimationFrame(() => setVisible(true));
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') requestClose(); };
+    document.addEventListener('keydown', onKey);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      cancelAnimationFrame(raf);
+      document.removeEventListener('keydown', onKey);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [requestClose]);
 
   // Addable exercises (excludes ones already in the workout), grouped using the
   // SAME mapping as "Train by muscle". Cardio only appears when it has any.
@@ -158,20 +181,22 @@ function AddSheet({ workout, catalog, onPick, onClose, busy }: {
   const active = groupKey ? groups.find((x) => x.group.key === groupKey) : null;
 
   return (
-    <div onClick={onClose} style={{
-      position: 'fixed', inset: 0, zIndex: 80, display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
-      background: 'rgba(0,0,0,.5)', backdropFilter: 'blur(2px)',
+    <div onClick={requestClose} style={{
+      position: 'fixed', inset: 0, zIndex: 80, display: 'flex', alignItems: 'center', justifyContent: 'center',
+      padding: 16, background: 'rgba(0,0,0,.5)', backdropFilter: 'blur(2px)',
+      opacity: visible ? 1 : 0, transition: 'opacity 200ms ease',
     }}>
       <div onClick={(e) => e.stopPropagation()} style={{
-        width: '100%', maxWidth: 440, maxHeight: '78vh', display: 'flex', flexDirection: 'column',
-        background: '#161918', borderTopLeftRadius: 22, borderTopRightRadius: 22,
-        border: `1px solid ${LINE}`, borderBottom: 'none', padding: '10px 16px 22px', fontFamily: FONT,
+        width: '100%', maxWidth: 420, maxHeight: '80vh', display: 'flex', flexDirection: 'column',
+        background: '#161918', borderRadius: 22, overflow: 'hidden',
+        border: `1px solid ${LINE}`, padding: '18px 16px', fontFamily: FONT,
+        opacity: visible ? 1 : 0, transform: visible ? 'scale(1)' : 'scale(.96)',
+        transition: 'opacity 200ms ease, transform 200ms ease',
       }}>
-        <div style={{ width: 38, height: 4, borderRadius: 999, background: 'rgba(235,230,216,.2)', margin: '0 auto 14px' }} />
         {/* header (kept) */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, flexShrink: 0 }}>
           <span style={{ fontSize: 16, fontWeight: 700, color: TEXT }}>Add exercise</span>
-          <button type="button" aria-label="Close" onClick={onClose} style={{
+          <button type="button" aria-label="Close" onClick={requestClose} style={{
             appearance: 'none', cursor: 'pointer', width: 32, height: 32, borderRadius: 9, color: MUT,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             background: 'rgba(235,230,216,.05)', border: `1px solid ${LINE}`,
@@ -180,7 +205,7 @@ function AddSheet({ workout, catalog, onPick, onClose, busy }: {
 
         {!active ? (
           // Level 1 — muscle groups
-          <div style={{ overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <div style={{ overflowY: 'auto', minHeight: 0, display: 'flex', flexDirection: 'column', gap: 6 }}>
             {groups.map(({ group, items }) => (
               <button key={group.key} type="button" onClick={() => setGroupKey(group.key)} style={{
                 appearance: 'none', cursor: 'pointer', textAlign: 'left', width: '100%',
@@ -201,7 +226,7 @@ function AddSheet({ workout, catalog, onPick, onClose, busy }: {
           // Level 2 — exercises in the chosen group
           <>
             <button type="button" onClick={() => setGroupKey(null)} aria-label="Back to muscle groups" style={{
-              appearance: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 7, marginBottom: 12,
+              appearance: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 7, marginBottom: 12, flexShrink: 0,
               padding: '8px 4px', background: 'transparent', border: 'none', color: SAGE, fontSize: 13, fontWeight: 600, fontFamily: FONT,
             }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
@@ -210,7 +235,7 @@ function AddSheet({ workout, catalog, onPick, onClose, busy }: {
             {active.items.length === 0 ? (
               <div style={{ fontSize: 13, color: MUT, padding: '12px 4px' }}>No exercises to add in this group right now.</div>
             ) : (
-              <div style={{ overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 3 }}>
+              <div style={{ overflowY: 'auto', minHeight: 0, display: 'flex', flexDirection: 'column', gap: 3 }}>
                 {active.items.map((c) => (
                   <button key={c.id} type="button" disabled={busy} onClick={() => onPick(c)} style={{
                     appearance: 'none', textAlign: 'left', cursor: busy ? 'default' : 'pointer', padding: '10px 12px',
