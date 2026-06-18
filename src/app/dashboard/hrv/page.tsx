@@ -5,6 +5,7 @@ import { getRecoveryDetail, type HrvTrendChart, type RecoveryDriver } from "@/li
 import AuroraBackground from "@/components/dashboard/AuroraBackground";
 import RadialGauge from "@/components/dashboard/RadialGauge";
 import GlassCard from "@/components/dashboard/GlassCard";
+import MetricEducation, { type MetricEducationItem } from "@/components/dashboard/MetricEducation";
 
 // ── Tokens ──────────────────────────────────────────────────────────────────
 const TEXT = "var(--nura-text-primary)";
@@ -14,6 +15,7 @@ const EMERALD = "var(--nura-optimal)";
 const SAGE = "var(--nura-sage)";
 const INK = "var(--nura-fg-rgb)"; // warm off-white in dark mode
 const SANS = "var(--font-inter), system-ui, sans-serif";
+const bStyle: React.CSSProperties = { color: TEXT, fontWeight: 600 };
 
 // Status level → color token (emerald = strong, sage = solid, gold = watch).
 const LEVEL_COLOR: Record<RecoveryDriver["level"], string> = {
@@ -34,6 +36,36 @@ const InfoIcon = () => (
 export default function RecoveryDetailPage() {
   const router = useRouter();
   const d = getRecoveryDetail();
+
+  // "Your number" is built from the same HRV data the hero/trend use: the rolling
+  // 7-day average and the "7-day baseline" tile — so it tracks live or dev-fallback
+  // values rather than a hardcoded number.
+  const hrvWeeklyAvg = d.hrv.average;
+  const baselineTile = d.tiles.find((t) => /baseline/i.test(t.label));
+  const hrvBaseline = baselineTile ? `${baselineTile.value}${baselineTile.unit ?? ""}`.trim() : `${hrvWeeklyAvg} ms`;
+
+  const eduItems: MetricEducationItem[] = [
+    {
+      label: "What it is",
+      body: "Heart rate variability is the tiny variation in time between your heartbeats, measured overnight. Counterintuitively, MORE variability is better — it means your nervous system is relaxed and adaptable rather than stuck in stress mode.",
+    },
+    {
+      label: "Why it matters",
+      body: "HRV is one of the best day-to-day readouts of recovery and stress balance. A higher, steady HRV means your body is bouncing back well; a drop often shows up when you're run down, stressed, sick, or under-recovered — sometimes before you feel it.",
+    },
+    {
+      label: "Your number",
+      body: <>Your HRV has averaged <b style={bStyle}>{hrvWeeklyAvg} ms</b> overnight this week, around your <b style={bStyle}>{hrvBaseline}</b> baseline. HRV is highly individual — there&apos;s no universal &ldquo;good&rdquo; number, so your own baseline and trend matter far more than comparing to anyone else.</>,
+    },
+    {
+      label: "What moves it",
+      body: "Sleep, training load, alcohol, stress, hydration, and illness all move it. Easy days, good sleep, and recovery raise it; hard training, drinking, or a short night drop it the next morning.",
+    },
+    {
+      label: "Keep in mind",
+      body: "HRV is noisy night to night — don't over-read a single reading. The multi-day trend against your own baseline is what tells the story.",
+    },
+  ];
 
   return (
     <div style={{
@@ -150,6 +182,11 @@ export default function RecoveryDetailPage() {
           <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "2.5px", color: EMERALD, textTransform: "uppercase" }}>NŪRA</div>
           <p style={{ fontSize: 13.5, lineHeight: 1.6, marginTop: 9 }}>{d.insight}</p>
         </GlassCard>
+
+        {/* Understanding (shared MetricEducation) */}
+        <div className="r-reveal" style={{ animationDelay: ".52s", marginTop: 16 }}>
+          <MetricEducation accent={EMERALD} title="Understanding your HRV" items={eduItems} />
+        </div>
       </div>
     </div>
   );

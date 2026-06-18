@@ -6,6 +6,7 @@ import AuroraBackground from "@/components/dashboard/AuroraBackground";
 import RadialGauge from "@/components/dashboard/RadialGauge";
 import GlassCard from "@/components/dashboard/GlassCard";
 import MetricChart from "@/components/dashboard/MetricChart";
+import MetricEducation, { type MetricEducationItem } from "@/components/dashboard/MetricEducation";
 import { smooth } from "@/components/dashboard/ActiveEnergyTodayChart";
 
 // ── Tokens ──────────────────────────────────────────────────────────────────
@@ -16,6 +17,7 @@ const GOLD = "var(--nura-amber)";
 const TEAL = "var(--nura-teal)";
 const INK = "var(--nura-fg-rgb)"; // warm off-white in dark mode
 const SANS = "var(--font-inter), system-ui, sans-serif";
+const bStyle: React.CSSProperties = { color: TEXT, fontWeight: 600 };
 
 // Warm gold ambient so this reads as the movement / steps page.
 const GOLD_AURORA =
@@ -41,6 +43,32 @@ export default function StepsDetailPage() {
     { k: "Total", v: d.weekTotal },
     { k: "Daily avg", v: d.weekAvg },
     { k: "Goal hit", v: d.goalHit },
+  ];
+
+  // "Your number" is built from the same step values the hero/trend use: today's
+  // count and the weekly daily average — so it tracks live or dev-fallback data.
+  const todaySteps = d.steps.toLocaleString("en-US");
+  const eduItems: MetricEducationItem[] = [
+    {
+      label: "What it is",
+      body: "Steps count the walking and movement you do across the whole day, pulled from your phone and watch. It's the simplest measure of how active you are outside of dedicated workouts.",
+    },
+    {
+      label: "Why it matters",
+      body: "Everyday movement adds up more than most people realize. Regular steps are linked to better heart health, metabolism, mood, and longevity — and the biggest gains come from simply not being sedentary, not from hitting a magic number.",
+    },
+    {
+      label: "Your number",
+      body: <>Today you&apos;ve taken <b style={bStyle}>{todaySteps}</b>, and you&apos;ve averaged <b style={bStyle}>{d.weekAvg}</b> a day this week. The &ldquo;10,000&rdquo; target is really a marketing number — research suggests the benefits build from around 7,000&ndash;8,000 steps a day, with more still helping.</>,
+    },
+    {
+      label: "What moves it",
+      body: "Walking meetings, errands, taking the stairs, and short movement breaks all stack up; desk-bound days and bad weather pull it down. Small, frequent walks beat one big push.",
+    },
+    {
+      label: "Keep in mind",
+      body: "Step counts vary by device and where you carry your phone — read it as a consistent trend for yourself, not a precise tally.",
+    },
   ];
 
   return (
@@ -172,6 +200,11 @@ export default function StepsDetailPage() {
           <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "2.5px", color: GOLD, textTransform: "uppercase" }}>NŪRA</div>
           <p style={{ fontSize: 13.5, lineHeight: 1.6, marginTop: 9 }}>{d.insight}</p>
         </GlassCard>
+
+        {/* Understanding (shared MetricEducation) */}
+        <div className="st-reveal" style={{ animationDelay: ".5s", marginTop: 16 }}>
+          <MetricEducation accent={GOLD} title="Understanding your steps" items={eduItems} />
+        </div>
       </div>
     </div>
   );

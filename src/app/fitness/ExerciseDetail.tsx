@@ -23,8 +23,11 @@ const DEMO = {
   // MoveKit clips are all ≈1.806:1 (1936×1072 and 1300×720). Matching the card to
   // that aspect makes the video fill edge-to-edge — no letterbox / pillarbox.
   aspect: '1936 / 1072',
-  radius: 14,                        // tight rounding so white reaches the corners
-  bg: CLIP_BG,                       // matches the clip backdrop — sub-pixel safety net, never dark
+  radius: 14,                        // tight rounding so the panel is cleanly rounded
+  // Solid white panel: WorkoutX gif placeholders ship on white, so they blend
+  // edge-to-edge with no inner rectangle or side bars. MoveKit clips fill via
+  // cover, so the same white panel keeps both demo types looking consistent.
+  bg: '#ffffff',
   border: 'rgba(120,124,118,0.18)', // neutral hairline frame
 };
 
@@ -129,16 +132,16 @@ export default function ExerciseDetail({ exerciseId, sets, reps, rest_seconds, o
           <div style={{ fontSize: 11, letterSpacing: '.18em', color: MUT }}>EXERCISE</div>
         </div>
 
-        {/* demo — plays the ORIGINAL MoveKit clip (looping, muted, autoplay). The
-            card matches the clip's aspect ratio, so the video fills it exactly
-            edge-to-edge: no letterbox/pillarbox, no crop, no dark gaps. */}
+        {/* demo — looping/muted/autoplay. A MoveKit clip fills the card via cover;
+            a WorkoutX gif placeholder sits on the same solid-white panel so its
+            white background blends edge-to-edge (no inner rectangle / side bars). */}
         <div style={{
           position: 'relative', borderRadius: DEMO.radius, overflow: 'hidden', aspectRatio: DEMO.aspect,
           marginBottom: 18, background: DEMO.bg, border: `1px solid ${DEMO.border}`,
         }}>
           {activeDemo ? (
             <div style={{ position: 'absolute', inset: 0, zIndex: 1 }}>
-              <ExerciseMedia key={activeDemo.src} src={activeDemo.src} alt={ex?.name ?? ''} fit={activeDemo.fit} onError={() => setDemoIdx((i) => i + 1)} />
+              <ExerciseMedia key={activeDemo.src} src={activeDemo.src} alt={ex?.name ?? ''} fit={activeDemo.fit} onError={() => setDemoIdx((i) => i + 1)} style={{ backgroundColor: '#ffffff' }} />
             </div>
           ) : (
             <div style={{ position: 'absolute', inset: 0, zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>

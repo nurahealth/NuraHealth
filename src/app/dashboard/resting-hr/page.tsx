@@ -6,6 +6,7 @@ import { getRestingHrDetail, SOURCE_LABEL, type RestingHrDetail } from "@/lib/da
 import AuroraBackground from "@/components/dashboard/AuroraBackground";
 import GlassCard from "@/components/dashboard/GlassCard";
 import RestingHrZoneBar from "@/components/dashboard/RestingHrZoneBar";
+import MetricEducation, { type MetricEducationItem } from "@/components/dashboard/MetricEducation";
 import { hex, lerp, smooth } from "@/components/dashboard/ActiveEnergyTodayChart";
 
 // ── Tokens ──────────────────────────────────────────────────────────────────
@@ -14,6 +15,7 @@ const MUTED = "var(--nura-text-secondary)";
 const FAINT = "var(--nura-text-tertiary)";
 const INK = "235,230,216"; // warm off-white (matches --nura-fg-rgb in dark)
 const SANS = "var(--font-inter), system-ui, sans-serif";
+const bStyle: React.CSSProperties = { color: TEXT, fontWeight: 600 };
 
 // Rose accents — resting HR reads as a warm, calm cardiovascular page.
 const ROSE = "#f0a890";
@@ -62,6 +64,32 @@ export default function RestingHrDetailPage() {
     { label: "7-day avg", value: d.avg7, unit: " bpm" },
     { label: "30-day low", value: d.low30, unit: " bpm" },
     { label: "Baseline", value: d.baseline, unit: " bpm" },
+  ];
+
+  // Educational rows for the shared "Understanding your resting heart rate"
+  // section. "Your number" is built from the same data the hero/trend use, so it
+  // tracks live values (or the dev fallback) rather than a hardcoded number.
+  const eduItems: MetricEducationItem[] = [
+    {
+      label: "What it is",
+      body: "Your resting heart rate is how many times your heart beats per minute when you're fully at rest, measured overnight. A lower, steady resting rate usually points to a stronger, more efficient heart.",
+    },
+    {
+      label: "Why it matters",
+      body: "It's one of the simplest windows into cardiovascular fitness and recovery. As fitness improves it drifts down, while a sudden climb can flag stress, illness, dehydration, or under-recovery.",
+    },
+    {
+      label: "Your number",
+      body: <>This week your resting heart rate has averaged <b style={bStyle}>{d.avg7} bpm</b> overnight, right around your usual <b style={bStyle}>{d.baseline} bpm</b> baseline. For most adults 50–70 bpm is typical, and fitter people often sit lower.</>,
+    },
+    {
+      label: "What moves it",
+      body: "Aerobic fitness, sleep, hydration, alcohol, caffeine, stress, and illness all shift it. Training lowers it over weeks; a hard day or short night nudges it up the next morning.",
+    },
+    {
+      label: "Keep in mind",
+      body: "One high morning isn't a problem on its own — read it against your own normal and watch the trend.",
+    },
   ];
 
   // Per-range trend config — series, what reference layers to show, axis labels.
@@ -227,6 +255,11 @@ export default function RestingHrDetailPage() {
           <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "2.5px", color: ROSE, textTransform: "uppercase" }}>NŪRA</div>
           <p style={{ fontSize: 13.5, lineHeight: 1.6, marginTop: 9 }}>{d.insight}</p>
         </GlassCard>
+
+        {/* Understanding (shared MetricEducation) */}
+        <div className="rhr-reveal" style={{ animationDelay: ".5s", marginTop: 16 }}>
+          <MetricEducation accent={TEAL} title="Understanding your resting heart rate" items={eduItems} />
+        </div>
       </div>
     </div>
   );

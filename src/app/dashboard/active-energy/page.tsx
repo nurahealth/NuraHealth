@@ -7,6 +7,7 @@ import AuroraBackground from "@/components/dashboard/AuroraBackground";
 import RadialGauge from "@/components/dashboard/RadialGauge";
 import GlassCard from "@/components/dashboard/GlassCard";
 import ActiveEnergyTodayChart, { colorAt, light } from "@/components/dashboard/ActiveEnergyTodayChart";
+import MetricEducation, { type MetricEducationItem } from "@/components/dashboard/MetricEducation";
 
 // ── Tokens ──────────────────────────────────────────────────────────────────
 const TEXT = "var(--nura-text-primary)";
@@ -17,6 +18,7 @@ const EMERALD = "var(--nura-optimal)";
 const INK = "235,230,216"; // warm off-white (matches --nura-fg-rgb in dark)
 const AMBER_RGB = "224,162,62";
 const SANS = "var(--font-inter), system-ui, sans-serif";
+const bStyle: React.CSSProperties = { color: TEXT, fontWeight: 600 };
 
 // Warm amber/coral ambient so this reads as the energy / activity page.
 const AMBER_AURORA =
@@ -49,6 +51,31 @@ export default function ActiveEnergyDetailPage() {
   const weekTotal = d.week.reduce((s, x) => s + x.value, 0);
   const weekAvg = Math.round(weekTotal / d.week.length);
   const hits = d.week.filter((x) => x.value >= d.moveGoal).length;
+
+  // "Your number" is built from the same active-energy values the hero/trend use:
+  // today's burn and the weekly daily average — so it tracks live or fallback data.
+  const eduItems: MetricEducationItem[] = [
+    {
+      label: "What it is",
+      body: "Active energy is the calories you burn through movement and exercise, on top of the baseline calories your body uses just to keep you alive. It reflects how much you actually moved today.",
+    },
+    {
+      label: "Why it matters",
+      body: "It's a fuller picture of daily effort than steps alone — it captures workouts, cycling, climbing, and intensity, not just walking. Tracking it shows whether your activity is trending up, holding steady, or slipping.",
+    },
+    {
+      label: "Your number",
+      body: <>Today you&apos;ve burned <b style={bStyle}>{d.activeEnergy.toLocaleString("en-US")} kcal</b>, with a weekly average of <b style={bStyle}>{weekAvg.toLocaleString("en-US")} kcal</b> a day. There&apos;s no universal target — what matters is a level that&apos;s consistent and right for your goals, so your own trend tells you more than the raw number.</>,
+    },
+    {
+      label: "What moves it",
+      body: "Workouts, intensity, walking, body size, and how much you move between tasks all drive it. A rest day naturally dips it; an active day or hard session spikes it.",
+    },
+    {
+      label: "Keep in mind",
+      body: "Calorie burn from a wearable is an estimate, not a precise measurement — use it to compare your own days, not as exact accounting.",
+    },
+  ];
 
   return (
     <div style={{
@@ -187,6 +214,11 @@ export default function ActiveEnergyDetailPage() {
           <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "2.5px", color: AMBER, textTransform: "uppercase" }}>NŪRA</div>
           <p style={{ fontSize: 13.5, lineHeight: 1.6, marginTop: 9 }}>{d.insight}</p>
         </GlassCard>
+
+        {/* Understanding (shared MetricEducation) */}
+        <div className="ae-reveal" style={{ animationDelay: ".5s", marginTop: 16 }}>
+          <MetricEducation accent={AMBER} title="Understanding your active energy" items={eduItems} />
+        </div>
       </div>
     </div>
   );
