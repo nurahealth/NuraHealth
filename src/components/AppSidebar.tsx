@@ -35,6 +35,8 @@ const Icons = {
   watch:    () => <I><circle cx="12" cy="12" r="6"/><path d="M9 4l1-2h4l1 2M9 20l1 2h4l1-2"/></I>,
   bookmark: () => <I><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></I>,
   flask:    () => <I><path d="M9 3h6M10 3v6l-4.5 9a1 1 0 0 0 .9 1.5h11.2a1 1 0 0 0 .9-1.5L14 9V3M7.5 14h9"/></I>,
+  leaf:     () => <I><path d="M5 21c.5-4.5 2.5-8 7-10"/><path d="M9 18c6.22 0 10.5-3.29 11-12V4h-4.01C9 4 6 7 6 11c0 3 1 5 3 7z"/></I>,
+  book:     () => <I><path d="M3 6a9 9 0 0 1 9 0 9 9 0 0 1 9 0"/><path d="M3 19a9 9 0 0 1 9 0 9 9 0 0 1 9 0"/><path d="M3 6v13M12 6v13M21 6v13"/></I>,
   message:  () => <I><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8z"/></I>,
   chevron:  () => <I><path d="M6 9l6 6 6-6"/></I>,
   settings: () => <I><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.05a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.05c.282.668.93 1.108 1.65 1.11H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></I>,
@@ -71,6 +73,8 @@ const NAV_ITEMS: NavItem[] = [
   { key: "home",        label: "Home",         href: "/",             icon: Icons.home },
   { key: "dashboard",   label: "Dashboard",    href: "/dashboard",    icon: Icons.activity },
   { key: "bloodwork",   label: "Bloodwork",    href: "/bloodwork",    icon: Icons.droplet },
+  { key: "nutrition",   label: "Nutrition",    href: "/nutrition",    icon: Icons.leaf },
+  { key: "recipes",     label: "Recipes",      href: "/recipes",      icon: Icons.book },
   { key: "supplements", label: "Supplements",  href: "/supplements",  icon: Icons.pill },
   { key: "integrations",label: "Integrations", href: "/integrations", icon: Icons.watch },
   { key: "saved",       label: "Saved",        href: "/saved",        icon: Icons.bookmark },
@@ -295,7 +299,11 @@ export default function AppSidebar() {
             <Fragment key={item.key}>
               <NavRow
                 item={item}
-                active={item.href === "/" ? pathname === "/" : pathname.startsWith(item.href)}
+                active={
+                  item.key === "recipes"
+                    ? pathname.startsWith("/recipes") || pathname.startsWith("/foods")
+                    : item.href === "/" ? pathname === "/" : pathname.startsWith(item.href)
+                }
                 onClick={() => navigate(item.href)}
               />
 
