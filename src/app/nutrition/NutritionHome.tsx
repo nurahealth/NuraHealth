@@ -238,7 +238,7 @@ export default function NutritionHome({
       <section>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
           <QuickAction icon={<CalendarDays size={18} color={SAGE} />} label="This week's plan" />
-          <QuickAction icon={<ShoppingBasket size={18} color={SAGE} />} label="Grocery list" />
+          <QuickAction icon={<ShoppingBasket size={18} color={SAGE} />} label="Grocery list" href="/nutrition/grocery" />
           <QuickAction icon={<Bookmark size={18} color={SAGE} />} label="Saved" href="/saved" />
         </div>
       </section>
