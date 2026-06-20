@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
-import { getLatestBiomarkers } from "@/lib/bloodwork";
+import { getLatestBiomarkersWith } from "@/lib/bloodwork";
 import NuraPageShell from "@/components/NuraPageShell";
 import NutritionHome, {
   type MarkerCardVM,
@@ -58,7 +58,7 @@ export default async function NutritionPage() {
     { data: recipeRows },
     { data: riRows },
   ] = await Promise.all([
-    getLatestBiomarkers(user.id),
+    getLatestBiomarkersWith(supabase, user.id),
     supabaseAdmin
       .from("health_markers")
       .select(

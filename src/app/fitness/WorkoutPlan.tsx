@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { GOAL_LABELS } from './FitnessOnboarding';
 import { mapProgram, PROGRAM_SELECT, type CatalogEx, type Program, type WEx, type Workout } from './planData';
@@ -61,6 +62,7 @@ const PencilIcon = () => <I size={14}><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3
 const TrashIcon = () => <I size={14}><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14" /></I>;
 const SparkIcon = ({ size = 20 }: { size?: number }) => <I size={size}><path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M18.4 5.6l-2.8 2.8M8.4 15.6l-2.8 2.8" /></I>;
 const RefreshIcon = () => <I size={14}><path d="M21 12a9 9 0 1 1-3-6.7L21 8M21 3v5h-5" /></I>;
+const GearIcon = () => <I size={14}><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H8.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.2.61.78 1.05 1.51 1.05H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" /></I>;
 const RestIcon = () => <I size={18}><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" /></I>;
 
 // ── Small UI atoms ───────────────────────────────────────────────────────────
@@ -440,6 +442,7 @@ function RecommendCard({ onGenerate, generating, error }: {
 
 // ── Main ─────────────────────────────────────────────────────────────────────
 export default function WorkoutPlan() {
+  const router = useRouter();
   const [program, setProgram] = useState<Program | null>(null);
   const [catalog, setCatalog] = useState<CatalogEx[]>([]);
   const [loading, setLoading] = useState(true);
@@ -582,9 +585,14 @@ export default function WorkoutPlan() {
               </ChipButton>
             </div>
           ) : (
-            <ChipButton tone="neutral" onClick={() => setConfirmRegen(true)}>
-              <RefreshIcon /> Regenerate
-            </ChipButton>
+            <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+              <ChipButton tone="sage" onClick={() => router.push('/fitness/settings')}>
+                <GearIcon /> Customize plan
+              </ChipButton>
+              <ChipButton tone="neutral" onClick={() => setConfirmRegen(true)}>
+                <RefreshIcon /> Regenerate
+              </ChipButton>
+            </div>
           )
         )}
       </div>

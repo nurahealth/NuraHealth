@@ -1,11 +1,10 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getRestingHrDetail, SOURCE_LABEL, type RestingHrDetail } from "@/lib/dashboardData";
 import AuroraBackground from "@/components/dashboard/AuroraBackground";
 import GlassCard from "@/components/dashboard/GlassCard";
-import RestingHrZoneBar from "@/components/dashboard/RestingHrZoneBar";
 import MetricEducation, { type MetricEducationItem } from "@/components/dashboard/MetricEducation";
 import { hex, lerp, smooth } from "@/components/dashboard/ActiveEnergyTodayChart";
 
@@ -52,6 +51,107 @@ const Chevron = () => (
 const InfoIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="9" /><path d="M12 11v5M12 8h.01" strokeLinecap="round" /></svg>
 );
+
+// ── Animated resting-HR ring hero ─────────────────────────────────────────────
+// A 270° teal gauge (gap at bottom-center): faint full-arc track + a teal
+// gradient fill that loads up on mount while the centered number counts up from
+// ~38 to the value. Because a LOWER resting rate is better, the fill represents
+// reading strength: clamp((90 − bpm) / 52, 0, 1) — 52 bpm ≈ 73% ("excellent").
+// No ECG/heartbeat — resting HR is an overnight summary, not a live metric.
+// All motion is disabled under prefers-reduced-motion (ring filled, number final).
+const RING_FROM = "#43c9a6";
+const RING_TO = "#7fe3cb";
+const RING_GLOW = "67,201,166"; // RGB triplet for the teal glow
+const COUNT_FROM = 38; // count-up start
+const FILL_MS = 1400;
+
+function RestingHrRing({ bpm }: { bpm: number }) {
+  const rawId = useId();
+  const gid = `rhrring-${rawId.replace(/[^a-zA-Z0-9]/g, "")}`;
+
+  // Geometry — a 270° arc with the gap centered at the bottom (mirrors RadialGauge).
+  const size = 236;
+  const stroke = 13;
+  const pad = 16; // breathing room so the glow isn't clipped
+  const box = size + pad * 2;
+  const r = (size - stroke) / 2;
+  const c = box / 2;
+  const circ = 2 * Math.PI * r;
+  const arc = 270;
+  const arcLen = circ * (arc / 360);
+  // Lower resting HR is better, so map 90→40 onto 0→1 fill strength.
+  const frac = Math.max(0, Math.min(1, (90 - bpm) / 52));
+  const target = arcLen * (1 - frac);
+  const rotation = -(90 + arc / 2); // -225° → gap centered at bottom
+
+  const [offset, setOffset] = useState(arcLen); // start empty
+  const [num, setNum] = useState(COUNT_FROM);
+  const [reduced, setReduced] = useState(false);
+  const rafRef = useRef(0);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    if (mq.matches) {
+      setReduced(true);
+      setOffset(target); // already filled
+      setNum(bpm); // final value, no count-up
+      return;
+    }
+    // Defer one tick so the empty→target fill transition actually plays.
+    const t = setTimeout(() => setOffset(target), 60);
+    // Count the number up from COUNT_FROM → bpm over the same ~1.4s (ease-out).
+    const ease = (p: number) => 1 - Math.pow(1 - p, 3);
+    let startTs = 0;
+    const stepFn = (ts: number) => {
+      if (!startTs) startTs = ts;
+      const p = Math.min(1, (ts - startTs) / FILL_MS);
+      setNum(Math.round(COUNT_FROM + (bpm - COUNT_FROM) * ease(p)));
+      if (p < 1) rafRef.current = requestAnimationFrame(stepFn);
+    };
+    rafRef.current = requestAnimationFrame(stepFn);
+    return () => { clearTimeout(t); cancelAnimationFrame(rafRef.current); };
+  }, [target, bpm]);
+
+  return (
+    <div style={{ position: "relative", width: size, height: size, margin: "0 auto" }}>
+      <svg
+        width={box} height={box} viewBox={`0 0 ${box} ${box}`}
+        style={{ position: "absolute", top: -pad, left: -pad, transform: `rotate(${rotation}deg)`, overflow: "visible", pointerEvents: "none" }}
+      >
+        <defs>
+          <linearGradient id={gid} x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stopColor={RING_FROM} />
+            <stop offset="1" stopColor={RING_TO} />
+          </linearGradient>
+        </defs>
+        {/* faint full 270° track */}
+        <circle
+          cx={c} cy={c} r={r} fill="none" stroke={`rgba(${RING_GLOW},0.14)`}
+          strokeWidth={stroke} strokeLinecap="round" strokeDasharray={`${arcLen} ${circ}`}
+        />
+        {/* teal gradient fill — loads up to the reading strength */}
+        <circle
+          cx={c} cy={c} r={r} fill="none"
+          stroke={`url(#${gid})`} strokeWidth={stroke} strokeLinecap="round"
+          strokeDasharray={`${arcLen} ${circ}`} strokeDashoffset={offset}
+          style={{
+            filter: `drop-shadow(0 0 7px rgba(${RING_GLOW},0.6))`,
+            transition: reduced ? "none" : `stroke-dashoffset ${FILL_MS}ms cubic-bezier(.2,.7,.2,1)`,
+          }}
+        />
+      </svg>
+
+      {/* centered content — count-up number + muted label */}
+      <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ display: "inline-flex", alignItems: "baseline", gap: 7, lineHeight: 1 }}>
+          <span style={{ fontSize: 58, fontWeight: 800, letterSpacing: "-2px", color: "var(--nura-text-primary)", textShadow: `0 0 18px rgba(${RING_GLOW},0.35)` }}>{num}</span>
+          <span style={{ fontSize: 18, fontWeight: 600, color: "var(--nura-text-secondary)" }}>bpm</span>
+        </div>
+        <div style={{ fontSize: 13, color: "var(--nura-text-secondary)", marginTop: 8 }}>Resting heart rate</div>
+      </div>
+    </div>
+  );
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 export default function RestingHrDetailPage() {
@@ -119,7 +219,7 @@ export default function RestingHrDetailPage() {
 
       <AuroraBackground gradient={ROSE_AURORA} />
 
-      <div style={{ position: "relative", zIndex: 1, maxWidth: 480, margin: "0 auto", padding: "max(env(safe-area-inset-top), 16px) 18px 44px" }}>
+      <div style={{ position: "relative", zIndex: 1, maxWidth: 480, margin: "0 auto", padding: "calc(env(safe-area-inset-top, 0px) + 46px) 18px 44px" }}>
         {/* Header shell — back · NŪRA wordmark · info */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 0 2px" }}>
           <button
@@ -143,19 +243,12 @@ export default function RestingHrDetailPage() {
         </div>
         <div className="rhr-reveal" style={{ animationDelay: ".05s", color: MUTED, fontSize: 14, marginBottom: 6 }}>{d.subtitle}</div>
 
-        {/* Hero — big value + zone bar (no ring; resting HR has no goal) */}
+        {/* Hero — animated teal ring (fill = reading strength) + status pill */}
         <div className="rhr-reveal" style={{ animationDelay: ".1s", textAlign: "center", padding: "16px 0 2px" }}>
-          <div style={{ fontSize: 64, fontWeight: 700, letterSpacing: "-3px", lineHeight: 1, display: "inline-flex", alignItems: "baseline", gap: 8 }}>
-            {d.value}<small style={{ fontSize: 20, fontWeight: 600, color: MUTED, letterSpacing: 0 }}>bpm</small>
-          </div>
-          <div style={{ fontSize: 13, color: MUTED, marginTop: 6 }}>Resting heart rate</div>
-
-          <div style={{ marginTop: 18 }}>
-            <RestingHrZoneBar value={d.value} min={d.zoneMin} max={d.zoneMax} labels={d.zoneLabels} />
-          </div>
+          <RestingHrRing bpm={d.value} />
 
           <span style={{
-            display: "inline-flex", alignItems: "center", gap: 6, marginTop: 18,
+            display: "inline-flex", alignItems: "center", gap: 6, marginTop: 20,
             padding: "6px 15px", borderRadius: 999, fontSize: 12, fontWeight: 600, letterSpacing: "0.5px",
             color: TEAL, border: `1px solid rgba(${TEAL_RGB},0.4)`,
           }}>

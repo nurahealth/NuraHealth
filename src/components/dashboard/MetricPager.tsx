@@ -90,7 +90,13 @@ export default function MetricPager({ initialMetric }: { initialMetric: string }
         .mp-scroller::-webkit-scrollbar { display: none; }
         .mp-panel {
           flex: 0 0 100%; width: 100%;
-          height: 100dvh; overflow-y: auto; overflow-x: hidden;
+          /* Each panel is its own vertically-scrollable column: full viewport
+             height + its own scroll context. The outer .mp-scroller owns the
+             horizontal snap; vertical scrolling happens WITHIN each panel.
+             min-height keeps un-rendered placeholder panels full-height so the
+             horizontal snap positions never drift. */
+          height: 100dvh; min-height: 100dvh;
+          overflow-y: auto; overflow-x: hidden;
           scroll-snap-align: start; scroll-snap-stop: always;
           -webkit-overflow-scrolling: touch;
         }

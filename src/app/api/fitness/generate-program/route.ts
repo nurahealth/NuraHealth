@@ -7,16 +7,28 @@ export const dynamic = 'force-dynamic';
 
 // Generate + persist the signed-in user's weekly program. Uses the user-scoped
 // client throughout so RLS guarantees they only read/write their own data.
-export async function POST(): Promise<NextResponse> {
+//
+// Optional JSON body: { overrides?: Partial<GeneratorProfile> }. Plan Settings
+// passes the just-chosen settings here so generation honors them THIS run even
+// before the (newer) preference columns are migrated onto the DB. Overrides win
+// over the stored profile; with no body it behaves exactly as before.
+export async function POST(req: Request): Promise<NextResponse> {
   const supabase = await createSupabaseServerClient();
 
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
 
-  // 1. The user's onboarding profile.
+  const body = await req.json().catch(() => ({} as Record<string, unknown>));
+  const overrides = (body && typeof body === 'object' ? (body as Record<string, unknown>).overrides : null) as
+    | Partial<GeneratorProfile>
+    | null
+    | undefined;
+
+  // 1. The user's profile. select('*') so the newer preference columns come back
+  // when present, and we don't 400 on databases where they don't exist yet.
   const { data: profile, error: profErr } = await supabase
     .from('fitness_profiles')
-    .select('primary_goal, experience_level, equipment, days_per_week, limitations, onboarded')
+    .select('*')
     .eq('user_id', user.id)
     .maybeSingle();
   if (profErr) return NextResponse.json({ error: profErr.message }, { status: 500 });
@@ -30,8 +42,22 @@ export async function POST(): Promise<NextResponse> {
     .select('id,name,target_muscles,secondary_muscles,body_part,equipment,gif_url');
   if (catErr) return NextResponse.json({ error: `Catalog read failed: ${catErr.message}` }, { status: 500 });
 
+  // 2b. Merge any request overrides over the stored profile (?? keeps [] and 0).
+  const p = profile as Record<string, unknown>;
+  const o = overrides ?? {};
+  const genProfile: GeneratorProfile = {
+    primary_goal: (o.primary_goal ?? p.primary_goal ?? 'general') as string,
+    experience_level: (o.experience_level ?? p.experience_level ?? 'Intermediate') as string,
+    equipment: (o.equipment ?? p.equipment ?? []) as string[],
+    days_per_week: (o.days_per_week ?? p.days_per_week ?? 3) as number,
+    limitations: (o.limitations ?? p.limitations ?? null) as string | null,
+    split: (o.split ?? p.split ?? null) as string | null,
+    focus_areas: (o.focus_areas ?? p.focus_areas ?? null) as string[] | null,
+    session_length: (o.session_length ?? p.session_length ?? null) as number | null,
+  };
+
   // 3. Generate (pure logic; always returns a usable plan).
-  const plan = generateProgram(profile as GeneratorProfile, (catalog ?? []) as CatalogExercise[]);
+  const plan = generateProgram(genProfile, (catalog ?? []) as CatalogExercise[]);
 
   // 3b. Diagnostics: how many exercises got matched into each day. If the catalog
   // is non-empty but training days come back empty, that's the bug to chase.

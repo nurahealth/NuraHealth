@@ -2,7 +2,7 @@ import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
-import { getLatestBiomarkers } from "@/lib/bloodwork";
+import { getLatestBiomarkersWith } from "@/lib/bloodwork";
 import NuraPageShell from "@/components/NuraPageShell";
 import { ArrowLeft, Activity, Lightbulb, ChevronRight } from "lucide-react";
 import { resolveBack, withFrom, type RawSearchParam } from "@/lib/backNav";
@@ -74,7 +74,7 @@ export default async function MarkerDetailPage({
   if (!marker) notFound();
 
   const [realBiomarkers, { data: foodRows }, { data: recipeRows }, { data: riRows }] = await Promise.all([
-    getLatestBiomarkers(user.id),
+    getLatestBiomarkersWith(supabase, user.id),
     supabaseAdmin
       .from("marker_foods")
       .select("food_name, why_text, frequency_text, order_index, ingredients(slug, name)")

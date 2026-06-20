@@ -57,7 +57,7 @@ export default function CardioFitnessDetailPage() {
 
       <div style={{
         maxWidth: 392, margin: "0 auto",
-        padding: "max(env(safe-area-inset-top), 14px) 16px max(env(safe-area-inset-bottom), 28px)",
+        padding: "calc(env(safe-area-inset-top, 0px) + 46px) 16px max(env(safe-area-inset-bottom), 28px)",
         display: "flex", flexDirection: "column", gap: 14,
       }}>
 

@@ -16,9 +16,13 @@ export interface CatalogExercise {
 export interface GeneratorProfile {
   primary_goal: string;          // onboarding id: muscle|fat|strength|endurance|mobility|general (labels also accepted)
   experience_level: string;      // Beginner|Intermediate|Advanced
-  equipment: string[];           // onboarding equipment ids
+  equipment: string[];           // equipment ids (onboarding OR Plan-Settings vocabulary — both accepted)
   days_per_week: number | null;  // 1..7
   limitations?: string | null;
+  // Plan-Settings additions (all optional — absence preserves the legacy behavior):
+  split?: string | null;         // 'Full Body' | 'Push-Pull-Legs' | 'Upper-Lower'. Overrides the days→split default.
+  focus_areas?: string[] | null; // muscle chips to give EXTRA volume (Chest, Back, Quads, …). Optional.
+  session_length?: number | null;// minutes per session (20|30|45|60) → drives exercises per workout.
 }
 
 export interface PlannedExercise {
@@ -77,6 +81,11 @@ const GOAL_ALIAS: Record<string, string> = {
 
 const EXP_COUNT: Record<string, number> = { beginner: 4, intermediate: 5, advanced: 6 };
 
+// Session length (minutes) → exercises per workout. A 20-min session fits ~3
+// movements; an hour fits ~6. When set, this takes precedence over experience
+// (the user is telling us how much time they actually have).
+const SESSION_COUNT: Record<number, number> = { 20: 3, 30: 4, 45: 5, 60: 6 };
+
 // Split sequence (focus per training day) keyed by days/week.
 const SPLITS: Record<number, string[]> = {
   1: ['Full Body'],
@@ -96,6 +105,37 @@ const SPLIT_TYPE: Record<number, string> = {
   7: 'Push / Pull / Legs + Full Body',
 };
 
+// An EXPLICIT split choice (from Plan Settings) overrides the days→split default
+// above. We build a focus sequence of exactly `days` entries by cycling the
+// chosen split's pattern, so e.g. PPL across 4 days = Push/Pull/Legs/Push.
+const SPLIT_PATTERNS: Record<string, { pattern: string[]; label: string }> = {
+  'full body':        { pattern: ['Full Body'],            label: 'Full Body' },
+  'push-pull-legs':   { pattern: ['Push', 'Pull', 'Legs'], label: 'Push / Pull / Legs' },
+  'upper-lower':      { pattern: ['Upper', 'Lower'],       label: 'Upper / Lower' },
+};
+
+// Normalise a free-form split label to a SPLIT_PATTERNS key (or null = use default).
+function splitKey(s: string | null | undefined): string | null {
+  const k = lower(s).trim();
+  if (!k) return null;
+  if (k.includes('full')) return 'full body';
+  if (k.includes('push') || k.includes('ppl') || k.includes('pull')) return 'push-pull-legs';
+  if (k.includes('upper') || k.includes('lower')) return 'upper-lower';
+  return null;
+}
+
+// Build the focus sequence + a human split-type label, honoring an explicit
+// split choice when present, else falling back to the days→split defaults.
+function resolveSplit(splitChoice: string | null | undefined, days: number): { focuses: string[]; label: string } {
+  const key = splitKey(splitChoice);
+  if (key && SPLIT_PATTERNS[key]) {
+    const { pattern, label } = SPLIT_PATTERNS[key];
+    const focuses = Array.from({ length: days }, (_, i) => pattern[i % pattern.length]);
+    return { focuses, label };
+  }
+  return { focuses: SPLITS[days] ?? SPLITS[3], label: SPLIT_TYPE[days] ?? 'Full Body' };
+}
+
 // Focus → catalog target_muscles / body_part keywords (all lower-cased).
 const FOCUS: Record<string, { targets: string[]; bodyParts: string[] }> = {
   Push:  { targets: ['pectorals', 'delts', 'triceps'], bodyParts: ['chest', 'shoulders'] },
@@ -107,15 +147,39 @@ const FOCUS: Record<string, { targets: string[]; bodyParts: string[] }> = {
   // 'Full Body' is handled specially (round-robin across groups).
 };
 
-// Onboarding equipment id → allowed catalog equipment tokens (lower-cased substrings).
-// 'any' means no equipment restriction.
+// Equipment id → allowed catalog equipment tokens (lower-cased substrings).
+// 'any' means no equipment restriction. Keys are matched case-insensitively so
+// BOTH the onboarding vocabulary AND the newer Plan-Settings chips resolve here.
 const EQUIP_MAP: Record<string, string[] | 'any'> = {
-  'Full gym': 'any',
-  'Home equipment': ['dumbbell', 'body weight', 'band', 'kettlebell'],
-  'Bodyweight only': ['body weight'],
-  'Resistance bands': ['band', 'body weight'],
-  'Dumbbells only': ['dumbbell', 'body weight'],
-  'Group classes': ['body weight'],
+  // ── Onboarding vocabulary ──
+  'full gym': 'any',
+  'home equipment': ['dumbbell', 'body weight', 'band', 'kettlebell'],
+  'bodyweight only': ['body weight'],
+  'resistance bands': ['band', 'body weight'],
+  'dumbbells only': ['dumbbell', 'body weight'],
+  'group classes': ['body weight'],
+  // ── Plan-Settings chips (each is one specific class of equipment) ──
+  'dumbbells': ['dumbbell'],
+  'barbell': ['barbell'],
+  'kettlebell': ['kettlebell'],
+  'bands': ['band'],
+  'machines': ['machine', 'cable', 'leverage', 'smith', 'sled'],
+  'bodyweight': ['body weight'],
+};
+
+// Focus-area chip → catalog target-muscle tokens (lower-cased substrings). Used
+// to add EXTRA volume for muscles the user wants to prioritise.
+const FOCUS_MUSCLE_MAP: Record<string, string[]> = {
+  chest:      ['pectoral', 'chest'],
+  back:       ['lat', 'upper back', 'trap', 'back'],
+  shoulders:  ['delt', 'shoulder'],
+  biceps:     ['bicep'],
+  triceps:    ['tricep'],
+  core:       ['abs', 'core', 'oblique', 'spine'],
+  quads:      ['quad'],
+  hamstrings: ['hamstring'],
+  glutes:     ['glute'],
+  calves:     ['calv', 'calf'],
 };
 
 const COMPOUND_RE = /\b(squat|deadlift|bench|press|row|pull[ -]?up|chin[ -]?up|lunge|dip|push[ -]?up|clean|snatch|thrust|overhead|pulldown)\b/i;
@@ -137,11 +201,53 @@ function resolveEquipment(sel: string[] | null | undefined): string[] | null {
   if (!sel || sel.length === 0) return null; // no restriction
   const set = new Set<string>();
   for (const s of sel) {
-    const m = EQUIP_MAP[s];
+    const m = EQUIP_MAP[lower(s).trim()];
     if (m === 'any') return null;
     if (Array.isArray(m)) m.forEach((x) => set.add(x));
   }
   return set.size ? [...set] : null;
+}
+
+// Selected focus chips → a list of token-groups (one per muscle). Unknown chips
+// are dropped. Returns [] when nothing is selected (→ balanced plan, no extra).
+function resolveFocusAreas(sel: string[] | null | undefined): string[][] {
+  if (!sel || sel.length === 0) return [];
+  const out: string[][] = [];
+  for (const s of sel) {
+    const tokens = FOCUS_MUSCLE_MAP[lower(s).trim()];
+    if (tokens) out.push(tokens);
+  }
+  return out;
+}
+
+// Does an exercise target ANY of the given muscle tokens?
+function targetsAny(ex: CatalogExercise, tokens: string[]): boolean {
+  const tl = targetsLower(ex);
+  return tokens.some((tok) => tl.some((t) => t.includes(tok)));
+}
+
+// Pick ONE extra exercise for a focus muscle, honoring equipment, preferring an
+// unused compound. Relaxes "unused" then "equipment" before giving up (null).
+function pickFocusExercise(
+  catalog: CatalogExercise[],
+  tokens: string[],
+  allowed: string[] | null,
+  programUsed: Set<string>,
+): CatalogExercise | null {
+  const tiers: CatalogExercise[][] = [
+    compoundFirst(catalog.filter((e) => targetsAny(e, tokens) && equipAllowed(e, allowed) && !programUsed.has(e.id))),
+    compoundFirst(catalog.filter((e) => targetsAny(e, tokens) && equipAllowed(e, allowed))),
+    compoundFirst(catalog.filter((e) => targetsAny(e, tokens) && !programUsed.has(e.id))),
+    compoundFirst(catalog.filter((e) => targetsAny(e, tokens))),
+  ];
+  for (const tier of tiers) {
+    for (const ex of tier) {
+      if (!programUsed.has(ex.id)) { programUsed.add(ex.id); return ex; }
+    }
+    // tier exhausted with only already-used rows → allow a repeat from this tier
+    if (tier.length) { const ex = tier[0]; programUsed.add(ex.id); return ex; }
+  }
+  return null;
 }
 
 function equipAllowed(ex: CatalogExercise, allowed: string[] | null): boolean {
@@ -250,11 +356,15 @@ function spreadTrainingDays(days: number): number[] {
 
 export function generateProgram(profile: GeneratorProfile, catalog: CatalogExercise[]): GeneratedProgram {
   const days = clamp(profile.days_per_week ?? 3, 1, 7);
-  const split = SPLITS[days] ?? SPLITS[3];
-  const splitType = SPLIT_TYPE[days] ?? 'Full Body';
+  // Split: explicit choice (Plan Settings) wins; else the days→split default.
+  const { focuses: split, label: splitType } = resolveSplit(profile.split, days);
   const presc = GOAL_PRESCRIPTION[normGoal(profile.primary_goal)] ?? GOAL_PRESCRIPTION.general;
-  const perWorkout = EXP_COUNT[lower(profile.experience_level).trim()] ?? 4;
+  // Exercises per workout: session length wins (the user's real time budget);
+  // else experience level; else 4.
+  const sessionCount = profile.session_length != null ? SESSION_COUNT[profile.session_length] : undefined;
+  const perWorkout = sessionCount ?? EXP_COUNT[lower(profile.experience_level).trim()] ?? 4;
   const allowed = resolveEquipment(profile.equipment);
+  const focusAreas = resolveFocusAreas(profile.focus_areas); // [] = balanced, no extra volume
   const safeCatalog = Array.isArray(catalog) ? catalog : [];
 
   const trainingIdx = spreadTrainingDays(days);
@@ -263,6 +373,7 @@ export function generateProgram(profile: GeneratorProfile, catalog: CatalogExerc
 
   const programUsed = new Set<string>();
   const workouts: PlannedWorkout[] = [];
+  let trainingOrdinal = 0; // counts training days, to rotate focus muscles across the week
 
   for (let d = 0; d < 7; d++) {
     const focus = idxToFocus.get(d);
@@ -280,6 +391,17 @@ export function generateProgram(profile: GeneratorProfile, catalog: CatalogExerc
     if (picks.length === 0 && safeCatalog.length > 0) {
       picks = safeCatalog.slice(0, Math.max(1, Math.min(perWorkout, safeCatalog.length)));
     }
+
+    // Focus areas: ADD one extra movement for a prioritised muscle on top of the
+    // base split (rotating through the selected muscles across training days).
+    // This is additive — the day keeps its full base split, so it never collapses
+    // into an isolation-only session.
+    if (focusAreas.length && safeCatalog.length) {
+      const tokens = focusAreas[trainingOrdinal % focusAreas.length];
+      const extra = pickFocusExercise(safeCatalog, tokens, allowed, programUsed);
+      if (extra && !picks.some((p) => p.id === extra.id)) picks = [...picks, extra];
+    }
+    trainingOrdinal++;
 
     const exercises: PlannedExercise[] = picks.map((ex, i) => ({
       exercise_id: ex.id,
