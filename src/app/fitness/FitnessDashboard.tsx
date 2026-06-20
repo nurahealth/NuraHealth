@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { GOAL_LABELS } from './FitnessOnboarding';
 import ExerciseDetail from './ExerciseDetail';
 import ExerciseMedia, { CLIP_BG } from './ExerciseMedia';
@@ -262,6 +263,7 @@ function AddSheet({ workout, catalog, onPick, onClose, busy }: {
 
 // ── Main ─────────────────────────────────────────────────────────────────────
 export default function FitnessDashboard() {
+  const router = useRouter();
   const [program, setProgram] = useState<Program | null>(null);
   const [catalog, setCatalog] = useState<CatalogEx[]>([]);
   const [summaries, setSummaries] = useState<ProgramSummary[]>([]);
@@ -430,11 +432,33 @@ export default function FitnessDashboard() {
             <div style={{ fontSize: 11, letterSpacing: '.22em', color: MUT }}>FITNESS</div>
             <h1 style={{ fontSize: 26, fontWeight: 700, letterSpacing: '-.01em', margin: '3px 0 0' }}>Your week</h1>
           </div>
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(155,176,165,.14)',
-            border: '1px solid rgba(155,176,165,.3)', color: SAGE, fontSize: 11, fontWeight: 700,
-            letterSpacing: '.08em', padding: '7px 12px', borderRadius: 999,
-          }}>★ PRO</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            {/* Plan Settings entry point — opens /fitness/settings */}
+            <button
+              type="button"
+              aria-label="Customize plan"
+              title="Customize plan"
+              onClick={() => router.push('/fitness/settings')}
+              style={{
+                appearance: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center',
+                justifyContent: 'center', width: 34, height: 34, borderRadius: 11, color: SAGE,
+                background: 'rgba(155,176,165,.14)', border: '1px solid rgba(155,176,165,.3)',
+                transition: 'background 150ms ease',
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(155,176,165,.24)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(155,176,165,.14)'; }}
+            >
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="3" />
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H8.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.2.61.78 1.05 1.51 1.05H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+              </svg>
+            </button>
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(155,176,165,.14)',
+              border: '1px solid rgba(155,176,165,.3)', color: SAGE, fontSize: 11, fontWeight: 700,
+              letterSpacing: '.08em', padding: '7px 12px', borderRadius: 999,
+            }}>★ PRO</div>
+          </div>
         </div>
 
         {/* segmented toggle */}

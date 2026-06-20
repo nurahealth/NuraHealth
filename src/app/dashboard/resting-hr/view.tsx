@@ -293,8 +293,8 @@ export default function RestingHrDetailPage() {
                   style={{
                     border: "none", cursor: "pointer", borderRadius: 999, padding: "5px 14px",
                     fontFamily: SANS, fontSize: 12, fontWeight: 600, letterSpacing: "0.3px",
-                    background: on ? `rgba(${ROSE_RGB},0.18)` : "transparent",
-                    color: on ? ROSE : `rgba(${INK},0.5)`,
+                    background: on ? `rgba(${RING_GLOW},0.18)` : "transparent",
+                    color: on ? RING_TO : `rgba(${INK},0.5)`,
                   }}
                 >
                   {r}
@@ -308,7 +308,7 @@ export default function RestingHrDetailPage() {
           {/* Legend (below the chart, not inside it) */}
           <div style={{ display: "flex", flexWrap: "wrap", gap: 16, marginTop: 12, fontSize: 11.5, color: MUTED }}>
             <span style={{ display: "flex", alignItems: "center", gap: 7 }}>
-              <span style={{ width: 16, height: 0, borderTop: `2.4px solid ${ROSE}`, borderRadius: 2, boxShadow: `0 0 5px rgba(${ROSE_RGB},0.6)` }} />
+              <span style={{ width: 16, height: 0, borderTop: `2.4px solid ${RING_FROM}`, borderRadius: 2, boxShadow: `0 0 5px rgba(${RING_GLOW},0.6)` }} />
               Resting HR
             </span>
             {active.showBand && (
@@ -394,8 +394,8 @@ function TrendChart({
     <svg width="100%" height={H} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" style={{ display: "block", overflow: "visible", marginTop: 12 }}>
       <defs>
         <linearGradient id={`${uid}-area`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={`rgba(${ROSE_RGB},0.28)`} />
-          <stop offset="100%" stopColor={`rgba(${ROSE_RGB},0)`} />
+          <stop offset="0%" stopColor={`rgba(${RING_GLOW},0.28)`} />
+          <stop offset="100%" stopColor={`rgba(${RING_GLOW},0)`} />
         </linearGradient>
       </defs>
 
@@ -423,15 +423,15 @@ function TrendChart({
 
       {/* Area fill + rose line */}
       <path d={area} fill={`url(#${uid}-area)`} />
-      <path d={line} fill="none" stroke={ROSE} strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" style={{ filter: `drop-shadow(0 0 4px rgba(${ROSE_RGB},0.55))` }} />
+      <path d={line} fill="none" stroke={RING_FROM} strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" style={{ filter: `drop-shadow(0 0 4px rgba(${RING_GLOW},0.55))` }} />
 
       {/* Lowest point — teal dot + label */}
       <circle cx={lowX.toFixed(1)} cy={lowY.toFixed(1)} r={3.4} fill={TEAL} style={{ filter: `drop-shadow(0 0 6px rgba(${TEAL_RGB},0.9))` }} />
       <text x={lowX.toFixed(1)} y={(lowY + 15).toFixed(1)} textAnchor="middle" fontSize={9.5} fontWeight={700} fill={TEAL} style={{ fontFamily: SANS }}>{lowV} low</text>
 
-      {/* Today — rose dot inside a faint halo ring */}
-      <circle cx={todayX.toFixed(1)} cy={todayY.toFixed(1)} r={8} fill="none" stroke={`rgba(${ROSE_RGB},0.35)`} strokeWidth={1.5} />
-      <circle cx={todayX.toFixed(1)} cy={todayY.toFixed(1)} r={3.6} fill={ROSE} style={{ filter: `drop-shadow(0 0 6px rgba(${ROSE_RGB},0.95))` }} />
+      {/* Today — teal dot inside a faint halo ring */}
+      <circle cx={todayX.toFixed(1)} cy={todayY.toFixed(1)} r={8} fill="none" stroke={`rgba(${RING_GLOW},0.35)`} strokeWidth={1.5} />
+      <circle cx={todayX.toFixed(1)} cy={todayY.toFixed(1)} r={3.6} fill={RING_TO} style={{ filter: `drop-shadow(0 0 6px rgba(${RING_GLOW},0.95))` }} />
 
       {/* X-axis labels (in-SVG so they align with the gutter) */}
       {xLabels.map((lab, i) => {

@@ -251,7 +251,34 @@ export interface PlannedRow {
   order_index: number;
 }
 
+export const MEAL_SLOTS = ["breakfast", "lunch", "dinner", "snack"];
 const SLOTS = ["breakfast", "lunch", "dinner"];
+
+// Does a recipe satisfy the user's preferences (status, cook time, excluded
+// ingredients, dietary-pattern allergens)? Shared by the generator and the
+// weekly-plan swap picker so both filter identically.
+export function recipePassesPrefs(r: CandidateRecipe, prefs: NutritionPrefs): boolean {
+  const excluded = new Set(
+    (prefs.excluded_ingredients ?? []).map((s) => s.toLowerCase().trim()).filter(Boolean)
+  );
+  const blocked = prefs.dietary_pattern ? PATTERN_BLOCK[prefs.dietary_pattern] ?? [] : [];
+  const maxMin = prefs.max_cook_minutes ?? null;
+
+  if (r.status !== "published") return false;
+  if (maxMin != null && r.total_minutes != null && r.total_minutes > maxMin) return false;
+  if (excluded.size) {
+    const toks = [...r.ingredientSlugs, ...r.ingredientNames].map((x) => x.toLowerCase());
+    if (toks.some((t) => excluded.has(t) || [...excluded].some((e) => e && t.includes(e)))) return false;
+  }
+  if (prefs.respect_allergens && blocked.length && r.allergen_flags.some((f) => blocked.includes(f)))
+    return false;
+  return true;
+}
+
+// Which of the user's flagged markers a recipe's goal_tags address.
+export function markersAddressed(goalTags: string[], flaggedSlugs: string[]): string[] {
+  return flaggedSlugs.filter((slug) => (MARKER_GOALS[slug] ?? []).some((g) => goalTags.includes(g)));
+}
 
 // flaggedSlugs MUST be ordered most-significant-first.
 export function selectPlannedMeals(opts: {
@@ -260,26 +287,9 @@ export function selectPlannedMeals(opts: {
   prefs: NutritionPrefs;
 }): PlannedRow[] {
   const { recipes, flaggedSlugs, prefs } = opts;
-  const excluded = new Set(
-    (prefs.excluded_ingredients ?? []).map((s) => s.toLowerCase().trim()).filter(Boolean)
-  );
-  const blocked = prefs.dietary_pattern ? PATTERN_BLOCK[prefs.dietary_pattern] ?? [] : [];
-  const maxMin = prefs.max_cook_minutes ?? null;
 
-  const passes = (r: CandidateRecipe): boolean => {
-    if (r.status !== "published") return false;
-    if (maxMin != null && r.total_minutes != null && r.total_minutes > maxMin) return false;
-    if (excluded.size) {
-      const toks = [...r.ingredientSlugs, ...r.ingredientNames].map((x) => x.toLowerCase());
-      if (toks.some((t) => excluded.has(t) || [...excluded].some((e) => e && t.includes(e)))) return false;
-    }
-    if (prefs.respect_allergens && blocked.length && r.allergen_flags.some((f) => blocked.includes(f)))
-      return false;
-    return true;
-  };
-
-  const markersFor = (tags: string[]): string[] =>
-    flaggedSlugs.filter((slug) => (MARKER_GOALS[slug] ?? []).some((g) => tags.includes(g)));
+  const passes = (r: CandidateRecipe): boolean => recipePassesPrefs(r, prefs);
+  const markersFor = (tags: string[]): string[] => markersAddressed(tags, flaggedSlugs);
 
   const scored = recipes.filter(passes).map((r) => {
     const addressed = markersFor(r.goal_tags);
