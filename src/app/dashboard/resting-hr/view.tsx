@@ -23,11 +23,11 @@ const ROSE_RGB = "240,168,144";
 const TEAL = "#5dccae";
 const TEAL_RGB = "93,204,174";
 
-// Warm rose ambient at the top of the page.
-const ROSE_AURORA =
-  "radial-gradient(80% 60% at 50% -6%, rgba(240,168,144,0.28), transparent 60%)," +
-  "radial-gradient(60% 50% at 86% 6%, rgba(232,140,150,0.16), transparent 60%)," +
-  "radial-gradient(70% 40% at 8% 14%, rgba(240,168,144,0.12), transparent 60%)";
+// Subtle dark-emerald ambient at the top of the page (fades to near-black).
+const EMERALD_AURORA =
+  "radial-gradient(80% 60% at 50% -6%, rgba(63,196,136,0.20), transparent 60%)," +
+  "radial-gradient(60% 50% at 86% 6%, rgba(63,196,136,0.10), transparent 60%)," +
+  "radial-gradient(70% 40% at 8% 14%, rgba(63,196,136,0.10), transparent 60%)";
 
 // ── Chart color helper (teal → sage → rose ramp, by value) ────────────────────
 // Defined locally and reusing the shared hex/lerp so it's guaranteed available
@@ -59,9 +59,9 @@ const InfoIcon = () => (
 // reading strength: clamp((90 − bpm) / 52, 0, 1) — 52 bpm ≈ 73% ("excellent").
 // No ECG/heartbeat — resting HR is an overnight summary, not a live metric.
 // All motion is disabled under prefers-reduced-motion (ring filled, number final).
-const RING_FROM = "#43c9a6";
-const RING_TO = "#7fe3cb";
-const RING_GLOW = "67,201,166"; // RGB triplet for the teal glow
+const RING_FROM = "#3fc488";
+const RING_TO = "#74e0aa";
+const RING_GLOW = "63,196,136"; // RGB triplet for the emerald glow
 const COUNT_FROM = 38; // count-up start
 const FILL_MS = 1400;
 
@@ -207,7 +207,7 @@ export default function RestingHrDetailPage() {
     <div style={{
       position: "relative", minHeight: "100dvh", overflow: "hidden",
       color: TEXT, fontFamily: SANS,
-      background: "radial-gradient(130% 80% at 50% -8%, #2e1518 0%, #160a0b 34%, var(--nura-bg) 72%)",
+      background: "radial-gradient(130% 80% at 50% -8%, #0c2a20 0%, #08160f 34%, var(--nura-bg) 72%)",
     }}>
       <style>{`
         .rhr-reveal { opacity: 0; transform: translateY(18px); animation: rhr-rise .7s cubic-bezier(.2,.7,.2,1) forwards; }
@@ -217,7 +217,7 @@ export default function RestingHrDetailPage() {
         * { font-variant-numeric: tabular-nums; }
       `}</style>
 
-      <AuroraBackground gradient={ROSE_AURORA} />
+      <AuroraBackground gradient={EMERALD_AURORA} />
 
       <div style={{ position: "relative", zIndex: 1, maxWidth: 480, margin: "0 auto", padding: "calc(env(safe-area-inset-top, 0px) + 46px) 18px 44px" }}>
         {/* Header shell — back · NŪRA wordmark · info */}
@@ -250,9 +250,9 @@ export default function RestingHrDetailPage() {
           <span style={{
             display: "inline-flex", alignItems: "center", gap: 6, marginTop: 20,
             padding: "6px 15px", borderRadius: 999, fontSize: 12, fontWeight: 600, letterSpacing: "0.5px",
-            color: TEAL, border: `1px solid rgba(${TEAL_RGB},0.4)`,
+            color: RING_FROM, border: `1px solid rgba(${RING_GLOW},0.4)`,
           }}>
-            <span style={{ width: 6, height: 6, borderRadius: "50%", background: TEAL, boxShadow: `0 0 8px ${TEAL}` }} />
+            <span style={{ width: 6, height: 6, borderRadius: "50%", background: RING_FROM, boxShadow: `0 0 8px rgba(${RING_GLOW},0.9)` }} />
             {d.status} · {belowBaseline} below your baseline
           </span>
         </div>
@@ -276,7 +276,7 @@ export default function RestingHrDetailPage() {
               <div style={{ fontSize: 15, fontWeight: 600 }}>Trend</div>
               <div style={{ fontSize: 12.5, color: MUTED, margin: "3px 0 0" }}>{active.subtitle}</div>
             </div>
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12.5, fontWeight: 700, color: trendDown ? TEAL : "#d3a253", whiteSpace: "nowrap" }}>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12.5, fontWeight: 700, color: trendDown ? RING_FROM : "#d3a253", whiteSpace: "nowrap" }}>
               {trendDown ? "▼" : "▲"} {Math.abs(trendDelta)} bpm
             </span>
           </div>

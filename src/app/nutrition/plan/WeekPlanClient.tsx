@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { withFrom } from "@/lib/backNav";
-import { ArrowLeft, RefreshCw, Plus, Clock, Repeat, X, ChevronRight, Loader2, CalendarDays } from "lucide-react";
+import { ArrowLeft, RefreshCw, Plus, Clock, Repeat, Trash2, X, ChevronRight, Loader2, CalendarDays } from "lucide-react";
 import {
   selectPlannedMeals,
   recipePassesPrefs,
@@ -62,6 +62,7 @@ export default function WeekPlanClient({ days, totalPlanned, candidates, prefs, 
   const [picker, setPicker] = useState<{ date: string; slot: string; meal: PlanMeal | null } | null>(null);
   const [regenerating, setRegenerating] = useState(false);
   const [busySlot, setBusySlot] = useState<string | null>(null);
+  const [removingSlot, setRemovingSlot] = useState<string | null>(null);
   const [error, setError] = useState("");
 
   const targetMarkerFor = useCallback((c: PlanCandidate): string | null => {
@@ -119,6 +120,26 @@ export default function WeekPlanClient({ days, totalPlanned, candidates, prefs, 
       setError("Couldn't save that change. Please try again.");
     } finally {
       setBusySlot(null);
+    }
+  };
+
+  // ── Remove a meal: delete the row, returning the slot to its empty state ────
+  const removeMeal = async (mealId: string, slotKey: string) => {
+    if (removingSlot) return;
+    setRemovingSlot(slotKey);
+    setError("");
+    try {
+      const { error: e } = await supabase
+        .from("planned_meals")
+        .delete()
+        .eq("id", mealId)
+        .eq("user_id", userId);
+      if (e) throw e;
+      router.refresh();
+    } catch {
+      setError("Couldn't remove that meal. Please try again.");
+    } finally {
+      setRemovingSlot(null);
     }
   };
 
@@ -262,6 +283,14 @@ export default function WeekPlanClient({ days, totalPlanned, candidates, prefs, 
                     >
                       {busySlot === `${day.date}__${slot}` ? <Loader2 size={13} style={{ animation: "spin 1s linear infinite" }} /> : <Repeat size={13} />}
                     </button>
+                    <button
+                      onClick={() => removeMeal(meal.id, `${day.date}__${slot}`)}
+                      aria-label={`Remove ${SLOT_LABEL[slot]}`}
+                      className="wp-trash"
+                      style={{ flexShrink: 0, width: 34, height: 34, display: "flex", alignItems: "center", justifyContent: "center", background: "transparent", border: `0.5px solid ${BORDER}`, borderRadius: 10, color: TEXT_SEC, cursor: "pointer" }}
+                    >
+                      {removingSlot === `${day.date}__${slot}` ? <Loader2 size={13} style={{ animation: "spin 1s linear infinite" }} /> : <Trash2 size={13} />}
+                    </button>
                   </div>
                 ) : (
                   <button
@@ -281,8 +310,8 @@ export default function WeekPlanClient({ days, totalPlanned, candidates, prefs, 
 
       {/* Swap / add picker */}
       {picker && (
-        <div onClick={() => busySlot === null && setPicker(null)} style={{ position: "fixed", inset: 0, zIndex: 90, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(6px)", display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
-          <div onClick={(e) => e.stopPropagation()} style={{ width: "100%", maxWidth: 480, maxHeight: "82dvh", overflowY: "auto", background: "var(--nura-bg)", borderTopLeftRadius: 22, borderTopRightRadius: 22, border: `0.5px solid ${BORDER}`, padding: "12px 16px max(env(safe-area-inset-bottom), 18px)" }}>
+        <div onClick={() => busySlot === null && setPicker(null)} style={{ position: "fixed", inset: 0, zIndex: 90, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ width: "100%", maxWidth: 430, maxHeight: "82dvh", overflowY: "auto", background: "var(--nura-bg)", borderRadius: 22, border: `0.5px solid ${BORDER}`, padding: "12px 16px 18px" }}>
             <div style={{ display: "flex", justifyContent: "center", padding: "2px 0 10px" }}>
               <span style={{ width: 40, height: 4, borderRadius: 999, background: "rgba(var(--nura-bg-tint-rgb),0.22)" }} />
             </div>
@@ -329,6 +358,7 @@ export default function WeekPlanClient({ days, totalPlanned, candidates, prefs, 
         @keyframes spin { to { transform: rotate(360deg); } }
         .wp-meal:hover { border-color: rgba(${SAGE_RGB},0.4) !important; }
         .wp-icon:hover, .wp-add:hover { border-color: rgba(${SAGE_RGB},0.45) !important; color: ${SAGE} !important; }
+        .wp-trash:hover { border-color: rgba(255,76,92,0.45) !important; color: #FF4C5C !important; }
         .wp-opt:hover { border-color: rgba(${SAGE_RGB},0.4) !important; background: rgba(${SAGE_RGB},0.05) !important; }
       `}</style>
     </div>

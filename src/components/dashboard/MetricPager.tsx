@@ -22,7 +22,7 @@ type MetricMeta = { id: string; accent: string; View: React.ComponentType };
 const METRICS: MetricMeta[] = [
   { id: "sleep", accent: "#5aa0e6", View: SleepView },
   { id: "hrv", accent: "var(--nura-optimal)", View: HrvView },
-  { id: "resting-hr", accent: "#f0a890", View: RestingHrView },
+  { id: "resting-hr", accent: "#3fc488", View: RestingHrView },
   { id: "steps", accent: "var(--nura-amber)", View: StepsView },
   { id: "active-energy", accent: "var(--nura-amber)", View: ActiveEnergyView },
   { id: "heart-rate", accent: "var(--nura-alert)", View: HeartRateView },

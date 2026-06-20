@@ -9,7 +9,8 @@ import { MUSCLE_GROUPS, CARDIO_GROUP, inGroup } from './muscleGroups';
 import {
   loadActiveProgram, loadCatalog, loadProgramSummaries,
   updateExerciseFields, swapExerciseRow, removeExerciseRow, addExerciseRow, reorderExerciseRows,
-  type CatalogEx, type Program, type ProgramSummary, type WEx, type Workout,
+  loadCompletions, logWorkoutCompletion, localDateKey,
+  type CatalogEx, type Program, type ProgramSummary, type WEx, type Workout, type WorkoutCompletion,
 } from './planData';
 
 // ── Palette (ported verbatim from design-reference/fitness-dashboard.html) ────
@@ -278,6 +279,13 @@ export default function FitnessDashboard() {
   const [generating, setGenerating] = useState(false);
   const [detailEx, setDetailEx] = useState<{ id: string; sets: number | null; reps: string | null; rest_seconds: number | null } | null>(null);
 
+  // ── Consistency log: real completions + an in-progress session timer ─────────
+  const [completions, setCompletions] = useState<WorkoutCompletion[]>([]);
+  // Active Start→Finish session, scoped to a workout on a specific calendar day.
+  const [session, setSession] = useState<{ workoutId: string; dateKey: string; startedAt: number } | null>(null);
+  const [logging, setLogging] = useState(false);
+  const [completeErr, setCompleteErr] = useState<string | null>(null);
+
   const today = useMemo(() => startOfDay(new Date()), []);
   const saveTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   const programRef = useRef<Program | null>(program);
@@ -285,8 +293,10 @@ export default function FitnessDashboard() {
   const dragIndexRef = useRef<number | null>(null);
 
   const load = useCallback(async () => {
-    const [{ program }, cat, sums] = await Promise.all([loadActiveProgram(), loadCatalog(), loadProgramSummaries()]);
-    setProgram(program); setCatalog(cat); setSummaries(sums); setLoading(false);
+    const [{ program }, cat, sums, comps] = await Promise.all([
+      loadActiveProgram(), loadCatalog(), loadProgramSummaries(), loadCompletions(),
+    ]);
+    setProgram(program); setCatalog(cat); setSummaries(sums); setCompletions(comps); setLoading(false);
     // Land on a real workout: today if it trains, else the next training day.
     if (program) {
       const baseIdx = programDayIndex(today);
@@ -317,6 +327,43 @@ export default function FitnessDashboard() {
   }, [program]);
   const selWorkout = byDay.get(programDayIndex(selected));
   const training = isTraining(selWorkout);
+
+  // Real completions, indexed by local calendar day for O(1) "done" lookups.
+  const completedKeys = useMemo(() => {
+    const s = new Set<string>();
+    for (const c of completions) s.add(localDateKey(new Date(c.completed_at)));
+    return s;
+  }, [completions]);
+  const selectedKey = localDateKey(selected);
+  const selectedDone = completedKeys.has(selectedKey);
+  const sessionActiveHere = !!session && session.dateKey === selectedKey && session.workoutId === selWorkout?.id;
+
+  const reloadCompletions = useCallback(async () => { setCompletions(await loadCompletions()); }, []);
+
+  // Start the session timer (records when "Start workout" was tapped).
+  const startWorkout = useCallback(() => {
+    if (!selWorkout) return;
+    setCompleteErr(null);
+    setSession({ workoutId: selWorkout.id, dateKey: selectedKey, startedAt: Date.now() });
+  }, [selWorkout, selectedKey]);
+
+  // Finish → INSERT a completion (date + which workout + duration when we have it).
+  const finishWorkout = useCallback(async () => {
+    if (!selWorkout) return;
+    setLogging(true); setCompleteErr(null);
+    const startedAt = sessionActiveHere ? session!.startedAt : null;
+    const durationSeconds = startedAt ? Math.max(1, Math.round((Date.now() - startedAt) / 1000)) : null;
+    const res = await logWorkoutCompletion({ programWorkoutId: selWorkout.id, durationSeconds });
+    setLogging(false);
+    if (!res.ok) {
+      setCompleteErr(res.needsMigration
+        ? 'Logging needs a quick database migration — run it to start recording completions.'
+        : (res.error || 'Could not save your completion. Please try again.'));
+      return;
+    }
+    setSession(null);
+    await reloadCompletions();
+  }, [selWorkout, sessionActiveHere, session, reloadCompletions]);
 
   const runWrite = useCallback(async (fn: () => Promise<string | null>) => {
     setSavingCount((n) => n + 1);
@@ -488,6 +535,7 @@ export default function FitnessDashboard() {
                   const train = isTraining(w);
                   const isToday = sameDay(date, today);
                   const isSel = sameDay(date, selected);
+                  const done = completedKeys.has(localDateKey(date));
                   return (
                     <div
                       key={i}
@@ -501,7 +549,14 @@ export default function FitnessDashboard() {
                     >
                       <div style={{ fontSize: 10, letterSpacing: '.05em', color: isToday ? BG : MUT }}>{WEEK_DOW[i]}</div>
                       <div style={{ fontSize: 16, fontWeight: 700, marginTop: 5, color: isToday ? BG : TEXT }}>{date.getDate()}</div>
-                      <div style={{ width: 5, height: 5, borderRadius: '50%', margin: '6px auto 0', background: isToday ? BG : train ? SAGE : 'transparent' }} />
+                      {/* Indicator: a check = a REAL logged completion; a dot = scheduled training. */}
+                      <div style={{ height: 12, marginTop: 5, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        {done ? (
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={isToday ? BG : SAGE} strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
+                        ) : (
+                          <div style={{ width: 5, height: 5, borderRadius: '50%', background: isToday ? BG : train ? 'rgba(155,176,165,.55)' : 'transparent' }} />
+                        )}
+                      </div>
                     </div>
                   );
                 })}
@@ -527,6 +582,7 @@ export default function FitnessDashboard() {
                     const w = byDay.get(programDayIndex(date));
                     const train = isTraining(w);
                     const isToday = sameDay(date, today);
+                    const done = completedKeys.has(localDateKey(date));
                     return (
                       <div
                         key={i}
@@ -540,9 +596,14 @@ export default function FitnessDashboard() {
                         }}
                       >
                         {date.getDate()}
-                        {train && !isToday && (
-                          <span style={{ position: 'absolute', bottom: 4, width: 4, height: 4, borderRadius: '50%', background: SAGE }} />
-                        )}
+                        {/* check = real completion; dot = scheduled-only */}
+                        {done && !isToday ? (
+                          <span style={{ position: 'absolute', bottom: 2.5, display: 'flex' }}>
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={SAGE} strokeWidth="3.6" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
+                          </span>
+                        ) : train && !isToday ? (
+                          <span style={{ position: 'absolute', bottom: 4, width: 4, height: 4, borderRadius: '50%', background: 'rgba(155,176,165,.55)' }} />
+                        ) : null}
                       </div>
                     );
                   })}
@@ -575,13 +636,33 @@ export default function FitnessDashboard() {
                 </div>
               )}
               {training && (
-                <div style={{ display: 'flex', gap: 10, alignItems: 'center', position: 'relative', zIndex: 2, marginTop: muscleChips(selWorkout!.exercises).length ? 0 : 16 }}>
-                  <button type="button" style={{ flex: 1, background: SAGE, color: BG, border: 'none', borderRadius: 13, padding: 14, fontSize: 15, fontWeight: 700, cursor: 'pointer', boxShadow: '0 8px 24px rgba(155,176,165,.3)' }}>
-                    Start workout
-                  </button>
-                  <button type="button" aria-label="Edit" style={{ width: 48, height: 48, borderRadius: 13, background: 'rgba(13,13,14,.4)', border: '1px solid rgba(235,230,216,.14)', color: TEXT, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z" /></svg>
-                  </button>
+                <div style={{ position: 'relative', zIndex: 2, marginTop: muscleChips(selWorkout!.exercises).length ? 0 : 16 }}>
+                  <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                    {selectedDone ? (
+                      // Already logged for this day — show a clear "done" state.
+                      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9, background: 'rgba(155,176,165,.16)', color: SAGE, border: '1px solid rgba(155,176,165,.4)', borderRadius: 13, padding: 14, fontSize: 15, fontWeight: 700 }}>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={SAGE} strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
+                        Completed
+                      </div>
+                    ) : sessionActiveHere ? (
+                      <button type="button" onClick={finishWorkout} disabled={logging} style={{ flex: 1, background: SAGE, color: BG, border: 'none', borderRadius: 13, padding: 14, fontSize: 15, fontWeight: 700, cursor: logging ? 'default' : 'pointer', opacity: logging ? 0.7 : 1, boxShadow: '0 8px 24px rgba(155,176,165,.3)' }}>
+                        {logging ? 'Saving…' : 'Finish workout'}
+                      </button>
+                    ) : (
+                      <button type="button" onClick={startWorkout} style={{ flex: 1, background: SAGE, color: BG, border: 'none', borderRadius: 13, padding: 14, fontSize: 15, fontWeight: 700, cursor: 'pointer', boxShadow: '0 8px 24px rgba(155,176,165,.3)' }}>
+                        Start workout
+                      </button>
+                    )}
+                    <button type="button" aria-label="Edit" style={{ width: 48, height: 48, borderRadius: 13, background: 'rgba(13,13,14,.4)', border: '1px solid rgba(235,230,216,.14)', color: TEXT, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z" /></svg>
+                    </button>
+                  </div>
+                  {sessionActiveHere && !logging && (
+                    <div style={{ fontSize: 11.5, color: MUT, marginTop: 9 }}>Workout in progress — tap Finish when you&apos;re done to log it.</div>
+                  )}
+                  {completeErr && (
+                    <div style={{ fontSize: 11.5, color: '#d98b8b', marginTop: 9 }}>{completeErr}</div>
+                  )}
                 </div>
               )}
             </div>

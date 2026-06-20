@@ -98,7 +98,11 @@ function MarkerCard({ m }: { m: MarkerCardVM }) {
       {m.foodHint && (
         <div style={{ display: "flex", alignItems: "center", gap: 7, marginTop: 12 }}>
           <Sparkles size={13} color={SAGE} style={{ flexShrink: 0 }} />
-          <span style={{ fontFamily: SANS, fontSize: 12.5, color: TEXT_SEC }}>Try {m.foodHint}</span>
+          {/* Out-of-range markers get a corrective "Try …"; in-range markers read
+              as upkeep ("Maintain with …") so they don't look like they need fixing. */}
+          <span style={{ fontFamily: SANS, fontSize: 12.5, color: TEXT_SEC }}>
+            {m.status === "optimal" ? "Maintain with" : "Try"} {m.foodHint}
+          </span>
           <ChevronRight size={14} color={TEXT_TER} style={{ marginLeft: "auto", flexShrink: 0 }} />
         </div>
       )}

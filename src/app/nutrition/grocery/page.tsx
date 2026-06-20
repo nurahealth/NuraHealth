@@ -2,25 +2,11 @@ import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import NuraPageShell from "@/components/NuraPageShell";
-import GroceryClient, { type GrocerySection } from "./GroceryClient";
+import GroceryClient, { type GroceryItem, type PlanItem } from "./GroceryClient";
 
 export const dynamic = "force-dynamic";
 
-// Aisle ordering for the section headers (known categories first, then any others).
-const CATEGORY_ORDER = ["root-spice", "greens", "legumes", "good-fats", "ferments", "protein", "fruit"];
-const CATEGORY_LABELS: Record<string, string> = {
-  "root-spice": "Roots & Spices",
-  greens: "Greens",
-  legumes: "Legumes",
-  "good-fats": "Good Fats",
-  ferments: "Ferments",
-  protein: "Protein",
-  fruit: "Fruit",
-};
-
-function pretty(t: string): string {
-  return t.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
-}
+interface IngredientEmbed { slug: string; name: string; category: string | null }
 
 // Next 7 calendar days as YYYY-MM-DD, starting today.
 function weekDates(): { start: string; end: string } {
@@ -31,40 +17,27 @@ function weekDates(): { start: string; end: string } {
   return { start, end: last.toISOString().slice(0, 10) };
 }
 
-interface IngredientEmbed { slug: string; name: string; category: string | null }
-
-export default async function GroceryPage() {
-  const supabase = await createSupabaseServerClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/dashboard");
-
+// Build the plan-derived candidate items from this week's planned meals
+// (deduped by ingredient slug, excluded ingredients removed).
+async function buildPlanItems(userId: string): Promise<PlanItem[]> {
   const { start, end } = weekDates();
-
-  // This week's planned meals (next 7 days) + the prefs that gate exclusions.
   const [{ data: planned }, { data: prefRow }] = await Promise.all([
     supabaseAdmin
       .from("planned_meals")
-      .select("recipe_id, plan_date, recipes(id, title)")
-      .eq("user_id", user.id)
+      .select("recipe_id")
+      .eq("user_id", userId)
       .gte("plan_date", start)
       .lte("plan_date", end),
     supabaseAdmin
       .from("nutrition_preferences")
       .select("excluded_ingredients")
-      .eq("user_id", user.id)
+      .eq("user_id", userId)
       .maybeSingle(),
   ]);
 
-  // recipe_id → title (deduped); collect the unique recipe ids to expand.
-  const titleById = new Map<string, string>();
-  for (const row of (planned ?? []) as Array<{ recipe_id: string | null; recipes: { id: string; title: string } | { id: string; title: string }[] | null }>) {
-    if (!row.recipe_id) continue;
-    const rec = Array.isArray(row.recipes) ? row.recipes[0] : row.recipes;
-    if (rec?.title) titleById.set(row.recipe_id, rec.title);
-  }
-  const recipeIds = [...titleById.keys()];
+  const recipeIds = [...new Set(((planned ?? []) as { recipe_id: string | null }[]).map((r) => r.recipe_id).filter((x): x is string => !!x))];
+  if (recipeIds.length === 0) return [];
 
-  // Excluded ingredients (matched the same loose way as the plan generator).
   const excluded = new Set(
     ((prefRow?.excluded_ingredients ?? []) as string[]).map((s) => s.toLowerCase().trim()).filter(Boolean)
   );
@@ -74,57 +47,80 @@ export default async function GroceryPage() {
     return excluded.has(slug) || [...excluded].some((e) => n.includes(e));
   };
 
-  // Aggregate ingredients across all planned recipes, deduped by slug.
-  type Agg = { slug: string; name: string; category: string; amounts: Set<string>; recipes: Set<string> };
+  const { data: riRows } = await supabaseAdmin
+    .from("recipe_ingredients")
+    .select("amount_text, ingredients(slug, name, category)")
+    .in("recipe_id", recipeIds);
+
+  type Agg = { name: string; category: string; amounts: Set<string> };
   const bySlug = new Map<string, Agg>();
+  for (const row of (riRows ?? []) as Array<{ amount_text: string | null; ingredients: IngredientEmbed | IngredientEmbed[] | null }>) {
+    const ing = Array.isArray(row.ingredients) ? row.ingredients[0] : row.ingredients;
+    if (!ing?.slug || !ing.name) continue;
+    if (isExcluded(ing.slug, ing.name)) continue;
+    const entry = bySlug.get(ing.slug) ?? { name: ing.name, category: ing.category ?? "other", amounts: new Set<string>() };
+    if (row.amount_text && row.amount_text.trim()) entry.amounts.add(row.amount_text.trim());
+    bySlug.set(ing.slug, entry);
+  }
 
-  if (recipeIds.length > 0) {
-    const { data: riRows } = await supabaseAdmin
-      .from("recipe_ingredients")
-      .select("recipe_id, amount_text, ingredients(slug, name, category)")
-      .in("recipe_id", recipeIds);
+  return [...bySlug.values()].map((a) => ({
+    name: a.name,
+    amount_text: a.amounts.size ? [...a.amounts].join(" · ") : null,
+    category: a.category,
+  }));
+}
 
-    for (const row of (riRows ?? []) as Array<{ recipe_id: string; amount_text: string | null; ingredients: IngredientEmbed | IngredientEmbed[] | null }>) {
-      const ing = Array.isArray(row.ingredients) ? row.ingredients[0] : row.ingredients;
-      if (!ing?.slug || !ing.name) continue;
-      if (isExcluded(ing.slug, ing.name)) continue;
+export default async function GroceryPage() {
+  const supabase = await createSupabaseServerClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/dashboard");
 
-      const entry = bySlug.get(ing.slug) ?? { slug: ing.slug, name: ing.name, category: ing.category ?? "other", amounts: new Set<string>(), recipes: new Set<string>() };
-      if (row.amount_text && row.amount_text.trim()) entry.amounts.add(row.amount_text.trim());
-      const title = titleById.get(row.recipe_id);
-      if (title) entry.recipes.add(title);
-      bySlug.set(ing.slug, entry);
+  const planItems = await buildPlanItems(user.id);
+
+  // Read the user's grocery_items. If the table isn't there yet (migration not
+  // applied), degrade gracefully instead of 500-ing.
+  let tableReady = true;
+  let items: GroceryItem[] = [];
+  const { data: rows, error } = await supabaseAdmin
+    .from("grocery_items")
+    .select("id, name, amount_text, category, is_checked, source, sort_order")
+    .eq("user_id", user.id)
+    .order("sort_order", { ascending: true });
+
+  if (error) {
+    const msg = `${error.code ?? ""} ${error.message ?? ""}`.toLowerCase();
+    if (msg.includes("does not exist") || msg.includes("schema cache") || error.code === "42P01") {
+      tableReady = false;
+    }
+  } else {
+    items = (rows ?? []) as GroceryItem[];
+  }
+
+  // First load: if the table is ready but empty, seed it from this week's plan.
+  if (tableReady && items.length === 0 && planItems.length > 0) {
+    const seed = planItems.map((p, i) => ({
+      user_id: user.id,
+      name: p.name,
+      amount_text: p.amount_text,
+      category: p.category,
+      source: "plan" as const,
+      is_checked: false,
+      sort_order: i,
+    }));
+    const { error: insErr } = await supabaseAdmin.from("grocery_items").insert(seed);
+    if (!insErr) {
+      const { data: reread } = await supabaseAdmin
+        .from("grocery_items")
+        .select("id, name, amount_text, category, is_checked, source, sort_order")
+        .eq("user_id", user.id)
+        .order("sort_order", { ascending: true });
+      items = (reread ?? []) as GroceryItem[];
     }
   }
 
-  // Group into aisle sections, ordered by CATEGORY_ORDER then alphabetical.
-  const byCategory = new Map<string, Agg[]>();
-  for (const item of bySlug.values()) {
-    const arr = byCategory.get(item.category) ?? [];
-    arr.push(item);
-    byCategory.set(item.category, arr);
-  }
-  const orderedCats = [...byCategory.keys()].sort((a, b) => {
-    const ia = CATEGORY_ORDER.indexOf(a), ib = CATEGORY_ORDER.indexOf(b);
-    if (ia !== -1 && ib !== -1) return ia - ib;
-    if (ia !== -1) return -1;
-    if (ib !== -1) return 1;
-    return a.localeCompare(b);
-  });
-
-  const sections: GrocerySection[] = orderedCats.map((cat) => ({
-    category: cat,
-    label: CATEGORY_LABELS[cat] ?? pretty(cat),
-    items: (byCategory.get(cat) ?? [])
-      .sort((a, b) => a.name.localeCompare(b.name))
-      .map((i) => ({ slug: i.slug, name: i.name, amounts: [...i.amounts], recipes: [...i.recipes] })),
-  }));
-
-  const totalItems = sections.reduce((n, s) => n + s.items.length, 0);
-
   return (
     <NuraPageShell maxWidth={760}>
-      <GroceryClient sections={sections} totalItems={totalItems} weekStart={start} userId={user.id} />
+      <GroceryClient items={items} planItems={planItems} tableReady={tableReady} userId={user.id} />
     </NuraPageShell>
   );
 }

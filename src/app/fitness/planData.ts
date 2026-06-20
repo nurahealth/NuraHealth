@@ -215,3 +215,66 @@ export async function loadProgramSummaries(): Promise<ProgramSummary[]> {
     .order('created_at', { ascending: false });
   return (data as ProgramSummary[] | null) ?? [];
 }
+
+// ── Workout completions (consistency log) ────────────────────────────────────
+// One row per completed workout. Foundation for a future Progress tab.
+
+export type WorkoutCompletion = {
+  id: string;
+  program_workout_id: string;
+  completed_at: string;     // ISO timestamptz
+  duration_seconds: number | null;
+};
+
+// Local calendar-day key (YYYY-MM-DD) — what the week/month grids match on. Uses
+// LOCAL date parts so a completion lines up with the day the user sees, matching
+// how `today`/`selected` are computed throughout the fitness UI.
+export function localDateKey(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+// PostgREST raises PGRST205 (and Postgres 42P01) until the migration has been
+// applied. Treat that as "no completions yet" so the app degrades cleanly.
+function isMissingTable(err: { code?: string; message?: string } | null): boolean {
+  if (!err) return false;
+  if (err.code === 'PGRST205' || err.code === '42P01') return true;
+  return /workout_completions/.test(err.message ?? '') && /(schema cache|does not exist)/i.test(err.message ?? '');
+}
+
+// All completions for the signed-in user (RLS scopes to owner). Returns [] when
+// the table isn't there yet, so the calendar simply shows nothing "done".
+export async function loadCompletions(): Promise<WorkoutCompletion[]> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return [];
+  const { data, error } = await supabase
+    .from('workout_completions')
+    .select('id, program_workout_id, completed_at, duration_seconds')
+    .eq('user_id', user.id)
+    .order('completed_at', { ascending: false });
+  if (error) return []; // missing table or any read error → treat as no completions
+  return (data as WorkoutCompletion[] | null) ?? [];
+}
+
+export type LogCompletionResult = { ok: true } | { ok: false; needsMigration: boolean; error: string };
+
+// Record one completed workout. `needsMigration` is true when the only problem
+// is that the table hasn't been created yet (so the UI can prompt for the SQL).
+export async function logWorkoutCompletion(args: {
+  programWorkoutId: string;
+  completedAt?: string;            // defaults to now
+  durationSeconds?: number | null;
+}): Promise<LogCompletionResult> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { ok: false, needsMigration: false, error: 'Not signed in.' };
+  const { error } = await supabase.from('workout_completions').insert({
+    user_id: user.id,
+    program_workout_id: args.programWorkoutId,
+    completed_at: args.completedAt ?? new Date().toISOString(),
+    duration_seconds: args.durationSeconds ?? null,
+  });
+  if (error) return { ok: false, needsMigration: isMissingTable(error), error: error.message };
+  return { ok: true };
+}

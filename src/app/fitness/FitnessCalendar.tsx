@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { loadActiveProgram, type Program, type WEx, type Workout } from './planData';
+import { loadActiveProgram, loadCompletions, localDateKey, type Program, type WEx, type Workout } from './planData';
 
 // ── Palette (NŪRA) ───────────────────────────────────────────────────────────
 const SAGE = '#9bb0a5';
@@ -119,8 +119,8 @@ function PeriodNav({ label, onPrev, onNext, onToday }: {
 }
 
 // ── Week view (vertical, one row per day) ────────────────────────────────────
-function WeekView({ cursor, byDay, today, onPick }: {
-  cursor: Date; byDay: Map<number, Workout>; today: Date; onPick: (d: Date) => void;
+function WeekView({ cursor, byDay, today, completedKeys, onPick }: {
+  cursor: Date; byDay: Map<number, Workout>; today: Date; completedKeys: Set<string>; onPick: (d: Date) => void;
 }) {
   const monday = startOfWeek(cursor);
   const days = Array.from({ length: 7 }, (_, i) => addDays(monday, i));
@@ -130,6 +130,7 @@ function WeekView({ cursor, byDay, today, onPick }: {
         const w = byDay.get(i);
         const training = isTraining(w);
         const isToday = sameDay(date, today);
+        const done = completedKeys.has(localDateKey(date));
         return (
           <button
             key={i}
@@ -156,11 +157,15 @@ function WeekView({ cursor, byDay, today, onPick }: {
               <div style={{ fontSize: 15.5, fontWeight: 600, color: training ? `rgb(${OFF})` : `rgba(${OFF},0.55)`, letterSpacing: '-0.2px' }}>
                 {focusOf(w)}
               </div>
-              <div style={{ fontSize: 12, color: training ? SAGE : `rgba(${OFF},0.4)`, fontFamily: training ? MONO : SANS, marginTop: 3, letterSpacing: training ? '0.3px' : 0 }}>
-                {training ? `${w!.exercises.length} ${w!.exercises.length === 1 ? 'exercise' : 'exercises'}` : 'Recovery'}
+              <div style={{ fontSize: 12, color: done ? SAGE : training ? SAGE : `rgba(${OFF},0.4)`, fontFamily: training ? MONO : SANS, marginTop: 3, letterSpacing: training ? '0.3px' : 0 }}>
+                {done ? 'Completed ✓' : training ? `${w!.exercises.length} ${w!.exercises.length === 1 ? 'exercise' : 'exercises'}` : 'Recovery'}
               </div>
             </div>
-            {training ? (
+            {done ? (
+              <span style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', width: 26, height: 26, borderRadius: '50%', background: SAGE }}>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={BG} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
+              </span>
+            ) : training ? (
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={`rgba(${OFF},0.3)`} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
                 <path d="M9 6l6 6-6 6" />
               </svg>
@@ -175,8 +180,8 @@ function WeekView({ cursor, byDay, today, onPick }: {
 }
 
 // ── Month view (6×7 grid) ────────────────────────────────────────────────────
-function MonthView({ cursor, byDay, today, onPick }: {
-  cursor: Date; byDay: Map<number, Workout>; today: Date; onPick: (d: Date) => void;
+function MonthView({ cursor, byDay, today, completedKeys, onPick }: {
+  cursor: Date; byDay: Map<number, Workout>; today: Date; completedKeys: Set<string>; onPick: (d: Date) => void;
 }) {
   const cells = useMemo(() => monthMatrix(cursor.getFullYear(), cursor.getMonth()), [cursor]);
   const month = cursor.getMonth();
@@ -197,6 +202,7 @@ function MonthView({ cursor, byDay, today, onPick }: {
           const w = byDay.get(programDayIndex(date));
           const training = isTraining(w);
           const isToday = sameDay(date, today);
+          const done = completedKeys.has(localDateKey(date));
           return (
             <button
               key={i}
@@ -215,7 +221,11 @@ function MonthView({ cursor, byDay, today, onPick }: {
               <span style={{ fontSize: 13, fontWeight: 600, lineHeight: 1, color: isToday ? SAGE : `rgb(${OFF})` }}>
                 {date.getDate()}
               </span>
-              {training ? (
+              {done ? (
+                <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 15, height: 15, borderRadius: '50%', background: SAGE, marginTop: 1 }}>
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={BG} strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
+                </span>
+              ) : training ? (
                 <span style={{
                   fontSize: 8.5, fontFamily: MONO, letterSpacing: '0.2px', lineHeight: 1.1, textAlign: 'center',
                   color: SAGE, maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
@@ -237,14 +247,19 @@ function MonthView({ cursor, byDay, today, onPick }: {
         <span style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 11.5, color: `rgba(${OFF},0.5)`, fontFamily: SANS }}>
           <span style={{ width: 4, height: 4, borderRadius: 999, background: `rgba(${OFF},0.18)` }} /> Rest
         </span>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 11.5, color: `rgba(${OFF},0.5)`, fontFamily: SANS }}>
+          <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 13, height: 13, borderRadius: '50%', background: SAGE }}>
+            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke={BG} strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
+          </span> Done
+        </span>
       </div>
     </div>
   );
 }
 
 // ── Day workout sheet (opens on tapping a day) ───────────────────────────────
-function DaySheet({ date, workout, onClose }: {
-  date: Date; workout: Workout | undefined; onClose: () => void;
+function DaySheet({ date, workout, done, onClose }: {
+  date: Date; workout: Workout | undefined; done: boolean; onClose: () => void;
 }) {
   const training = isTraining(workout);
   const heading = date.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
@@ -276,6 +291,12 @@ function DaySheet({ date, workout, onClose }: {
             <div style={{ fontSize: 22, fontWeight: 700, color: training ? `rgb(${OFF})` : `rgba(${OFF},0.7)`, marginTop: 5, letterSpacing: '-0.4px' }}>
               {focusOf(workout)}
             </div>
+            {done && (
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginTop: 8, padding: '4px 10px', borderRadius: 999, background: 'rgba(155,176,165,0.16)', border: '1px solid rgba(155,176,165,0.4)', color: SAGE, fontSize: 12, fontWeight: 600, fontFamily: SANS }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={SAGE} strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
+                Completed
+              </span>
+            )}
           </div>
           <button
             type="button"
@@ -349,16 +370,18 @@ export default function FitnessCalendar() {
   const [view, setView] = useState<'week' | 'month'>('week');
   const [cursor, setCursor] = useState<Date>(() => startOfDay(new Date()));
   const [selected, setSelected] = useState<Date | null>(null);
+  const [completedKeys, setCompletedKeys] = useState<Set<string>>(() => new Set());
 
   const today = useMemo(() => startOfDay(new Date()), []);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const { program, error } = await loadActiveProgram();
+      const [{ program, error }, comps] = await Promise.all([loadActiveProgram(), loadCompletions()]);
       if (cancelled) return;
       setProgram(program);
       setError(error);
+      setCompletedKeys(new Set(comps.map((c) => localDateKey(new Date(c.completed_at)))));
       setLoading(false);
     })();
     return () => { cancelled = true; };
@@ -431,13 +454,13 @@ export default function FitnessCalendar() {
           </div>
 
           {view === 'week'
-            ? <WeekView cursor={cursor} byDay={byDay} today={today} onPick={setSelected} />
-            : <MonthView cursor={cursor} byDay={byDay} today={today} onPick={setSelected} />}
+            ? <WeekView cursor={cursor} byDay={byDay} today={today} completedKeys={completedKeys} onPick={setSelected} />
+            : <MonthView cursor={cursor} byDay={byDay} today={today} completedKeys={completedKeys} onPick={setSelected} />}
         </>
       )}
 
       {selected && (
-        <DaySheet date={selected} workout={byDay.get(programDayIndex(selected))} onClose={() => setSelected(null)} />
+        <DaySheet date={selected} workout={byDay.get(programDayIndex(selected))} done={completedKeys.has(localDateKey(selected))} onClose={() => setSelected(null)} />
       )}
     </div>
   );
