@@ -16,7 +16,7 @@ const BORDER = "var(--nura-border)";
 const SURFACE = "var(--nura-surface)";
 const SAGE = "var(--nura-sage)";
 const SAGE_RGB = "var(--nura-sage-rgb)";
-const SANS = "'Inter', system-ui, sans-serif";
+const SANS = "var(--font-inter), system-ui, sans-serif";
 
 // ── Icons (Tabler-inspired) ───────────────────────────────────────────────────
 const I = ({ children, size = 17, color = "currentColor" }: { children: React.ReactNode; size?: number; color?: string }) => (
@@ -32,6 +32,7 @@ const Icons = {
   activity: () => <I><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/><path d="M3.5 12h4l2-5 3 9 2-4h6"/></I>,
   droplet:  () => <I><path d="M12 2c0 0-8 11-8 14.5a8 8 0 0 0 16 0C20 13 12 2 12 2z"/></I>,
   pill:     () => <I><path d="M10 4l10 10a4 4 0 0 1-5.66 5.66L4 9.66A4 4 0 0 1 9.66 4z"/><path d="M9 11l4 4"/></I>,
+  dumbbell: () => <I><path d="M4 9v6M7 6.5v11M7 12h10M17 6.5v11M20 9v6"/></I>,
   watch:    () => <I><circle cx="12" cy="12" r="6"/><path d="M9 4l1-2h4l1 2M9 20l1 2h4l1-2"/></I>,
   bookmark: () => <I><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></I>,
   flask:    () => <I><path d="M9 3h6M10 3v6l-4.5 9a1 1 0 0 0 .9 1.5h11.2a1 1 0 0 0 .9-1.5L14 9V3M7.5 14h9"/></I>,
@@ -76,6 +77,7 @@ const NAV_ITEMS: NavItem[] = [
   { key: "nutrition",   label: "Nutrition",    href: "/nutrition",    icon: Icons.leaf },
   { key: "recipes",     label: "Recipes",      href: "/recipes",      icon: Icons.book },
   { key: "supplements", label: "Supplements",  href: "/supplements",  icon: Icons.pill },
+  { key: "fitness",     label: "Fitness",      href: "/fitness",      icon: Icons.dumbbell },
   { key: "integrations",label: "Integrations", href: "/integrations", icon: Icons.watch },
   { key: "saved",       label: "Saved",        href: "/saved",        icon: Icons.bookmark },
 ];

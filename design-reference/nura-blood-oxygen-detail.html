@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NŪRA — Blood Oxygen detail</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --text:#ebe6d8; --muted:rgba(235,230,216,0.55); --faint:rgba(235,230,216,0.30);
+    --cool:#5aa0e6; --teal:#5dccae; --sage:#9bb0a5; --gold:#d3a253; --coral:#e8745a; --warm:#e0a23e;
+    --glass:rgba(22,25,27,0.5); --glass-line:rgba(235,230,216,0.10);
+  }
+  *{box-sizing:border-box; margin:0; padding:0; -webkit-font-smoothing:antialiased; font-variant-numeric:tabular-nums;}
+  body{font-family:'Inter',sans-serif; background:#08090a; min-height:100vh; color:var(--text); position:relative; overflow-x:hidden;}
+  .aurora{position:fixed; inset:0; pointer-events:none; z-index:0;
+    background:radial-gradient(80% 42% at 50% -4%, rgba(93,204,174,0.14) 0%, rgba(90,160,230,0.05) 36%, rgba(10,11,12,0) 70%);}
+  .grain{position:fixed; inset:0; pointer-events:none; z-index:1; opacity:.05; mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");}
+  .page{position:relative; z-index:2; width:412px; max-width:100%; margin:0 auto; padding:22px 18px 40px;}
+
+  .top{display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;}
+  .top .back{width:34px; height:34px; border-radius:50%; border:1px solid var(--glass-line); display:flex; align-items:center; justify-content:center; color:var(--muted); font-size:20px;}
+  .top .ttl{font-size:15px; font-weight:600; letter-spacing:.2px;}
+  .top .src{font-size:10px; letter-spacing:.8px; text-transform:uppercase; color:var(--faint); font-weight:600;}
+
+  .hero{display:flex; flex-direction:column; align-items:center; margin:20px 0 4px;}
+  .status{font-size:52px; font-weight:700; letter-spacing:-1.5px; line-height:.95; color:var(--teal); filter:drop-shadow(0 0 22px rgba(93,204,174,0.3));}
+  .herodev{font-size:13.5px; color:var(--muted); margin-top:12px;}
+  .herodev b{color:var(--text); font-weight:700;}
+  .zone{width:100%; margin-top:22px;}
+  .zonebar{position:relative; height:8px; border-radius:999px; background:linear-gradient(90deg,#e8745a 0%, #d3a253 40%, #5dccae 100%);}
+  .zonemark{position:absolute; top:-5px; width:3px; height:18px; border-radius:2px; background:#ebe6d8; box-shadow:0 0 8px rgba(235,230,216,0.6); transform:translateX(-50%);}
+  .zonelabels{display:flex; justify-content:space-between; margin-top:8px; font-size:10px; color:var(--faint);}
+  .pill{margin-top:18px; display:inline-flex; align-items:center; gap:7px; padding:7px 15px; border-radius:999px;
+    font-size:12px; font-weight:600; letter-spacing:.3px; color:var(--teal); border:1px solid rgba(93,204,174,0.4); background:rgba(93,204,174,0.06);}
+  .pill .dot{width:6px; height:6px; border-radius:50%; background:var(--teal); box-shadow:0 0 8px var(--teal);}
+
+  .tiles{display:flex; gap:10px; margin-top:24px;}
+  .tile{flex:1; background:var(--glass); border:1px solid var(--glass-line); border-radius:16px; padding:14px 12px; box-shadow:inset 0 1px 0 rgba(235,230,216,0.08);}
+  .tile .k{font-size:10.5px; letter-spacing:1px; text-transform:uppercase; color:var(--faint); font-weight:600;}
+  .tile .v{font-size:20px; font-weight:700; margin-top:6px; letter-spacing:-.5px;}
+  .tile .v small{font-size:12px; font-weight:600; color:var(--muted); letter-spacing:0;}
+
+  .card{margin-top:14px; background:var(--glass); -webkit-backdrop-filter:blur(22px) saturate(1.15); backdrop-filter:blur(22px) saturate(1.15);
+    border:1px solid var(--glass-line); border-radius:20px; padding:18px 18px 16px; box-shadow:inset 0 1px 0 rgba(235,230,216,0.10), 0 18px 50px rgba(0,0,0,.35);}
+  .chead{display:flex; align-items:center; justify-content:space-between;}
+  .ch{font-size:16px; font-weight:700; letter-spacing:-.2px;}
+  .csub{font-size:12.5px; color:var(--muted); margin:3px 0 6px;}
+  .trend{font-size:12px; font-weight:700; color:var(--teal);}
+  .tabs{display:inline-flex; gap:2px; margin-top:10px; padding:3px; border-radius:999px; background:rgba(235,230,216,0.05); border:1px solid var(--glass-line);}
+  .tab{appearance:none; border:0; background:transparent; color:var(--muted); font-family:inherit; font-size:11.5px; font-weight:600; padding:5px 14px; border-radius:999px; cursor:pointer;}
+  .tab.active{background:rgba(93,204,174,0.16); color:var(--teal);}
+  .xax{display:flex; justify-content:space-between; padding:0 2px; margin-top:7px; font-size:10px; color:var(--faint);}
+  .trendkey{display:flex; gap:14px; margin-top:11px; font-size:11px; color:var(--muted); flex-wrap:wrap;}
+  .trendkey .it{display:flex; align-items:center; gap:6px;}
+  .trendkey .sw{width:15px; height:9px; border-radius:3px; flex:none;}
+  .trendkey .sw.band{background:rgba(93,204,174,0.18); border:1px solid rgba(93,204,174,0.5);}
+  .trendkey .sw.line{height:0; border-radius:0; border-top:2px solid var(--teal);}
+  .trendkey .sw.base{height:0; border-radius:0; border-top:2px dashed rgba(235,230,216,0.5);}
+  .miniins{display:flex; gap:9px; align-items:flex-start; margin-top:13px; padding-top:13px; border-top:1px solid rgba(235,230,216,0.07); font-size:12.5px; line-height:1.45; color:var(--muted);}
+  .miniins .d{width:6px; height:6px; border-radius:50%; background:var(--teal); margin-top:5px; flex:none; box-shadow:0 0 7px var(--teal);}
+  .miniins b{color:var(--text); font-weight:700;}
+
+  .insight{margin-top:16px; padding:18px 20px; border-radius:18px; border:1px solid rgba(93,204,174,0.2); background:linear-gradient(135deg, rgba(93,204,174,0.09), rgba(90,160,230,0.03));}
+  .insight .tag{font-size:11px; letter-spacing:1.4px; text-transform:uppercase; color:var(--teal); font-weight:600;}
+  .insight p{font-size:14.5px; line-height:1.55; margin-top:8px; color:rgba(235,230,216,0.85);}
+  .insight p b{color:var(--teal); font-weight:700;}
+</style>
+</head>
+<body>
+<div class="aurora"></div>
+<div class="grain"></div>
+<div class="page">
+
+  <div class="top">
+    <div class="back">‹</div>
+    <div class="ttl">Blood Oxygen</div>
+    <div class="src">Oura</div>
+  </div>
+
+  <div class="hero">
+    <div class="status">Normal</div>
+    <div class="herodev">Averaged <b>97%</b> overnight — a healthy range</div>
+    <div class="zone">
+      <div class="zonebar"><div class="zonemark" id="zmark"></div></div>
+      <div class="zonelabels"><span>Low</span><span>Borderline</span><span>Healthy</span></div>
+    </div>
+    <div class="pill"><span class="dot"></span>Optimal breathing regularity</div>
+  </div>
+
+  <div class="tiles">
+    <div class="tile"><div class="k">Last night</div><div class="v">97<small>%</small></div></div>
+    <div class="tile"><div class="k">Lowest dip</div><div class="v">94<small>%</small></div></div>
+    <div class="tile"><div class="k">7-day avg</div><div class="v">97<small>%</small></div></div>
+  </div>
+
+  <div class="card">
+    <div class="chead"><div><div class="ch">Trend</div><div class="csub" id="trendsub">Blood oxygen through last night</div></div><div class="trend">Steady</div></div>
+    <div class="tabs"><button class="tab active" data-r="1">1D</button><button class="tab" data-r="7">7D</button><button class="tab" data-r="30">30D</button></div>
+    <svg id="trend" width="100%" height="140" viewBox="0 0 356 140"></svg>
+    <div class="xax" id="trendxax"></div>
+    <div class="trendkey">
+      <div class="it"><span class="sw band"></span>Healthy range (95–100%)</div>
+      <div class="it"><span class="sw line"></span>Your reading</div>
+      <div class="it"><span class="sw base"></span>Your average</div>
+    </div>
+    <div class="miniins"><span class="d"></span><span>Your oxygen held around <b>97%</b> all night with only a brief dip to <b>94%</b> — normal, healthy variation. Repeated, deeper dips can point to disrupted breathing, which is the pattern worth watching over time.</span></div>
+  </div>
+
+  <div class="card">
+    <div class="ch">Nightly lows</div>
+    <div class="csub">Each night's lowest reading vs the 95% mark — the dips matter more than the average</div>
+    <svg id="lows" width="100%" height="138" viewBox="0 0 356 138"></svg>
+    <div class="xax"><span>2 wks ago</span><span>1 wk ago</span><span>Last night</span></div>
+  </div>
+
+  <div class="insight">
+    <div class="tag">NŪRA insight</div>
+    <p>Blood oxygen — <b>SpO₂</b> — is the percentage of your red blood cells carrying oxygen to your tissues, and for most healthy people it sits between <b>95 and 100%</b>. NŪRA reads it overnight, when your breathing is steadiest, so a single night reflects how well you were oxygenating while you slept. A brief dip into the low 90s now and then is normal; what matters is the <b>pattern</b>. Frequent or sustained dips below 90%, especially paired with loud snoring, gasping, or daytime fatigue, can be a sign of disrupted breathing during sleep and are worth raising with a doctor. Altitude, a stuffy nose, or sleeping on your back can nudge it down temporarily, too. Your readings have stayed comfortably in the healthy range with steady breathing — a good sign your recovery isn't being undercut overnight.</p>
+  </div>
+
+</div>
+
+<script>
+  const hex=h=>({r:parseInt(h.slice(1,3),16),g:parseInt(h.slice(3,5),16),b:parseInt(h.slice(5,7),16)});
+  const lerp=(a,b,t)=>Math.round(a+(b-a)*t);
+  const parse=s=>s.match(/\d+/g).map(Number);
+  const light=(s,a)=>{const[r,g,b]=parse(s);return`rgb(${lerp(r,255,a)},${lerp(g,255,a)},${lerp(b,255,a)})`;};
+  function colorAt(t,stops){t=Math.max(0,Math.min(1,t));
+    for(let i=0;i<stops.length-1;i++){const[s0,c0]=stops[i],[s1,c1]=stops[i+1];
+      if(t>=s0&&t<=s1){const k=(t-s0)/((s1-s0)||1),A=hex(c0),B=hex(c1);return`rgb(${lerp(A.r,B.r,k)},${lerp(A.g,B.g,k)},${lerp(A.b,B.b,k)})`;}}
+    return stops[stops.length-1][1];}
+  function smooth(pts){let d=`M ${pts[0].x.toFixed(1)},${pts[0].y.toFixed(1)}`;
+    for(let i=0;i<pts.length-1;i++){const p0=pts[i-1]||pts[i],p1=pts[i],p2=pts[i+1],p3=pts[i+2]||p2;
+      d+=` C ${(p1.x+(p2.x-p0.x)/6).toFixed(1)},${(p1.y+(p2.y-p0.y)/6).toFixed(1)} ${(p2.x-(p3.x-p1.x)/6).toFixed(1)},${(p2.y-(p3.y-p1.y)/6).toFixed(1)} ${p2.x.toFixed(1)},${p2.y.toFixed(1)}`;}
+    return d;}
+
+  const TEAL='#5dccae';
+
+  // zone marker: 97% on an 88–100 scale
+  document.getElementById('zmark').style.left=(((97-88)/(100-88))*100).toFixed(1)+'%';
+
+  // ── data ──
+  const NIGHT=[97,97,98,97,96,97,98,97,96,95,94,95,97,98,97,97,96,97,98,98,97,96,95,94,95,96,97,98,97,97,98,97];
+  const D7=[97,96,97,98,97,96,97];
+  const D30=[97,96,97,98,96,95,97,98,97,96,97,98,97,96,95,96,97,98,97,97,96,97,98,97,96,97,98,97,96,97];
+
+  function buildTrend(range){
+    let data,xlabels,sub;
+    if(range==='1'){data=NIGHT; xlabels=['11p','1a','3a','5a','7a']; sub='Blood oxygen through last night';}
+    else if(range==='7'){data=D7; xlabels=['6d','5d','4d','3d','2d','1d','Now']; sub='Nightly average this week';}
+    else {data=D30; xlabels=['Wk 1','Wk 2','Wk 3','Wk 4','Now']; sub='Nightly average this month';}
+    const W=356,top=14,bot=112,plotH=bot-top,n=data.length,floor=90,ceil=100,ticks=[90,95,100];
+    const x=i=>i*(W/(n-1)), y=v=>top+(1-(v-floor)/(ceil-floor))*plotH;
+    const band=`<rect x="0" y="${y(100).toFixed(1)}" width="${W}" height="${(y(95)-y(100)).toFixed(1)}" fill="rgba(93,204,174,0.10)"/>`;
+    let grid=''; ticks.forEach(t=>{const gy=y(t); grid+=`<line x1="0" y1="${gy.toFixed(1)}" x2="${W}" y2="${gy.toFixed(1)}" stroke="rgba(235,230,216,0.06)"/><text x="${W-2}" y="${(gy-3).toFixed(1)}" text-anchor="end" font-size="9" fill="rgba(235,230,216,0.32)">${t}%</text>`;});
+    const by=y(97); const base=`<line x1="0" y1="${by.toFixed(1)}" x2="${W}" y2="${by.toFixed(1)}" stroke="rgba(235,230,216,0.3)" stroke-width="1" stroke-dasharray="3 4"/>`;
+    const pts=data.map((v,i)=>({x:x(i),y:y(v)}));
+    const area=`<path d="${smooth(pts)} L ${pts[n-1].x.toFixed(1)},${bot} L ${pts[0].x.toFixed(1)},${bot} Z" fill="rgba(93,204,174,0.07)"/>`;
+    const line=`<path d="${smooth(pts)}" fill="none" stroke="${TEAL}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="filter:drop-shadow(0 0 5px rgba(93,204,174,0.5))"/>`;
+    const last=pts[n-1]; const dot=`<circle cx="${last.x.toFixed(1)}" cy="${last.y.toFixed(1)}" r="3.4" fill="${TEAL}" style="filter:drop-shadow(0 0 6px ${TEAL})"/>`;
+    document.getElementById('trend').innerHTML=band+grid+base+area+line+dot;
+    document.getElementById('trendxax').innerHTML=xlabels.map(l=>`<span>${l}</span>`).join('');
+    document.getElementById('trendsub').textContent=sub;
+  }
+  document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{
+    document.querySelectorAll('.tab').forEach(o=>o.classList.remove('active'));
+    t.classList.add('active'); buildTrend(t.dataset.r);
+  }));
+  buildTrend('1');
+
+  // ── nightly lows bars ──
+  (function(){
+    const lows=[95,94,96,95,93,95,96,94,95,96,95,97,96,95];
+    const W=356,top=14,bot=118,n=lows.length,floor=90,ceil=100;
+    const y=v=>top+(1-(v-floor)/(ceil-floor))*(bot-top);
+    const gap=W/n, bw=gap*0.5;
+    let bars='';
+    lows.forEach((v,i)=>{const cx=i*gap+gap/2; const c=v>=95?TEAL:'#d3a253';
+      bars+=`<rect x="${(cx-bw/2).toFixed(1)}" y="${y(v).toFixed(1)}" width="${bw.toFixed(1)}" height="${(bot-y(v)).toFixed(1)}" rx="3" fill="${c}" opacity="0.88"/>`;});
+    const ref=y(95); const refline=`<line x1="0" y1="${ref.toFixed(1)}" x2="${W}" y2="${ref.toFixed(1)}" stroke="rgba(235,230,216,0.4)" stroke-width="1" stroke-dasharray="3 4"/><text x="${W-2}" y="${(ref-3).toFixed(1)}" text-anchor="end" font-size="9" fill="rgba(235,230,216,0.42)">95%</text>`;
+    document.getElementById('lows').innerHTML=refline+bars;
+  })();
+</script>
+</body>
+</html>

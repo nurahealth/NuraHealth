@@ -24,7 +24,7 @@ import type { MetricChartData } from "@/lib/dashboardData";
 // average curve, and a glowing peak readout. When false (the default) the chart
 // renders exactly as before — Heart Rate and every other card are untouched.
 
-const SANS = "'Inter', system-ui, sans-serif";
+const SANS = "var(--font-inter), system-ui, sans-serif";
 const INK = "235,230,216"; // warm-white, matches --nura-fg-rgb (dark)
 const TEAL = "93,204,174";  // --nura-teal, for high-tech glows / hotspot
 
@@ -209,8 +209,7 @@ export default function MetricChart({
             </text>
           ))}
 
-          {/* Peak readout — glowing dot + label */}
-          <circle cx={peakX.toFixed(1)} cy={peakY.toFixed(1)} r={3.4} fill={`rgb(${TEAL})`} style={{ filter: `drop-shadow(0 0 6px rgba(${TEAL},0.95))` }} />
+          {/* Peak readout — label (peak dot removed) */}
           <text
             x={labelX.toFixed(1)} y={labelY.toFixed(1)} textAnchor="middle"
             fill={`rgb(${INK})`} style={{ fontFamily: SANS, fontSize: 9.5, fontWeight: 700, letterSpacing: "0.5px", filter: `drop-shadow(0 0 5px rgba(${TEAL},0.6))` }}

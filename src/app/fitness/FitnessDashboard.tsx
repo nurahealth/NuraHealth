@@ -1,0 +1,822 @@
+'use client';
+
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { GOAL_LABELS } from './FitnessOnboarding';
+import ExerciseDetail from './ExerciseDetail';
+import ExerciseMedia, { CLIP_BG } from './ExerciseMedia';
+import { MUSCLE_GROUPS, CARDIO_GROUP, inGroup } from './muscleGroups';
+import {
+  loadActiveProgram, loadCatalog, loadProgramSummaries,
+  updateExerciseFields, swapExerciseRow, removeExerciseRow, addExerciseRow, reorderExerciseRows,
+  loadCompletions, logWorkoutCompletion, localDateKey,
+  type CatalogEx, type Program, type ProgramSummary, type WEx, type Workout, type WorkoutCompletion,
+} from './planData';
+
+// ── Palette (ported verbatim from design-reference/fitness-dashboard.html) ────
+const BG = '#0d0d0e';
+const SAGE = '#9bb0a5';
+const TEXT = '#ebe6d8';
+const MUT = 'rgba(235,230,216,.5)';
+const SURF = 'rgba(235,230,216,.045)';
+const LINE = 'rgba(235,230,216,.09)';
+const FONT = '-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,sans-serif';
+
+const WEEK_DOW = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN']; // week strip is Monday-first
+const MONTH_DOW = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];             // month grid is Sunday-first
+
+// ── Date helpers ─────────────────────────────────────────────────────────────
+const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+const addDays = (d: Date, n: number) => { const x = startOfDay(d); x.setDate(x.getDate() + n); return x; };
+const addMonths = (d: Date, n: number) => new Date(d.getFullYear(), d.getMonth() + n, 1);
+const programDayIndex = (d: Date) => (d.getDay() + 6) % 7; // Mon=0 .. Sun=6
+const startOfWeek = (d: Date) => addDays(d, -programDayIndex(d));
+const sameDay = (a: Date, b: Date) =>
+  a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+
+// ── Display helpers ──────────────────────────────────────────────────────────
+const titleCase = (s: string) => s.replace(/\b\w/g, (c) => c.toUpperCase());
+const lc = (s: string | null | undefined) => (s ?? '').toLowerCase();
+function muscleLabel(ex: CatalogEx | null): string {
+  if (!ex) return '';
+  const t = (ex.target_muscles ?? []).filter(Boolean);
+  return (t.length ? t : (ex.body_part ? [ex.body_part] : [])).map(titleCase).join(' · ');
+}
+function isTraining(w: Workout | undefined): w is Workout {
+  return !!w && !w.is_rest && w.exercises.length > 0;
+}
+function focusOf(w: Workout | undefined): string {
+  return isTraining(w) ? (w.focus || w.title || 'Training') : 'Rest';
+}
+function muscleChips(exs: WEx[]): string[] {
+  const set = new Set<string>();
+  for (const e of exs) {
+    if (e.exercise?.body_part) set.add(titleCase(e.exercise.body_part));
+    else (e.exercise?.target_muscles ?? []).forEach((m) => m && set.add(titleCase(m)));
+  }
+  return [...set].slice(0, 5);
+}
+function estimateMinutes(exs: WEx[]): number {
+  let s = 0;
+  for (const e of exs) s += (e.sets ?? 3) * (45 + (e.rest_seconds ?? 60));
+  return Math.max(5, Math.round(s / 60 / 5) * 5);
+}
+function candidatesForMuscle(ex: CatalogEx | null, catalog: CatalogEx[]): CatalogEx[] {
+  if (!ex) return catalog;
+  const targets = new Set((ex.target_muscles ?? []).map(lc).filter(Boolean));
+  const bp = lc(ex.body_part);
+  return catalog
+    .filter((c) => c.id !== ex.id)
+    .filter((c) => (c.target_muscles ?? []).map(lc).some((m) => targets.has(m)) || (!!bp && lc(c.body_part) === bp))
+    .sort((a, b) => a.name.localeCompare(b.name));
+}
+function addCandidates(workout: Workout | undefined, catalog: CatalogEx[]): CatalogEx[] {
+  const have = new Set(workout?.exercises.map((e) => e.exercise?.id).filter(Boolean));
+  const groups = new Set<string>();
+  workout?.exercises.forEach((e) => { if (e.exercise?.body_part) groups.add(lc(e.exercise.body_part)); });
+  const pool = catalog.filter((c) => !have.has(c.id));
+  const rel = pool.filter((c) => groups.has(lc(c.body_part))).sort((a, b) => a.name.localeCompare(b.name));
+  const rest = pool.filter((c) => !groups.has(lc(c.body_part))).sort((a, b) => a.name.localeCompare(b.name));
+  return [...rel, ...rest];
+}
+function goalLabel(goal: string | null): string {
+  return goal ? (GOAL_LABELS[goal] ?? goal) : 'Training';
+}
+function programName(p: ProgramSummary): string {
+  return p.split_type || goalLabel(p.goal);
+}
+function programProgress(createdAt: string): number {
+  const days = Math.max(0, Math.floor((Date.now() - new Date(createdAt).getTime()) / 86400000));
+  return Math.min(100, Math.round((days / 84) * 100));
+}
+
+// ── Catalog picker sheet (swap / add). Carries the same palette as the card. ──
+function Sheet({ title, items, onPick, onClose, onRemove, busy }: {
+  title: string; items: CatalogEx[]; onPick: (c: CatalogEx) => void; onClose: () => void;
+  onRemove?: () => void; busy: boolean;
+}) {
+  return (
+    <div onClick={onClose} style={{
+      position: 'fixed', inset: 0, zIndex: 80, display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+      background: 'rgba(0,0,0,.5)', backdropFilter: 'blur(2px)',
+    }}>
+      <div onClick={(e) => e.stopPropagation()} style={{
+        width: '100%', maxWidth: 440, maxHeight: '78vh', display: 'flex', flexDirection: 'column',
+        background: '#161918', borderTopLeftRadius: 22, borderTopRightRadius: 22,
+        border: `1px solid ${LINE}`, borderBottom: 'none', padding: '10px 16px 22px', fontFamily: FONT,
+      }}>
+        <div style={{ width: 38, height: 4, borderRadius: 999, background: 'rgba(235,230,216,.2)', margin: '0 auto 14px' }} />
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+          <span style={{ fontSize: 16, fontWeight: 700, color: TEXT }}>{title}</span>
+          <button type="button" aria-label="Close" onClick={onClose} style={{
+            appearance: 'none', cursor: 'pointer', width: 32, height: 32, borderRadius: 9, color: MUT,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            background: 'rgba(235,230,216,.05)', border: `1px solid ${LINE}`,
+          }}>✕</button>
+        </div>
+        {onRemove && (
+          <button type="button" disabled={busy} onClick={onRemove} style={{
+            appearance: 'none', cursor: 'pointer', width: '100%', marginBottom: 10, padding: 12, borderRadius: 12,
+            fontSize: 13, fontWeight: 600, color: '#d98b8b', background: 'rgba(217,139,139,.1)',
+            border: '1px solid rgba(217,139,139,.28)',
+          }}>Remove from workout</button>
+        )}
+        {items.length === 0 ? (
+          <div style={{ fontSize: 13, color: MUT, padding: '12px 4px' }}>Nothing else in the catalog for this muscle yet.</div>
+        ) : (
+          <div style={{ overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 3 }}>
+            {items.map((c) => (
+              <button key={c.id} type="button" disabled={busy} onClick={() => onPick(c)} style={{
+                appearance: 'none', textAlign: 'left', cursor: busy ? 'default' : 'pointer', padding: '11px 12px',
+                borderRadius: 11, border: `1px solid ${LINE}`, background: SURF, color: TEXT,
+                display: 'flex', flexDirection: 'column', gap: 3,
+              }}>
+                <span style={{ fontSize: 14, fontWeight: 600 }}>{c.name}</span>
+                <span style={{ fontSize: 11, color: MUT }}>{muscleLabel(c)}{c.equipment ? ` — ${c.equipment}` : ''}</span>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── Add-exercise sheet: two-level (muscle groups → exercises) ────────────────
+function AddSheet({ workout, catalog, onPick, onClose, busy }: {
+  workout: Workout | undefined; catalog: CatalogEx[];
+  onPick: (c: CatalogEx) => void; onClose: () => void; busy: boolean;
+}) {
+  const [groupKey, setGroupKey] = useState<string | null>(null);
+  const [visible, setVisible] = useState(false); // drives the fade + scale enter/exit
+
+  // Animated dismissal: play the exit transition, then actually unmount via onClose.
+  const closeRef = useRef(onClose);
+  useEffect(() => { closeRef.current = onClose; }, [onClose]);
+  const requestClose = useCallback(() => {
+    setVisible(false);
+    setTimeout(() => closeRef.current(), 200);
+  }, []);
+
+  // While open: enter animation, Escape-to-close, and a background scroll lock.
+  useEffect(() => {
+    const raf = requestAnimationFrame(() => setVisible(true));
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') requestClose(); };
+    document.addEventListener('keydown', onKey);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      cancelAnimationFrame(raf);
+      document.removeEventListener('keydown', onKey);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [requestClose]);
+
+  // Addable exercises (excludes ones already in the workout), grouped using the
+  // SAME mapping as "Train by muscle". Cardio only appears when it has any.
+  const candidates = useMemo(() => addCandidates(workout, catalog), [workout, catalog]);
+  const groups = useMemo(() => {
+    const base = [...MUSCLE_GROUPS];
+    if (candidates.some((c) => inGroup(c, CARDIO_GROUP))) base.push(CARDIO_GROUP);
+    return base.map((g) => ({ group: g, items: candidates.filter((c) => inGroup(c, g)) }));
+  }, [candidates]);
+  const active = groupKey ? groups.find((x) => x.group.key === groupKey) : null;
+
+  return (
+    <div onClick={requestClose} style={{
+      position: 'fixed', inset: 0, zIndex: 80, display: 'flex', alignItems: 'center', justifyContent: 'center',
+      padding: 16, background: 'rgba(0,0,0,.5)', backdropFilter: 'blur(2px)',
+      opacity: visible ? 1 : 0, transition: 'opacity 200ms ease',
+    }}>
+      <div onClick={(e) => e.stopPropagation()} style={{
+        width: '100%', maxWidth: 420, maxHeight: '80vh', display: 'flex', flexDirection: 'column',
+        background: '#161918', borderRadius: 22, overflow: 'hidden',
+        border: `1px solid ${LINE}`, padding: '18px 16px', fontFamily: FONT,
+        opacity: visible ? 1 : 0, transform: visible ? 'scale(1)' : 'scale(.96)',
+        transition: 'opacity 200ms ease, transform 200ms ease',
+      }}>
+        {/* header (kept) */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, flexShrink: 0 }}>
+          <span style={{ fontSize: 16, fontWeight: 700, color: TEXT }}>Add exercise</span>
+          <button type="button" aria-label="Close" onClick={requestClose} style={{
+            appearance: 'none', cursor: 'pointer', width: 32, height: 32, borderRadius: 9, color: MUT,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            background: 'rgba(235,230,216,.05)', border: `1px solid ${LINE}`,
+          }}>✕</button>
+        </div>
+
+        {!active ? (
+          // Level 1 — muscle groups
+          <div style={{ overflowY: 'auto', minHeight: 0, display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {groups.map(({ group, items }) => (
+              <button key={group.key} type="button" onClick={() => setGroupKey(group.key)} style={{
+                appearance: 'none', cursor: 'pointer', textAlign: 'left', width: '100%',
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10,
+                padding: '14px 14px', borderRadius: 13, border: `1px solid ${LINE}`, background: SURF, color: TEXT,
+              }}>
+                <span style={{ fontSize: 14.5, fontWeight: 600 }}>{group.label}</span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+                  <span style={{ fontSize: 11, fontWeight: 600, color: SAGE, padding: '3px 9px', borderRadius: 999, background: 'rgba(155,176,165,.12)', border: '1px solid rgba(155,176,165,.3)' }}>
+                    {items.length}
+                  </span>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={SAGE} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6" /></svg>
+                </span>
+              </button>
+            ))}
+          </div>
+        ) : (
+          // Level 2 — exercises in the chosen group
+          <>
+            <button type="button" onClick={() => setGroupKey(null)} aria-label="Back to muscle groups" style={{
+              appearance: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 7, marginBottom: 12, flexShrink: 0,
+              padding: '8px 4px', background: 'transparent', border: 'none', color: SAGE, fontSize: 13, fontWeight: 600, fontFamily: FONT,
+            }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
+              {active.group.label}
+            </button>
+            {active.items.length === 0 ? (
+              <div style={{ fontSize: 13, color: MUT, padding: '12px 4px' }}>No exercises to add in this group right now.</div>
+            ) : (
+              <div style={{ overflowY: 'auto', minHeight: 0, display: 'flex', flexDirection: 'column', gap: 3 }}>
+                {active.items.map((c) => (
+                  <button key={c.id} type="button" disabled={busy} onClick={() => onPick(c)} style={{
+                    appearance: 'none', textAlign: 'left', cursor: busy ? 'default' : 'pointer', padding: '10px 12px',
+                    borderRadius: 11, border: `1px solid ${LINE}`, background: SURF, color: TEXT,
+                    display: 'flex', alignItems: 'center', gap: 11,
+                  }}>
+                    <span style={{ width: 40, height: 40, borderRadius: 9, overflow: 'hidden', flexShrink: 0, background: CLIP_BG, border: '1px solid rgba(155,176,165,.18)' }}>
+                      {c.gif_url && <ExerciseMedia src={c.gif_url} alt={c.name} fit="cover" thumb />}
+                    </span>
+                    <span style={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: 3 }}>
+                      <span style={{ fontSize: 14, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.name}</span>
+                      <span style={{ fontSize: 11, color: MUT, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{muscleLabel(c)}{c.equipment ? ` — ${c.equipment}` : ''}</span>
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── Main ─────────────────────────────────────────────────────────────────────
+export default function FitnessDashboard() {
+  const router = useRouter();
+  const [program, setProgram] = useState<Program | null>(null);
+  const [catalog, setCatalog] = useState<CatalogEx[]>([]);
+  const [summaries, setSummaries] = useState<ProgramSummary[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const [view, setView] = useState<'week' | 'month'>('week');
+  const [cursor, setCursor] = useState<Date>(() => startOfDay(new Date()));
+  const [selected, setSelected] = useState<Date>(() => startOfDay(new Date()));
+  const [picker, setPicker] = useState<{ kind: 'swap' | 'add'; weId?: string } | null>(null);
+  const [savingCount, setSavingCount] = useState(0);
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [generating, setGenerating] = useState(false);
+  const [detailEx, setDetailEx] = useState<{ id: string; sets: number | null; reps: string | null; rest_seconds: number | null } | null>(null);
+
+  // ── Consistency log: real completions + an in-progress session timer ─────────
+  const [completions, setCompletions] = useState<WorkoutCompletion[]>([]);
+  // Active Start→Finish session, scoped to a workout on a specific calendar day.
+  const [session, setSession] = useState<{ workoutId: string; dateKey: string; startedAt: number } | null>(null);
+  const [logging, setLogging] = useState(false);
+  const [completeErr, setCompleteErr] = useState<string | null>(null);
+
+  const today = useMemo(() => startOfDay(new Date()), []);
+  const saveTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+  const programRef = useRef<Program | null>(program);
+  useEffect(() => { programRef.current = program; }, [program]);
+  const dragIndexRef = useRef<number | null>(null);
+
+  const load = useCallback(async () => {
+    const [{ program }, cat, sums, comps] = await Promise.all([
+      loadActiveProgram(), loadCatalog(), loadProgramSummaries(), loadCompletions(),
+    ]);
+    setProgram(program); setCatalog(cat); setSummaries(sums); setCompletions(comps); setLoading(false);
+    // Land on a real workout: today if it trains, else the next training day.
+    if (program) {
+      const baseIdx = programDayIndex(today);
+      for (let k = 0; k < 7; k++) {
+        const w = program.workouts.find((x) => x.day_index === (baseIdx + k) % 7);
+        if (w && !w.is_rest && w.exercises.length > 0) { setSelected(addDays(today, k)); break; }
+      }
+    }
+  }, [today]);
+
+  useEffect(() => { load(); }, [load]);
+
+  // No active program yet → generate one from the onboarding profile, then reload.
+  const generate = useCallback(async () => {
+    setGenerating(true);
+    try {
+      const res = await fetch('/api/fitness/generate-program', { method: 'POST' });
+      if (res.ok) { setLoading(true); await load(); }
+    } finally {
+      setGenerating(false);
+    }
+  }, [load]);
+
+  const byDay = useMemo(() => {
+    const m = new Map<number, Workout>();
+    program?.workouts.forEach((w) => m.set(w.day_index, w));
+    return m;
+  }, [program]);
+  const selWorkout = byDay.get(programDayIndex(selected));
+  const training = isTraining(selWorkout);
+
+  // Real completions, indexed by local calendar day for O(1) "done" lookups.
+  const completedKeys = useMemo(() => {
+    const s = new Set<string>();
+    for (const c of completions) s.add(localDateKey(new Date(c.completed_at)));
+    return s;
+  }, [completions]);
+  const selectedKey = localDateKey(selected);
+  const selectedDone = completedKeys.has(selectedKey);
+  const sessionActiveHere = !!session && session.dateKey === selectedKey && session.workoutId === selWorkout?.id;
+
+  const reloadCompletions = useCallback(async () => { setCompletions(await loadCompletions()); }, []);
+
+  // Start the session timer (records when "Start workout" was tapped).
+  const startWorkout = useCallback(() => {
+    if (!selWorkout) return;
+    setCompleteErr(null);
+    setSession({ workoutId: selWorkout.id, dateKey: selectedKey, startedAt: Date.now() });
+  }, [selWorkout, selectedKey]);
+
+  // Finish → INSERT a completion (date + which workout + duration when we have it).
+  const finishWorkout = useCallback(async () => {
+    if (!selWorkout) return;
+    setLogging(true); setCompleteErr(null);
+    const startedAt = sessionActiveHere ? session!.startedAt : null;
+    const durationSeconds = startedAt ? Math.max(1, Math.round((Date.now() - startedAt) / 1000)) : null;
+    const res = await logWorkoutCompletion({ programWorkoutId: selWorkout.id, durationSeconds });
+    setLogging(false);
+    if (!res.ok) {
+      setCompleteErr(res.needsMigration
+        ? 'Logging needs a quick database migration — run it to start recording completions.'
+        : (res.error || 'Could not save your completion. Please try again.'));
+      return;
+    }
+    setSession(null);
+    await reloadCompletions();
+  }, [selWorkout, sessionActiveHere, session, reloadCompletions]);
+
+  const runWrite = useCallback(async (fn: () => Promise<string | null>) => {
+    setSavingCount((n) => n + 1);
+    await fn();
+    setSavingCount((n) => Math.max(0, n - 1));
+  }, []);
+  const mutateWorkout = useCallback((workoutId: string, fn: (exs: WEx[]) => WEx[]) => {
+    setProgram((prev) => prev ? {
+      ...prev, workouts: prev.workouts.map((w) => w.id === workoutId ? { ...w, exercises: fn(w.exercises) } : w),
+    } : prev);
+  }, []);
+
+  // Stepper edits SETS (clamped 1..6, matching the reference) with debounced save.
+  const stepSets = useCallback((workoutId: string, weId: string, delta: number) => {
+    mutateWorkout(workoutId, (exs) => exs.map((e) =>
+      e.id === weId ? { ...e, sets: Math.max(1, Math.min(6, (e.sets ?? 0) + delta)) } : e));
+    clearTimeout(saveTimers.current[weId]);
+    saveTimers.current[weId] = setTimeout(() => {
+      const cur = programRef.current?.workouts.find((w) => w.id === workoutId)?.exercises.find((e) => e.id === weId);
+      if (cur) runWrite(() => updateExerciseFields(weId, { sets: cur.sets }));
+    }, 500);
+  }, [mutateWorkout, runWrite]);
+
+  const doSwap = useCallback((workoutId: string, weId: string, next: CatalogEx) => {
+    mutateWorkout(workoutId, (exs) => exs.map((e) => e.id === weId ? { ...e, exercise: next } : e));
+    setPicker(null);
+    runWrite(() => swapExerciseRow(weId, next.id));
+  }, [mutateWorkout, runWrite]);
+
+  const doRemove = useCallback((workoutId: string, weId: string) => {
+    mutateWorkout(workoutId, (exs) => exs.filter((e) => e.id !== weId));
+    setPicker(null);
+    runWrite(() => removeExerciseRow(weId));
+  }, [mutateWorkout, runWrite]);
+
+  const doAdd = useCallback(async (next: CatalogEx) => {
+    if (!selWorkout) return;
+    setPicker(null);
+    const last = selWorkout.exercises[selWorkout.exercises.length - 1];
+    const sort_order = selWorkout.exercises.reduce((m, e) => Math.max(m, e.sort_order), 0) + 1;
+    const sets = last?.sets ?? 3, reps = last?.reps ?? '8-12', rest_seconds = last?.rest_seconds ?? 75;
+    setSavingCount((n) => n + 1);
+    const { id } = await addExerciseRow(selWorkout.id, { exercise_id: next.id, sort_order, sets, reps, rest_seconds });
+    setSavingCount((n) => Math.max(0, n - 1));
+    if (id) mutateWorkout(selWorkout.id, (exs) => [...exs, { id, sort_order, sets, reps, rest_seconds, notes: null, exercise: next }]);
+  }, [selWorkout, mutateWorkout]);
+
+  // Drag-to-reorder (the grip). Authoritative index in a ref so StrictMode's
+  // double-invoke of state updaters can't double-apply the move.
+  const onDragStartRow = useCallback((i: number) => { dragIndexRef.current = i; setDragIndex(i); }, []);
+  const onDragEnterRow = useCallback((workoutId: string, over: number) => {
+    const from = dragIndexRef.current;
+    if (from === null || from === over) return;
+    mutateWorkout(workoutId, (exs) => { const n = [...exs]; const [m] = n.splice(from, 1); n.splice(over, 0, m); return n; });
+    dragIndexRef.current = over; setDragIndex(over);
+  }, [mutateWorkout]);
+  const onDragEndRow = useCallback((workoutId: string) => {
+    dragIndexRef.current = null; setDragIndex(null);
+    const w = programRef.current?.workouts.find((x) => x.id === workoutId);
+    if (!w) return;
+    const ordered = w.exercises.map((e, i) => ({ id: e.id, sort_order: i + 1 }));
+    mutateWorkout(workoutId, (exs) => exs.map((e, i) => ({ ...e, sort_order: i + 1 })));
+    runWrite(() => reorderExerciseRows(ordered));
+  }, [mutateWorkout, runWrite]);
+
+  const pickerItems = picker?.kind === 'swap'
+    ? candidatesForMuscle(selWorkout?.exercises.find((e) => e.id === picker.weId)?.exercise ?? null, catalog)
+    : [];
+
+  // ── Section styles (1:1 with the reference CSS) ─────────────────────────────
+  const wrap: React.CSSProperties = {
+    minHeight: '100vh', display: 'flex', justifyContent: 'center', padding: 20,
+    background: 'radial-gradient(120% 40% at 50% -5%, #16191780 0%, #0d0d0e 50%)',
+    fontFamily: FONT, color: TEXT,
+  };
+  const app: React.CSSProperties = { width: '100%', maxWidth: 440, paddingBottom: 90 };
+  const segBtn = (on: boolean): React.CSSProperties => ({
+    flex: 1, border: 'none', background: on ? SAGE : 'transparent', color: on ? BG : MUT,
+    fontSize: 13, fontWeight: 600, padding: 9, borderRadius: 9, cursor: 'pointer', transition: '.18s',
+  });
+
+  const heroEyebrow = sameDay(selected, today)
+    ? `TODAY · ${selected.toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase()}`
+    : selected.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' }).toUpperCase();
+  const editEyebrow = sameDay(selected, today)
+    ? "EDIT TODAY'S WORKOUT"
+    : `EDIT ${selected.toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase()}'S WORKOUT`;
+
+  // Week strip dates (Monday-first week containing today).
+  const weekDays = useMemo(() => {
+    const mon = startOfWeek(today);
+    return Array.from({ length: 7 }, (_, i) => addDays(mon, i));
+  }, [today]);
+
+  // Month grid cells (Sunday-first).
+  const monthCells = useMemo(() => {
+    const y = cursor.getFullYear(), m = cursor.getMonth();
+    const firstDow = new Date(y, m, 1).getDay(); // 0=Sun
+    const days = new Date(y, m + 1, 0).getDate();
+    const cells: (Date | null)[] = [];
+    for (let i = 0; i < firstDow; i++) cells.push(null);
+    for (let d = 1; d <= days; d++) cells.push(new Date(y, m, d));
+    return cells;
+  }, [cursor]);
+
+  return (
+    <div style={wrap}>
+      <div style={app}>
+
+        {/* header */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+          <div>
+            <div style={{ fontSize: 11, letterSpacing: '.22em', color: MUT }}>FITNESS</div>
+            <h1 style={{ fontSize: 26, fontWeight: 700, letterSpacing: '-.01em', margin: '3px 0 0' }}>Your week</h1>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            {/* Plan Settings entry point — opens /fitness/settings */}
+            <button
+              type="button"
+              aria-label="Customize plan"
+              title="Customize plan"
+              onClick={() => router.push('/fitness/settings')}
+              style={{
+                appearance: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center',
+                justifyContent: 'center', width: 34, height: 34, borderRadius: 11, color: SAGE,
+                background: 'rgba(155,176,165,.14)', border: '1px solid rgba(155,176,165,.3)',
+                transition: 'background 150ms ease',
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(155,176,165,.24)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(155,176,165,.14)'; }}
+            >
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="3" />
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H8.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.2.61.78 1.05 1.51 1.05H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+              </svg>
+            </button>
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(155,176,165,.14)',
+              border: '1px solid rgba(155,176,165,.3)', color: SAGE, fontSize: 11, fontWeight: 700,
+              letterSpacing: '.08em', padding: '7px 12px', borderRadius: 999,
+            }}>★ PRO</div>
+          </div>
+        </div>
+
+        {/* segmented toggle */}
+        <div style={{ display: 'flex', background: SURF, border: `1px solid ${LINE}`, borderRadius: 12, padding: 4, marginBottom: 16 }}>
+          <button type="button" style={segBtn(view === 'week')} onClick={() => setView('week')}>Week</button>
+          <button type="button" style={segBtn(view === 'month')} onClick={() => setView('month')}>Month</button>
+        </div>
+
+        {loading ? (
+          <div style={{ fontSize: 13, color: MUT, padding: '8px 2px' }}>Loading your week…</div>
+        ) : !program ? (
+          <div style={{ borderRadius: 18, padding: '28px 24px', textAlign: 'center', background: 'rgba(155,176,165,.05)', border: '1px solid rgba(155,176,165,.22)' }}>
+            <p style={{ fontSize: 14.5, color: 'rgba(235,230,216,.7)', lineHeight: 1.6, margin: '0 0 18px' }}>
+              No active program yet — build your weekly plan and it&apos;ll appear here.
+            </p>
+            <button type="button" onClick={generate} disabled={generating} style={{ appearance: 'none', cursor: generating ? 'default' : 'pointer', border: 'none', padding: '11px 22px', borderRadius: 12, fontSize: 14, fontWeight: 700, color: BG, background: generating ? 'rgba(155,176,165,.5)' : SAGE }}>
+              {generating ? 'Building your plan…' : 'Build my plan'}
+            </button>
+          </div>
+        ) : (
+          <>
+            {/* WEEK */}
+            {view === 'week' && (
+              <div style={{ display: 'flex', gap: 7, marginBottom: 22 }}>
+                {weekDays.map((date, i) => {
+                  const w = byDay.get(i);
+                  const train = isTraining(w);
+                  const isToday = sameDay(date, today);
+                  const isSel = sameDay(date, selected);
+                  const done = completedKeys.has(localDateKey(date));
+                  return (
+                    <div
+                      key={i}
+                      onClick={() => setSelected(date)}
+                      style={{
+                        flex: 1, textAlign: 'center', padding: '11px 0 9px', borderRadius: 14, cursor: 'pointer', transition: '.16s',
+                        background: isToday ? SAGE : SURF,
+                        border: `1px solid ${isToday ? SAGE : isSel ? SAGE : LINE}`,
+                        boxShadow: isToday ? '0 8px 22px rgba(155,176,165,.28)' : 'none',
+                      }}
+                    >
+                      <div style={{ fontSize: 10, letterSpacing: '.05em', color: isToday ? BG : MUT }}>{WEEK_DOW[i]}</div>
+                      <div style={{ fontSize: 16, fontWeight: 700, marginTop: 5, color: isToday ? BG : TEXT }}>{date.getDate()}</div>
+                      {/* Indicator: a check = a REAL logged completion; a dot = scheduled training. */}
+                      <div style={{ height: 12, marginTop: 5, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        {done ? (
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={isToday ? BG : SAGE} strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
+                        ) : (
+                          <div style={{ width: 5, height: 5, borderRadius: '50%', background: isToday ? BG : train ? 'rgba(155,176,165,.55)' : 'transparent' }} />
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* MONTH */}
+            {view === 'month' && (
+              <div style={{ background: SURF, border: `1px solid ${LINE}`, borderRadius: 18, padding: 16, marginBottom: 22 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                  <span style={{ fontSize: 15, fontWeight: 700 }}>{cursor.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</span>
+                  <span style={{ color: MUT, fontSize: 13, display: 'flex', gap: 14 }}>
+                    <span style={{ cursor: 'pointer' }} onClick={() => setCursor((c) => addMonths(c, -1))}>‹</span>
+                    <span style={{ cursor: 'pointer' }} onClick={() => setCursor((c) => addMonths(c, 1))}>›</span>
+                  </span>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 4 }}>
+                  {MONTH_DOW.map((d, i) => (
+                    <div key={`h${i}`} style={{ fontSize: 10, color: MUT, textAlign: 'center', paddingBottom: 6 }}>{d}</div>
+                  ))}
+                  {monthCells.map((date, i) => {
+                    if (!date) return <div key={i} style={{ aspectRatio: '1', color: 'transparent' }} />;
+                    const w = byDay.get(programDayIndex(date));
+                    const train = isTraining(w);
+                    const isToday = sameDay(date, today);
+                    const done = completedKeys.has(localDateKey(date));
+                    return (
+                      <div
+                        key={i}
+                        onClick={() => setSelected(date)}
+                        style={{
+                          aspectRatio: '1', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative',
+                          fontSize: 13, borderRadius: 10, cursor: 'pointer',
+                          color: isToday ? BG : train ? TEXT : 'rgba(235,230,216,.8)',
+                          fontWeight: isToday || train ? 700 : 400,
+                          background: isToday ? SAGE : train ? 'rgba(155,176,165,.16)' : 'transparent',
+                        }}
+                      >
+                        {date.getDate()}
+                        {/* check = real completion; dot = scheduled-only */}
+                        {done && !isToday ? (
+                          <span style={{ position: 'absolute', bottom: 2.5, display: 'flex' }}>
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={SAGE} strokeWidth="3.6" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
+                          </span>
+                        ) : train && !isToday ? (
+                          <span style={{ position: 'absolute', bottom: 4, width: 4, height: 4, borderRadius: '50%', background: 'rgba(155,176,165,.55)' }} />
+                        ) : null}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* TODAY HERO */}
+            <div style={{
+              position: 'relative', overflow: 'hidden', borderRadius: 22, padding: 20, marginBottom: 14,
+              background: training ? 'linear-gradient(135deg,rgba(155,176,165,.20),rgba(155,176,165,.04))' : SURF,
+              border: `1px solid ${training ? 'rgba(155,176,165,.25)' : LINE}`,
+            }}>
+              <div style={{ position: 'absolute', right: -40, top: -40, width: 180, height: 180, borderRadius: '50%', background: 'radial-gradient(circle,rgba(155,176,165,.35),transparent 70%)', pointerEvents: 'none' }} />
+              <svg style={{ position: 'absolute', right: -10, bottom: -30, opacity: 0.13 }} width="150" height="150" viewBox="0 0 24 24" fill="none" stroke={SAGE} strokeWidth="1.2">
+                <path d="M6.5 6.5 17.5 17.5M3 8l3-3M16 21l3-3M8 3 5 6M21 16l-3 3" />
+              </svg>
+              <div style={{ fontSize: 11, letterSpacing: '.16em', color: SAGE, position: 'relative' }}>{heroEyebrow}</div>
+              <h2 style={{ fontSize: 24, fontWeight: 700, margin: '6px 0 4px', position: 'relative' }}>
+                {training ? focusOf(selWorkout) : 'Rest & recover'}
+              </h2>
+              <div style={{ fontSize: 13, color: MUT, position: 'relative' }}>
+                {training ? `${selWorkout!.exercises.length} exercises · ~${estimateMinutes(selWorkout!.exercises)} min` : 'Recovery day'}
+              </div>
+              {training && (
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', margin: '14px 0 16px', position: 'relative' }}>
+                  {muscleChips(selWorkout!.exercises).map((c) => (
+                    <span key={c} style={{ fontSize: 11, background: 'rgba(13,13,14,.35)', border: '1px solid rgba(235,230,216,.12)', color: TEXT, borderRadius: 999, padding: '5px 11px' }}>{c}</span>
+                  ))}
+                </div>
+              )}
+              {training && (
+                <div style={{ position: 'relative', zIndex: 2, marginTop: muscleChips(selWorkout!.exercises).length ? 0 : 16 }}>
+                  <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                    {selectedDone ? (
+                      // Already logged for this day — show a clear "done" state.
+                      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9, background: 'rgba(155,176,165,.16)', color: SAGE, border: '1px solid rgba(155,176,165,.4)', borderRadius: 13, padding: 14, fontSize: 15, fontWeight: 700 }}>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={SAGE} strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
+                        Completed
+                      </div>
+                    ) : sessionActiveHere ? (
+                      <button type="button" onClick={finishWorkout} disabled={logging} style={{ flex: 1, background: SAGE, color: BG, border: 'none', borderRadius: 13, padding: 14, fontSize: 15, fontWeight: 700, cursor: logging ? 'default' : 'pointer', opacity: logging ? 0.7 : 1, boxShadow: '0 8px 24px rgba(155,176,165,.3)' }}>
+                        {logging ? 'Saving…' : 'Finish workout'}
+                      </button>
+                    ) : (
+                      <button type="button" onClick={startWorkout} style={{ flex: 1, background: SAGE, color: BG, border: 'none', borderRadius: 13, padding: 14, fontSize: 15, fontWeight: 700, cursor: 'pointer', boxShadow: '0 8px 24px rgba(155,176,165,.3)' }}>
+                        Start workout
+                      </button>
+                    )}
+                    <button type="button" aria-label="Edit" style={{ width: 48, height: 48, borderRadius: 13, background: 'rgba(13,13,14,.4)', border: '1px solid rgba(235,230,216,.14)', color: TEXT, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z" /></svg>
+                    </button>
+                  </div>
+                  {sessionActiveHere && !logging && (
+                    <div style={{ fontSize: 11.5, color: MUT, marginTop: 9 }}>Workout in progress — tap Finish when you&apos;re done to log it.</div>
+                  )}
+                  {completeErr && (
+                    <div style={{ fontSize: 11.5, color: '#d98b8b', marginTop: 9 }}>{completeErr}</div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* SIMPLE EDIT */}
+            {training && (
+              <div style={{ background: SURF, border: `1px solid ${LINE}`, borderRadius: 18, padding: '6px 16px 14px', marginBottom: 22 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 0 6px' }}>
+                  <span style={{ fontSize: 13, letterSpacing: '.04em', color: MUT }}>{editEyebrow}</span>
+                  <span style={{ fontSize: 13, letterSpacing: '.04em', color: SAGE }}>{savingCount > 0 ? 'saving…' : 'auto-saves'}</span>
+                </div>
+                {selWorkout!.exercises.map((we, i) => (
+                  <div
+                    key={we.id}
+                    onDragEnter={() => onDragEnterRow(selWorkout!.id, i)}
+                    onDragOver={(e) => e.preventDefault()}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0',
+                      borderTop: '1px solid rgba(235,230,216,.06)',
+                      opacity: dragIndex === i ? 0.5 : 1,
+                    }}
+                  >
+                    <span
+                      draggable
+                      onDragStart={() => onDragStartRow(i)}
+                      onDragEnd={() => onDragEndRow(selWorkout!.id)}
+                      style={{ color: 'rgba(235,230,216,.25)', cursor: 'grab', touchAction: 'none', display: 'flex' }}
+                      aria-label="Drag to reorder"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                        <circle cx="9" cy="6" r="1" /><circle cx="15" cy="6" r="1" /><circle cx="9" cy="12" r="1" /><circle cx="15" cy="12" r="1" /><circle cx="9" cy="18" r="1" /><circle cx="15" cy="18" r="1" />
+                      </svg>
+                    </span>
+                    {/* Main tap target: thumbnail + name → how-to detail screen. */}
+                    <button
+                      type="button"
+                      aria-label={`How to: ${we.exercise?.name ?? 'exercise'}`}
+                      onClick={() => we.exercise && setDetailEx({ id: we.exercise.id, sets: we.sets, reps: we.reps, rest_seconds: we.rest_seconds })}
+                      style={{ appearance: 'none', textAlign: 'left', border: 'none', background: 'transparent', padding: 0, flex: 1, minWidth: 0, cursor: 'pointer', color: TEXT, fontFamily: FONT, display: 'flex', alignItems: 'center', gap: 12 }}
+                    >
+                      <span style={{ width: 38, height: 38, borderRadius: 10, overflow: 'hidden', background: CLIP_BG, border: '1px solid rgba(155,176,165,.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: SAGE, fontSize: 11, flexShrink: 0 }}>
+                        {we.exercise?.gif_url ? <ExerciseMedia src={we.exercise.gif_url} alt={we.exercise.name} fit="cover" thumb /> : '▶'}
+                      </span>
+                      <span style={{ minWidth: 0 }}>
+                        <span style={{ display: 'block', fontSize: 14, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{we.exercise?.name ?? 'Exercise'}</span>
+                        <span style={{ display: 'block', fontSize: 11, color: MUT, marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{muscleLabel(we.exercise)}</span>
+                      </span>
+                    </button>
+                    {/* Sets steppers — their own controls. */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                      <button type="button" aria-label="Decrease sets" onClick={() => stepSets(selWorkout!.id, we.id, -1)} style={{ width: 26, height: 26, borderRadius: 8, border: `1px solid ${LINE}`, background: 'rgba(235,230,216,.05)', color: TEXT, fontSize: 15, cursor: 'pointer', lineHeight: 1 }}>−</button>
+                      <div style={{ minWidth: 42, textAlign: 'center' }}>
+                        <span style={{ fontSize: 13, fontWeight: 700, display: 'block' }}>{we.sets ?? 0} × {we.reps ?? '—'}</span>
+                        <span style={{ fontSize: 9, color: MUT, display: 'block', letterSpacing: '.05em' }}>SETS×REPS</span>
+                      </div>
+                      <button type="button" aria-label="Increase sets" onClick={() => stepSets(selWorkout!.id, we.id, 1)} style={{ width: 26, height: 26, borderRadius: 8, border: `1px solid ${LINE}`, background: 'rgba(235,230,216,.05)', color: TEXT, fontSize: 15, cursor: 'pointer', lineHeight: 1 }}>+</button>
+                    </div>
+                    {/* Swap — explicit, separate from the main tap target. */}
+                    <button
+                      type="button"
+                      aria-label={`Swap ${we.exercise?.name ?? 'exercise'}`}
+                      title="Swap exercise"
+                      onClick={() => setPicker({ kind: 'swap', weId: we.id })}
+                      style={{ appearance: 'none', cursor: 'pointer', width: 28, height: 28, borderRadius: 8, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: SAGE, background: 'rgba(155,176,165,.1)', border: '1px solid rgba(155,176,165,.28)' }}
+                    >
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 4 3 8l4 4M3 8h14M17 20l4-4-4-4M21 16H7" /></svg>
+                    </button>
+                    {/* Remove — its own control. */}
+                    <button
+                      type="button"
+                      aria-label={`Remove ${we.exercise?.name ?? 'exercise'}`}
+                      title="Remove exercise"
+                      onClick={() => doRemove(selWorkout!.id, we.id)}
+                      style={{ appearance: 'none', cursor: 'pointer', width: 28, height: 28, borderRadius: 8, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#d98b8b', background: 'rgba(217,139,139,.1)', border: '1px solid rgba(217,139,139,.28)' }}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+                    </button>
+                  </div>
+                ))}
+                <button type="button" onClick={() => setPicker({ kind: 'add' })} style={{ width: '100%', marginTop: 10, background: 'transparent', border: '1px dashed rgba(155,176,165,.4)', color: SAGE, borderRadius: 12, padding: 12, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+                  + Add exercise
+                </button>
+              </div>
+            )}
+
+            {/* PROGRAMS */}
+            <div style={{ fontSize: 12, letterSpacing: '.16em', color: MUT, textTransform: 'uppercase', margin: '4px 0 12px' }}>Continue</div>
+            {summaries.map((p) => {
+              const pct = programProgress(p.created_at);
+              return (
+                <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 14, background: SURF, border: `1px solid ${LINE}`, borderRadius: 16, padding: 14, marginBottom: 10 }}>
+                  <div style={{ width: 46, height: 46, borderRadius: 12, background: 'linear-gradient(135deg,rgba(155,176,165,.25),rgba(155,176,165,.06))', border: '1px solid rgba(155,176,165,.2)', flexShrink: 0 }} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 14.5, fontWeight: 700 }}>{programName(p)}</div>
+                    <div style={{ height: 6, borderRadius: 6, background: 'rgba(235,230,216,.1)', marginTop: 8, overflow: 'hidden' }}>
+                      <div style={{ display: 'block', height: '100%', background: SAGE, borderRadius: 6, width: `${pct}%` }} />
+                    </div>
+                  </div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: SAGE }}>{pct}%</div>
+                </div>
+              );
+            })}
+          </>
+        )}
+
+        {/* bottom nav */}
+        <div style={{
+          position: 'fixed', bottom: 16, left: '50%', transform: 'translateX(-50%)', width: 'calc(100% - 40px)', maxWidth: 400,
+          background: 'rgba(20,22,21,.9)', backdropFilter: 'blur(12px)', border: `1px solid ${LINE}`, borderRadius: 20,
+          display: 'flex', justifyContent: 'space-around', padding: 12, zIndex: 40,
+        }}>
+          {[
+            { label: 'Home', on: true, path: <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /> },
+            { label: 'Calendar', on: false, path: <><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" /></> },
+            { label: 'Progress', on: false, path: <path d="M3 3v18h18M7 14l3-3 3 3 5-5" /> },
+            { label: 'Profile', on: false, path: <><circle cx="12" cy="8" r="4" /><path d="M4 21a8 8 0 0 1 16 0" /></> },
+          ].map((n) => (
+            <div key={n.label} style={{ color: n.on ? SAGE : MUT, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, fontSize: 9 }}>
+              <svg width="21" height="21" viewBox="0 0 24 24" stroke="currentColor" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">{n.path}</svg>
+              {n.label}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {picker?.kind === 'swap' && (
+        <Sheet
+          title="Swap exercise"
+          items={pickerItems}
+          busy={savingCount > 0}
+          onClose={() => setPicker(null)}
+          onPick={(c) => picker.weId && doSwap(selWorkout!.id, picker.weId, c)}
+        />
+      )}
+
+      {picker?.kind === 'add' && (
+        <AddSheet
+          workout={selWorkout}
+          catalog={catalog}
+          busy={savingCount > 0}
+          onClose={() => setPicker(null)}
+          onPick={(c) => doAdd(c)}
+        />
+      )}
+
+      {detailEx && (
+        <ExerciseDetail
+          exerciseId={detailEx.id}
+          sets={detailEx.sets}
+          reps={detailEx.reps}
+          rest_seconds={detailEx.rest_seconds}
+          onClose={() => setDetailEx(null)}
+        />
+      )}
+    </div>
+  );
+}

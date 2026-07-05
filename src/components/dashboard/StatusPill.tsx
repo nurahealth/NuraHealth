@@ -12,7 +12,7 @@ const MAP: Record<PillStatus, { color: string; rgb: string; label: string }> = {
   alert: { color: "var(--nura-alert)", rgb: "var(--nura-alert-rgb)", label: "Alert" },
 };
 
-const SANS = "'Inter', system-ui, sans-serif";
+const SANS = "var(--font-inter), system-ui, sans-serif";
 
 export default function StatusPill({
   status,

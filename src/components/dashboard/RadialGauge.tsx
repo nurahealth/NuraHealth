@@ -5,7 +5,7 @@ import { useEffect, useId, useRef, useState } from "react";
 // Animated radial score gauge: a gradient arc that sweeps in on mount plus a
 // count-up number in the center. Reused by every metric detail hero.
 
-const SANS = "'Inter', system-ui, sans-serif";
+const SANS = "var(--font-inter), system-ui, sans-serif";
 
 interface Props {
   value: number;
@@ -15,7 +15,11 @@ interface Props {
   /** Small caption under the number, e.g. "Sleep Index". */
   label?: string;
   gradientFrom?: string;
+  /** Optional middle gradient stop (renders a 3-stop stroke when set). */
+  gradientMid?: string;
   gradientTo?: string;
+  /** Total sweep in degrees (default 360 = full ring; e.g. 270 = gap at bottom). */
+  arc?: number;
   /** RGB triplet for the arc + number glow (defaults to teal). */
   glowRgb?: string;
   /** Formats the center count-up number (defaults to a plain integer). */
@@ -33,11 +37,13 @@ export default function RadialGauge({
   stroke = 9,
   label,
   gradientFrom = "var(--nura-teal)",
+  gradientMid,
   gradientTo = "var(--nura-sage)",
   glowRgb = "93,204,174",
   format = (n) => String(n),
   valueFontSize,
   labelGap = 2,
+  arc = 360,
 }: Props) {
   const rawId = useId();
   const gid = `gauge-${rawId.replace(/[^a-zA-Z0-9]/g, "")}`;
@@ -52,9 +58,14 @@ export default function RadialGauge({
   const c = box / 2;
   const circ = 2 * Math.PI * r;
   const pct = Math.max(0, Math.min(1, value / max));
-  const target = circ * (1 - pct);
+  // Length of the visible arc. For a partial arc (arc < 360) the gap sits at
+  // the bottom and the sweep is centered on top; for 360 this equals `circ`,
+  // so a full-ring gauge renders exactly as before.
+  const arcLen = circ * (arc / 360);
+  const target = arcLen * (1 - pct);
+  const rotation = arc >= 360 ? -90 : -(90 + arc / 2);
 
-  const [offset, setOffset] = useState(circ);
+  const [offset, setOffset] = useState(arcLen);
   const [num, setNum] = useState(0);
   const rafRef = useRef(0);
 
@@ -81,19 +92,20 @@ export default function RadialGauge({
     <div style={{ position: "relative", width: size, height: size, flex: "0 0 auto" }}>
       <svg
         width={box} height={box} viewBox={`0 0 ${box} ${box}`}
-        style={{ position: "absolute", top: -pad, left: -pad, transform: "rotate(-90deg)", overflow: "visible", pointerEvents: "none" }}
+        style={{ position: "absolute", top: -pad, left: -pad, transform: `rotate(${rotation}deg)`, overflow: "visible", pointerEvents: "none" }}
       >
         <defs>
           <linearGradient id={gid} x1="0" y1="0" x2="1" y2="1">
             <stop offset="0" stopColor={gradientFrom} />
+            {gradientMid && <stop offset="0.5" stopColor={gradientMid} />}
             <stop offset="1" stopColor={gradientTo} />
           </linearGradient>
         </defs>
-        <circle cx={c} cy={c} r={r} fill="none" stroke="rgba(235,230,216,0.08)" strokeWidth={stroke} />
+        <circle cx={c} cy={c} r={r} fill="none" stroke="rgba(235,230,216,0.08)" strokeWidth={stroke} strokeDasharray={`${arcLen} ${circ}`} />
         <circle
           cx={c} cy={c} r={r} fill="none"
           stroke={`url(#${gid})`} strokeWidth={stroke} strokeLinecap="round"
-          strokeDasharray={circ} strokeDashoffset={offset}
+          strokeDasharray={`${arcLen} ${circ}`} strokeDashoffset={offset}
           style={{
             filter: `drop-shadow(0 0 7px rgba(${glowRgb},0.65))`,
             transition: "stroke-dashoffset 1.3s cubic-bezier(.2,.7,.2,1)",

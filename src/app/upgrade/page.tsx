@@ -14,7 +14,7 @@ const SAGE = "var(--nura-sage)";
 const SAGE_HOV = "var(--nura-sage-hover)";
 const SAGE_ON = "var(--nura-bg)";
 const SAGE_RGB = "var(--nura-sage-rgb)";
-const SANS = "'Inter', system-ui, sans-serif";
+const SANS = "var(--font-inter), system-ui, sans-serif";
 const MONO = "'JetBrains Mono', monospace";
 
 const FEATURES = [

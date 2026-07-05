@@ -20,7 +20,7 @@ const SAGE = "var(--nura-sage)";
 const SAGE_HOV = "var(--nura-sage-hover)";
 const SAGE_ON = "var(--nura-bg)";
 const SAGE_RGB = "var(--nura-sage-rgb)";
-const SANS = "'Inter', system-ui, sans-serif";
+const SANS = "var(--font-inter), system-ui, sans-serif";
 const SERIF = "'DM Serif Display', Georgia, serif";
 
 const PROMPTS = [
@@ -304,8 +304,8 @@ export default function Home() {
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         .nura-content {
           width: 100%;
-          max-width: 340px;
-          padding: 0 24px;
+          max-width: 100%;
+          padding: 0 12px;
           display: flex;
           flex-direction: column;
           align-items: stretch;

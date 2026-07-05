@@ -15,7 +15,7 @@ const TEXT_TER = "var(--nura-text-tertiary)";
 const BORDER = "var(--nura-border)";
 const CARD = "var(--nura-card)";
 const SAGE = "var(--nura-sage)";
-const SANS = "'Inter', system-ui, sans-serif";
+const SANS = "var(--font-inter), system-ui, sans-serif";
 
 const EYEBROW: React.CSSProperties = {
   fontFamily: SANS, fontSize: 10, fontWeight: 600, letterSpacing: "1.6px", textTransform: "uppercase",

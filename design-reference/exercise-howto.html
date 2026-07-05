@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>NŪRA — Exercise how-to</title>
+<style>
+  :root{--bg:#0d0d0e;--sage:#9bb0a5;--sage2:#abc0b5;--text:#ebe6d8;--mut:rgba(235,230,216,.5);--surf:rgba(235,230,216,.045);--line:rgba(235,230,216,.09);}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;background:#000;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,sans-serif;color:var(--text);}
+  .wrap{min-height:100vh;display:flex;justify-content:center;padding:20px;background:radial-gradient(120% 40% at 50% -5%, #16191780 0%, #0d0d0e 50%);}
+  .app{width:100%;max-width:440px;padding-bottom:30px;}
+  .back{display:flex;align-items:center;gap:10px;margin-bottom:16px;}
+  .back .btn{width:36px;height:36px;border-radius:12px;background:var(--surf);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;cursor:pointer;}
+  .back .eye{font-size:11px;letter-spacing:.18em;color:var(--mut);}
+  .demo{position:relative;border-radius:20px;overflow:hidden;height:210px;display:flex;align-items:center;justify-content:center;margin-bottom:18px;background:linear-gradient(135deg,rgba(155,176,165,.2),rgba(155,176,165,.03));border:1px solid rgba(155,176,165,.22);}
+  .demo .glow{position:absolute;right:-30px;top:-30px;width:160px;height:160px;border-radius:50%;background:radial-gradient(circle,rgba(155,176,165,.3),transparent 70%);}
+  @keyframes float{0%,100%{transform:translateY(-5px)}50%{transform:translateY(5px)}}
+  .demo svg.fig{animation:float 2.6s ease-in-out infinite;position:relative;z-index:2;}
+  .demo .cap{position:absolute;bottom:11px;left:13px;font-size:10px;letter-spacing:.04em;color:rgba(235,230,216,.55);display:flex;align-items:center;gap:6px;}
+  .demo .cap i{width:6px;height:6px;border-radius:50%;background:var(--sage);display:inline-block;}
+  h1.name{font-size:24px;font-weight:700;letter-spacing:-.01em;margin:0 0 12px;}
+  .chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px;}
+  .chip{font-size:11px;border-radius:999px;padding:5px 12px;}
+  .chip.pri{background:var(--sage);color:var(--bg);font-weight:700;}
+  .chip.sec{border:1px solid rgba(155,176,165,.4);color:var(--sage);}
+  .meta{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:26px;}
+  .tile{background:var(--surf);border:1px solid var(--line);border-radius:14px;padding:12px 14px;}
+  .tile .l{font-size:10px;letter-spacing:.05em;color:var(--mut);margin-bottom:5px;}
+  .tile .v{font-size:15px;font-weight:700;}
+  .sec{font-size:12px;letter-spacing:.16em;color:var(--mut);text-transform:uppercase;margin:0 0 14px;}
+  .step{display:flex;gap:13px;margin-bottom:15px;}
+  .step .n{width:25px;height:25px;border-radius:50%;background:rgba(155,176,165,.16);color:var(--sage);font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .step .t{font-size:14px;line-height:1.5;color:rgba(235,230,216,.85);}
+  .tip{display:flex;gap:10px;align-items:flex-start;margin-bottom:10px;}
+  .tip .d{width:6px;height:6px;border-radius:50%;background:var(--sage);margin-top:7px;flex-shrink:0;}
+  .tip .t{font-size:13.5px;color:rgba(235,230,216,.8);line-height:1.45;}
+  .sets-head{display:flex;align-items:center;justify-content:space-between;margin:30px 0 6px;}
+  .sets-head .hint{font-size:11px;color:var(--sage);}
+  .setrow{display:flex;align-items:center;justify-content:space-between;padding:13px 0;border-top:1px solid rgba(235,230,216,.06);}
+  .setrow .sn{font-size:14px;font-weight:600;}
+  .setrow .sr{font-size:11px;color:var(--mut);margin-top:2px;}
+  .chk{width:30px;height:30px;border-radius:50%;border:1.5px solid rgba(235,230,216,.2);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s;}
+  .chk.on{background:var(--sage);border-color:var(--sage);}
+  .done{width:100%;margin-top:22px;background:var(--sage);color:var(--bg);border:none;border-radius:14px;padding:16px;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 8px 24px rgba(155,176,165,.28);}
+</style></head>
+<body><div class="wrap"><div class="app">
+
+  <div class="back">
+    <div class="btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ebe6d8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></div>
+    <div class="eye">EXERCISE</div>
+  </div>
+
+  <div class="demo">
+    <div class="glow"></div>
+    <svg class="fig" width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="#9bb0a5" stroke-width="1.3" stroke-linecap="round"><path d="M6.5 6.5 17.5 17.5M3 8l3-3M16 21l3-3M8 3 5 6M21 16l-3 3"/></svg>
+    <div class="cap"><i></i>Demo · loops automatically</div>
+  </div>
+
+  <h1 class="name">Bench Press</h1>
+  <div class="chips">
+    <span class="chip pri">Chest</span>
+    <span class="chip sec">Triceps</span>
+    <span class="chip sec">Front delts</span>
+  </div>
+
+  <div class="meta">
+    <div class="tile"><div class="l">SETS × REPS</div><div class="v">3 × 8–12</div></div>
+    <div class="tile"><div class="l">REST</div><div class="v">60s</div></div>
+    <div class="tile"><div class="l">EQUIPMENT</div><div class="v">Barbell</div></div>
+    <div class="tile"><div class="l">LEVEL</div><div class="v">Intermediate</div></div>
+  </div>
+
+  <div class="sec">How to</div>
+  <div class="step"><div class="n">1</div><div class="t">Lie flat on the bench, feet planted, and grip the bar slightly wider than shoulder-width.</div></div>
+  <div class="step"><div class="n">2</div><div class="t">Unrack and lower the bar under control to mid-chest.</div></div>
+  <div class="step"><div class="n">3</div><div class="t">Press up until your arms are extended, keeping your shoulders back.</div></div>
+  <div class="step" style="margin-bottom:28px;"><div class="n">4</div><div class="t">Pause briefly at the top, then repeat for your reps.</div></div>
+
+  <div class="sec">Form tips</div>
+  <div class="tip"><div class="d"></div><div class="t">Keep your wrists stacked over your elbows.</div></div>
+  <div class="tip"><div class="d"></div><div class="t">Drive through your mid-back, not just your shoulders.</div></div>
+  <div class="tip"><div class="d"></div><div class="t">Don't bounce the bar off your chest.</div></div>
+
+  <div class="sets-head">
+    <div class="sec" style="margin:0;">Your sets</div>
+    <div class="hint">tap to log</div>
+  </div>
+  <div class="setrow"><div><div class="sn">Set 1</div><div class="sr">8–12 reps</div></div><div class="chk"></div></div>
+  <div class="setrow"><div><div class="sn">Set 2</div><div class="sr">8–12 reps</div></div><div class="chk"></div></div>
+  <div class="setrow"><div><div class="sn">Set 3</div><div class="sr">8–12 reps</div></div><div class="chk"></div></div>
+
+  <button class="done">Mark complete</button>
+
+</div></div>
+<script>
+  document.querySelectorAll('.chk').forEach(function(c){
+    c.addEventListener('click',function(){
+      c.classList.toggle('on');
+      c.innerHTML = c.classList.contains('on') ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0d0d0e" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>' : '';
+    });
+  });
+</script>
+</body></html>

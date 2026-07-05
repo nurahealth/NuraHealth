@@ -1,48 +1,47 @@
 import type { ReactElement } from "react";
 import type { SleepDepthChartData } from "@/lib/dashboardData";
 
-// Sleep card's bespoke overnight depth chart (mirrors design-reference/
-// nura-sleep-card-final.html). Only the Sleep metric card renders this; every
+// Sleep card's bespoke overnight chart (mirrors design-reference/
+// nura-sleep-card-modern.html). Only the Sleep metric card renders this; every
 // other card keeps the shared MetricChart.
 //
-//  • color-coded depth bars across the night — height = sleep depth, colored by
-//    stage band (deep / light / REM / awake), each with a top→bottom gradient
-//    and rounded top
-//  • a flowing white glowing line (smooth Catmull-Rom curve) riding just above
-//    the bar tops, zigzagging with the sleep-cycle depth
-//  • a glowing off-white dot on every wave crest (each local maximum), including
-//    the final small hump — but none in the troughs and none at the tail
-//  • the stage-duration row beneath
+//  • gradient stage bars across the night (11p→7a) — height follows the
+//    hypnogram depth, each bar colored by its stage band (deep / REM / light /
+//    awake) with a top→bottom vertical gradient (lighter at the top, fading
+//    translucent at the base)
+//  • a subtle 1.5px glow on the deep bars only
+//  • three faint horizontal gridlines for structure
+//  • the stage-duration legend row beneath
 //
-// Colors are token-driven (--nura-* vars) so it tracks the design system and
-// works in dark mode; the off-white ink (line, dots, awake bars) is the warm
-// --nura-fg-rgb token.
+// No overlay line and no crest dots — purely the stage bars.
 
-const SANS = "'Inter', system-ui, sans-serif";
+const SANS = "var(--font-inter), system-ui, sans-serif";
 const INK = "var(--nura-fg-rgb)"; // warm off-white in dark mode
 
-// Depth → stage-band color (token-driven). Mirrors the reference thresholds.
-function bandColor(d: number): string {
-  if (d >= 0.78) return "var(--nura-sleep-deep)"; // deep — blue
-  if (d >= 0.5) return "var(--nura-sage)";        // light — sage
-  if (d >= 0.3) return "var(--nura-teal)";        // REM — teal
-  return `rgba(${INK},0.4)`;                       // awake — faint off-white
+// Stage palette (literal hexes so the per-bar gradients can lighten them).
+const STAGE_HEX = {
+  deep: "#5aa0e6",  // blue
+  rem: "#5dccae",   // teal
+  light: "#9bb0a5", // sage
+  awake: "#d3a253", // gold
+} as const;
+
+type Stage = keyof typeof STAGE_HEX;
+
+// Depth → stage band. Mirrors the reference thresholds.
+function bandStage(d: number): Stage {
+  if (d >= 0.78) return "deep";
+  if (d >= 0.5) return "light";
+  if (d >= 0.3) return "rem";
+  return "awake";
 }
 
-// Catmull-Rom → cubic-bezier path through the (uneven-x) crest points.
-function catmullRom(pts: { x: number; y: number }[]): string {
-  if (pts.length < 2) return "";
-  let d = `M ${pts[0].x.toFixed(1)},${pts[0].y.toFixed(1)}`;
-  for (let i = 0; i < pts.length - 1; i++) {
-    const p0 = pts[i - 1] ?? pts[i];
-    const p1 = pts[i];
-    const p2 = pts[i + 1];
-    const p3 = pts[i + 2] ?? p2;
-    const c1x = p1.x + (p2.x - p0.x) / 6, c1y = p1.y + (p2.y - p0.y) / 6;
-    const c2x = p2.x - (p3.x - p1.x) / 6, c2y = p2.y - (p3.y - p1.y) / 6;
-    d += ` C ${c1x.toFixed(1)},${c1y.toFixed(1)} ${c2x.toFixed(1)},${c2y.toFixed(1)} ${p2.x.toFixed(1)},${p2.y.toFixed(1)}`;
-  }
-  return d;
+function hex(h: string): [number, number, number] {
+  const s = h.replace("#", "");
+  return [parseInt(s.slice(0, 2), 16), parseInt(s.slice(2, 4), 16), parseInt(s.slice(4, 6), 16)];
+}
+function light([r, g, b]: [number, number, number], amt: number): [number, number, number] {
+  return [Math.round(r + (255 - r) * amt), Math.round(g + (255 - g) * amt), Math.round(b + (255 - b) * amt)];
 }
 
 export default function SleepDepthChart({ data }: { data: SleepDepthChartData }) {
@@ -56,63 +55,43 @@ export default function SleepDepthChart({ data }: { data: SleepDepthChartData })
   const bw = Math.min(slot * 0.62, 7);
   const yOf = (d: number) => bot - d * plotH;
 
-  const bars: ReactElement[] = [];
   const grads: ReactElement[] = [];
-  const tops: { x: number; y: number }[] = [];
+  const bars: ReactElement[] = [];
   depth.forEach((d, i) => {
-    const c = bandColor(d);
+    const stage = bandStage(d);
+    const c = STAGE_HEX[stage];
+    const [r, g, b] = hex(c);
+    const [lr, lg, lb] = light([r, g, b], 0.35);
     const x = i * slot + (slot - bw) / 2;
     const yy = yOf(d);
+    const h = bot - yy;
     const gid = `sb${i}`;
     grads.push(
       <linearGradient key={gid} id={gid} x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0" stopColor={c} />
-        <stop offset="1" stopColor={c} stopOpacity={0.3} />
+        <stop offset="0" stopColor={`rgb(${lr},${lg},${lb})`} stopOpacity={1} />
+        <stop offset="1" stopColor={`rgb(${r},${g},${b})`} stopOpacity={0.18} />
       </linearGradient>,
     );
     bars.push(
       <rect
         key={i} x={x.toFixed(1)} y={yy.toFixed(1)} width={bw.toFixed(1)}
-        height={(bot - yy).toFixed(1)} rx={(bw / 2).toFixed(1)} fill={`url(#${gid})`}
+        height={h.toFixed(1)} rx={Math.min(bw / 2, h / 2).toFixed(1)} fill={`url(#${gid})`}
+        style={stage === "deep" ? { filter: `drop-shadow(0 0 1.5px rgba(${r},${g},${b},0.7))` } : undefined}
       />,
     );
-    tops.push({ x: i * slot + slot / 2, y: yy - 4 });
   });
 
-  const line = catmullRom(tops);
-
-  // Glowing dot at every wave crest (local maximum), including the final small
-  // hump — but never in a trough and never at the tail.
-  const dots: ReactElement[] = [];
-  depth.forEach((d, i) => {
-    if (i === n - 1) return; // no dot at the very end / tail
-    const prev = depth[i - 1] ?? Infinity;
-    const next = depth[i + 1] ?? Infinity;
-    if (d >= prev && d > next) {
-      const p = tops[i];
-      dots.push(
-        <circle
-          key={`dot${i}`} cx={p.x.toFixed(1)} cy={p.y.toFixed(1)} r={3.6}
-          fill={`rgb(${INK})`}
-          style={{ filter: `drop-shadow(0 0 6px rgba(${INK},0.9))` }}
-        />,
-      );
-    }
-  });
+  // Three faint horizontal gridlines for structure.
+  const gridlines = [0.25, 0.5, 0.75].map((f, i) => (
+    <line key={`g${i}`} x1={0} x2={W} y1={top + plotH * f} y2={top + plotH * f} stroke={`rgba(${INK},0.06)`} strokeWidth={1} />
+  ));
 
   return (
     <div>
       <svg width="100%" height={H} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" style={{ display: "block", overflow: "visible" }}>
         <defs>{grads}</defs>
-        <g style={{ filter: "drop-shadow(0 0 4px rgba(var(--nura-teal-rgb),0.22))" }}>{bars}</g>
-        {line && (
-          <path
-            d={line} fill="none" stroke={`rgb(${INK})`} strokeWidth={2.2}
-            strokeLinecap="round" strokeLinejoin="round" opacity={0.92}
-            style={{ filter: `drop-shadow(0 0 6px rgba(${INK},0.5))` }}
-          />
-        )}
-        {dots}
+        {gridlines}
+        {bars}
       </svg>
 
       {/* X-axis */}

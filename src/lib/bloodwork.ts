@@ -1,3 +1,4 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { supabase } from "./supabase";
 
 export interface LabPanel {
@@ -143,7 +144,18 @@ export async function getPanelsBiomarkers(
 }
 
 export async function getLatestBiomarkers(userId: string): Promise<Biomarker[]> {
-  const { data, error } = await supabase
+  return getLatestBiomarkersWith(supabase, userId);
+}
+
+// Server-component variant: pass a server-side Supabase client (the
+// createServerClient/cookies instance) so this can run outside the browser.
+// The module-level `supabase` singleton is a "use client" browser client and
+// is unusable from a Server Component, so callers there must supply a client.
+export async function getLatestBiomarkersWith(
+  client: SupabaseClient,
+  userId: string
+): Promise<Biomarker[]> {
+  const { data, error } = await client
     .from("biomarkers")
     .select("*")
     .eq("user_id", userId)

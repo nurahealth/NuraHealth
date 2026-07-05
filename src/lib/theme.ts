@@ -98,6 +98,6 @@ export type NuraPalette = { readonly [K in keyof typeof NURA_DARK]: string };
 
 export const FONTS = {
   serif: "'DM Serif Display', Georgia, serif",
-  sans: "'Inter', system-ui, sans-serif",
+  sans: "var(--font-inter), system-ui, sans-serif",
   mono: "'JetBrains Mono', monospace",
 } as const;

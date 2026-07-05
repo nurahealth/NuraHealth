@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NŪRA · New metric cards</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0a0b0c; --text:#ebe6d8; --sage:#9bb0a5; --muted:rgba(235,230,216,0.62); --faint:rgba(235,230,216,0.40);
+        --teal:#5dccae; --blue:#5aa0e6; --gold:#d3a253; --mauve:#a98fc4; --coral:#e8745a;}
+  *{margin:0; padding:0; box-sizing:border-box;}
+  body{font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); padding:28px 0 50px; -webkit-font-smoothing:antialiased;}
+  .wrap{max-width:380px; margin:0 auto; padding:0 18px;}
+  .hd{font-size:12px; letter-spacing:1.4px; text-transform:uppercase; color:var(--faint); font-weight:700; margin:6px 2px 18px;}
+
+  .card{background:rgba(255,255,255,0.022); border:1px solid rgba(235,230,216,0.085); border-radius:22px; padding:20px 20px 18px; margin-bottom:18px; position:relative; overflow:hidden;}
+  .card::before{content:""; position:absolute; inset:0 0 auto 0; height:1px; background:linear-gradient(90deg,transparent,rgba(235,230,216,0.10),transparent);}
+  .chead{display:flex; justify-content:space-between; align-items:center; margin-bottom:13px;}
+  .cname{font-size:11px; letter-spacing:1.6px; text-transform:uppercase; color:rgba(235,230,216,0.72); font-weight:600;}
+  .csrc{font-size:9.5px; letter-spacing:1.1px; text-transform:uppercase; color:var(--faint); font-weight:600;}
+  .cval{display:flex; align-items:baseline; gap:7px; margin-bottom:2px;}
+  .cnum{font-size:39px; font-weight:700; letter-spacing:-1.3px; line-height:1;}
+  .cunit{font-size:14.5px; font-weight:500; color:var(--muted);}
+  .ctrend{font-size:13px; font-weight:600; display:flex; align-items:center; gap:3px;}
+  .ctrend svg{width:12px; height:12px;}
+  .chart{margin-top:8px;}
+  .chart svg{display:block; width:100%; height:auto; overflow:visible;}
+  .cfoot{display:flex; justify-content:space-between; align-items:flex-end; gap:12px; margin-top:14px;}
+  .ccap{font-size:12.5px; line-height:1.45; color:var(--muted);}
+  .ccap b{color:var(--text); font-weight:600;}
+  .pill{font-size:9.5px; letter-spacing:1px; text-transform:uppercase; font-weight:700; padding:6px 11px; border-radius:9px; white-space:nowrap; flex:none;}
+
+  /* VO2 zone bar */
+  .zwrap{margin-top:14px;}
+  .zbar{height:14px; border-radius:7px; position:relative;}
+  .zmark{position:absolute; top:-5px; width:3px; height:24px; background:#fff; border-radius:2px; transform:translateX(-50%); box-shadow:0 0 8px rgba(255,255,255,0.5);}
+  .zlabels{display:flex; justify-content:space-between; margin-top:9px;}
+  .zlabels span{font-size:9.5px; letter-spacing:.4px; text-transform:uppercase; color:var(--faint); font-weight:600;}
+  .zlabels span.on{color:var(--gold);}
+  .spark{margin-top:4px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hd">New cards · matched to your set</div>
+
+  <!-- BLOOD OXYGEN -->
+  <div class="card">
+    <div class="chead"><div class="cname">Blood Oxygen</div><div class="csrc">Oura</div></div>
+    <div class="cval"><span class="cnum">97<span style="font-size:22px;font-weight:600">%</span></span>
+      <span class="ctrend" style="color:var(--teal)">avg overnight</span></div>
+    <div class="chart" id="spo2"></div>
+    <div class="cfoot">
+      <div class="ccap">Lowest <b>94%</b> · stayed in your healthy range all night.</div>
+      <div class="pill" style="color:var(--teal);background:rgba(93,204,174,0.12);border:1px solid rgba(93,204,174,0.32)">Normal</div>
+    </div>
+  </div>
+
+  <!-- RESPIRATORY RATE -->
+  <div class="card">
+    <div class="chead"><div class="cname">Respiratory Rate</div><div class="csrc">Oura</div></div>
+    <div class="cval"><span class="cnum">14.2</span><span class="cunit">br/min</span>
+      <span class="ctrend" style="color:var(--mauve)">steady</span></div>
+    <div class="chart" id="resp"></div>
+    <div class="cfoot">
+      <div class="ccap">Right on your <b>14.3</b> baseline — no signs of strain or illness.</div>
+      <div class="pill" style="color:var(--mauve);background:rgba(169,143,196,0.12);border:1px solid rgba(169,143,196,0.32)">Normal</div>
+    </div>
+  </div>
+
+  <!-- VO2 MAX -->
+  <div class="card">
+    <div class="chead"><div class="cname">Cardio Fitness · VO₂ max</div><div class="csrc">Apple Watch</div></div>
+    <div class="cval"><span class="cnum">48</span><span class="cunit">ml/kg·min</span>
+      <span class="ctrend" style="color:var(--teal)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 15l7-7 7 7"/></svg>1.5 in 3 mo</span></div>
+    <div class="zwrap">
+      <div class="zbar" id="zbar"><div class="zmark" id="zmark"></div></div>
+      <div class="zlabels"><span>Low</span><span>Below avg</span><span class="on">Above avg</span><span>High</span></div>
+    </div>
+    <div class="chart spark" id="vspark"></div>
+    <div class="cfoot">
+      <div class="ccap"><b>Above average</b> for your age &amp; sex · roughly top 25%.</div>
+      <div class="pill" style="color:var(--gold);background:rgba(211,162,83,0.12);border:1px solid rgba(211,162,83,0.32)">Above avg</div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ---- shared helpers ----
+  function hex(h){h=h.replace('#','');return [parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)];}
+  function parse(h){return hex(h);}
+  function lerp(a,b,t){return a+(b-a)*t;}
+  function light(h,amt){const c=hex(h);return `rgb(${Math.round(lerp(c[0],255,amt))},${Math.round(lerp(c[1],255,amt))},${Math.round(lerp(c[2],255,amt))})`;}
+  function hexA(h,a){const c=hex(h);return `rgba(${c[0]},${c[1]},${c[2]},${a})`;}
+  function colorAt(t,stops){ // stops: [[pos,hex],...]
+    for(let i=0;i<stops.length-1;i++){const [p0,c0]=stops[i],[p1,c1]=stops[i+1];
+      if(t>=p0&&t<=p1){const u=(t-p0)/(p1-p0||1);const a=hex(c0),b=hex(c1);
+        return `rgb(${Math.round(lerp(a[0],b[0],u))},${Math.round(lerp(a[1],b[1],u))},${Math.round(lerp(a[2],b[2],u))})`;}}
+    return stops[stops.length-1][1];
+  }
+  function smooth(pts){ // Catmull-Rom -> cubic bezier path
+    if(pts.length<2) return '';
+    let d=`M${pts[0][0]},${pts[0][1]}`;
+    for(let i=0;i<pts.length-1;i++){
+      const p0=pts[i-1]||pts[i],p1=pts[i],p2=pts[i+1],p3=pts[i+2]||p2;
+      const c1x=p1[0]+(p2[0]-p0[0])/6, c1y=p1[1]+(p2[1]-p0[1])/6;
+      const c2x=p2[0]-(p3[0]-p1[0])/6, c2y=p2[1]-(p3[1]-p1[1])/6;
+      d+=` C${c1x},${c1y} ${c2x},${c2y} ${p2[0]},${p2[1]}`;
+    }
+    return d;
+  }
+
+  const W=340,H=150,padL=4,padR=30,padT=14,padB=24;
+  function xAt(i,n){return padL+(i/(n-1))*(W-padL-padR);}
+  function yAt(v,lo,hi){return padT+(1-(v-lo)/(hi-lo))*(H-padT-padB);}
+
+  // generic overnight line/area chart
+  function overnight(elId,{data,lo,hi,ticks,bandLo,bandHi,avg,color,uid}){
+    const n=data.length;
+    const pts=data.map((v,i)=>[xAt(i,n),yAt(v,lo,hi)]);
+    const line=smooth(pts);
+    const area=line+` L${pts[n-1][0]},${yAt(lo,lo,hi)} L${pts[0][0]},${yAt(lo,lo,hi)} Z`;
+    let g=`<defs>
+      <linearGradient id="ln${uid}" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="${hexA(color,0.55)}"/><stop offset="0.5" stop-color="${color}"/><stop offset="1" stop-color="${light(color,0.25)}"/>
+      </linearGradient>
+      <linearGradient id="ar${uid}" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="${hexA(color,0.28)}"/><stop offset="1" stop-color="${hexA(color,0)}"/>
+      </linearGradient></defs>`;
+    // normal-range band
+    let band='';
+    if(bandLo!=null){band=`<rect x="${padL}" y="${yAt(bandHi,lo,hi)}" width="${W-padL-padR}" height="${yAt(bandLo,lo,hi)-yAt(bandHi,lo,hi)}" fill="${hexA(color,0.06)}" rx="3"/>`;}
+    // right-edge gridline ticks + labels
+    let grid='';
+    ticks.forEach(t=>{const y=yAt(t,lo,hi);
+      grid+=`<line x1="${padL}" y1="${y}" x2="${W-padR}" y2="${y}" stroke="rgba(235,230,216,0.06)" stroke-width="1"/>`;
+      grid+=`<text x="${W-padR+5}" y="${y+3}" font-size="9" fill="rgba(235,230,216,0.40)">${t}</text>`;});
+    // dashed average
+    const avgLine=`<line x1="${padL}" y1="${yAt(avg,lo,hi)}" x2="${W-padR}" y2="${yAt(avg,lo,hi)}" stroke="${hexA(color,0.55)}" stroke-width="1.3" stroke-dasharray="4 4"/>`;
+    // x labels
+    const xl=['11p','1a','3a','5a','7a'];
+    let xlab='';
+    xl.forEach((l,k)=>{const x=padL+(k/(xl.length-1))*(W-padL-padR);
+      xlab+=`<text x="${x}" y="${H-6}" font-size="9" fill="rgba(235,230,216,0.40)" text-anchor="${k===0?'start':k===xl.length-1?'end':'middle'}">${l}</text>`;});
+    document.getElementById(elId).innerHTML=
+      `<svg viewBox="0 0 ${W} ${H}">${g}${band}${grid}${avgLine}
+        <path d="${area}" fill="url(#ar${uid})"/>
+        <path d="${line}" fill="none" stroke="url(#ln${uid})" stroke-width="2.4" stroke-linecap="round"/>
+        ${xlab}</svg>`;
+  }
+
+  // ---- Blood Oxygen data (overnight %, mostly 96-98, two dips) ----
+  const spo2=[97,97,98,97,96,97,98,97,96,95,94,95,97,98,97,97,96,97,98,98,97,96,95,94,95,96,97,98,97,97,98,97];
+  overnight('spo2',{data:spo2,lo:90,hi:100,ticks:[90,95,100],bandLo:95,bandHi:100,avg:97,color:'#5dccae',uid:'o2'});
+
+  // ---- Respiratory rate (br/min, steady ~14.3) ----
+  const resp=[14.4,14.2,14.0,14.3,14.5,14.2,13.9,14.1,14.4,14.6,14.3,14.0,13.8,14.1,14.3,14.5,14.2,14.0,14.2,14.4,14.3,14.1,13.9,14.2,14.4,14.3,14.1,14.0,14.2,14.3,14.2,14.1];
+  overnight('resp',{data:resp,lo:12,hi:17,ticks:[12,14,16],bandLo:12,bandHi:16,avg:14.3,color:'#a98fc4',uid:'rr'});
+
+  // ---- VO2 max zone bar ----
+  const zbar=document.getElementById('zbar');
+  zbar.style.background=`linear-gradient(90deg, ${'#e8745a'} 0%, ${'#d3a253'} 42%, ${'#5dccae'} 78%, ${'#9bb0a5'} 100%)`;
+  // marker: VO2 48 on a 20-60 scale -> position
+  const vmin=20,vmax=60,v=48;
+  document.getElementById('zmark').style.left=((v-vmin)/(vmax-vmin)*100)+'%';
+
+  // ---- VO2 small 6-month trend sparkline ----
+  (function(){
+    const d=[45.5,46,46.2,46.8,47.3,48];const n=d.length;
+    const w=340,h=46,pl=2,pr=30,pt=8,pb=6;
+    const lo=44,hi=49;
+    const X=i=>pl+(i/(n-1))*(w-pl-pr), Y=val=>pt+(1-(val-lo)/(hi-lo))*(h-pt-pb);
+    const pts=d.map((val,i)=>[X(i),Y(val)]);
+    const line=smooth(pts);
+    const months=['Jan','','Mar','','May','Now'];
+    let xl='';months.forEach((m,k)=>{if(m){const x=X(k);xl+=`<text x="${x}" y="${h-(-2)}" font-size="8.5" fill="rgba(235,230,216,0.38)" text-anchor="${k===0?'start':k===n-1?'end':'middle'}">${m}</text>`;}});
+    document.getElementById('vspark').innerHTML=
+      `<svg viewBox="0 0 ${w} ${h}"><defs><linearGradient id="vg" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="${hexA('#d3a253',0.5)}"/><stop offset="1" stop-color="#d3a253"/></linearGradient></defs>
+        <text x="${w-pr+5}" y="${Y(48)+3}" font-size="9" fill="rgba(235,230,216,0.40)">48</text>
+        <path d="${line}" fill="none" stroke="url(#vg)" stroke-width="2.2" stroke-linecap="round"/>
+        <circle cx="${pts[n-1][0]}" cy="${pts[n-1][1]}" r="3.2" fill="#d3a253"/>
+        ${xl}</svg>`;
+  })();
+</script>
+</body>
+</html>

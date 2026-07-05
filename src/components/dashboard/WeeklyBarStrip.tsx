@@ -3,7 +3,7 @@ import type { CSSProperties } from "react";
 // Weekly bar strip with the selected day highlighted in white. Each bar shows
 // its value above and a short label below. Reusable across metric detail pages.
 
-const SANS = "'Inter', system-ui, sans-serif";
+const SANS = "var(--font-inter), system-ui, sans-serif";
 
 export interface WeekDay {
   label: string;

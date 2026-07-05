@@ -16,7 +16,7 @@ const SAGE_HOV = "var(--nura-sage-hover)";
 const SAGE_ON = "var(--nura-bg)";
 const SAGE_RGB = "var(--nura-sage-rgb)";
 const RED = "var(--nura-danger)";
-const SANS = "'Inter', system-ui, sans-serif";
+const SANS = "var(--font-inter), system-ui, sans-serif";
 
 // ── Icons ─────────────────────────────────────────────────────────────────────
 function GoogleLogo({ size = 18 }: { size?: number }) {
