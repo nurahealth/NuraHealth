@@ -20,13 +20,15 @@ import type { MetricChartData } from "@/lib/dashboardData";
 //
 // `highTech` is an OPT-IN elevated treatment (used only by the Steps card +
 // Steps detail "Today" chart): lit-glass gradient pills, per-bar colored glow,
-// vertical hour gridlines, a teal hotspot behind the busiest stretch, a glowing
+// vertical hour gridlines, an orange hotspot behind the busiest stretch, a glowing
 // average curve, and a glowing peak readout. When false (the default) the chart
 // renders exactly as before — Heart Rate and every other card are untouched.
 
 const SANS = "var(--font-inter), system-ui, sans-serif";
 const INK = "235,230,216"; // warm-white, matches --nura-fg-rgb (dark)
-const TEAL = "93,204,174";  // --nura-teal, for high-tech glows / hotspot
+// High-tech is a Steps-only treatment → a pure-orange identity (no teal/green).
+const HT_GLOW = "227,162,99"; // #e3a263 orange — high-tech glows / hotspot / peak
+const HT_STOPS: [string, string, string] = ["#f3c795", "#f0bc84", "#e3a263"]; // lightest → light → base
 
 // Ramp stops mirror tokens: teal=--nura-teal, amber=--nura-amber,
 // coral=--nura-alert, sage=--nura-sage, emerald=--nura-optimal.
@@ -122,7 +124,7 @@ export default function MetricChart({
       const h = Math.max(norm * plotH, 2);
       const x = i * slot + (slot - bw) / 2;
       const y = base - h;
-      const [r, g, b] = rampRgb(stops, norm);
+      const [r, g, b] = rampRgb(HT_STOPS, norm);
       const [lr, lg, lb] = lighten([r, g, b], 0.5);
       const rx = Math.min(bw / 2, h / 2); // fully rounded top AND bottom
       const glowR = (2 + norm * 5).toFixed(1);
@@ -166,13 +168,13 @@ export default function MetricChart({
           <defs>
             {defs}
             <radialGradient id={`${uid}-hot`} cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor={`rgba(${TEAL},0.28)`} />
-              <stop offset="60%" stopColor={`rgba(${TEAL},0.10)`} />
-              <stop offset="100%" stopColor={`rgba(${TEAL},0)`} />
+              <stop offset="0%" stopColor={`rgba(${HT_GLOW},0.28)`} />
+              <stop offset="60%" stopColor={`rgba(${HT_GLOW},0.10)`} />
+              <stop offset="100%" stopColor={`rgba(${HT_GLOW},0)`} />
             </radialGradient>
           </defs>
 
-          {/* Teal hotspot behind the most active stretch of the day */}
+          {/* Orange hotspot behind the most active stretch of the day */}
           <ellipse
             cx={peakX.toFixed(1)} cy={((top + base) / 2).toFixed(1)} rx={(slot * 5).toFixed(1)} ry={(plotH * 0.62).toFixed(1)}
             fill={`url(#${uid}-hot)`} style={{ filter: "blur(6px)" }}
@@ -198,7 +200,7 @@ export default function MetricChart({
           {curve && (
             <path
               d={curve} fill="none" stroke={`rgba(${INK},0.55)`} strokeWidth={1.6} strokeDasharray="4 5" strokeLinecap="round"
-              style={{ filter: `drop-shadow(0 0 5px rgba(${TEAL},0.5))` }}
+              style={{ filter: `drop-shadow(0 0 5px rgba(${HT_GLOW},0.5))` }}
             />
           )}
 
@@ -212,7 +214,7 @@ export default function MetricChart({
           {/* Peak readout — label (peak dot removed) */}
           <text
             x={labelX.toFixed(1)} y={labelY.toFixed(1)} textAnchor="middle"
-            fill={`rgb(${INK})`} style={{ fontFamily: SANS, fontSize: 9.5, fontWeight: 700, letterSpacing: "0.5px", filter: `drop-shadow(0 0 5px rgba(${TEAL},0.6))` }}
+            fill="#f3c795" style={{ fontFamily: SANS, fontSize: 9.5, fontWeight: 700, letterSpacing: "0.5px", filter: `drop-shadow(0 0 5px rgba(${HT_GLOW},0.6))` }}
           >
             {peakLabel}
           </text>

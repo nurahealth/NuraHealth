@@ -14,7 +14,6 @@ const TEXT = "var(--nura-text-primary)";
 const MUTED = "var(--nura-text-secondary)";
 const FAINT = "var(--nura-text-tertiary)";
 const GOLD = "var(--nura-amber)";
-const TEAL = "var(--nura-teal)";
 const INK = "var(--nura-fg-rgb)"; // warm off-white in dark mode
 const SANS = "var(--font-inter), system-ui, sans-serif";
 const bStyle: React.CSSProperties = { color: TEXT, fontWeight: 600 };
@@ -118,9 +117,9 @@ export default function StepsDetailPage() {
             format={(n) => n.toLocaleString("en-US")}
             valueFontSize={44}
             labelGap={10}
-            gradientFrom={GOLD}
-            gradientTo={TEAL}
-            glowRgb="var(--nura-amber-rgb)"
+            gradientFrom="#e3a263"
+            gradientTo="#f0bc84"
+            glowRgb="227,162,99"
           />
           <span style={{
             display: "inline-flex", alignItems: "center", gap: 6, marginTop: 18,
@@ -196,7 +195,7 @@ export default function StepsDetailPage() {
 
         {/* NŪRA insight */}
         <GlassCard className="st-reveal" style={{ animationDelay: ".42s", marginTop: 16, borderRadius: 20, padding: 17, position: "relative", overflow: "hidden" }}>
-          <div aria-hidden style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 3, background: "linear-gradient(180deg,var(--nura-amber),var(--nura-teal))", boxShadow: "0 0 16px rgba(var(--nura-amber-rgb),0.5)" }} />
+          <div aria-hidden style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 3, background: "linear-gradient(180deg,#f0bc84,#e3a263)", boxShadow: "0 0 16px rgba(227,162,99,0.5)" }} />
           <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "2.5px", color: GOLD, textTransform: "uppercase" }}>NŪRA</div>
           <p style={{ fontSize: 13.5, lineHeight: 1.6, marginTop: 9 }}>{d.insight}</p>
         </GlassCard>
@@ -212,7 +211,7 @@ export default function StepsDetailPage() {
 
 // ── This-week bar chart ───────────────────────────────────────────────────────
 // Seven daily bars with the step count labeled above each. Days that met the
-// 10k goal are teal with a soft glow; days below are gold. Faint y-axis
+// 10k goal are orange with a soft glow; days below are muted grey. Faint y-axis
 // gridlines (5k/15k), a dashed goal line labeled "10k goal", and weekday labels
 // with today highlighted.
 function StepsWeekChart({ d }: { d: StepsDetail }) {
@@ -226,6 +225,24 @@ function StepsWeekChart({ d }: { d: StepsDetail }) {
 
   return (
     <svg width="100%" height={H} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" style={{ display: "block", overflow: "visible", marginTop: 6 }}>
+      <defs>
+        <linearGradient id="swk-orange" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#f3c795" />
+          <stop offset="1" stopColor="#e3a263" />
+        </linearGradient>
+        <linearGradient id="swk-grey" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#615c53" />
+          <stop offset="1" stopColor="#403c36" />
+        </linearGradient>
+        <filter id="swk-glow" x="-40%" y="-40%" width="180%" height="180%">
+          <feGaussianBlur stdDeviation="2" result="b" />
+          <feMerge>
+            <feMergeNode in="b" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+      </defs>
+
       {/* Gridlines + edge labels */}
       {d.weekGridlines.map((g) => (
         <g key={g}>
@@ -238,18 +255,24 @@ function StepsWeekChart({ d }: { d: StepsDetail }) {
       <line x1={L} y1={yOf(d.weekGoal).toFixed(1)} x2={R} y2={yOf(d.weekGoal).toFixed(1)} stroke={`rgba(${INK},0.4)`} strokeWidth={1} strokeDasharray="4 5" />
       <text x={R + 6} y={yOf(d.weekGoal).toFixed(1)} textAnchor="start" dominantBaseline="central" fontSize={9} fontWeight={600} fill={`rgba(${INK},0.5)`} style={{ fontFamily: SANS }}>10k goal</text>
 
-      {/* Daily bars */}
+      {/* Daily bars — orange (hit goal) vs muted grey (under), soft glow on both */}
       {d.week.map((day, i) => {
         const hit = day.value >= d.weekGoal;
         const x = L + i * slot + (slot - barW) / 2;
         const y = yOf(day.value);
         const h = bot - y;
         return (
-          <g key={i} style={hit ? { filter: "drop-shadow(0 0 5px rgba(var(--nura-teal-rgb),0.55))" } : undefined}>
+          <g key={i}>
             <rect
               x={x.toFixed(1)} y={y.toFixed(1)} width={barW.toFixed(1)} height={Math.max(h, 2).toFixed(1)}
-              rx={6} fill={hit ? TEAL : GOLD} opacity={day.isToday ? 1 : 0.9}
+              rx={6} fill={hit ? "url(#swk-orange)" : "url(#swk-grey)"} filter="url(#swk-glow)"
             />
+            {day.isToday && (
+              <rect
+                x={x.toFixed(1)} y={y.toFixed(1)} width={barW.toFixed(1)} height={Math.max(h, 2).toFixed(1)}
+                rx={6} fill="none" stroke={`rgba(${INK},0.85)`} strokeWidth={1}
+              />
+            )}
             <text x={(x + barW / 2).toFixed(1)} y={(y - 7).toFixed(1)} textAnchor="middle" fontSize={10} fontWeight={700} fill={day.isToday ? TEXT : `rgba(${INK},0.62)`} style={{ fontFamily: SANS }}>
               {(day.value / 1000).toFixed(1)}k
             </text>
@@ -263,15 +286,17 @@ function StepsWeekChart({ d }: { d: StepsDetail }) {
   );
 }
 
-// Literal teal/gold — matches the reference mockup and the page's existing
-// data-strip, which also reaches for #5dccae / #d3a253 directly.
-const TEAL_HEX = "#5dccae";
+// One warm orange identity across the page (no teal/green). GOLD_HEX is the
+// muted "behind / down" indicator; positive/lead accents use ORANGE.
+const ORANGE = "#e3a263";        // base
+const ORANGE_LIGHT = "#f0bc84";  // light
+const ORANGE_RGB = "227,162,99"; // #e3a263
 const GOLD_HEX = "#d3a253";
 
 // ── Card 1 · Pace vs your usual ───────────────────────────────────────────────
 // How today's cumulative steps are tracking against a typical day: a lead line
-// with the live delta, a cumulative line chart (today solid teal vs usual dashed
-// off-white, with the "ahead" gap shaded teal), a key row, and a week-over-week
+// with the live delta, a cumulative line chart (today solid orange vs usual dashed
+// off-white, with the "ahead" gap shaded orange), a key row, and a week-over-week
 // compare row.
 function StepsPaceCard({ d }: { d: StepsDetail }) {
   const last = d.paceToday.length - 1;
@@ -291,7 +316,7 @@ function StepsPaceCard({ d }: { d: StepsDetail }) {
       <div style={{ fontSize: 12.5, color: MUTED, margin: "3px 0 8px" }}>How today is tracking against a typical day</div>
 
       <div style={{ display: "flex", alignItems: "baseline", gap: 9, margin: "10px 0 4px" }}>
-        <span style={{ fontSize: 30, fontWeight: 700, letterSpacing: "-1px", color: ahead ? TEAL_HEX : GOLD_HEX }}>
+        <span style={{ fontSize: 30, fontWeight: 700, letterSpacing: "-1px", color: ahead ? ORANGE : GOLD_HEX }}>
           {ahead ? "▲" : "▼"} {Math.abs(delta).toLocaleString("en-US")}
         </span>
         <span style={{ fontSize: 13, color: MUTED }}>{ahead ? "ahead of" : "behind"} your usual pace by now</span>
@@ -306,7 +331,7 @@ function StepsPaceCard({ d }: { d: StepsDetail }) {
       {/* Key — today (solid) vs usual (dashed) */}
       <div style={{ display: "flex", gap: 16, marginTop: 12, paddingTop: 12, borderTop: "1px solid rgba(235,230,216,0.07)", fontSize: 12, color: MUTED }}>
         <span style={{ display: "flex", alignItems: "center", gap: 7 }}>
-          <span style={{ width: 16, height: 0, borderTop: `2px solid ${TEAL_HEX}`, borderRadius: 2 }} />
+          <span style={{ width: 16, height: 0, borderTop: `2px solid ${ORANGE}`, borderRadius: 2 }} />
           <span><b style={{ color: TEXT, fontWeight: 700 }}>Today</b> · {todaySteps.toLocaleString("en-US")}</span>
         </span>
         <span style={{ display: "flex", alignItems: "center", gap: 7 }}>
@@ -317,15 +342,15 @@ function StepsPaceCard({ d }: { d: StepsDetail }) {
 
       {/* Week over week */}
       <div style={{ display: "flex", alignItems: "center", gap: 7, marginTop: 13, paddingTop: 13, borderTop: "1px solid rgba(235,230,216,0.07)", fontSize: 13, color: MUTED }}>
-        <span style={{ color: up ? TEAL_HEX : GOLD_HEX, fontWeight: 700 }}>{up ? "▲" : "▼"} {Math.abs(pct)}%</span>
+        <span style={{ color: up ? ORANGE : GOLD_HEX, fontWeight: 700 }}>{up ? "▲" : "▼"} {Math.abs(pct)}%</span>
         <span>this week ({d.thisWeekStepTotal.toLocaleString("en-US")}) vs last week ({d.lastWeekStepTotal.toLocaleString("en-US")})</span>
       </div>
     </GlassCard>
   );
 }
 
-// Cumulative pace chart — today's solid teal line over the usual dashed
-// off-white line, with the gap between them shaded faint teal and a glowing dot
+// Cumulative pace chart — today's solid orange line over the usual dashed
+// off-white line, with the gap between them shaded faint orange and a glowing dot
 // at today's current point. Stretches to fill the card width (preserveAspectRatio
 // "none"); the 12a→now axis labels are rendered by the card.
 function StepsPaceChart({ d }: { d: StepsDetail }) {
@@ -345,16 +370,16 @@ function StepsPaceChart({ d }: { d: StepsDetail }) {
 
   return (
     <svg width="100%" height={150} viewBox={`0 0 ${W} 150`} preserveAspectRatio="none" style={{ display: "block" }}>
-      <path d={gap} fill="rgba(93,204,174,0.10)" />
+      <path d={gap} fill="rgba(227,162,99,0.12)" />
       <path d={smooth(up)} fill="none" stroke="rgba(235,230,216,0.5)" strokeWidth={1.6} strokeDasharray="4 5" strokeLinecap="round" />
-      <path d={smooth(tp)} fill="none" stroke={TEAL_HEX} strokeWidth={2.2} strokeLinecap="round" style={{ filter: "drop-shadow(0 0 4px rgba(93,204,174,0.5))" }} />
-      <circle cx={tp[n - 1][0].toFixed(1)} cy={tp[n - 1][1].toFixed(1)} r={3.2} fill={TEAL_HEX} style={{ filter: "drop-shadow(0 0 6px #5dccae)" }} />
+      <path d={smooth(tp)} fill="none" stroke={ORANGE} strokeWidth={2.2} strokeLinecap="round" style={{ filter: "drop-shadow(0 0 4px rgba(227,162,99,0.5))" }} />
+      <circle cx={tp[n - 1][0].toFixed(1)} cy={tp[n - 1][1].toFixed(1)} r={3.2} fill={ORANGE} style={{ filter: `drop-shadow(0 0 6px ${ORANGE})` }} />
     </svg>
   );
 }
 
 // ── Card 2 · Movement ─────────────────────────────────────────────────────────
-// Active vs sedentary through the waking hours: a strip of per-hour blocks (teal
+// Active vs sedentary through the waking hours: a strip of per-hour blocks (orange
 // when active, faint when sedentary), three duration tiles, and a mini-insight.
 function StepsMovementCard({ d }: { d: StepsDetail }) {
   const wakingHours = d.movementHours.length;
@@ -377,8 +402,8 @@ function StepsMovementCard({ d }: { d: StepsDetail }) {
             key={i}
             style={{
               flex: 1, height: 30, borderRadius: 4,
-              background: s === "a" ? `linear-gradient(180deg, #7fe0c6, ${TEAL_HEX})` : "rgba(235,230,216,0.07)",
-              boxShadow: s === "a" ? "0 0 8px rgba(93,204,174,0.35)" : undefined,
+              background: s === "a" ? `linear-gradient(180deg, ${ORANGE_LIGHT}, ${ORANGE})` : "rgba(235,230,216,0.07)",
+              boxShadow: s === "a" ? `0 0 8px rgba(${ORANGE_RGB},0.35)` : undefined,
             }}
           />
         ))}
@@ -399,7 +424,7 @@ function StepsMovementCard({ d }: { d: StepsDetail }) {
 
       {/* Mini-insight */}
       <div style={{ display: "flex", gap: 9, alignItems: "flex-start", marginTop: 14, paddingTop: 13, borderTop: "1px solid rgba(235,230,216,0.07)", fontSize: 12.5, lineHeight: 1.45, color: MUTED }}>
-        <span style={{ width: 6, height: 6, borderRadius: "50%", background: TEAL_HEX, marginTop: 5, flex: "none", boxShadow: "0 0 7px #5dccae" }} />
+        <span style={{ width: 6, height: 6, borderRadius: "50%", background: ORANGE, marginTop: 5, flex: "none", boxShadow: `0 0 7px ${ORANGE}` }} />
         <span>
           You moved during <b style={{ color: TEXT, fontWeight: 700 }}>{activeHours} of {wakingHours}</b> waking hours. Your longest unbroken sit was{" "}
           <b style={{ color: TEXT, fontWeight: 700 }}>{d.longestSit}</b> around {d.longestSitWhen} — a 5-minute walk in that window would break it up and is where most easy wins hide.
