@@ -101,10 +101,12 @@ function HrvMiniRing({ hrv }: { hrv: number }) {
         />
       </svg>
 
-      {/* centered content — value + a smaller "ms" inline on one line */}
-      <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "baseline", justifyContent: "center", gap: 4, lineHeight: 1 }}>
-        <span style={{ fontFamily: SANS, fontSize: 32, fontWeight: 700, color: TEXT, letterSpacing: "-0.02em", textShadow: `0 0 14px rgba(${AQUA_RGB},0.3)` }}>{num}</span>
-        <span style={{ fontFamily: SANS, fontSize: 12, fontWeight: 600, color: TEXT_SEC }}>ms</span>
+      {/* centered content — dead-center in the ring; value + a smaller "ms" inline */}
+      <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ display: "inline-flex", alignItems: "baseline", gap: 4, lineHeight: 1 }}>
+          <span style={{ fontFamily: SANS, fontSize: 32, fontWeight: 700, color: TEXT, letterSpacing: "-0.02em", textShadow: `0 0 14px rgba(${AQUA_RGB},0.3)` }}>{num}</span>
+          <span style={{ fontFamily: SANS, fontSize: 12, fontWeight: 600, color: TEXT_SEC }}>ms</span>
+        </div>
       </div>
     </div>
   );
