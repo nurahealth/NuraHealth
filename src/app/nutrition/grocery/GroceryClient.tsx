@@ -4,7 +4,7 @@ import { useState, useMemo, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { ArrowLeft, ShoppingBasket, Plus, Check, Trash2, X, RefreshCw, Loader2 } from "lucide-react";
+import { ArrowLeft, ShoppingBasket, Plus, Check, Trash2, X, RefreshCw, RotateCcw, Loader2 } from "lucide-react";
 
 // ── Design tokens (locked system — same as the rest of /nutrition) ────────────
 const TEXT = "var(--nura-text-primary)";
@@ -32,6 +32,16 @@ const CATEGORY_OPTIONS = ["root-spice", "greens", "legumes", "good-fats", "ferme
 
 function pretty(t: string): string {
   return t.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+// Normalized ingredient key for dedup — trimmed, lower-cased name.
+function nameKey(s: string): string {
+  return s.trim().toLowerCase();
+}
+
+// Split an amount_text back into its individual " · "-joined parts.
+function amountParts(s: string | null): string[] {
+  return (s ?? "").split(" · ").map((p) => p.trim()).filter(Boolean);
 }
 
 export interface GroceryItem {
@@ -107,27 +117,97 @@ export default function GroceryClient({ items: initial, planItems, tableReady, u
     setRemovingId(null);
   };
 
-  // ── Refresh from plan (add new plan ingredients; never duplicate/clobber) ────
+  // ── Refresh from plan ────────────────────────────────────────────────────────
+  // Matches plan ingredients to existing rows by name: merges amounts into an
+  // existing PLAN row, skips names already present as a MANUAL row (never touched),
+  // and only inserts genuinely-new ingredients — so it can never make a duplicate.
   const refreshFromPlan = async () => {
     if (refreshing) return;
     setRefreshing(true); setError(""); setInfo("");
-    const existing = new Set(items.map((i) => i.name.trim().toLowerCase()));
-    const toAdd = planItems.filter((p) => !existing.has(p.name.trim().toLowerCase()));
-    if (toAdd.length === 0) {
+
+    const byName = new Map(items.map((i) => [nameKey(i.name), i]));
+
+    // Collapse the incoming plan items by name first (defensive), unioning amounts.
+    const planByName = new Map<string, PlanItem>();
+    for (const p of planItems) {
+      const k = nameKey(p.name);
+      const prev = planByName.get(k);
+      if (prev) {
+        const amts = new Set([...amountParts(prev.amount_text), ...amountParts(p.amount_text)]);
+        prev.amount_text = amts.size ? [...amts].join(" · ") : null;
+      } else {
+        planByName.set(k, { ...p });
+      }
+    }
+
+    const toInsert: PlanItem[] = [];
+    const toUpdate: { item: GroceryItem; amount_text: string | null }[] = [];
+    for (const [k, p] of planByName) {
+      const existing = byName.get(k);
+      if (!existing) { toInsert.push(p); continue; }
+      if (existing.source === "manual") continue; // leave manual items alone
+      const amts = new Set([...amountParts(existing.amount_text), ...amountParts(p.amount_text)]);
+      const merged = amts.size ? [...amts].join(" · ") : null;
+      if (merged !== existing.amount_text) toUpdate.push({ item: existing, amount_text: merged });
+    }
+
+    if (toInsert.length === 0 && toUpdate.length === 0) {
       setInfo("Your list is already up to date with this week's plan.");
       setRefreshing(false);
       return;
     }
-    let s = nextSort();
-    const rows = toAdd.map((p) => ({ user_id: userId, name: p.name, amount_text: p.amount_text, category: p.category, source: "plan" as const, is_checked: false, sort_order: s++ }));
-    const { data, error: e } = await supabase
+
+    try {
+      for (const u of toUpdate) {
+        const { error: e } = await supabase
+          .from("grocery_items")
+          .update({ amount_text: u.amount_text, updated_at: new Date().toISOString() })
+          .eq("id", u.item.id)
+          .eq("user_id", userId);
+        if (e) throw e;
+      }
+
+      let inserted: GroceryItem[] = [];
+      if (toInsert.length) {
+        let s = nextSort();
+        const rows = toInsert.map((p) => ({ user_id: userId, name: p.name, amount_text: p.amount_text, category: p.category, source: "plan" as const, is_checked: false, sort_order: s++ }));
+        const { data, error: e } = await supabase
+          .from("grocery_items")
+          .insert(rows)
+          .select("id, name, amount_text, category, is_checked, source, sort_order");
+        if (e) throw e;
+        inserted = (data ?? []) as GroceryItem[];
+      }
+
+      setItems((prev) => {
+        const upd = new Map(toUpdate.map((u) => [u.item.id, u.amount_text]));
+        const nextRows = prev.map((i) => (upd.has(i.id) ? { ...i, amount_text: upd.get(i.id)! } : i));
+        return [...nextRows, ...inserted];
+      });
+
+      const parts: string[] = [];
+      if (inserted.length) parts.push(`added ${inserted.length} new item${inserted.length === 1 ? "" : "s"}`);
+      if (toUpdate.length) parts.push(`merged ${toUpdate.length}`);
+      setInfo(`Refreshed from your plan — ${parts.join(", ")}.`);
+    } catch {
+      setError("Couldn't refresh from your plan. Please try again.");
+      router.refresh();
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  // ── Uncheck all (reset the list for the next shopping trip) ──────────────────
+  const uncheckAll = async () => {
+    const checkedIds = items.filter((i) => i.is_checked).map((i) => i.id);
+    if (checkedIds.length === 0) return;
+    setItems((prev) => prev.map((i) => (i.is_checked ? { ...i, is_checked: false } : i)));
+    const { error: e } = await supabase
       .from("grocery_items")
-      .insert(rows)
-      .select("id, name, amount_text, category, is_checked, source, sort_order");
-    if (e) { setError("Couldn't refresh from your plan. Please try again."); setRefreshing(false); return; }
-    setItems((prev) => [...prev, ...((data ?? []) as GroceryItem[])]);
-    setInfo(`Added ${(data ?? []).length} new item${(data ?? []).length === 1 ? "" : "s"} from your plan.`);
-    setRefreshing(false);
+      .update({ is_checked: false, updated_at: new Date().toISOString() })
+      .in("id", checkedIds)
+      .eq("user_id", userId);
+    if (e) { setError("Couldn't reset the list. Refreshing…"); router.refresh(); }
   };
 
   // ── Grouping + counter ──────────────────────────────────────────────────────
@@ -144,7 +224,10 @@ export default function GroceryClient({ items: initial, planItems, tableReady, u
     return cats.map((cat) => ({
       category: cat,
       label: CATEGORY_LABELS[cat] ?? pretty(cat),
-      items: byCat.get(cat)!.slice().sort((a, b) => (a.is_checked ? 1 : 0) - (b.is_checked ? 1 : 0) || a.sort_order - b.sort_order || a.name.localeCompare(b.name)),
+      // Stable position — do NOT reorder on check, or a tapped row visibly jumps
+      // past its neighbor and looks like the wrong item toggled. Checked rows dim
+      // in place instead.
+      items: byCat.get(cat)!.slice().sort((a, b) => a.sort_order - b.sort_order || a.name.localeCompare(b.name)),
     }));
   }, [items]);
 
@@ -188,9 +271,20 @@ export default function GroceryClient({ items: initial, planItems, tableReady, u
         <div style={{ fontFamily: SANS, fontSize: 11, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", color: SAGE, marginBottom: 8 }}>This week</div>
         <h1 style={heading}>Grocery list</h1>
         {total > 0 && (
-          <p style={{ fontFamily: SANS, fontSize: 13.5, color: TEXT_SEC, margin: "8px 0 0" }}>
-            {got} of {total} got · {total - got} to go
-          </p>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "8px 0 0", flexWrap: "wrap" }}>
+            <p style={{ fontFamily: SANS, fontSize: 13.5, color: TEXT_SEC, margin: 0 }}>
+              {got} of {total} got · {total - got} to go
+            </p>
+            {got > 0 && (
+              <button
+                onClick={uncheckAll}
+                className="gl-uncheck"
+                style={{ display: "inline-flex", alignItems: "center", gap: 5, fontFamily: SANS, fontSize: 11.5, fontWeight: 600, color: TEXT_SEC, background: "transparent", border: `0.5px solid ${BORDER}`, borderRadius: 999, padding: "4px 10px", cursor: "pointer", transition: "color 160ms, border-color 160ms" }}
+              >
+                <RotateCcw size={11} /> Uncheck all
+              </button>
+            )}
+          </div>
         )}
       </div>
 
@@ -245,6 +339,7 @@ export default function GroceryClient({ items: initial, planItems, tableReady, u
         @keyframes spin { to { transform: rotate(360deg); } }
         .gl-row:hover { border-color: rgba(${SAGE_RGB},0.4); }
         .gl-trash:hover { border-color: rgba(255,76,92,0.45) !important; color: ${DANGER} !important; }
+        .gl-uncheck:hover { border-color: rgba(${SAGE_RGB},0.45); color: ${SAGE}; }
       `}</style>
     </div>
   );
