@@ -23,6 +23,7 @@ import BodyTempCardRing from "@/components/dashboard/BodyTempCardRing";
 import OverallHealthCard from "@/components/dashboard/OverallHealthCard";
 import HealthPlanCard from "@/components/dashboard/HealthPlanCard";
 import CustomizeSheet from "@/components/dashboard/CustomizeSheet";
+import HrvCard from "@/components/dashboard/HrvCard";
 import BloodOxygenCard from "@/components/dashboard/BloodOxygenCard";
 import RespiratoryRateCard from "@/components/dashboard/RespiratoryRateCard";
 import CardioFitnessCard from "@/components/dashboard/CardioFitnessCard";
@@ -137,6 +138,7 @@ export default function DashboardPage() {
       <div className="dash-grid" style={{ marginTop: 16 }}>
         {vis.visible.map((m) => {
           const go = () => router.push(`/dashboard/${m.id}`);
+          if (m.id === "hrv") return <HrvCard key={m.id} metric={m} onClick={go} />;
           if (m.id === "blood-oxygen") return <BloodOxygenCard key={m.id} metric={m} onClick={go} />;
           if (m.id === "respiratory-rate") return <RespiratoryRateCard key={m.id} metric={m} onClick={go} />;
           if (m.id === "cardio-fitness") return <CardioFitnessCard key={m.id} metric={m} onClick={go} />;

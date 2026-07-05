@@ -278,3 +278,64 @@ export async function logWorkoutCompletion(args: {
   if (error) return { ok: false, needsMigration: isMissingTable(error), error: error.message };
   return { ok: true };
 }
+
+// ── Body & weight metrics ────────────────────────────────────────────────────
+// One row per weigh-in. Powers the Progress screen's "Body" section.
+
+export type BodyMetric = {
+  id: string;
+  recorded_on: string;      // 'YYYY-MM-DD'
+  weight: number | null;
+  unit: string;             // 'lb' | 'kg'
+  body_fat_pct: number | null;
+  waist: number | null;
+  notes: string | null;
+  created_at: string;
+};
+
+// Same missing-table guard as loadCompletions — degrade cleanly until the
+// body_metrics migration is applied.
+function isMissingBodyTable(err: { code?: string; message?: string } | null): boolean {
+  if (!err) return false;
+  if (err.code === 'PGRST205' || err.code === '42P01') return true;
+  return /body_metrics/.test(err.message ?? '') && /(schema cache|does not exist)/i.test(err.message ?? '');
+}
+
+// All weigh-ins for the signed-in user, oldest → newest (chart order). Returns
+// [] when the table isn't there yet, so the Body section shows the empty prompt.
+export async function loadBodyMetrics(): Promise<BodyMetric[]> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return [];
+  const { data, error } = await supabase
+    .from('body_metrics')
+    .select('id, recorded_on, weight, unit, body_fat_pct, waist, notes, created_at')
+    .eq('user_id', user.id)
+    .order('recorded_on', { ascending: true })
+    .order('created_at', { ascending: true });
+  if (error) return [];
+  return (data as BodyMetric[] | null) ?? [];
+}
+
+export type LogBodyMetricResult = { ok: true } | { ok: false; needsMigration: boolean; error: string };
+
+// Insert one weigh-in dated today (recorded_on defaults to current_date in DB).
+export async function logBodyMetric(args: {
+  weight: number;
+  unit: string;
+  bodyFatPct?: number | null;
+  waist?: number | null;
+  notes?: string | null;
+}): Promise<LogBodyMetricResult> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { ok: false, needsMigration: false, error: 'Not signed in.' };
+  const { error } = await supabase.from('body_metrics').insert({
+    user_id: user.id,
+    weight: args.weight,
+    unit: args.unit,
+    body_fat_pct: args.bodyFatPct ?? null,
+    waist: args.waist ?? null,
+    notes: args.notes ?? null,
+  });
+  if (error) return { ok: false, needsMigration: isMissingBodyTable(error), error: error.message };
+  return { ok: true };
+}

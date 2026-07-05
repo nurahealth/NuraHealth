@@ -1,9 +1,9 @@
 "use client";
 
+import { useEffect, useId, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getRecoveryDetail, type HrvTrendChart, type RecoveryDriver } from "@/lib/dashboardData";
+import { getMetric, getRecoveryDetail, type HrvTrendChart, type RecoveryDriver } from "@/lib/dashboardData";
 import AuroraBackground from "@/components/dashboard/AuroraBackground";
-import RadialGauge from "@/components/dashboard/RadialGauge";
 import GlassCard from "@/components/dashboard/GlassCard";
 import MetricEducation, { type MetricEducationItem } from "@/components/dashboard/MetricEducation";
 
@@ -11,16 +11,27 @@ import MetricEducation, { type MetricEducationItem } from "@/components/dashboar
 const TEXT = "var(--nura-text-primary)";
 const MUTED = "var(--nura-text-secondary)";
 const FAINT = "var(--nura-text-tertiary)";
-const EMERALD = "var(--nura-optimal)";
-const SAGE = "var(--nura-sage)";
 const INK = "var(--nura-fg-rgb)"; // warm off-white in dark mode
 const SANS = "var(--font-inter), system-ui, sans-serif";
 const bStyle: React.CSSProperties = { color: TEXT, fontWeight: 600 };
 
-// Status level → color token (emerald = strong, sage = solid, gold = watch).
+// Aqua-teal identity for the whole page (ring, pill, chart, accents).
+const AQUA = "#4fc4d6";
+const AQUA_LIGHT = "#7fdce8";
+const AQUA_RGB = "79,196,214"; // #4fc4d6
+const AQUA_LIGHT_RGB = "127,220,232"; // #7fdce8
+
+// Subtle dark-aqua ambient at the top of the page (fades to near-black).
+const AQUA_AURORA =
+  "radial-gradient(80% 60% at 50% -6%, rgba(79,196,214,0.20), transparent 60%)," +
+  "radial-gradient(60% 50% at 86% 6%, rgba(79,196,214,0.10), transparent 60%)," +
+  "radial-gradient(70% 40% at 8% 14%, rgba(79,196,214,0.10), transparent 60%)";
+
+// Status level → color token. Strong/solid ride the aqua theme; watch stays gold
+// as a distinct "keep an eye on it" signal.
 const LEVEL_COLOR: Record<RecoveryDriver["level"], string> = {
-  strong: "var(--nura-optimal)",
-  solid: "var(--nura-sage)",
+  strong: AQUA,
+  solid: AQUA_LIGHT,
   watch: "var(--nura-good)",
 };
 
@@ -32,10 +43,122 @@ const InfoIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="9" /><path d="M12 11v5M12 8h.01" strokeLinecap="round" /></svg>
 );
 
+// ── Animated aqua-teal HRV ring hero ──────────────────────────────────────────
+// A 270° aqua ring (gap at bottom-center): a faint full-arc track + an aqua-teal
+// gradient fill that loads up on mount while the centered number counts up from
+// ~30 to the value. Higher HRV is better, so the fill represents strength:
+// clamp((hrv − 20) / 70, 0, 1) — 62 ms ≈ 60% filled. No ECG/heartbeat: HRV is an
+// overnight summary, not a live metric. All motion is disabled under
+// prefers-reduced-motion (ring already filled, number at its final value).
+const RING_FROM = AQUA;
+const RING_TO = AQUA_LIGHT;
+const RING_GLOW = AQUA_RGB; // RGB triplet for the aqua glow
+const COUNT_FROM = 30; // count-up start
+const FILL_MS = 1400;
+
+function HrvRing({ hrv }: { hrv: number }) {
+  const rawId = useId();
+  const gid = `hrvring-${rawId.replace(/[^a-zA-Z0-9]/g, "")}`;
+
+  // Geometry — a 270° arc with the gap centered at the bottom (mirrors RadialGauge).
+  const size = 236;
+  const stroke = 13;
+  const pad = 16; // breathing room so the glow isn't clipped
+  const box = size + pad * 2;
+  const r = (size - stroke) / 2;
+  const c = box / 2;
+  const circ = 2 * Math.PI * r;
+  const arc = 270;
+  const arcLen = circ * (arc / 360);
+  // Higher HRV is better, so map 20→90 ms onto 0→1 fill strength.
+  const frac = Math.max(0, Math.min(1, (hrv - 20) / 70));
+  const target = arcLen * (1 - frac);
+  const rotation = -(90 + arc / 2); // -225° → gap centered at bottom
+
+  const [offset, setOffset] = useState(arcLen); // start empty
+  const [num, setNum] = useState(COUNT_FROM);
+  const [reduced, setReduced] = useState(false);
+  const rafRef = useRef(0);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    if (mq.matches) {
+      setReduced(true);
+      setOffset(target); // already filled
+      setNum(hrv); // final value, no count-up
+      return;
+    }
+    // Defer one tick so the empty→target fill transition actually plays.
+    const t = setTimeout(() => setOffset(target), 60);
+    // Count the number up from COUNT_FROM → hrv over the same ~1.4s (ease-out).
+    const ease = (p: number) => 1 - Math.pow(1 - p, 3);
+    let startTs = 0;
+    const stepFn = (ts: number) => {
+      if (!startTs) startTs = ts;
+      const p = Math.min(1, (ts - startTs) / FILL_MS);
+      setNum(Math.round(COUNT_FROM + (hrv - COUNT_FROM) * ease(p)));
+      if (p < 1) rafRef.current = requestAnimationFrame(stepFn);
+    };
+    rafRef.current = requestAnimationFrame(stepFn);
+    return () => { clearTimeout(t); cancelAnimationFrame(rafRef.current); };
+  }, [target, hrv]);
+
+  return (
+    <div style={{ position: "relative", width: size, height: size, margin: "0 auto" }}>
+      <svg
+        width={box} height={box} viewBox={`0 0 ${box} ${box}`}
+        style={{ position: "absolute", top: -pad, left: -pad, transform: `rotate(${rotation}deg)`, overflow: "visible", pointerEvents: "none" }}
+      >
+        <defs>
+          <linearGradient id={gid} x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stopColor={RING_FROM} />
+            <stop offset="1" stopColor={RING_TO} />
+          </linearGradient>
+        </defs>
+        {/* faint full 270° track */}
+        <circle
+          cx={c} cy={c} r={r} fill="none" stroke={`rgba(${RING_GLOW},0.14)`}
+          strokeWidth={stroke} strokeLinecap="round" strokeDasharray={`${arcLen} ${circ}`}
+        />
+        {/* aqua-teal gradient fill — loads up to the reading strength */}
+        <circle
+          cx={c} cy={c} r={r} fill="none"
+          stroke={`url(#${gid})`} strokeWidth={stroke} strokeLinecap="round"
+          strokeDasharray={`${arcLen} ${circ}`} strokeDashoffset={offset}
+          style={{
+            filter: `drop-shadow(0 0 7px rgba(${RING_GLOW},0.6))`,
+            transition: reduced ? "none" : `stroke-dashoffset ${FILL_MS}ms cubic-bezier(.2,.7,.2,1)`,
+          }}
+        />
+      </svg>
+
+      {/* centered content — count-up number + muted label */}
+      <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ display: "inline-flex", alignItems: "baseline", gap: 7, lineHeight: 1 }}>
+          <span style={{ fontSize: 58, fontWeight: 800, letterSpacing: "-2px", color: TEXT, textShadow: `0 0 18px rgba(${RING_GLOW},0.35)` }}>{num}</span>
+          <span style={{ fontSize: 18, fontWeight: 600, color: MUTED }}>ms</span>
+        </div>
+        <div style={{ fontSize: 13, color: MUTED, marginTop: 8 }}>Heart rate variability</div>
+      </div>
+    </div>
+  );
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 export default function RecoveryDetailPage() {
   const router = useRouter();
   const d = getRecoveryDetail();
+
+  // Hero number + ring fill + count-up target all read the real HRV metric
+  // (dev fallback to the recovery payload / 62 if it's ever missing).
+  const hrvMetric = getMetric("hrv");
+  const hrv = hrvMetric?.value ?? d.hrv.current ?? 62;
+
+  // Status pill, driven by real data: "{Status} · trending {up|down} 7 days".
+  const status = hrvMetric?.status ?? "optimal";
+  const pillStatus = status.charAt(0).toUpperCase() + status.slice(1);
+  const trendUp = (hrvMetric?.delta?.dir ?? "up") === "up";
+  const pillText = `${pillStatus} · trending ${trendUp ? "up" : "down"} 7 days`;
 
   // "Your number" is built from the same HRV data the hero/trend use: the rolling
   // 7-day average and the "7-day baseline" tile — so it tracks live or dev-fallback
@@ -71,7 +194,7 @@ export default function RecoveryDetailPage() {
     <div style={{
       position: "relative", minHeight: "100dvh", overflow: "hidden",
       color: TEXT, fontFamily: SANS,
-      background: "radial-gradient(130% 80% at 50% -8%, #0d2c27 0%, #081514 34%, var(--nura-bg) 72%)",
+      background: "radial-gradient(130% 80% at 50% -8%, #0c2e33 0%, #07181b 34%, var(--nura-bg) 72%)",
     }}>
       <style>{`
         .r-reveal { opacity: 0; transform: translateY(18px); animation: r-rise .7s cubic-bezier(.2,.7,.2,1) forwards; }
@@ -80,7 +203,7 @@ export default function RecoveryDetailPage() {
         * { font-variant-numeric: tabular-nums; }
       `}</style>
 
-      <AuroraBackground />
+      <AuroraBackground gradient={AQUA_AURORA} />
 
       <div style={{ position: "relative", zIndex: 1, maxWidth: 480, margin: "0 auto", padding: "calc(env(safe-area-inset-top, 0px) + 46px) 18px 44px" }}>
         {/* Header shell — back · NŪRA wordmark · info */}
@@ -103,24 +226,17 @@ export default function RecoveryDetailPage() {
         </h1>
         <div className="r-reveal" style={{ animationDelay: ".05s", color: MUTED, fontSize: 14, marginBottom: 6 }}>{d.subtitle}</div>
 
-        {/* Hero — recovery gauge + status pill */}
-        <div className="r-reveal" style={{ animationDelay: ".1s", display: "flex", flexDirection: "column", alignItems: "center", padding: "14px 0 6px" }}>
-          <RadialGauge
-            value={d.score}
-            label="Recovery"
-            size={180}
-            stroke={12}
-            gradientFrom="var(--nura-sage)"
-            gradientTo="var(--nura-optimal)"
-            glowRgb="var(--nura-optimal-rgb)"
-          />
+        {/* Hero — animated aqua HRV ring (fill = reading strength) + status pill */}
+        <div className="r-reveal" style={{ animationDelay: ".1s", textAlign: "center", padding: "16px 0 2px" }}>
+          <HrvRing hrv={hrv} />
+
           <span style={{
-            display: "inline-flex", alignItems: "center", gap: 6, marginTop: 12,
+            display: "inline-flex", alignItems: "center", gap: 6, marginTop: 20,
             padding: "6px 15px", borderRadius: 999, fontSize: 12, fontWeight: 600, letterSpacing: "0.5px",
-            color: EMERALD, border: "1px solid rgba(var(--nura-optimal-rgb),0.4)",
+            color: RING_FROM, border: `1px solid rgba(${RING_GLOW},0.4)`,
           }}>
-            <span style={{ width: 6, height: 6, borderRadius: "50%", background: EMERALD, boxShadow: "0 0 8px var(--nura-optimal)" }} />
-            {d.pill}
+            <span style={{ width: 6, height: 6, borderRadius: "50%", background: RING_FROM, boxShadow: `0 0 8px rgba(${RING_GLOW},0.9)` }} />
+            {pillText}
           </span>
         </div>
 
@@ -130,7 +246,7 @@ export default function RecoveryDetailPage() {
             <span style={{ fontSize: 15, fontWeight: 600 }}>HRV · 7-day trend</span>
             <span style={{ fontSize: 13, color: MUTED }}>
               <b style={{ color: TEXT, fontWeight: 700, fontSize: 18 }}>{d.hrv.current}</b> ms{" "}
-              <span style={{ color: EMERALD, fontWeight: 600 }}>▲ {d.hrv.delta}</span>
+              <span style={{ color: RING_FROM, fontWeight: 600 }}>▲ {d.hrv.delta}</span>
             </span>
           </div>
           <div style={{ fontSize: 12.5, color: MUTED, margin: "3px 0 8px" }}>
@@ -178,14 +294,14 @@ export default function RecoveryDetailPage() {
 
         {/* NŪRA insight */}
         <GlassCard className="r-reveal" style={{ animationDelay: ".44s", marginTop: 16, borderRadius: 20, padding: 17, position: "relative", overflow: "hidden" }}>
-          <div aria-hidden style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 3, background: "linear-gradient(180deg,var(--nura-sage),var(--nura-optimal))", boxShadow: "0 0 16px rgba(var(--nura-optimal-rgb),0.5)" }} />
-          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "2.5px", color: EMERALD, textTransform: "uppercase" }}>NŪRA</div>
+          <div aria-hidden style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 3, background: `linear-gradient(180deg, ${RING_FROM}, ${RING_TO})`, boxShadow: `0 0 16px rgba(${RING_GLOW},0.5)` }} />
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "2.5px", color: AQUA, textTransform: "uppercase" }}>NŪRA</div>
           <p style={{ fontSize: 13.5, lineHeight: 1.6, marginTop: 9 }}>{d.insight}</p>
         </GlassCard>
 
         {/* Understanding (shared MetricEducation) */}
         <div className="r-reveal" style={{ animationDelay: ".52s", marginTop: 16 }}>
-          <MetricEducation accent={EMERALD} title="Understanding your HRV" items={eduItems} />
+          <MetricEducation accent={AQUA} title="Understanding your HRV" items={eduItems} />
         </div>
       </div>
     </div>
@@ -193,9 +309,9 @@ export default function RecoveryDetailPage() {
 }
 
 // ── HRV zone-band line chart ──────────────────────────────────────────────────
-// Shaded optimal-zone band, dashed rolling-average line, a white glowing line
-// with a glowing dot on each day (the latest day larger + emerald glow), and
-// y-axis gridline labels. Mirrors the HRV dashboard-card chart in the reference.
+// Shaded optimal-zone band, dashed rolling-average line, an aqua glowing line
+// with a glowing dot on each day (the latest day larger + brighter aqua glow),
+// and y-axis gridline labels. Mirrors the HRV dashboard-card chart in the reference.
 function HrvZoneChart({ hrv }: { hrv: HrvTrendChart }) {
   const { values, zone, average, floor, ceil, gridlines } = hrv;
   const W = 356, H = 150, L = 24, R = 352, top = 10, bot = 120;
@@ -211,9 +327,9 @@ function HrvZoneChart({ hrv }: { hrv: HrvTrendChart }) {
       {/* Optimal-zone band */}
       <rect
         x={L} y={yOf(zone[1]).toFixed(1)} width={plotW} height={(yOf(zone[0]) - yOf(zone[1])).toFixed(1)}
-        rx={7} fill="rgba(var(--nura-optimal-rgb),0.12)"
+        rx={7} fill={`rgba(${AQUA_RGB},0.12)`}
       />
-      <text x={R - 5} y={(yOf(zone[1]) + 14).toFixed(1)} textAnchor="end" fontSize={10} fontWeight={600} fill={EMERALD} style={{ fontFamily: SANS }}>
+      <text x={R - 5} y={(yOf(zone[1]) + 14).toFixed(1)} textAnchor="end" fontSize={10} fontWeight={600} fill={AQUA} style={{ fontFamily: SANS }}>
         Optimal zone
       </text>
 
@@ -229,12 +345,12 @@ function HrvZoneChart({ hrv }: { hrv: HrvTrendChart }) {
       <line x1={L} y1={yOf(average).toFixed(1)} x2={R} y2={yOf(average).toFixed(1)} stroke={`rgba(${INK},0.4)`} strokeWidth={1} strokeDasharray="4 5" />
       <text x={L + 2} y={(yOf(average) - 4).toFixed(1)} fontSize={9} fill={`rgba(${INK},0.45)`} style={{ fontFamily: SANS }}>avg {average}</text>
 
-      {/* Daily line + dots */}
-      <polyline points={poly} fill="none" stroke={`rgb(${INK})`} strokeWidth={2.6} strokeLinecap="round" strokeLinejoin="round" style={{ filter: `drop-shadow(0 0 4px rgba(${INK},0.4))` }} />
+      {/* Daily line + dots (aqua) */}
+      <polyline points={poly} fill="none" stroke={AQUA} strokeWidth={2.6} strokeLinecap="round" strokeLinejoin="round" style={{ filter: `drop-shadow(0 0 4px rgba(${AQUA_RGB},0.55))` }} />
       {pts.map((p, i) => (
         <circle
-          key={i} cx={p.x.toFixed(1)} cy={p.y.toFixed(1)} r={i === last ? 4.4 : 3.4} fill={`rgb(${INK})`}
-          style={{ filter: i === last ? "drop-shadow(0 0 6px rgba(var(--nura-optimal-rgb),0.95))" : `drop-shadow(0 0 3px rgba(${INK},0.55))` }}
+          key={i} cx={p.x.toFixed(1)} cy={p.y.toFixed(1)} r={i === last ? 4.4 : 3.4} fill={i === last ? AQUA_LIGHT : AQUA}
+          style={{ filter: i === last ? `drop-shadow(0 0 6px rgba(${AQUA_LIGHT_RGB},0.95))` : `drop-shadow(0 0 3px rgba(${AQUA_RGB},0.55))` }}
         />
       ))}
     </svg>

@@ -4,11 +4,12 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import {
-  selectPlannedMeals,
   DIETARY_PATTERNS,
   type NutritionPrefs,
   type CandidateRecipe,
 } from "@/lib/nutrition";
+import { buildDayPlan, type FlaggedMarker, type MarkerFoodMap } from "@/lib/mealScoring";
+import { insertPlannedMeals, toInsertRows } from "@/lib/plannedMealsIO";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Customize meals — bottom sheet (mirrors the dashboard CustomizeSheet pattern:
@@ -67,14 +68,16 @@ export default function NutritionCustomizeSheet({
   initialPrefs,
   userId,
   candidates,
-  flaggedSlugs,
+  flaggedMarkers,
+  markerFoods,
 }: {
   open: boolean;
   onClose: () => void;
   initialPrefs: NutritionPrefs;
   userId: string;
   candidates: CandidateRecipe[];
-  flaggedSlugs: string[];
+  flaggedMarkers: FlaggedMarker[];
+  markerFoods: MarkerFoodMap;
 }) {
   const router = useRouter();
   const [pattern, setPattern] = useState(initialPrefs.dietary_pattern ?? "");
@@ -118,20 +121,9 @@ export default function NutritionCustomizeSheet({
         .eq("plan_date", today);
       if (dErr) throw dErr;
 
-      const rows = selectPlannedMeals({ recipes: candidates, flaggedSlugs, prefs: newPrefs });
-      if (rows.length > 0) {
-        const { error: iErr } = await supabase.from("planned_meals").insert(
-          rows.map((r) => ({
-            user_id: userId,
-            plan_date: today,
-            meal_slot: r.meal_slot,
-            recipe_id: r.recipe_id,
-            target_marker_slug: r.target_marker_slug,
-            order_index: r.order_index,
-          }))
-        );
-        if (iErr) throw iErr;
-      }
+      const rows = buildDayPlan({ recipes: candidates, flagged: flaggedMarkers, markerFoods, prefs: newPrefs });
+      const iErr = await insertPlannedMeals(supabase, toInsertRows(rows, userId, today));
+      if (iErr) throw new Error(iErr.message);
       onClose();
       router.refresh();
     } catch {

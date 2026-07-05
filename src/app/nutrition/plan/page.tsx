@@ -14,6 +14,8 @@ import {
   type MarkerDirection,
   type NutritionPrefs,
 } from "@/lib/nutrition";
+import { type FlaggedMarker, type MarkerFoodMap } from "@/lib/mealScoring";
+import { selectPlannedMealsWithReason } from "@/lib/plannedMealsIO";
 
 export const dynamic = "force-dynamic";
 
@@ -50,13 +52,20 @@ export default async function WeekPlanPage() {
   const end = dates[dates.length - 1];
   const today = start;
 
+  type PlannedRow = {
+    id: string; plan_date: string; meal_slot: string; target_marker_slug: string | null; order_index: number;
+    reason?: string | null;
+    recipes: { slug: string; title: string; total_minutes: number | null; category: string } | { slug: string; title: string; total_minutes: number | null; category: string }[] | null;
+  };
+
   const [
     realBiomarkers,
     { data: markerRows },
     { data: prefRow },
     { data: recipeRows },
     { data: riRows },
-    { data: plannedRows },
+    { data: foodRows },
+    plannedRows,
   ] = await Promise.all([
     getLatestBiomarkersWith(supabase, user.id),
     supabaseAdmin
@@ -75,11 +84,17 @@ export default async function WeekPlanPage() {
       .eq("status", "published"),
     supabaseAdmin.from("recipe_ingredients").select("recipe_id, ingredients(slug, name)"),
     supabaseAdmin
-      .from("planned_meals")
-      .select("id, plan_date, meal_slot, target_marker_slug, order_index, recipes(slug, title, total_minutes, category)")
-      .eq("user_id", user.id)
-      .gte("plan_date", start)
-      .lte("plan_date", end),
+      .from("marker_foods")
+      .select("order_index, health_markers(slug), ingredients(slug, name)")
+      .order("order_index", { ascending: true }),
+    selectPlannedMealsWithReason<PlannedRow>((extra) =>
+      supabaseAdmin
+        .from("planned_meals")
+        .select(`id, plan_date, meal_slot, target_marker_slug, order_index, recipes(slug, title, total_minutes, category)${extra}`)
+        .eq("user_id", user.id)
+        .gte("plan_date", start)
+        .lte("plan_date", end)
+    ),
   ]);
 
   const markers = (markerRows ?? []) as HealthMarkerRow[];
@@ -88,7 +103,7 @@ export default async function WeekPlanPage() {
   for (const m of markers) markerNames[m.slug] = m.name;
 
   // ── Resolve flagged markers (most-significant-first) — same as the daily tab ─
-  const built: { slug: string; severity: number; status: string }[] = [];
+  const built: { slug: string; name: string; unit: string | null; value: number; severity: number; status: string }[] = [];
   for (const m of markers) {
     let value: number | null = null;
     if (isSample) {
@@ -99,12 +114,25 @@ export default async function WeekPlanPage() {
     }
     if (value == null) continue;
     const geo = computeMarkerGeometry(value, m.optimal_min, m.optimal_max, m.direction, m.unit);
-    built.push({ slug: m.slug, status: geo.status, severity: markerSeverity(value, m.optimal_min, m.optimal_max, m.direction) });
+    built.push({ slug: m.slug, name: m.name, unit: m.unit, value, status: geo.status, severity: markerSeverity(value, m.optimal_min, m.optimal_max, m.direction) });
   }
-  const flaggedSlugs = built
-    .filter((b) => b.status === "attention")
-    .sort((a, b) => b.severity - a.severity)
-    .map((b) => b.slug);
+  const flaggedBuilt = built.filter((b) => b.status === "attention").sort((a, b) => b.severity - a.severity);
+  const flaggedSlugs = flaggedBuilt.map((b) => b.slug);
+  const flaggedMarkers: FlaggedMarker[] = flaggedBuilt.map((b) => ({
+    slug: b.slug, name: b.name, severity: b.severity, value: b.value, unit: b.unit,
+  }));
+
+  // marker slug → top foods (ingredient slug + name) for the scoring engine.
+  const markerFoods: MarkerFoodMap = {};
+  for (const row of (foodRows ?? []) as Array<{
+    health_markers: { slug: string } | { slug: string }[] | null;
+    ingredients: { slug: string; name: string } | { slug: string; name: string }[] | null;
+  }>) {
+    const hm = Array.isArray(row.health_markers) ? row.health_markers[0] : row.health_markers;
+    const ing = Array.isArray(row.ingredients) ? row.ingredients[0] : row.ingredients;
+    if (!hm?.slug || !ing?.slug || !ing?.name) continue;
+    (markerFoods[hm.slug] ??= []).push({ slug: ing.slug, name: ing.name });
+  }
 
   void SAMPLE_COLLECTED; // (sample date not surfaced on this view)
 
@@ -139,13 +167,9 @@ export default async function WeekPlanPage() {
     : DEFAULT_PREFS;
 
   // ── Build the 7-day view-model from planned_meals ───────────────────────────
-  type PlannedRow = {
-    id: string; plan_date: string; meal_slot: string; target_marker_slug: string | null; order_index: number;
-    recipes: { slug: string; title: string; total_minutes: number | null; category: string } | { slug: string; title: string; total_minutes: number | null; category: string }[] | null;
-  };
   const byDateSlot = new Map<string, PlannedRow>();
   let totalPlanned = 0;
-  for (const row of (plannedRows ?? []) as PlannedRow[]) {
+  for (const row of plannedRows) {
     byDateSlot.set(`${row.plan_date}__${row.meal_slot}`, row);
     totalPlanned++;
   }
@@ -172,6 +196,7 @@ export default async function WeekPlanPage() {
             totalMinutes: rec.total_minutes,
             targetMarkerSlug: row.target_marker_slug,
             targetMarkerName: row.target_marker_slug ? markerNames[row.target_marker_slug] ?? null : null,
+            reason: row.reason ?? null,
           },
         };
       }),
@@ -186,6 +211,8 @@ export default async function WeekPlanPage() {
         candidates={candidates}
         prefs={prefs}
         flaggedSlugs={flaggedSlugs}
+        flaggedMarkers={flaggedMarkers}
+        markerFoods={markerFoods}
         markerNames={markerNames}
         dates={dates}
         userId={user.id}

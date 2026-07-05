@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { loadActiveProgram, loadCompletions, localDateKey, type Program, type WEx, type Workout } from './planData';
 
@@ -57,7 +57,6 @@ const I = ({ children, size = 18 }: { children: React.ReactNode; size?: number }
 const Chevron = ({ dir }: { dir: 'left' | 'right' }) => (
   <I size={18}><path d={dir === 'left' ? 'M15 6l-6 6 6 6' : 'M9 6l6 6-6 6'} /></I>
 );
-const CloseIcon = () => <I size={18}><path d="M6 6l12 12M18 6L6 18" /></I>;
 const RestIcon = ({ size = 16 }: { size?: number }) => <I size={size}><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" /></I>;
 
 // ── Segmented Week / Month toggle ────────────────────────────────────────────
@@ -257,33 +256,56 @@ function MonthView({ cursor, byDay, today, completedKeys, onPick }: {
   );
 }
 
-// ── Day workout sheet (opens on tapping a day) ───────────────────────────────
+// ── Day workout modal (opens on tapping a day) ───────────────────────────────
+// Centered modal — shell/animation/close reuse the "Add exercise" modal
+// (FitnessDashboard → AddSheet) 1:1. The date/content/badge/button styling is
+// kept verbatim from the previous bottom sheet.
 function DaySheet({ date, workout, done, onClose }: {
   date: Date; workout: Workout | undefined; done: boolean; onClose: () => void;
 }) {
   const training = isTraining(workout);
   const heading = date.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
-  return (
-    <div
-      onClick={onClose}
-      style={{
-        position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
-        background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(2px)',
-      }}
-    >
-      <div
-        onClick={(e) => e.stopPropagation()}
-        style={{
-          width: '100%', maxWidth: 560, maxHeight: '80vh', overflowY: 'auto',
-          background: '#161617', borderTopLeftRadius: 22, borderTopRightRadius: 22,
-          border: `1px solid rgba(${OFF},0.1)`, borderBottom: 'none',
-          padding: '10px 20px 32px',
-        }}
-      >
-        {/* grabber */}
-        <div style={{ width: 38, height: 4, borderRadius: 999, background: `rgba(${OFF},0.2)`, margin: '0 auto 16px' }} />
 
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 18 }}>
+  const [visible, setVisible] = useState(false); // drives the fade + scale enter/exit
+
+  // Animated dismissal: play the exit transition, then actually unmount via onClose.
+  const closeRef = useRef(onClose);
+  useEffect(() => { closeRef.current = onClose; }, [onClose]);
+  const requestClose = useCallback(() => {
+    setVisible(false);
+    setTimeout(() => closeRef.current(), 200);
+  }, []);
+
+  // While open: enter animation, Escape-to-close, and a background scroll lock.
+  useEffect(() => {
+    const raf = requestAnimationFrame(() => setVisible(true));
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') requestClose(); };
+    document.addEventListener('keydown', onKey);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      cancelAnimationFrame(raf);
+      document.removeEventListener('keydown', onKey);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [requestClose]);
+
+  return (
+    <div onClick={requestClose} style={{
+      position: 'fixed', inset: 0, zIndex: 80, display: 'flex', alignItems: 'center', justifyContent: 'center',
+      padding: 16, background: 'rgba(0,0,0,.5)', backdropFilter: 'blur(2px)',
+      opacity: visible ? 1 : 0, transition: 'opacity 200ms ease',
+    }}>
+      <div onClick={(e) => e.stopPropagation()} style={{
+        width: '100%', maxWidth: 420, maxHeight: '80vh', display: 'flex', flexDirection: 'column',
+        background: '#161918', borderRadius: 22, overflow: 'hidden',
+        border: `1px solid rgba(${OFF},.09)`, padding: '18px 16px',
+        fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,sans-serif',
+        opacity: visible ? 1 : 0, transform: visible ? 'scale(1)' : 'scale(.96)',
+        transition: 'opacity 200ms ease, transform 200ms ease',
+      }}>
+        {/* header (date + focus + completed badge, ✕ close) — pinned */}
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 18, flexShrink: 0 }}>
           <div>
             <div style={{ fontSize: 11, fontFamily: MONO, letterSpacing: '1.4px', color: `rgba(${OFF},0.45)`, textTransform: 'uppercase' }}>
               {heading}
@@ -298,65 +320,61 @@ function DaySheet({ date, workout, done, onClose }: {
               </span>
             )}
           </div>
-          <button
-            type="button"
-            aria-label="Close"
-            onClick={onClose}
-            style={{
-              appearance: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-              width: 34, height: 34, borderRadius: 10, flexShrink: 0, color: `rgba(${OFF},0.6)`,
-              background: `rgba(${OFF},0.05)`, border: `1px solid rgba(${OFF},0.12)`,
-            }}
-          >
-            <CloseIcon />
-          </button>
+          <button type="button" aria-label="Close" onClick={requestClose} style={{
+            appearance: 'none', cursor: 'pointer', width: 32, height: 32, borderRadius: 9, color: `rgba(${OFF},.5)`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+            background: 'rgba(235,230,216,.05)', border: `1px solid rgba(${OFF},.09)`,
+          }}>✕</button>
         </div>
 
-        {!training ? (
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 12, padding: '18px 16px', borderRadius: 14,
-            background: `rgba(${OFF},0.02)`, border: `1px dashed rgba(${OFF},0.1)`,
-          }}>
-            <span style={{ color: `rgba(${OFF},0.45)` }}><RestIcon size={20} /></span>
-            <span style={{ fontSize: 14, color: `rgba(${OFF},0.6)`, fontFamily: SANS }}>Rest &amp; recover — no training scheduled.</span>
-          </div>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {workout!.exercises.map((we) => (
-              <div
-                key={we.id}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', borderRadius: 12,
-                  background: `rgba(${OFF},0.03)`, border: `1px solid rgba(${OFF},0.08)`,
-                }}
-              >
-                <div style={{ minWidth: 0, flex: 1 }}>
-                  <div style={{ fontSize: 14.5, fontWeight: 500, color: `rgb(${OFF})`, lineHeight: 1.3 }}>
-                    {we.exercise?.name ?? 'Exercise'}
-                  </div>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2px 8px', marginTop: 4 }}>
-                    <span style={{ fontSize: 11.5, fontFamily: MONO, letterSpacing: '0.3px', color: SAGE }}>{prescription(we)}</span>
-                    {muscleLabel(we.exercise) && (
-                      <span style={{ fontSize: 11.5, color: `rgba(${OFF},0.42)` }}>{muscleLabel(we.exercise)}</span>
-                    )}
+        {/* body — scrolls if taller than the modal, which stays centered */}
+        <div style={{ overflowY: 'auto', minHeight: 0 }}>
+          {!training ? (
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 12, padding: '18px 16px', borderRadius: 14,
+              background: `rgba(${OFF},0.02)`, border: `1px dashed rgba(${OFF},0.1)`,
+            }}>
+              <span style={{ color: `rgba(${OFF},0.45)` }}><RestIcon size={20} /></span>
+              <span style={{ fontSize: 14, color: `rgba(${OFF},0.6)`, fontFamily: SANS }}>Rest &amp; recover — no training scheduled.</span>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {workout!.exercises.map((we) => (
+                <div
+                  key={we.id}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', borderRadius: 12,
+                    background: `rgba(${OFF},0.03)`, border: `1px solid rgba(${OFF},0.08)`,
+                  }}
+                >
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <div style={{ fontSize: 14.5, fontWeight: 500, color: `rgb(${OFF})`, lineHeight: 1.3 }}>
+                      {we.exercise?.name ?? 'Exercise'}
+                    </div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2px 8px', marginTop: 4 }}>
+                      <span style={{ fontSize: 11.5, fontFamily: MONO, letterSpacing: '0.3px', color: SAGE }}>{prescription(we)}</span>
+                      {muscleLabel(we.exercise) && (
+                        <span style={{ fontSize: 11.5, color: `rgba(${OFF},0.42)` }}>{muscleLabel(we.exercise)}</span>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        )}
+              ))}
+            </div>
+          )}
 
-        <Link
-          href="/fitness"
-          style={{
-            display: 'block', textAlign: 'center', marginTop: 18, textDecoration: 'none',
-            fontSize: 13, fontWeight: 500, color: SAGE, fontFamily: SANS,
-            padding: '11px', borderRadius: 11, background: 'rgba(155,176,165,0.1)',
-            border: '1px solid rgba(155,176,165,0.3)',
-          }}
-        >
-          Edit in plan →
-        </Link>
+          <Link
+            href="/fitness"
+            style={{
+              display: 'block', textAlign: 'center', marginTop: 18, textDecoration: 'none',
+              fontSize: 13, fontWeight: 500, color: SAGE, fontFamily: SANS,
+              padding: '11px', borderRadius: 11, background: 'rgba(155,176,165,0.1)',
+              border: '1px solid rgba(155,176,165,0.3)',
+            }}
+          >
+            Edit in plan →
+          </Link>
+        </div>
       </div>
     </div>
   );

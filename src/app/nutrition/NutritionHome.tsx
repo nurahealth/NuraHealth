@@ -7,6 +7,7 @@ import { withFrom } from "@/lib/backNav";
 import { UtensilsCrossed, Sparkles, ChevronRight, SlidersHorizontal, CalendarDays, ShoppingBasket, Bookmark } from "lucide-react";
 import NutritionCustomizeSheet from "./NutritionCustomizeSheet";
 import type { NutritionPrefs, CandidateRecipe } from "@/lib/nutrition";
+import type { FlaggedMarker, MarkerFoodMap } from "@/lib/mealScoring";
 
 // ── Shared view-models (built server-side in page.tsx) ───────────────────────
 export interface MarkerCardVM {
@@ -29,6 +30,7 @@ export interface MealVM {
   slot: string;
   targetMarkerSlug: string | null;
   targetMarkerName: string | null;
+  reason: string | null;
 }
 export interface SummaryVM {
   narrative: string;
@@ -118,7 +120,8 @@ export default function NutritionHome({
   meals,
   prefs,
   candidates,
-  flaggedSlugs,
+  flaggedMarkers,
+  markerFoods,
   userId,
 }: {
   dateLabel: string;
@@ -128,7 +131,8 @@ export default function NutritionHome({
   meals: MealVM[];
   prefs: NutritionPrefs;
   candidates: CandidateRecipe[];
-  flaggedSlugs: string[];
+  flaggedMarkers: FlaggedMarker[];
+  markerFoods: MarkerFoodMap;
   userId: string;
 }) {
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -219,6 +223,11 @@ export default function NutritionHome({
                 <div style={{ minWidth: 0, flex: 1 }}>
                   <div style={{ fontFamily: SANS, fontSize: 10, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: TEXT_TER, marginBottom: 2 }}>{SLOT_LABEL[m.slot] ?? m.slot}</div>
                   <div style={{ fontFamily: SANS, fontSize: 15, fontWeight: 600, color: TEXT, lineHeight: 1.3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{m.recipeTitle}</div>
+                  {m.reason && (
+                    <div style={{ fontFamily: SANS, fontSize: 11.5, color: TEXT_TER, marginTop: 3, lineHeight: 1.4, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+                      {m.reason}
+                    </div>
+                  )}
                 </div>
                 {m.targetMarkerName && (
                   <span style={{ flexShrink: 0, fontFamily: SANS, fontSize: 10.5, fontWeight: 600, color: AMBER, background: `rgba(${AMBER_RGB},0.10)`, border: `0.5px solid rgba(${AMBER_RGB},0.28)`, borderRadius: 999, padding: "4px 10px" }}>
@@ -253,7 +262,8 @@ export default function NutritionHome({
         initialPrefs={prefs}
         userId={userId}
         candidates={candidates}
-        flaggedSlugs={flaggedSlugs}
+        flaggedMarkers={flaggedMarkers}
+        markerFoods={markerFoods}
       />
 
       <style>{`

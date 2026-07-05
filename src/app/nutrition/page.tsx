@@ -13,7 +13,6 @@ import {
   computeMarkerGeometry,
   markerSeverity,
   buildSummaryNarrative,
-  selectPlannedMeals,
   DEFAULT_PREFS,
   SAMPLE_VALUES,
   SAMPLE_COLLECTED,
@@ -21,6 +20,8 @@ import {
   type NutritionPrefs,
   type CandidateRecipe,
 } from "@/lib/nutrition";
+import { buildDayPlan, type FlaggedMarker, type MarkerFoodMap } from "@/lib/mealScoring";
+import { insertPlannedMeals, toInsertRows, selectPlannedMealsWithReason } from "@/lib/plannedMealsIO";
 
 export const dynamic = "force-dynamic";
 
@@ -68,7 +69,7 @@ export default async function NutritionPage() {
       .order("display_order", { ascending: true }),
     supabaseAdmin
       .from("marker_foods")
-      .select("marker_id, food_name, order_index, health_markers(slug), ingredients(name)")
+      .select("marker_id, food_name, order_index, health_markers(slug), ingredients(slug, name)")
       .order("order_index", { ascending: true }),
     supabaseAdmin
       .from("nutrition_preferences")
@@ -89,18 +90,24 @@ export default async function NutritionPage() {
   // Review fallback: no panels on file → render with a clearly-labeled sample set.
   const isSample = realBiomarkers.length === 0;
 
-  // First food (by order_index) per marker slug → one-line hint on the card.
+  // First food (by order_index) per marker slug → one-line hint on the card, and
+  // the full marker→top-foods index (with ingredient slugs) the engine scores on.
   const foodHintBySlug = new Map<string, string>();
+  const markerFoods: MarkerFoodMap = {};
   for (const row of (foodRows ?? []) as Array<{
     food_name: string | null;
     health_markers: { slug: string } | { slug: string }[] | null;
-    ingredients: { name: string } | { name: string }[] | null;
+    ingredients: { slug: string; name: string } | { slug: string; name: string }[] | null;
   }>) {
     const hm = Array.isArray(row.health_markers) ? row.health_markers[0] : row.health_markers;
-    if (!hm?.slug || foodHintBySlug.has(hm.slug)) continue;
+    if (!hm?.slug) continue;
     const ing = Array.isArray(row.ingredients) ? row.ingredients[0] : row.ingredients;
     const label = ing?.name ?? row.food_name;
-    if (label) foodHintBySlug.set(hm.slug, label);
+    if (label && !foodHintBySlug.has(hm.slug)) foodHintBySlug.set(hm.slug, label);
+    // Only ingredient-backed foods (with a slug) can match recipe ingredients.
+    if (ing?.slug && ing?.name) {
+      (markerFoods[hm.slug] ??= []).push({ slug: ing.slug, name: ing.name });
+    }
   }
 
   // ── Build marker view-models (only markers we can resolve a value for) ──────
@@ -151,6 +158,10 @@ export default async function NutritionPage() {
   const flagged = built.filter((b) => b.status === "attention").sort((a, b) => b.severity - a.severity);
   const strong = built.filter((b) => b.status === "optimal");
   const flaggedSlugs = flagged.map((b) => b.slug);
+  // Full flagged-marker context (severity + latest reading) for the scoring engine.
+  const flaggedMarkers: FlaggedMarker[] = flagged.map((b) => ({
+    slug: b.slug, name: b.name, severity: b.severity, value: b.value, unit: b.unit,
+  }));
   // Flagged first (most significant first), then the strong ones.
   const markerCards: MarkerCardVM[] = [...flagged, ...strong];
 
@@ -204,20 +215,24 @@ export default async function NutritionPage() {
     : DEFAULT_PREFS;
 
   // ── Today's plan — read, and generate+persist if none exists ───────────────
+  type PlanReadRow = {
+    id: string;
+    meal_slot: string;
+    target_marker_slug: string | null;
+    order_index: number;
+    reason?: string | null;
+    recipes: { slug: string; title: string } | { slug: string; title: string }[] | null;
+  };
   async function readPlan(): Promise<MealVM[]> {
-    const { data } = await supabaseAdmin
-      .from("planned_meals")
-      .select("id, meal_slot, target_marker_slug, order_index, recipes(slug, title)")
-      .eq("user_id", user!.id)
-      .eq("plan_date", today)
-      .order("order_index", { ascending: true });
-    return ((data ?? []) as Array<{
-      id: string;
-      meal_slot: string;
-      target_marker_slug: string | null;
-      order_index: number;
-      recipes: { slug: string; title: string } | { slug: string; title: string }[] | null;
-    }>)
+    const data = await selectPlannedMealsWithReason<PlanReadRow>((extra) =>
+      supabaseAdmin
+        .from("planned_meals")
+        .select(`id, meal_slot, target_marker_slug, order_index, recipes(slug, title)${extra}`)
+        .eq("user_id", user!.id)
+        .eq("plan_date", today)
+        .order("order_index", { ascending: true })
+    );
+    return data
       .map((row) => {
         const rec = Array.isArray(row.recipes) ? row.recipes[0] : row.recipes;
         if (!rec) return null;
@@ -228,6 +243,7 @@ export default async function NutritionPage() {
           slot: row.meal_slot,
           targetMarkerSlug: row.target_marker_slug,
           targetMarkerName: row.target_marker_slug ? markerNames[row.target_marker_slug] ?? null : null,
+          reason: row.reason ?? null,
         } as MealVM;
       })
       .filter((m): m is MealVM => m !== null);
@@ -235,20 +251,9 @@ export default async function NutritionPage() {
 
   let meals = await readPlan();
   if (meals.length === 0 && flaggedSlugs.length > 0 && candidates.length > 0) {
-    const rows = selectPlannedMeals({ recipes: candidates, flaggedSlugs, prefs });
-    if (rows.length > 0) {
-      await supabaseAdmin.from("planned_meals").insert(
-        rows.map((r) => ({
-          user_id: user.id,
-          plan_date: today,
-          meal_slot: r.meal_slot,
-          recipe_id: r.recipe_id,
-          target_marker_slug: r.target_marker_slug,
-          order_index: r.order_index,
-        }))
-      );
-      meals = await readPlan();
-    }
+    const rows = buildDayPlan({ recipes: candidates, flagged: flaggedMarkers, markerFoods, prefs });
+    await insertPlannedMeals(supabaseAdmin, toInsertRows(rows, user.id, today));
+    meals = await readPlan();
   }
 
   // ── Summary stats + narrative ──────────────────────────────────────────────
@@ -312,7 +317,8 @@ export default async function NutritionPage() {
         meals={meals}
         prefs={prefs}
         candidates={candidates}
-        flaggedSlugs={flaggedSlugs}
+        flaggedMarkers={flaggedMarkers}
+        markerFoods={markerFoods}
         userId={user.id}
       />
     </NuraPageShell>

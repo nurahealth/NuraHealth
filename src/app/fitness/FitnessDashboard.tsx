@@ -793,12 +793,12 @@ export default function FitnessDashboard() {
           display: 'flex', justifyContent: 'space-around', padding: 12, zIndex: 40,
         }}>
           {[
-            { label: 'Home', on: true, path: <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /> },
-            { label: 'Calendar', on: false, path: <><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" /></> },
-            { label: 'Progress', on: false, path: <path d="M3 3v18h18M7 14l3-3 3 3 5-5" /> },
-            { label: 'Profile', on: false, path: <><circle cx="12" cy="8" r="4" /><path d="M4 21a8 8 0 0 1 16 0" /></> },
+            { label: 'Home', on: true, to: null, path: <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /> },
+            { label: 'Calendar', on: false, to: '/fitness/calendar', path: <><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" /></> },
+            { label: 'Progress', on: false, to: '/fitness/progress', path: <path d="M3 3v18h18M7 14l3-3 3 3 5-5" /> },
+            { label: 'Profile', on: false, to: null, path: <><circle cx="12" cy="8" r="4" /><path d="M4 21a8 8 0 0 1 16 0" /></> },
           ].map((n) => (
-            <div key={n.label} style={{ color: n.on ? SAGE : MUT, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, fontSize: 9 }}>
+            <div key={n.label} onClick={n.to ? () => router.push(n.to!) : undefined} style={{ color: n.on ? SAGE : MUT, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, fontSize: 9, cursor: n.to ? 'pointer' : 'default' }}>
               <svg width="21" height="21" viewBox="0 0 24 24" stroke="currentColor" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">{n.path}</svg>
               {n.label}
             </div>

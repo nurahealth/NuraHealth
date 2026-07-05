@@ -7,12 +7,19 @@ import { supabase } from "@/lib/supabase";
 import { withFrom } from "@/lib/backNav";
 import { ArrowLeft, RefreshCw, Plus, Clock, Repeat, Trash2, X, ChevronRight, Loader2, CalendarDays } from "lucide-react";
 import {
-  selectPlannedMeals,
   recipePassesPrefs,
-  markersAddressed,
   type NutritionPrefs,
   type CandidateRecipe,
 } from "@/lib/nutrition";
+import {
+  scoreRecipe,
+  buildWeekPlan,
+  buildMealReason,
+  type FlaggedMarker,
+  type MarkerFoodMap,
+  type RecipeScore,
+} from "@/lib/mealScoring";
+import { insertPlannedMeals, toInsertRows, updatePlannedMeal } from "@/lib/plannedMealsIO";
 
 // ── Design tokens (locked system — same as the rest of /nutrition) ────────────
 const TEXT = "var(--nura-text-primary)";
@@ -40,6 +47,7 @@ export interface PlanMeal {
   totalMinutes: number | null;
   targetMarkerSlug: string | null;
   targetMarkerName: string | null;
+  reason: string | null;
 }
 export interface PlanSlot { slot: string; meal: PlanMeal | null }
 export interface PlanDay { date: string; weekday: string; dateLabel: string; isToday: boolean; meals: PlanSlot[] }
@@ -48,12 +56,14 @@ function pretty(t: string): string {
   return t.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-export default function WeekPlanClient({ days, totalPlanned, candidates, prefs, flaggedSlugs, markerNames, dates, userId }: {
+export default function WeekPlanClient({ days, totalPlanned, candidates, prefs, flaggedMarkers, markerFoods, markerNames, dates, userId }: {
   days: PlanDay[];
   totalPlanned: number;
   candidates: PlanCandidate[];
   prefs: NutritionPrefs;
   flaggedSlugs: string[];
+  flaggedMarkers: FlaggedMarker[];
+  markerFoods: MarkerFoodMap;
   markerNames: Record<string, string>;
   dates: string[];
   userId: string;
@@ -65,54 +75,53 @@ export default function WeekPlanClient({ days, totalPlanned, candidates, prefs, 
   const [removingSlot, setRemovingSlot] = useState<string | null>(null);
   const [error, setError] = useState("");
 
-  const targetMarkerFor = useCallback((c: PlanCandidate): string | null => {
-    return markersAddressed(c.goal_tags, flaggedSlugs)[0] ?? null;
-  }, [flaggedSlugs]);
+  const flaggedBySlug = useMemo(
+    () => Object.fromEntries(flaggedMarkers.map((m) => [m.slug, m])),
+    [flaggedMarkers],
+  );
+  // Same marker-driven scoring the generator uses, so swaps stay truthful.
+  const scoreFor = useCallback(
+    (c: PlanCandidate): RecipeScore => scoreRecipe(c, flaggedMarkers, markerFoods),
+    [flaggedMarkers, markerFoods],
+  );
 
   // Build the swap/add picker options for a given slot: prefs-passing recipes,
-  // same-category-as-slot first, then marker-relevant, then quicker.
+  // same-category-as-slot first, then by marker score, then quicker.
   const pickerOptions = useMemo(() => {
     if (!picker) return [] as PlanCandidate[];
     const currentId = picker.meal ? candidates.find((c) => c.slug === picker.meal!.recipeSlug)?.id : undefined;
-    const target = picker.meal?.targetMarkerSlug ?? null;
     const eligible = candidates.filter((c) => recipePassesPrefs(c, prefs) && c.id !== currentId);
-    const score = (c: PlanCandidate): number => {
-      let s = 0;
-      if (c.category === picker.slot) s += 4;
-      const addressed = markersAddressed(c.goal_tags, flaggedSlugs);
-      if (target && addressed.includes(target)) s += 3;
-      else if (addressed.length) s += 1;
-      return s;
-    };
+    const rank = (c: PlanCandidate): number =>
+      (c.category === picker.slot ? 1000 : 0) + scoreRecipe(c, flaggedMarkers, markerFoods).total;
     return eligible
-      .sort((a, b) => score(b) - score(a) || (a.total_minutes ?? 999) - (b.total_minutes ?? 999) || a.title.localeCompare(b.title))
+      .sort((a, b) => rank(b) - rank(a) || (a.total_minutes ?? 999) - (b.total_minutes ?? 999) || a.title.localeCompare(b.title))
       .slice(0, 12);
-  }, [picker, candidates, prefs, flaggedSlugs]);
+  }, [picker, candidates, prefs, flaggedMarkers, markerFoods]);
 
   // ── Persist: swap an existing meal, or add into an empty slot ────────────────
   const choose = async (c: PlanCandidate) => {
     if (!picker) return;
     setBusySlot(`${picker.date}__${picker.slot}`);
     setError("");
-    const target = targetMarkerFor(c);
+    const s = scoreFor(c);
+    const target = s.bestMarkerSlug;
+    const reason = buildMealReason(s, flaggedBySlug);
     try {
       if (picker.meal) {
-        const { error: e } = await supabase
-          .from("planned_meals")
-          .update({ recipe_id: c.id, target_marker_slug: target })
-          .eq("id", picker.meal.id)
-          .eq("user_id", userId);
-        if (e) throw e;
-      } else {
-        const { error: e } = await supabase.from("planned_meals").insert({
-          user_id: userId,
-          plan_date: picker.date,
-          meal_slot: picker.slot,
-          recipe_id: c.id,
-          target_marker_slug: target,
-          order_index: SLOTS.indexOf(picker.slot),
+        const e = await updatePlannedMeal(supabase, picker.meal.id, userId, {
+          recipe_id: c.id, target_marker_slug: target, reason,
         });
-        if (e) throw e;
+        if (e) throw new Error(e.message);
+      } else {
+        const e = await insertPlannedMeals(
+          supabase,
+          toInsertRows(
+            [{ recipe_id: c.id, meal_slot: picker.slot, target_marker_slug: target, order_index: SLOTS.indexOf(picker.slot), reason }],
+            userId,
+            picker.date,
+          ),
+        );
+        if (e) throw new Error(e.message);
       }
       setPicker(null);
       router.refresh();
@@ -157,24 +166,11 @@ export default function WeekPlanClient({ days, totalPlanned, candidates, prefs, 
         .lte("plan_date", dates[dates.length - 1]);
       if (dErr) throw dErr;
 
-      const inserts: Array<Record<string, unknown>> = [];
-      for (const date of dates) {
-        const rows = selectPlannedMeals({ recipes: candidates, flaggedSlugs, prefs });
-        for (const r of rows) {
-          inserts.push({
-            user_id: userId,
-            plan_date: date,
-            meal_slot: r.meal_slot,
-            recipe_id: r.recipe_id,
-            target_marker_slug: r.target_marker_slug,
-            order_index: r.order_index,
-          });
-        }
-      }
-      if (inserts.length > 0) {
-        const { error: iErr } = await supabase.from("planned_meals").insert(inserts);
-        if (iErr) throw iErr;
-      }
+      // One marker-driven pass across all 7 days, with cross-day variety.
+      const plan = buildWeekPlan({ dates, recipes: candidates, flagged: flaggedMarkers, markerFoods, prefs });
+      const inserts = dates.flatMap((date) => toInsertRows(plan[date] ?? [], userId, date));
+      const iErr = await insertPlannedMeals(supabase, inserts);
+      if (iErr) throw new Error(iErr.message);
       router.refresh();
     } catch {
       setError("Couldn't regenerate your week. Please try again.");
@@ -272,6 +268,11 @@ export default function WeekPlanClient({ days, totalPlanned, candidates, prefs, 
                             </span>
                           )}
                         </span>
+                        {meal.reason && (
+                          <span style={{ display: "block", fontFamily: SANS, fontSize: 11, color: TEXT_TER, marginTop: 4, lineHeight: 1.4 }}>
+                            {meal.reason}
+                          </span>
+                        )}
                       </span>
                       <ChevronRight size={15} color={TEXT_TER} style={{ flexShrink: 0 }} />
                     </Link>
@@ -329,7 +330,7 @@ export default function WeekPlanClient({ days, totalPlanned, candidates, prefs, 
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 8, paddingBottom: 8 }}>
                 {pickerOptions.map((c) => {
-                  const tgt = targetMarkerFor(c);
+                  const tgt = scoreFor(c).bestMarkerSlug;
                   return (
                     <button key={c.id} onClick={() => choose(c)} disabled={busySlot !== null} className="wp-opt" style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", textAlign: "left", background: SURFACE, border: `0.5px solid ${BORDER}`, borderRadius: 12, padding: "12px 14px", cursor: busySlot !== null ? "default" : "pointer" }}>
                       <span style={{ flex: 1, minWidth: 0 }}>

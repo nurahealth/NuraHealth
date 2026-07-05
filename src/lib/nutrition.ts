@@ -249,10 +249,10 @@ export interface PlannedRow {
   meal_slot: string;
   target_marker_slug: string | null;
   order_index: number;
+  reason: string | null;
 }
 
 export const MEAL_SLOTS = ["breakfast", "lunch", "dinner", "snack"];
-const SLOTS = ["breakfast", "lunch", "dinner"];
 
 // Does a recipe satisfy the user's preferences (status, cook time, excluded
 // ingredients, dietary-pattern allergens)? Shared by the generator and the
@@ -280,64 +280,10 @@ export function markersAddressed(goalTags: string[], flaggedSlugs: string[]): st
   return flaggedSlugs.filter((slug) => (MARKER_GOALS[slug] ?? []).some((g) => goalTags.includes(g)));
 }
 
-// flaggedSlugs MUST be ordered most-significant-first.
-export function selectPlannedMeals(opts: {
-  recipes: CandidateRecipe[];
-  flaggedSlugs: string[];
-  prefs: NutritionPrefs;
-}): PlannedRow[] {
-  const { recipes, flaggedSlugs, prefs } = opts;
-
-  const passes = (r: CandidateRecipe): boolean => recipePassesPrefs(r, prefs);
-  const markersFor = (tags: string[]): string[] => markersAddressed(tags, flaggedSlugs);
-
-  const scored = recipes.filter(passes).map((r) => {
-    const addressed = markersFor(r.goal_tags);
-    const score = prefs.prioritize_markers === false ? (addressed.length ? 1 : 0) : addressed.length;
-    return { r, score, target: addressed[0] ?? null };
-  });
-
-  let pool = scored.filter((s) => s.score > 0);
-  if (!pool.length) pool = scored; // never leave the day empty if recipes are available
-  pool.sort((a, b) => b.score - a.score || (a.r.total_minutes ?? 999) - (b.r.total_minutes ?? 999));
-
-  const used = new Set<string>();
-  const filled = new Set<string>();
-  const rows: PlannedRow[] = [];
-
-  // Pass 1 — place each recipe in its natural meal slot.
-  for (const s of pool) {
-    if (rows.length >= 3) break;
-    if (used.has(s.r.id)) continue;
-    if (SLOTS.includes(s.r.category) && !filled.has(s.r.category)) {
-      rows.push({
-        recipe_id: s.r.id,
-        meal_slot: s.r.category,
-        target_marker_slug: s.target,
-        order_index: SLOTS.indexOf(s.r.category),
-      });
-      used.add(s.r.id);
-      filled.add(s.r.category);
-    }
-  }
-  // Pass 2 — fill any still-empty slots with the best remaining recipe.
-  for (const slot of SLOTS) {
-    if (rows.length >= 3) break;
-    if (filled.has(slot)) continue;
-    const next = pool.find((s) => !used.has(s.r.id));
-    if (!next) break;
-    rows.push({
-      recipe_id: next.r.id,
-      meal_slot: slot,
-      target_marker_slug: next.target,
-      order_index: SLOTS.indexOf(slot),
-    });
-    used.add(next.r.id);
-    filled.add(slot);
-  }
-
-  return rows.sort((a, b) => a.order_index - b.order_index);
-}
+// NOTE: the meal-selection engine now lives in ./mealScoring (buildDayPlan /
+// buildWeekPlan), which does true marker-driven scoring. `markersAddressed`
+// remains here as the shared goal_tag ↔ marker mapping used by both the engine
+// (MEDIUM signal) and the weekly-plan swap picker.
 
 // ── Sample bloodwork (review fallback when the account has no panels) ─────────
 // Mapped onto health_marker slugs. Mirrors the values in the Phase 3 brief.
