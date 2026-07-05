@@ -28,7 +28,7 @@ export default async function RecipesPage() {
 
   // All recipes (incl. draft stubs) so the library renders fully for review,
   // plus a lightweight recipe→ingredient-name map to power ingredient search.
-  const [{ data: recipeRows }, { data: linkRows }] = await Promise.all([
+  const [{ data: recipeRows }, { data: linkRows }, { data: savedRows }] = await Promise.all([
     supabaseAdmin
       .from("recipes")
       .select("id, slug, title, description, category, cuisine, total_minutes, servings, is_organic, goal_tags, system_tags, status")
@@ -36,7 +36,13 @@ export default async function RecipesPage() {
     supabaseAdmin
       .from("recipe_ingredients")
       .select("recipe_id, ingredients(name)"),
+    supabaseAdmin
+      .from("saved_recipes")
+      .select("recipe_id")
+      .eq("user_id", user.id),
   ]);
+
+  const savedIds = ((savedRows ?? []) as Array<{ recipe_id: string }>).map((s) => s.recipe_id);
 
   // recipe_id → [ingredient names]
   const namesByRecipe = new Map<string, string[]>();
@@ -66,7 +72,7 @@ export default async function RecipesPage() {
 
   return (
     <NuraPageShell maxWidth={1040}>
-      <RecipesBrowseClient recipes={recipes} />
+      <RecipesBrowseClient recipes={recipes} savedIds={savedIds} userId={user.id} />
     </NuraPageShell>
   );
 }

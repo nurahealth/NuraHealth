@@ -269,6 +269,7 @@ export default function FitnessDashboard() {
   const [catalog, setCatalog] = useState<CatalogEx[]>([]);
   const [summaries, setSummaries] = useState<ProgramSummary[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const [view, setView] = useState<'week' | 'month'>('week');
   const [cursor, setCursor] = useState<Date>(() => startOfDay(new Date()));
@@ -293,17 +294,26 @@ export default function FitnessDashboard() {
   const dragIndexRef = useRef<number | null>(null);
 
   const load = useCallback(async () => {
-    const [{ program }, cat, sums, comps] = await Promise.all([
-      loadActiveProgram(), loadCatalog(), loadProgramSummaries(), loadCompletions(),
-    ]);
-    setProgram(program); setCatalog(cat); setSummaries(sums); setCompletions(comps); setLoading(false);
-    // Land on a real workout: today if it trains, else the next training day.
-    if (program) {
-      const baseIdx = programDayIndex(today);
-      for (let k = 0; k < 7; k++) {
-        const w = program.workouts.find((x) => x.day_index === (baseIdx + k) % 7);
-        if (w && !w.is_rest && w.exercises.length > 0) { setSelected(addDays(today, k)); break; }
+    // Never leave the UI stuck on "Loading…": if any loader rejects (network
+    // drop, auth-refresh stall, a chunk that failed to fetch after a deploy),
+    // surface it as a visible, retryable error instead of hanging forever.
+    try {
+      setLoadError(null);
+      const [{ program }, cat, sums, comps] = await Promise.all([
+        loadActiveProgram(), loadCatalog(), loadProgramSummaries(), loadCompletions(),
+      ]);
+      setProgram(program); setCatalog(cat); setSummaries(sums); setCompletions(comps); setLoading(false);
+      // Land on a real workout: today if it trains, else the next training day.
+      if (program) {
+        const baseIdx = programDayIndex(today);
+        for (let k = 0; k < 7; k++) {
+          const w = program.workouts.find((x) => x.day_index === (baseIdx + k) % 7);
+          if (w && !w.is_rest && w.exercises.length > 0) { setSelected(addDays(today, k)); break; }
+        }
       }
+    } catch (e) {
+      setLoadError(e instanceof Error ? e.message : 'Could not load your fitness plan.');
+      setLoading(false);
     }
   }, [today]);
 
@@ -514,7 +524,15 @@ export default function FitnessDashboard() {
           <button type="button" style={segBtn(view === 'month')} onClick={() => setView('month')}>Month</button>
         </div>
 
-        {loading ? (
+        {loadError ? (
+          <div style={{ borderRadius: 18, padding: '24px 22px', textAlign: 'center', background: 'rgba(217,139,139,.06)', border: '1px solid rgba(217,139,139,.28)' }}>
+            <div style={{ fontSize: 15, fontWeight: 700, color: '#e0a4a4', marginBottom: 6 }}>Couldn&apos;t load your plan</div>
+            <p style={{ fontSize: 13, color: MUT, lineHeight: 1.6, margin: '0 0 16px', wordBreak: 'break-word' }}>{loadError}</p>
+            <button type="button" onClick={() => { setLoading(true); load(); }} style={{ appearance: 'none', cursor: 'pointer', border: 'none', padding: '10px 20px', borderRadius: 12, fontSize: 14, fontWeight: 700, color: BG, background: SAGE }}>
+              Try again
+            </button>
+          </div>
+        ) : loading ? (
           <div style={{ fontSize: 13, color: MUT, padding: '8px 2px' }}>Loading your week…</div>
         ) : !program ? (
           <div style={{ borderRadius: 18, padding: '28px 24px', textAlign: 'center', background: 'rgba(155,176,165,.05)', border: '1px solid rgba(155,176,165,.22)' }}>

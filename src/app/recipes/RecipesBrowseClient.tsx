@@ -4,10 +4,12 @@ import { useState, useMemo } from "react";
 import Link from "next/link";
 import {
   Search, Clock, Leaf, Flame, Sprout, Heart, Zap, Droplet,
-  UtensilsCrossed, ArrowRight, Globe,
+  UtensilsCrossed, ArrowRight, Globe, Bookmark,
 } from "lucide-react";
 import { sageGradient } from "@/lib/sageGradient";
 import { withFrom } from "@/lib/backNav";
+import { SavedRecipesProvider } from "@/components/SavedRecipesProvider";
+import SaveRecipeButton from "@/components/SaveRecipeButton";
 
 // ── Design tokens (locked NŪRA system) ─────────────────────────────────────────
 const TEXT = "var(--nura-text-primary)";
@@ -74,6 +76,7 @@ function categoryLabel(v: string): string {
 export function RecipeCard({ r, from, fromLabel }: { r: Recipe; from?: string; fromLabel?: string }) {
   const primaryGoal = r.goal_tags[0];
   return (
+    <div style={{ position: "relative" }}>
     <Link
       href={from ? withFrom(`/recipes/${r.slug}`, from, fromLabel ?? "Back") : `/recipes/${r.slug}`}
       className="rx-card"
@@ -98,9 +101,10 @@ export function RecipeCard({ r, from, fromLabel }: { r: Recipe; from?: string; f
             <Leaf size={10} /> Organic
           </span>
         )}
+        {/* Draft badge sits bottom-left so it never collides with the save button. */}
         {r.status !== "published" && (
           <span style={{
-            position: "absolute", top: 8, right: 8,
+            position: "absolute", bottom: 8, left: 8,
             fontFamily: SANS, fontSize: 8.5, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase",
             color: TEXT_TER, background: "rgba(13,13,14,0.55)", backdropFilter: "blur(4px)",
             border: `0.5px solid ${BORDER}`, borderRadius: 6, padding: "2px 6px",
@@ -139,6 +143,12 @@ export function RecipeCard({ r, from, fromLabel }: { r: Recipe; from?: string; f
         </div>
       </div>
     </Link>
+      {/* Save toggle — overlaid as a sibling of the Link (not nested inside the
+          anchor). Renders only when a SavedRecipesProvider is in the tree. */}
+      <div style={{ position: "absolute", top: 8, right: 8, zIndex: 2 }}>
+        <SaveRecipeButton recipeId={r.id} size={34} />
+      </div>
+    </div>
   );
 }
 
@@ -152,7 +162,15 @@ type Filter =
 const ALL: Filter = { kind: "all" };
 
 // ── Main client ──────────────────────────────────────────────────────────────
-export default function RecipesBrowseClient({ recipes }: { recipes: Recipe[] }) {
+export default function RecipesBrowseClient({
+  recipes,
+  savedIds,
+  userId,
+}: {
+  recipes: Recipe[];
+  savedIds: string[];
+  userId: string;
+}) {
   const [filter, setFilter] = useState<Filter>(ALL);
   const [query, setQuery] = useState("");
 
@@ -205,6 +223,7 @@ export default function RecipesBrowseClient({ recipes }: { recipes: Recipe[] }) 
   };
 
   return (
+    <SavedRecipesProvider userId={userId} initialSavedIds={savedIds}>
     <div>
       <style>{`
         .rx-card { transition: background 180ms, border-color 180ms, transform 180ms; }
@@ -315,6 +334,18 @@ export default function RecipesBrowseClient({ recipes }: { recipes: Recipe[] }) 
             </button>
           );
         })}
+        {/* Jump to the user's saved recipes. */}
+        <Link
+          href="/nutrition/saved"
+          style={{
+            flexShrink: 0, marginLeft: 4, display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 15px",
+            background: `rgba(${SAGE_RGB},0.08)`, border: `0.5px solid rgba(${SAGE_RGB},0.3)`, borderRadius: 999,
+            fontFamily: SANS, fontSize: 12, fontWeight: 600, letterSpacing: "0.04em", color: SAGE,
+            textDecoration: "none", whiteSpace: "nowrap",
+          }}
+        >
+          <Bookmark size={13} /> Saved
+        </Link>
       </div>
 
       {/* Browse by goal */}
@@ -430,5 +461,6 @@ export default function RecipesBrowseClient({ recipes }: { recipes: Recipe[] }) 
         )}
       </section>
     </div>
+    </SavedRecipesProvider>
   );
 }

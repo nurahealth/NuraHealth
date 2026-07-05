@@ -6,7 +6,8 @@ import NuraPageShell from "@/components/NuraPageShell";
 import { ArrowLeft, Clock, Users, Leaf } from "lucide-react";
 import { sageGradient } from "@/lib/sageGradient";
 import { resolveBack, type RawSearchParam } from "@/lib/backNav";
-import SaveButton from "./SaveButton";
+import { SavedRecipesProvider } from "@/components/SavedRecipesProvider";
+import SaveRecipeButton from "@/components/SaveRecipeButton";
 import IngredientRow, { type RecipeIngredient } from "./IngredientRow";
 
 export const dynamic = "force-dynamic";
@@ -140,7 +141,9 @@ export default async function RecipeDetailPage({
         {/* Hero */}
         <div style={{ position: "relative", borderRadius: 18, overflow: "hidden", border: `0.5px solid ${BORDER}`, minHeight: 200, background: sageGradient(recipe.hero_style ?? recipe.slug) }}>
           <div style={{ position: "absolute", top: 12, right: 12, zIndex: 2 }}>
-            <SaveButton recipeId={recipe.id} userId={user.id} initialSaved={initialSaved} />
+            <SavedRecipesProvider userId={user.id} initialSavedIds={initialSaved ? [recipe.id] : []}>
+              <SaveRecipeButton recipeId={recipe.id} />
+            </SavedRecipesProvider>
           </div>
           <div style={{ minHeight: 200 }} />
         </div>
