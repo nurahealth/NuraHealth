@@ -63,11 +63,76 @@ async function buildPlanItems(userId: string): Promise<PlanItem[]> {
     bySlug.set(ing.slug, entry);
   }
 
-  return [...bySlug.values()].map((a) => ({
+  // Second pass — collapse by display name too, so two different ingredient
+  // slugs that share a name (e.g. black-pepper / pepper) become ONE list row.
+  const byName = new Map<string, Agg>();
+  for (const a of bySlug.values()) {
+    const key = a.name.trim().toLowerCase();
+    const entry = byName.get(key) ?? { name: a.name, category: a.category, amounts: new Set<string>() };
+    a.amounts.forEach((x) => entry.amounts.add(x));
+    byName.set(key, entry);
+  }
+
+  return [...byName.values()].map((a) => ({
     name: a.name,
     amount_text: a.amounts.size ? [...a.amounts].join(" · ") : null,
     category: a.category,
   }));
+}
+
+// Normalized ingredient key for dedup — trimmed, lower-cased name.
+function nameKey(s: string): string {
+  return s.trim().toLowerCase();
+}
+
+// Split an amount_text back into its individual " · "-joined parts.
+function amountParts(s: string | null): string[] {
+  return (s ?? "").split(" · ").map((p) => p.trim()).filter(Boolean);
+}
+
+// One-time cleanup: merge pre-existing duplicate PLAN rows for a user (same name)
+// into a single row — union the amounts, keep checked if EITHER was checked, and
+// delete the extras. Manual items are never touched. Returns the cleaned list.
+async function dedupePlanRows(items: GroceryItem[], userId: string): Promise<GroceryItem[]> {
+  const groups = new Map<string, GroceryItem[]>();
+  for (const it of items) {
+    if (it.source !== "plan") continue;
+    const key = nameKey(it.name);
+    (groups.get(key) ?? groups.set(key, []).get(key)!).push(it);
+  }
+
+  const deleteIds: string[] = [];
+  const updates: { id: string; amount_text: string | null; is_checked: boolean }[] = [];
+  for (const group of groups.values()) {
+    if (group.length < 2) continue;
+    group.sort((a, b) => a.sort_order - b.sort_order);
+    const keep = group[0];
+    const amounts = new Set<string>();
+    let checked = false;
+    for (const g of group) {
+      amountParts(g.amount_text).forEach((p) => amounts.add(p));
+      if (g.is_checked) checked = true;
+      if (g.id !== keep.id) deleteIds.push(g.id);
+    }
+    const merged = amounts.size ? [...amounts].join(" · ") : null;
+    updates.push({ id: keep.id, amount_text: merged, is_checked: checked });
+    keep.amount_text = merged;
+    keep.is_checked = checked;
+  }
+
+  if (deleteIds.length === 0) return items; // nothing to do
+
+  for (const u of updates) {
+    await supabaseAdmin
+      .from("grocery_items")
+      .update({ amount_text: u.amount_text, is_checked: u.is_checked, updated_at: new Date().toISOString() })
+      .eq("id", u.id)
+      .eq("user_id", userId);
+  }
+  await supabaseAdmin.from("grocery_items").delete().in("id", deleteIds).eq("user_id", userId);
+
+  const removed = new Set(deleteIds);
+  return items.filter((it) => !removed.has(it.id));
 }
 
 export default async function GroceryPage() {
@@ -94,6 +159,8 @@ export default async function GroceryPage() {
     }
   } else {
     items = (rows ?? []) as GroceryItem[];
+    // Heal any pre-existing duplicate plan rows before rendering.
+    items = await dedupePlanRows(items, user.id);
   }
 
   // First load: if the table is ready but empty, seed it from this week's plan.

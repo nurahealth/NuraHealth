@@ -101,10 +101,10 @@ function HrvMiniRing({ hrv }: { hrv: number }) {
         />
       </svg>
 
-      {/* centered content — value with a small "ms" beneath */}
-      <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", lineHeight: 1 }}>
+      {/* centered content — value + a smaller "ms" inline on one line */}
+      <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "baseline", justifyContent: "center", gap: 4, lineHeight: 1 }}>
         <span style={{ fontFamily: SANS, fontSize: 32, fontWeight: 700, color: TEXT, letterSpacing: "-0.02em", textShadow: `0 0 14px rgba(${AQUA_RGB},0.3)` }}>{num}</span>
-        <span style={{ fontFamily: SANS, fontSize: 12, fontWeight: 600, color: TEXT_SEC, marginTop: 4 }}>ms</span>
+        <span style={{ fontFamily: SANS, fontSize: 12, fontWeight: 600, color: TEXT_SEC }}>ms</span>
       </div>
     </div>
   );
@@ -133,15 +133,16 @@ export default function HrvCard({ metric, onClick }: { metric: DashboardMetric; 
         minHeight: 248,
       }}
     >
-      {/* Header — full name (left, wraps if needed) · source (right) */}
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
-        <span style={{ ...EYEBROW, fontSize: 9.5, letterSpacing: "1.2px", color: TEXT_SEC, lineHeight: 1.3 }}>Heart Rate Variability</span>
-        <span style={{ ...EYEBROW, fontSize: 9, color: TEXT_TER, whiteSpace: "nowrap", flexShrink: 0 }}>{SOURCE_LABEL[metric.source]}</span>
+      {/* Header — name (left) · source (right) */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+        <span style={{ ...EYEBROW, color: TEXT_SEC }}>{metric.name}</span>
+        <span style={{ ...EYEBROW, fontSize: 9, color: TEXT_TER }}>{SOURCE_LABEL[metric.source]}</span>
       </div>
 
-      {/* Center — mini aqua ring gauge */}
-      <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "10px 0" }}>
+      {/* Center — mini aqua ring gauge + label directly beneath */}
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 9, padding: "10px 0" }}>
         <HrvMiniRing hrv={hrv} />
+        <span style={{ fontFamily: SANS, fontSize: 11.5, color: TEXT_TER }}>Heart Rate Variability</span>
       </div>
 
       {/* Below the ring — delta, trend note, status pill */}
