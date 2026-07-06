@@ -339,3 +339,130 @@ export async function logBodyMetric(args: {
   if (error) return { ok: false, needsMigration: isMissingBodyTable(error), error: error.message };
   return { ok: true };
 }
+
+// ── Progress photos ──────────────────────────────────────────────────────────
+// One row per uploaded photo. Images live in the PRIVATE `progress-photos`
+// storage bucket; we never expose a public URL — every image is fetched through
+// a short-lived signed URL so it stays owner-only.
+
+const PROGRESS_BUCKET = 'progress-photos';
+const SIGNED_URL_TTL = 60 * 60; // 1h — long enough for a browsing session
+
+// How the image sits in its portrait frame: 'fill' = cover, 'contain' = letterboxed.
+export type PhotoFit = 'fill' | 'contain';
+
+export type ProgressPhoto = {
+  id: string;
+  taken_on: string;         // 'YYYY-MM-DD'
+  storage_path: string;
+  pose: string | null;
+  notes: string | null;
+  fit: PhotoFit;            // defaults to 'fill'
+  created_at: string;
+  url: string | null;       // resolved signed URL (null if signing failed)
+};
+
+// Same missing-table guard as the others — degrade cleanly until the migration
+// is applied so the section just shows its empty prompt.
+function isMissingPhotoTable(err: { code?: string; message?: string } | null): boolean {
+  if (!err) return false;
+  if (err.code === 'PGRST205' || err.code === '42P01') return true;
+  return /progress_photos/.test(err.message ?? '') && /(schema cache|does not exist)/i.test(err.message ?? '');
+}
+
+// The `fit` column ships in a later migration (20260705000003). Until it's run,
+// selecting/inserting it 42703s — detect that so we can fall back to no-fit.
+function isMissingFitColumn(err: { code?: string; message?: string } | null): boolean {
+  if (!err) return false;
+  if (err.code === '42703' || err.code === 'PGRST204') return true;
+  return /fit/.test(err.message ?? '') && /(column|schema cache|does not exist)/i.test(err.message ?? '');
+}
+
+const normFit = (v: unknown): PhotoFit => (v === 'contain' ? 'contain' : 'fill');
+
+// All photos for the signed-in user, NEWEST FIRST, each with a fresh signed URL.
+// Returns [] when the table isn't there yet.
+export async function loadProgressPhotos(): Promise<ProgressPhoto[]> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return [];
+  const run = (cols: string) => supabase
+    .from('progress_photos')
+    .select(cols)
+    .eq('user_id', user.id)
+    .order('taken_on', { ascending: false })
+    .order('created_at', { ascending: false });
+
+  let { data, error } = await run('id, taken_on, storage_path, pose, notes, fit, created_at');
+  // Fall back to selecting without `fit` if that column isn't there yet.
+  if (error && isMissingFitColumn(error)) {
+    ({ data, error } = await run('id, taken_on, storage_path, pose, notes, created_at'));
+  }
+  if (error) return [];
+  const raw = (data as Record<string, unknown>[] | null) ?? [];
+  if (raw.length === 0) return [];
+
+  // Batch-sign every path in one call, then zip the URLs back onto the rows.
+  const paths = raw.map((r) => r.storage_path as string);
+  const { data: signed } = await supabase.storage
+    .from(PROGRESS_BUCKET)
+    .createSignedUrls(paths, SIGNED_URL_TTL);
+  const urlByPath = new Map((signed ?? []).map((s) => [s.path, s.signedUrl] as const));
+  return raw.map((r) => ({
+    id: r.id as string,
+    taken_on: r.taken_on as string,
+    storage_path: r.storage_path as string,
+    pose: (r.pose as string | null) ?? null,
+    notes: (r.notes as string | null) ?? null,
+    fit: normFit(r.fit),
+    created_at: r.created_at as string,
+    url: urlByPath.get(r.storage_path as string) ?? null,
+  }));
+}
+
+export type AddProgressPhotoResult = { ok: true } | { ok: false; needsMigration: boolean; error: string };
+
+// Upload a photo to the private bucket, then insert its row. Files are keyed
+// under `<uid>/<uuid>.<ext>` so storage RLS (folder = uid) scopes them to owner.
+export async function addProgressPhoto(args: {
+  file: File;
+  takenOn?: string;         // 'YYYY-MM-DD'; DB defaults to current_date
+  pose?: string | null;
+  notes?: string | null;
+  fit?: PhotoFit;           // how it sits in the frame; DB defaults to 'fill'
+}): Promise<AddProgressPhotoResult> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { ok: false, needsMigration: false, error: 'Not signed in.' };
+
+  const ext = (args.file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg';
+  const path = `${user.id}/${crypto.randomUUID()}.${ext}`;
+
+  const { error: upErr } = await supabase.storage
+    .from(PROGRESS_BUCKET)
+    .upload(path, args.file, { contentType: args.file.type || 'image/jpeg', upsert: false });
+  if (upErr) return { ok: false, needsMigration: false, error: upErr.message };
+
+  const base = {
+    user_id: user.id,
+    storage_path: path,
+    taken_on: args.takenOn || undefined,   // let DB default to current_date when unset
+    pose: args.pose ?? null,
+    notes: args.notes ?? null,
+  };
+  let { error } = await supabase.from('progress_photos').insert({ ...base, fit: args.fit ?? 'fill' });
+  // Retry without `fit` if that column hasn't been added yet.
+  if (error && isMissingFitColumn(error)) {
+    ({ error } = await supabase.from('progress_photos').insert(base));
+  }
+  if (error) {
+    // Roll back the orphaned object so a failed insert doesn't leak storage.
+    await supabase.storage.from(PROGRESS_BUCKET).remove([path]).catch(() => {});
+    return { ok: false, needsMigration: isMissingPhotoTable(error), error: error.message };
+  }
+  return { ok: true };
+}
+
+// Persist a fit change for an existing photo (owner-scoped by RLS). Best-effort:
+// no-ops silently if the `fit` column isn't there yet.
+export async function updatePhotoFit(id: string, fit: PhotoFit): Promise<void> {
+  await supabase.from('progress_photos').update({ fit }).eq('id', id);
+}

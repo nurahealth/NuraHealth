@@ -9,6 +9,15 @@ export const RECIPE_CATEGORIES = ["breakfast", "lunch", "dinner", "baking", "sna
 export const INGREDIENT_CATEGORIES = ["root-spice", "greens", "legumes", "good-fats", "ferments", "protein", "fruit"] as const;
 export const STATUSES = ["draft", "published"] as const;
 
+// PostgREST/Postgres report an unknown column as PGRST204 / 42703. Lets writes
+// degrade gracefully when an optional column (e.g. image_url) hasn't been
+// migrated yet, instead of failing the whole insert/update.
+export function isMissingColumnError(err: { code?: string; message?: string } | null, column: string): boolean {
+  if (!err) return false;
+  const code = err.code ?? "";
+  return (code === "42703" || code === "PGRST204") && (err.message ?? "").includes(column);
+}
+
 // ── Slug helpers ──────────────────────────────────────────────────────────────
 export function slugify(s: string): string {
   return (

@@ -67,14 +67,25 @@ export default function RadialGauge({
 
   const [offset, setOffset] = useState(arcLen);
   const [num, setNum] = useState(0);
+  const [reduced, setReduced] = useState(false);
   const rafRef = useRef(0);
 
   useEffect(() => {
+    // Respect reduced-motion: render the ring already filled + the final number,
+    // skipping both the arc sweep and the count-up.
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    if (mq.matches) {
+      setReduced(true);
+      setOffset(target);
+      setNum(value);
+      return;
+    }
+
     // Kick the arc transition shortly after mount so CSS animates it.
     const t = setTimeout(() => setOffset(target), 250);
 
-    // Count-up with an ease-out cubic.
-    const dur = 1300;
+    // Count-up with an ease-out cubic over the same ~1.4s as the arc sweep.
+    const dur = 1400;
     let start = 0;
     const ease = (p: number) => 1 - Math.pow(1 - p, 3);
     const step = (ts: number) => {
@@ -108,7 +119,7 @@ export default function RadialGauge({
           strokeDasharray={`${arcLen} ${circ}`} strokeDashoffset={offset}
           style={{
             filter: `drop-shadow(0 0 7px rgba(${glowRgb},0.65))`,
-            transition: "stroke-dashoffset 1.3s cubic-bezier(.2,.7,.2,1)",
+            transition: reduced ? "none" : "stroke-dashoffset 1.4s cubic-bezier(.2,.7,.2,1)",
           }}
         />
       </svg>

@@ -96,11 +96,12 @@ const miniBtn: React.CSSProperties = {
 };
 
 // ── Field wrapper ─────────────────────────────────────────────────────────────
-function Field({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
+function Field({ label, required, error, children }: { label: string; required?: boolean; error?: string; children: React.ReactNode }) {
   return (
     <div>
       <label style={labelStyle}>{label} {required && <span style={{ color: DANGER }}>*</span>}</label>
       {children}
+      {error && <div style={{ fontFamily: SANS, fontSize: 11.5, fontWeight: 600, color: DANGER, marginTop: 5 }}>{error}</div>}
     </div>
   );
 }
@@ -246,18 +247,66 @@ function BlockEditor({ value, onChange }: { value: Block[]; onChange: (v: Block[
 }
 
 // ── Recipe ↔ ingredient link editor ──────────────────────────────────────────
-function LinkEditor({ value, onChange, ingredients }: { value: RecipeLink[]; onChange: (v: RecipeLink[]) => void; ingredients: AdminIngredient[] }) {
+function LinkEditor({ value, onChange, ingredients, onCreateIngredient }: { value: RecipeLink[]; onChange: (v: RecipeLink[]) => void; ingredients: AdminIngredient[]; onCreateIngredient: (draft: { name: string; category: string; tagline: string }) => Promise<string | null> }) {
   const set = (i: number, patch: Partial<RecipeLink>) => onChange(value.map((l, j) => (j === i ? { ...l, ...patch } : l)));
+
+  // Inline "new ingredient" panel — scoped to the row that opened it.
+  const [newFor, setNewFor] = useState<number | null>(null);
+  const [nName, setNName] = useState("");
+  const [nCat, setNCat] = useState("");
+  const [nTag, setNTag] = useState("");
+  const [creating, setCreating] = useState(false);
+  const [nErr, setNErr] = useState("");
+
+  const openNew = (i: number) => { setNewFor(i); setNName(""); setNCat(""); setNTag(""); setNErr(""); };
+  const submitNew = async () => {
+    if (newFor === null) return;
+    if (!nName.trim()) { setNErr("Name is required"); return; }
+    if (!nCat) { setNErr("Category is required"); return; }
+    setCreating(true); setNErr("");
+    const id = await onCreateIngredient({ name: nName.trim(), category: nCat, tagline: nTag.trim() });
+    setCreating(false);
+    if (id) { set(newFor, { ingredient_id: id }); setNewFor(null); }
+    else setNErr("Couldn't create the ingredient — see the error above.");
+  };
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
       {value.map((l, i) => (
         <div key={i} style={{ background: SURFACE, border: `0.5px solid ${BORDER}`, borderRadius: 12, padding: 12, display: "flex", gap: 8 }}>
           <span style={{ flexShrink: 0, width: 24, height: 24, marginTop: 4, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", background: `rgba(${SAGE_RGB},0.14)`, fontFamily: SANS, fontSize: 11, fontWeight: 600, color: SAGE }}>{i + 1}</span>
           <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 8 }}>
-            <select value={l.ingredient_id} onChange={(e) => set(i, { ingredient_id: e.target.value })} style={{ ...inputStyle, appearance: "none", cursor: "pointer" }}>
+            <select value={l.ingredient_id} onChange={(e) => { if (e.target.value === "__new__") openNew(i); else set(i, { ingredient_id: e.target.value }); }} style={{ ...inputStyle, appearance: "none", cursor: "pointer" }}>
               <option value="">Select an ingredient…</option>
               {ingredients.map((ing) => <option key={ing.id} value={ing.id}>{ing.name}</option>)}
+              <option value="__new__">+ New ingredient…</option>
             </select>
+
+            {/* Inline create panel for this row */}
+            {newFor === i && (
+              <div style={{ background: `rgba(${SAGE_RGB},0.05)`, border: `0.5px solid rgba(${SAGE_RGB},0.28)`, borderRadius: 10, padding: 12, display: "flex", flexDirection: "column", gap: 8 }}>
+                <Eyebrow color={SAGE} size={9}>New ingredient</Eyebrow>
+                <input value={nName} autoFocus onChange={(e) => { setNName(e.target.value); if (nErr) setNErr(""); }} placeholder="Name (e.g. Ginger)" style={inputStyle} />
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                  <select value={nCat} onChange={(e) => { setNCat(e.target.value); if (nErr) setNErr(""); }} style={{ ...inputStyle, appearance: "none", cursor: "pointer" }}>
+                    <option value="" disabled>Category…</option>
+                    {INGREDIENT_CATEGORIES.map((c) => <option key={c} value={c}>{pretty(c)}</option>)}
+                  </select>
+                  <input value={nTag} onChange={(e) => setNTag(e.target.value)} placeholder="Tagline (optional)" style={inputStyle} />
+                </div>
+                <span style={{ fontFamily: SANS, fontSize: 11, color: TEXT_TER, lineHeight: 1.5 }}>
+                  Creates a draft ingredient and selects it here. Add its full deep-dive content (cellular explainer, how-to-use) later on the ingredient&rsquo;s own admin page.
+                </span>
+                {nErr && <div style={{ fontFamily: SANS, fontSize: 11.5, fontWeight: 600, color: DANGER }}>{nErr}</div>}
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button type="button" onClick={submitNew} disabled={creating} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 14px", background: SAGE, border: "none", borderRadius: 9, color: SAGE_ON, fontFamily: SANS, fontSize: 11.5, fontWeight: 600, cursor: creating ? "default" : "pointer", opacity: creating ? 0.7 : 1 }}>
+                    {creating ? <Loader2 size={12} style={{ animation: "spin 1s linear infinite" }} /> : <Plus size={12} />} Create & select
+                  </button>
+                  <button type="button" onClick={() => setNewFor(null)} disabled={creating} style={{ padding: "8px 14px", background: "transparent", border: `0.5px solid ${BORDER}`, borderRadius: 9, color: TEXT_SEC, fontFamily: SANS, fontSize: 11.5, fontWeight: 600, cursor: "pointer" }}>Cancel</button>
+                </div>
+              </div>
+            )}
+
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
               <input value={l.amount_text} onChange={(e) => set(i, { amount_text: e.target.value })} placeholder="Amount (e.g. 2 cloves)" style={inputStyle} />
               <input value={l.primary_system} onChange={(e) => set(i, { primary_system: e.target.value })} placeholder="Primary system (e.g. immune)" style={inputStyle} />
@@ -292,6 +341,9 @@ function ModalShell({ title, busy, onClose, error, children, onSave }: { title: 
           {children}
         </div>
         <div style={{ position: "sticky", bottom: 0, background: BG, padding: "16px 20px 24px", marginTop: 16, borderTop: `0.5px solid ${BORDER}` }}>
+          {/* Error repeated at the action so a failed save is impossible to miss,
+              even when the top of the long form is scrolled out of view. */}
+          {error && <div style={{ marginBottom: 12, padding: "10px 12px", background: "rgba(255,76,92,0.08)", border: `0.5px solid rgba(255,76,92,0.4)`, borderRadius: 10 }}><Eyebrow color={DANGER} size={10}>{error}</Eyebrow></div>}
           <button onClick={onSave} disabled={busy} className="nura-primary-btn" style={{ width: "100%", padding: "13px 16px", background: SAGE, border: "none", borderRadius: 14, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, fontFamily: SANS, fontSize: 12, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", color: SAGE_ON, cursor: busy ? "default" : "pointer", opacity: busy ? 0.7 : 1, transition: "background 200ms, transform 100ms" }}>
             {busy ? <Loader2 size={14} style={{ animation: "spin 1s linear infinite" }} /> : null} Save
           </button>
@@ -324,6 +376,31 @@ function RecipeModal({ token, editing, ingredients, onClose, onSuccess }: { toke
   const [loadingLinks, setLoadingLinks] = useState(!!editing);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [titleErr, setTitleErr] = useState("");
+  const [categoryErr, setCategoryErr] = useState("");
+  const [dragOver, setDragOver] = useState(false);
+  // Local ingredient list so an inline-created ingredient shows in the picker
+  // immediately without waiting for the parent to refetch.
+  const [ingredientList, setIngredientList] = useState<AdminIngredient[]>(ingredients);
+
+  // Create a new ingredient inline (draft), append it, and return its id so the
+  // calling row can select it right away. Full deep-dive content is added later.
+  const createIngredient = async (draft: { name: string; category: string; tagline: string }): Promise<string | null> => {
+    try {
+      const res = await fetch("/api/admin/ingredients", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ name: draft.name, category: draft.category, tagline: draft.tagline || null, status: "draft" }),
+      });
+      const data = await res.json() as { ingredient?: AdminIngredient; error?: string };
+      if (!res.ok || !data.ingredient) throw new Error(data.error ?? "Couldn't create the ingredient");
+      setIngredientList((prev) => [...prev, data.ingredient!].sort((a, b) => a.name.localeCompare(b.name)));
+      return data.ingredient.id;
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Couldn't create the ingredient");
+      return null;
+    }
+  };
 
   // Upload a photo to the recipe-images bucket; the returned public URL is saved
   // on the recipe when the form is submitted.
@@ -374,8 +451,11 @@ function RecipeModal({ token, editing, ingredients, onClose, onSuccess }: { toke
   useEffect(() => { if (!slugEdited) setSlug(slugify(title)); }, [title, slugEdited]);
 
   const save = async () => {
-    if (!title.trim()) { setError("Title is required"); return; }
-    if (!category) { setError("Category is required"); return; }
+    const tErr = !title.trim() ? "Title is required" : "";
+    const cErr = !category ? "Category is required" : "";
+    setTitleErr(tErr); setCategoryErr(cErr);
+    if (tErr || cErr) { setError("Please fix the highlighted fields."); return; }
+    if (!token) { setError("Your admin session isn't ready yet — reload the page and try again."); return; }
     setBusy(true); setError("");
     const payload = {
       title, slug, description, category, cuisine,
@@ -401,12 +481,12 @@ function RecipeModal({ token, editing, ingredients, onClose, onSuccess }: { toke
 
   return (
     <ModalShell title={editing ? "Edit Recipe" : "Add Recipe"} busy={busy} onClose={onClose} error={error} onSave={save}>
-      <Field label="Title" required><input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Recipe title" style={inputStyle} /></Field>
+      <Field label="Title" required error={titleErr}><input value={title} onChange={(e) => { setTitle(e.target.value); if (titleErr) setTitleErr(""); }} placeholder="Recipe title" style={inputStyle} /></Field>
       <Field label="Slug" required><input value={slug} onChange={(e) => { setSlugEdited(true); setSlug(e.target.value); }} placeholder="auto-from-title" style={inputStyle} /></Field>
       <Field label="Description"><textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} placeholder="Optional" style={{ ...inputStyle, resize: "vertical", lineHeight: 1.6 }} /></Field>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-        <Field label="Category" required>
-          <select value={category} onChange={(e) => setCategory(e.target.value)} style={{ ...inputStyle, appearance: "none", cursor: "pointer" }}>
+        <Field label="Category" required error={categoryErr}>
+          <select value={category} onChange={(e) => { setCategory(e.target.value); if (categoryErr) setCategoryErr(""); }} style={{ ...inputStyle, appearance: "none", cursor: "pointer" }}>
             <option value="" disabled>Select…</option>
             {RECIPE_CATEGORIES.map((c) => <option key={c} value={c}>{pretty(c)}</option>)}
           </select>
@@ -424,10 +504,24 @@ function RecipeModal({ token, editing, ingredients, onClose, onSuccess }: { toke
       <Field label="Hero style"><input value={heroStyle} onChange={(e) => setHeroStyle(e.target.value)} placeholder="Optional gradient key (defaults to slug)" style={inputStyle} /></Field>
       <Field label="Photo">
         <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
-          <div style={{ width: 96, height: 72, borderRadius: 10, overflow: "hidden", flexShrink: 0, position: "relative", background: sageGradient(slug || "recipe"), border: `0.5px solid ${BORDER}` }}>
+          {/* Drop target — also click-to-upload via the button. Shows a sage drop
+              state while a file is dragged over it. */}
+          <div
+            onDragOver={(e) => { e.preventDefault(); if (!uploading && !dragOver) setDragOver(true); }}
+            onDragLeave={(e) => { e.preventDefault(); setDragOver(false); }}
+            onDrop={(e) => { e.preventDefault(); setDragOver(false); const f = e.dataTransfer.files?.[0]; if (f) uploadImage(f); }}
+            style={{ width: 128, height: 88, borderRadius: 10, overflow: "hidden", flexShrink: 0, position: "relative", background: sageGradient(slug || "recipe"), border: dragOver ? `1.5px dashed ${SAGE}` : `0.5px solid ${BORDER}`, transition: "border-color 150ms" }}
+          >
             {imageUrl && (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={imageUrl} alt="Recipe" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+            )}
+            {(dragOver || !imageUrl) && (
+              <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", textAlign: "center", padding: 6, background: dragOver ? `rgba(${SAGE_RGB},0.22)` : "transparent", pointerEvents: "none" }}>
+                <span style={{ fontFamily: SANS, fontSize: 10.5, fontWeight: 600, color: dragOver ? SAGE : `rgba(${FG_RGB},0.5)`, lineHeight: 1.3 }}>
+                  {dragOver ? "Drop photo" : "Drag a photo here"}
+                </span>
+              </div>
             )}
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
@@ -447,7 +541,7 @@ function RecipeModal({ token, editing, ingredients, onClose, onSuccess }: { toke
       <Field label="Status"><StatusSelect status={status} onChange={setStatus} /></Field>
       <Field label="Method steps"><StepEditor value={steps} onChange={setSteps} placeholder="Describe this step…" /></Field>
       <Field label="Ingredients">
-        {loadingLinks ? <Eyebrow color={TEXT_TER}>Loading ingredients…</Eyebrow> : <LinkEditor value={links} onChange={setLinks} ingredients={ingredients} />}
+        {loadingLinks ? <Eyebrow color={TEXT_TER}>Loading ingredients…</Eyebrow> : <LinkEditor value={links} onChange={setLinks} ingredients={ingredientList} onCreateIngredient={createIngredient} />}
       </Field>
     </ModalShell>
   );

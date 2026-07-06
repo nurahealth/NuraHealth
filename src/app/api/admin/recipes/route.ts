@@ -3,7 +3,7 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 import { requireAdminFromRequest, AdminError } from "@/lib/admin";
 import {
   RECIPE_CATEGORIES, STATUSES, slugify, slugTaken,
-  toStringArray, toNumberedSteps,
+  toStringArray, toNumberedSteps, isMissingColumnError,
 } from "@/lib/admin-nutrition";
 
 const CATEGORY_SET = new Set<string>(RECIPE_CATEGORIES);
@@ -87,7 +87,14 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       status,
     };
 
-    const { data, error } = await supabaseAdmin.from("recipes").insert(insert).select("*").single();
+    let { data, error } = await supabaseAdmin.from("recipes").insert(insert).select("*").single();
+    // image_url is only present once its migration is applied — retry without it
+    // so recipe creation still works (and errors stay loud) before then.
+    if (error && isMissingColumnError(error, "image_url")) {
+      const rest = { ...insert };
+      delete (rest as Record<string, unknown>).image_url;
+      ({ data, error } = await supabaseAdmin.from("recipes").insert(rest).select("*").single());
+    }
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
     await insertLinks((data as { id: string }).id, body.ingredients);

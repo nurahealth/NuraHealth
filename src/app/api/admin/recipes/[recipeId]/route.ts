@@ -3,7 +3,7 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 import { requireAdminFromRequest, AdminError } from "@/lib/admin";
 import {
   RECIPE_CATEGORIES, STATUSES, slugify, slugTaken,
-  toStringArray, toNumberedSteps,
+  toStringArray, toNumberedSteps, isMissingColumnError,
 } from "@/lib/admin-nutrition";
 
 const CATEGORY_SET = new Set<string>(RECIPE_CATEGORIES);
@@ -109,7 +109,13 @@ export async function PATCH(
     if (body.method_steps !== undefined) update.method_steps = toNumberedSteps(body.method_steps);
 
     if (Object.keys(update).length > 0) {
-      const { data, error } = await supabaseAdmin.from("recipes").update(update).eq("id", recipeId).select("*").single();
+      let { data, error } = await supabaseAdmin.from("recipes").update(update).eq("id", recipeId).select("*").single();
+      // Degrade gracefully if image_url isn't migrated yet (see POST route).
+      if (error && isMissingColumnError(error, "image_url")) {
+        const rest = { ...update };
+        delete (rest as Record<string, unknown>).image_url;
+        ({ data, error } = await supabaseAdmin.from("recipes").update(rest).eq("id", recipeId).select("*").single());
+      }
       if (error) return NextResponse.json({ error: error.message }, { status: 500 });
       if (!data) return NextResponse.json({ error: "Recipe not found" }, { status: 404 });
     }

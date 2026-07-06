@@ -5,13 +5,18 @@ import { useRouter } from 'next/navigation';
 import NuraPlexus from '@/components/NuraPlexus';
 import { hexA, smooth } from '@/components/dashboard/cardChartHelpers';
 import {
+  addProgressPhoto,
   loadActiveProgram,
   loadBodyMetrics,
   loadCompletions,
+  loadProgressPhotos,
   localDateKey,
   logBodyMetric,
+  updatePhotoFit,
   type BodyMetric,
+  type PhotoFit,
   type Program,
+  type ProgressPhoto,
   type WorkoutCompletion,
 } from './planData';
 
@@ -118,9 +123,19 @@ function WeightTrendChart({ points, unit }: { points: { date: string; value: num
   );
 }
 
-// ── Log weigh-in modal — reuses the centered modal shell (backdrop blur, fade +
-// scale enter/exit, ✕, Escape, scroll-lock) shared by Add-exercise / the
-// calendar day modal. Fields: weight (required), body fat %, waist, notes.
+// Shared field styles for the centered modals (Body-log / Add-photo), so inputs
+// look identical across them.
+const modalInputStyle: React.CSSProperties = {
+  width: '100%', boxSizing: 'border-box', padding: '11px 13px', borderRadius: 11,
+  fontFamily: MONO, fontSize: 14, color: TEXT, background: SURF, border: `1px solid ${LINE}`, outline: 'none',
+};
+const modalLabel = (text: string) => (
+  <div style={{ fontSize: 11, letterSpacing: '.05em', color: MUT, margin: '0 0 6px' }}>{text}</div>
+);
+
+// ── Log weigh-in modal — renders inside the shared CenteredModal shell (same
+// wrapper / padding / scroll structure as every other modal here). Fields:
+// weight (required), body fat %, waist, notes.
 function LogWeightModal({ defaultUnit, onClose, onSaved }: {
   defaultUnit: string; onClose: () => void; onSaved: () => void;
 }) {
@@ -131,8 +146,106 @@ function LogWeightModal({ defaultUnit, onClose, onSaved }: {
   const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
-  const [visible, setVisible] = useState(false);
 
+  const save = useCallback(async (close: () => void) => {
+    const w = parseFloat(weight);
+    if (!Number.isFinite(w) || w <= 0) { setErr('Enter a weight.'); return; }
+    setSaving(true); setErr(null);
+    const num = (s: string) => { const v = parseFloat(s); return Number.isFinite(v) ? v : null; };
+    const res = await logBodyMetric({
+      weight: w, unit,
+      bodyFatPct: num(bodyFat), waist: num(waist),
+      notes: notes.trim() || null,
+    });
+    setSaving(false);
+    if (!res.ok) {
+      setErr(res.needsMigration
+        ? 'Weight logging needs a quick database migration — run it to start tracking.'
+        : (res.error || 'Could not save. Please try again.'));
+      return;
+    }
+    onSaved();
+    close();
+  }, [weight, unit, bodyFat, waist, notes, onSaved]);
+
+  const unitBtn = (u: 'lb' | 'kg'): React.CSSProperties => ({
+    flex: 1, appearance: 'none', cursor: 'pointer', border: 'none', borderRadius: 9, padding: 8,
+    fontFamily: MONO, fontSize: 13, fontWeight: 700,
+    background: unit === u ? SAGE : 'transparent', color: unit === u ? BG : MUT, transition: '.18s',
+  });
+
+  return (
+    <CenteredModal title="Log weigh-in" onClose={onClose}>
+      {(close) => (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          {/* unit toggle */}
+          <div>
+            {modalLabel('UNIT')}
+            <div style={{ display: 'flex', gap: 4, padding: 4, borderRadius: 12, background: SURF, border: `1px solid ${LINE}` }}>
+              <button type="button" onClick={() => setUnit('lb')} style={unitBtn('lb')}>lb</button>
+              <button type="button" onClick={() => setUnit('kg')} style={unitBtn('kg')}>kg</button>
+            </div>
+          </div>
+
+          <div>
+            {modalLabel(`WEIGHT (${unit})`)}
+            <input value={weight} onChange={(e) => setWeight(e.target.value)} inputMode="decimal" placeholder="0" autoFocus style={modalInputStyle} />
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            <div>
+              {modalLabel('BODY FAT %')}
+              <input value={bodyFat} onChange={(e) => setBodyFat(e.target.value)} inputMode="decimal" placeholder="—" style={modalInputStyle} />
+            </div>
+            <div>
+              {modalLabel(`WAIST (${unit === 'kg' ? 'cm' : 'in'})`)}
+              <input value={waist} onChange={(e) => setWaist(e.target.value)} inputMode="decimal" placeholder="—" style={modalInputStyle} />
+            </div>
+          </div>
+
+          <div>
+            {modalLabel('NOTES')}
+            <textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Optional" rows={2}
+              style={{ ...modalInputStyle, fontFamily: FONT, resize: 'none', lineHeight: 1.5 }} />
+          </div>
+
+          {err && <div style={{ fontSize: 12.5, color: '#e0a4a4' }}>{err}</div>}
+
+          <button type="button" onClick={() => save(close)} disabled={saving} style={{
+            width: '100%', marginTop: 2, background: SAGE, color: BG, border: 'none', borderRadius: 14,
+            padding: 14, fontSize: 15, fontWeight: 700, cursor: saving ? 'default' : 'pointer',
+            opacity: saving ? 0.7 : 1, boxShadow: '0 8px 24px rgba(155,176,165,.28)',
+          }}>
+            {saving ? 'Saving…' : 'Save'}
+          </button>
+        </div>
+      )}
+    </CenteredModal>
+  );
+}
+
+// ── Centered modal shell — the single centered-modal component every modal on
+// this screen uses (backdrop blur, fade+scale enter/exit, ✕, Escape, scroll-lock,
+// never a bottom sheet). The Body-log / Add-photo / photo-viewer modals all route
+// through this so their wrapper, padding and scroll structure are identical.
+//
+// Padding contract (fixes off-centre content once, at the root):
+//  • the card carries VERTICAL padding only;
+//  • the header and the scrollable body each carry the SAME horizontal inset
+//    (H_INSET) with box-sizing: border-box, so title/✕, the photo area and every
+//    field line up on identical left/right edges;
+//  • the body reserves a scrollbar gutter on BOTH sides (scrollbar-gutter: stable
+//    both-edges), so the scrollbar can never overlap or crowd content and the
+//    content stays optically centred whether or not a scrollbar is showing.
+//
+// `children` may be a render function receiving `close` — an animated close the
+// child calls after a successful save (so programmatic closes fade out too).
+const H_INSET = 16;
+function CenteredModal({ title, onClose, maxWidth = 420, children }: {
+  title: React.ReactNode; onClose: () => void; maxWidth?: number;
+  children: React.ReactNode | ((close: () => void) => React.ReactNode);
+}) {
+  const [visible, setVisible] = useState(false);
   const closeRef = useRef(onClose);
   useEffect(() => { closeRef.current = onClose; }, [onClose]);
   const requestClose = useCallback(() => {
@@ -153,108 +266,323 @@ function LogWeightModal({ defaultUnit, onClose, onSaved }: {
     };
   }, [requestClose]);
 
-  const save = useCallback(async () => {
-    const w = parseFloat(weight);
-    if (!Number.isFinite(w) || w <= 0) { setErr('Enter a weight.'); return; }
-    setSaving(true); setErr(null);
-    const num = (s: string) => { const v = parseFloat(s); return Number.isFinite(v) ? v : null; };
-    const res = await logBodyMetric({
-      weight: w, unit,
-      bodyFatPct: num(bodyFat), waist: num(waist),
-      notes: notes.trim() || null,
-    });
-    setSaving(false);
-    if (!res.ok) {
-      setErr(res.needsMigration
-        ? 'Weight logging needs a quick database migration — run it to start tracking.'
-        : (res.error || 'Could not save. Please try again.'));
-      return;
-    }
-    onSaved();
-    requestClose();
-  }, [weight, unit, bodyFat, waist, notes, onSaved, requestClose]);
-
-  const inputStyle: React.CSSProperties = {
-    width: '100%', padding: '11px 13px', borderRadius: 11, fontFamily: MONO, fontSize: 14,
-    color: TEXT, background: SURF, border: `1px solid ${LINE}`, outline: 'none',
-  };
-  const label = (text: string) => (
-    <div style={{ fontSize: 11, letterSpacing: '.05em', color: MUT, margin: '0 0 6px' }}>{text}</div>
-  );
-  const unitBtn = (u: 'lb' | 'kg'): React.CSSProperties => ({
-    flex: 1, appearance: 'none', cursor: 'pointer', border: 'none', borderRadius: 9, padding: 8,
-    fontFamily: MONO, fontSize: 13, fontWeight: 700,
-    background: unit === u ? SAGE : 'transparent', color: unit === u ? BG : MUT, transition: '.18s',
-  });
-
   return (
     <div onClick={requestClose} style={{
       position: 'fixed', inset: 0, zIndex: 80, display: 'flex', alignItems: 'center', justifyContent: 'center',
       padding: 16, background: 'rgba(0,0,0,.5)', backdropFilter: 'blur(2px)',
       opacity: visible ? 1 : 0, transition: 'opacity 200ms ease',
     }}>
+      {/* Subtle, inset scrollbar for the (rare) tall-content case — thin, rounded,
+          sage-neutral, sitting inside the reserved gutter so it never touches the
+          card's rounded edge or the content. WebKit rule + standard fallback. */}
+      <style>{`
+        .nura-modal-scroll::-webkit-scrollbar { width: 6px; }
+        .nura-modal-scroll::-webkit-scrollbar-track { background: transparent; }
+        .nura-modal-scroll::-webkit-scrollbar-thumb { background: rgba(155,176,165,.35); border-radius: 999px; }
+        .nura-modal-scroll::-webkit-scrollbar-thumb:hover { background: rgba(155,176,165,.55); }
+      `}</style>
       <div onClick={(e) => e.stopPropagation()} style={{
-        width: '100%', maxWidth: 420, maxHeight: '80vh', display: 'flex', flexDirection: 'column',
+        width: '100%', maxWidth, maxHeight: '86vh', display: 'flex', flexDirection: 'column', boxSizing: 'border-box',
         background: '#161918', borderRadius: 22, overflow: 'hidden',
-        border: `1px solid ${LINE}`, padding: '18px 16px', fontFamily: FONT,
+        border: `1px solid ${LINE}`, padding: '18px 0', fontFamily: FONT,
         opacity: visible ? 1 : 0, transform: visible ? 'scale(1)' : 'scale(.96)',
         transition: 'opacity 200ms ease, transform 200ms ease',
       }}>
-        {/* header — pinned */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, flexShrink: 0 }}>
-          <span style={{ fontSize: 16, fontWeight: 700, color: TEXT }}>Log weigh-in</span>
+        {/* header — same H_INSET as the body */}
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          marginBottom: 14, padding: `0 ${H_INSET}px`, boxSizing: 'border-box', flexShrink: 0,
+        }}>
+          <span style={{ fontSize: 16, fontWeight: 700, color: TEXT }}>{title}</span>
           <button type="button" aria-label="Close" onClick={requestClose} style={{
             appearance: 'none', cursor: 'pointer', width: 32, height: 32, borderRadius: 9, color: MUT,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             background: 'rgba(235,230,216,.05)', border: `1px solid ${LINE}`,
           }}>✕</button>
         </div>
+        {/* scrollable body — equal L/R inset, border-box, gutter reserved both
+            sides, subtle thin scrollbar (see .nura-modal-scroll above). */}
+        <div className="nura-modal-scroll" style={{
+          overflowY: 'auto', minHeight: 0, padding: `0 ${H_INSET}px`, boxSizing: 'border-box',
+          scrollbarGutter: 'stable both-edges',
+          scrollbarWidth: 'thin', scrollbarColor: 'rgba(155,176,165,.35) transparent',
+        }}>
+          {typeof children === 'function' ? children(requestClose) : children}
+        </div>
+      </div>
+    </div>
+  );
+}
 
-        {/* body — scrolls if tall */}
-        <div style={{ overflowY: 'auto', minHeight: 0, display: 'flex', flexDirection: 'column', gap: 14 }}>
-          {/* unit toggle */}
-          <div>
-            {label('UNIT')}
-            <div style={{ display: 'flex', gap: 4, padding: 4, borderRadius: 12, background: SURF, border: `1px solid ${LINE}` }}>
-              <button type="button" onClick={() => setUnit('lb')} style={unitBtn('lb')}>lb</button>
-              <button type="button" onClick={() => setUnit('kg')} style={unitBtn('kg')}>kg</button>
-            </div>
+// 'YYYY-MM-DD' → 'Mon D, YYYY' for photo captions (local, no TZ shift).
+function fmtPhotoDate(iso: string): string {
+  const [y, m, d] = iso.split('-').map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+// Portrait frame — progress photos are usually full-body vertical shots. Used by
+// the modal preview, the gallery thumbnails, and the enlarged view so a vertical
+// photo never gets squished into a wide box.
+const PHOTO_ASPECT = '3 / 4';
+// 'fill' → object-fit: cover (crops), 'contain' → whole photo letterboxed.
+const objectFitFor = (fit: PhotoFit): React.CSSProperties['objectFit'] => (fit === 'contain' ? 'contain' : 'cover');
+
+// Small, subtle Fill / Fit segmented toggle sitting over the preview corner.
+function FitToggle({ value, onChange }: { value: PhotoFit; onChange: (f: PhotoFit) => void }) {
+  const seg = (f: PhotoFit, text: string): React.CSSProperties => ({
+    appearance: 'none', cursor: 'pointer', border: 'none', borderRadius: 7, padding: '4px 9px',
+    fontFamily: FONT, fontSize: 11, fontWeight: 700, letterSpacing: '.02em',
+    background: value === f ? SAGE : 'transparent', color: value === f ? BG : TEXT, transition: '.15s',
+  });
+  return (
+    <div style={{
+      display: 'inline-flex', gap: 2, padding: 3, borderRadius: 10,
+      background: 'rgba(13,13,14,.6)', backdropFilter: 'blur(6px)', border: `1px solid ${LINE}`,
+    }}>
+      <button type="button" onClick={() => onChange('fill')} style={seg('fill', 'Fill')}>Fill</button>
+      <button type="button" onClick={() => onChange('contain')} style={seg('contain', 'Fit')}>Fit</button>
+    </div>
+  );
+}
+
+// ── Add-photo modal — pick/upload an image with optional pose + notes, upload to
+// the private progress-photos bucket and insert the row. Centered shell above.
+function AddPhotoModal({ onClose, onSaved }: { onClose: () => void; onSaved: () => void }) {
+  const [file, setFile] = useState<File | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
+  const [fit, setFit] = useState<PhotoFit>('fill');
+  const [takenOn, setTakenOn] = useState(localDateKey(new Date()));
+  const [pose, setPose] = useState('');
+  const [notes, setNotes] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  // Two inputs feeding one flow: camera (capture) opens the device camera on
+  // mobile; gallery (no capture) opens the library / file picker. On desktop
+  // both fall back to the file picker.
+  const cameraRef = useRef<HTMLInputElement>(null);
+  const galleryRef = useRef<HTMLInputElement>(null);
+
+  // Revoke the object URL when the picked file changes / on unmount.
+  useEffect(() => {
+    if (!file) { setPreview(null); return; }
+    const url = URL.createObjectURL(file);
+    setPreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [file]);
+
+  const save = useCallback(async (close: () => void) => {
+    if (!file) { setErr('Add a photo first.'); return; }
+    setSaving(true); setErr(null);
+    const res = await addProgressPhoto({
+      file, takenOn, pose: pose.trim() || null, notes: notes.trim() || null, fit,
+    });
+    setSaving(false);
+    if (!res.ok) {
+      setErr(res.needsMigration
+        ? 'Progress photos need a quick database migration — run it to start tracking.'
+        : (res.error || 'Could not save. Please try again.'));
+      return;
+    }
+    onSaved();
+    close();
+  }, [file, takenOn, pose, notes, fit, onSaved]);
+
+  // Take Photo / Choose Photo — same sage-tinted pill, side by side.
+  const pickBtn: React.CSSProperties = {
+    flex: 1, appearance: 'none', cursor: 'pointer', boxSizing: 'border-box',
+    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
+    color: SAGE, background: 'rgba(155,176,165,.12)', border: '1px solid rgba(155,176,165,.3)',
+    borderRadius: 11, padding: '11px 12px', fontSize: 13.5, fontWeight: 700, fontFamily: FONT,
+  };
+
+  return (
+    <CenteredModal title="Add photo" onClose={onClose}>
+      {(close) => (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          {/* hidden inputs — camera (capture) + gallery (no capture), one handler */}
+          <input ref={cameraRef} type="file" accept="image/*" capture="environment" hidden
+            onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
+          <input ref={galleryRef} type="file" accept="image/*" hidden
+            onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
+
+          {/* photo area — portrait (3:4) frame; preview when chosen, else a
+              dashed placeholder. The Fill/Fit toggle sits in the top-right when a
+              photo is loaded and controls how it sits in the frame. */}
+          <div style={{
+            position: 'relative', width: '100%', boxSizing: 'border-box', aspectRatio: PHOTO_ASPECT, overflow: 'hidden',
+            borderRadius: 16, background: SURF, border: `1px ${preview ? 'solid' : 'dashed'} ${LINE}`,
+            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, color: MUT,
+          }}>
+            {preview ? (
+              <>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={preview} alt="Selected photo" style={{ width: '100%', height: '100%', objectFit: objectFitFor(fit) }} />
+                <div style={{ position: 'absolute', top: 8, right: 8 }}>
+                  <FitToggle value={fit} onChange={setFit} />
+                </div>
+              </>
+            ) : (
+              <>
+                <span style={{ fontSize: 26, color: SAGE }}>+</span>
+                <span style={{ fontSize: 13 }}>Take or choose a photo</span>
+              </>
+            )}
+          </div>
+
+          {/* Take Photo / Choose Photo */}
+          <div style={{ display: 'flex', gap: 10 }}>
+            <button type="button" onClick={() => cameraRef.current?.click()} style={pickBtn}>
+              <svg width="16" height="16" viewBox="0 0 24 24" stroke="currentColor" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" /><circle cx="12" cy="13" r="4" />
+              </svg>
+              {preview ? 'Retake' : 'Take Photo'}
+            </button>
+            <button type="button" onClick={() => galleryRef.current?.click()} style={pickBtn}>
+              <svg width="16" height="16" viewBox="0 0 24 24" stroke="currentColor" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><path d="M21 15l-5-5L5 21" />
+              </svg>
+              {preview ? 'Replace' : 'Choose Photo'}
+            </button>
           </div>
 
           <div>
-            {label(`WEIGHT (${unit})`)}
-            <input value={weight} onChange={(e) => setWeight(e.target.value)} inputMode="decimal" placeholder="0" autoFocus style={inputStyle} />
+            {modalLabel('DATE')}
+            <input type="date" value={takenOn} max={localDateKey(new Date())}
+              onChange={(e) => setTakenOn(e.target.value)} style={modalInputStyle} />
           </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-            <div>
-              {label('BODY FAT %')}
-              <input value={bodyFat} onChange={(e) => setBodyFat(e.target.value)} inputMode="decimal" placeholder="—" style={inputStyle} />
-            </div>
-            <div>
-              {label(`WAIST (${unit === 'kg' ? 'cm' : 'in'})`)}
-              <input value={waist} onChange={(e) => setWaist(e.target.value)} inputMode="decimal" placeholder="—" style={inputStyle} />
-            </div>
-          </div>
-
           <div>
-            {label('NOTES')}
+            {modalLabel('POSE')}
+            <input value={pose} onChange={(e) => setPose(e.target.value)} placeholder="Optional — e.g. front relaxed"
+              style={{ ...modalInputStyle, fontFamily: FONT }} />
+          </div>
+          <div>
+            {modalLabel('NOTES')}
             <textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Optional" rows={2}
-              style={{ ...inputStyle, fontFamily: FONT, resize: 'none', lineHeight: 1.5 }} />
+              style={{ ...modalInputStyle, fontFamily: FONT, resize: 'none', lineHeight: 1.5 }} />
           </div>
 
           {err && <div style={{ fontSize: 12.5, color: '#e0a4a4' }}>{err}</div>}
 
-          <button type="button" onClick={save} disabled={saving} style={{
+          <button type="button" onClick={() => save(close)} disabled={saving} style={{
             width: '100%', marginTop: 2, background: SAGE, color: BG, border: 'none', borderRadius: 14,
             padding: 14, fontSize: 15, fontWeight: 700, cursor: saving ? 'default' : 'pointer',
             opacity: saving ? 0.7 : 1, boxShadow: '0 8px 24px rgba(155,176,165,.28)',
           }}>
-            {saving ? 'Saving…' : 'Save'}
+            {saving ? 'Uploading…' : 'Save'}
           </button>
         </div>
-      </div>
+      )}
+    </CenteredModal>
+  );
+}
+
+// ── Photo viewer — the tapped photo large with date + notes, plus a Compare flow
+// that picks any second photo and shows them side-by-side (before / after,
+// ordered by date). Same centered shell.
+function PhotoViewerModal({ photo, photos, onClose, onUpdate }: {
+  photo: ProgressPhoto; photos: ProgressPhoto[]; onClose: () => void;
+  onUpdate: (id: string, fit: PhotoFit) => void;
+}) {
+  const [mode, setMode] = useState<'single' | 'pick'>('single');
+  const [other, setOther] = useState<ProgressPhoto | null>(null);
+  const [fit, setFit] = useState<PhotoFit>(photo.fit);
+
+  // Persist the fit change and reflect it in the parent (thumbnails/list) too.
+  const changeFit = (f: PhotoFit) => {
+    setFit(f);
+    updatePhotoFit(photo.id, f);
+    onUpdate(photo.id, f);
+  };
+
+  const caption = (p: ProgressPhoto, align: 'left' | 'center' = 'center') => (
+    <div style={{ textAlign: align, marginTop: 8 }}>
+      <div style={{ fontFamily: MONO, fontSize: 12, color: SAGE }}>{fmtPhotoDate(p.taken_on)}</div>
+      {p.pose && <div style={{ fontSize: 12, color: MUT, marginTop: 3 }}>{p.pose}</div>}
+      {p.notes && <div style={{ fontSize: 12.5, color: TEXT, marginTop: 6, lineHeight: 1.5 }}>{p.notes}</div>}
     </div>
+  );
+  const img = (fitVal: PhotoFit): React.CSSProperties => ({
+    width: '100%', aspectRatio: PHOTO_ASPECT, objectFit: objectFitFor(fitVal),
+    borderRadius: 14, background: SURF, border: `1px solid ${LINE}`, display: 'block',
+  });
+  const others = photos.filter((p) => p.id !== photo.id);
+
+  // Compare view: order the pair oldest → newest so it reads before → after.
+  if (other) {
+    const pair = [photo, other].sort((a, b) => (a.taken_on < b.taken_on ? -1 : 1));
+    return (
+      <CenteredModal title="Compare" onClose={onClose} maxWidth={560}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+          {pair.map((p, i) => (
+            <div key={p.id}>
+              <div style={{ fontSize: 10, letterSpacing: '.14em', color: MUT, marginBottom: 6 }}>
+                {i === 0 ? 'BEFORE' : 'AFTER'}
+              </div>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={p.url ?? ''} alt={`Progress photo ${p.taken_on}`} style={img(p.id === photo.id ? fit : p.fit)} />
+              <div style={{ fontFamily: MONO, fontSize: 12, color: SAGE, marginTop: 8, textAlign: 'center' }}>{fmtPhotoDate(p.taken_on)}</div>
+            </div>
+          ))}
+        </div>
+        <button type="button" onClick={() => setOther(null)} style={{
+          width: '100%', marginTop: 16, background: 'rgba(155,176,165,.12)', color: SAGE,
+          border: '1px solid rgba(155,176,165,.3)', borderRadius: 12, padding: 12,
+          fontSize: 14, fontWeight: 700, fontFamily: FONT, cursor: 'pointer',
+        }}>Back</button>
+      </CenteredModal>
+    );
+  }
+
+  // Pick-a-second-photo view.
+  if (mode === 'pick') {
+    return (
+      <CenteredModal title="Compare with…" onClose={onClose}>
+        {others.length === 0 ? (
+          <div style={{ fontSize: 13.5, color: MUT, lineHeight: 1.6, padding: '8px 2px' }}>
+            Add another photo to compare before &amp; after.
+          </div>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
+            {others.map((p) => (
+              <button key={p.id} type="button" onClick={() => setOther(p)} style={{
+                appearance: 'none', cursor: 'pointer', padding: 0, background: 'none', border: 'none',
+              }}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={p.url ?? ''} alt={`Progress photo ${p.taken_on}`} style={{
+                  width: '100%', aspectRatio: PHOTO_ASPECT, objectFit: objectFitFor(p.fit),
+                  borderRadius: 11, background: SURF, border: `1px solid ${LINE}`, display: 'block',
+                }} />
+                <div style={{ fontFamily: MONO, fontSize: 10.5, color: MUT, marginTop: 5, textAlign: 'center' }}>{fmtPhotoDate(p.taken_on)}</div>
+              </button>
+            ))}
+          </div>
+        )}
+        <button type="button" onClick={() => setMode('single')} style={{
+          width: '100%', marginTop: 16, background: 'rgba(235,230,216,.05)', color: MUT,
+          border: `1px solid ${LINE}`, borderRadius: 12, padding: 12,
+          fontSize: 14, fontWeight: 700, fontFamily: FONT, cursor: 'pointer',
+        }}>Back</button>
+      </CenteredModal>
+    );
+  }
+
+  // Single large view.
+  return (
+    <CenteredModal title={fmtPhotoDate(photo.taken_on)} onClose={onClose} maxWidth={460}>
+      <div style={{ position: 'relative' }}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={photo.url ?? ''} alt={`Progress photo ${photo.taken_on}`} style={img(fit)} />
+        <div style={{ position: 'absolute', top: 8, right: 8 }}>
+          <FitToggle value={fit} onChange={changeFit} />
+        </div>
+      </div>
+      {(photo.pose || photo.notes) && caption(photo)}
+      <button type="button" onClick={() => setMode('pick')} style={{
+        width: '100%', marginTop: 16, background: 'rgba(155,176,165,.12)', color: SAGE,
+        border: '1px solid rgba(155,176,165,.3)', borderRadius: 12, padding: 12,
+        fontSize: 14, fontWeight: 700, fontFamily: FONT, cursor: 'pointer',
+      }}>Compare</button>
+    </CenteredModal>
   );
 }
 
@@ -263,7 +591,10 @@ export default function FitnessProgress() {
   const [program, setProgram] = useState<Program | null>(null);
   const [completions, setCompletions] = useState<WorkoutCompletion[]>([]);
   const [bodyMetrics, setBodyMetrics] = useState<BodyMetric[]>([]);
+  const [photos, setPhotos] = useState<ProgressPhoto[]>([]);
   const [logOpen, setLogOpen] = useState(false);
+  const [addPhotoOpen, setAddPhotoOpen] = useState(false);
+  const [viewing, setViewing] = useState<ProgressPhoto | null>(null);
   const [loading, setLoading] = useState(true);
 
   const today = useMemo(() => startOfDay(new Date()), []);
@@ -271,11 +602,14 @@ export default function FitnessProgress() {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const [{ program }, comps, body] = await Promise.all([loadActiveProgram(), loadCompletions(), loadBodyMetrics()]);
+      const [{ program }, comps, body, pics] = await Promise.all([
+        loadActiveProgram(), loadCompletions(), loadBodyMetrics(), loadProgressPhotos(),
+      ]);
       if (cancelled) return;
       setProgram(program);
       setCompletions(comps);
       setBodyMetrics(body);
+      setPhotos(pics);
       setLoading(false);
     })();
     return () => { cancelled = true; };
@@ -283,6 +617,8 @@ export default function FitnessProgress() {
 
   // Re-pull weigh-ins after logging one (keeps the number + chart in sync).
   const refreshBody = useCallback(async () => { setBodyMetrics(await loadBodyMetrics()); }, []);
+  // Re-pull photos after an upload (fresh signed URLs, newest first).
+  const refreshPhotos = useCallback(async () => { setPhotos(await loadProgressPhotos()); }, []);
 
   // Current/previous weigh-in, the display unit, and the change vs the last entry.
   const body = useMemo(() => {
@@ -486,6 +822,47 @@ export default function FitnessProgress() {
             )}
           </div>
 
+          {/* progress photos */}
+          {secHead('Progress Photos')}
+          <div style={{ marginBottom: 30 }}>
+            {photos.length === 0 ? (
+              <button type="button" onClick={() => setAddPhotoOpen(true)} style={{
+                appearance: 'none', cursor: 'pointer', width: '100%', textAlign: 'center',
+                background: SURF, border: `1px dashed ${LINE}`, borderRadius: 18, padding: '26px 20px', color: TEXT,
+              }}>
+                <div style={{ fontSize: 26, color: SAGE, marginBottom: 8 }}>+</div>
+                <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>Add your first photo</div>
+                <div style={{ fontSize: 12.5, color: MUT, lineHeight: 1.5 }}>Track visible change over time.</div>
+              </button>
+            ) : (
+              <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 4, scrollbarWidth: 'none' }}>
+                {/* + Add photo tile */}
+                <button type="button" onClick={() => setAddPhotoOpen(true)} style={{
+                  appearance: 'none', cursor: 'pointer', flex: '0 0 auto', width: 96, aspectRatio: '3 / 4',
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6,
+                  background: SURF, border: `1px dashed ${LINE}`, borderRadius: 14, color: MUT, padding: 0,
+                }}>
+                  <span style={{ fontSize: 22, color: SAGE }}>+</span>
+                  <span style={{ fontSize: 11 }}>Add photo</span>
+                </button>
+
+                {/* thumbnails, newest first */}
+                {photos.map((p) => (
+                  <button key={p.id} type="button" onClick={() => setViewing(p)} style={{
+                    appearance: 'none', cursor: 'pointer', flex: '0 0 auto', width: 96, padding: 0, background: 'none', border: 'none',
+                  }}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={p.url ?? ''} alt={`Progress photo ${p.taken_on}`} style={{
+                      width: 96, aspectRatio: PHOTO_ASPECT, objectFit: objectFitFor(p.fit),
+                      borderRadius: 14, background: SURF, border: `1px solid ${LINE}`, display: 'block',
+                    }} />
+                    <div style={{ fontFamily: MONO, fontSize: 10.5, color: MUT, marginTop: 6, textAlign: 'center' }}>{fmtPhotoDate(p.taken_on)}</div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
           {/* consistency heatmap */}
           {secHead('Consistency')}
           <div style={{ overflowX: 'auto', marginBottom: 8 }}>
@@ -558,6 +935,21 @@ export default function FitnessProgress() {
 
       {logOpen && (
         <LogWeightModal defaultUnit={body.unit} onClose={() => setLogOpen(false)} onSaved={refreshBody} />
+      )}
+      {addPhotoOpen && (
+        <AddPhotoModal onClose={() => setAddPhotoOpen(false)} onSaved={refreshPhotos} />
+      )}
+      {viewing && (
+        <PhotoViewerModal
+          photo={viewing}
+          photos={photos}
+          onClose={() => setViewing(null)}
+          onUpdate={(id, fit) => {
+            // Optimistic — keep the signed URLs, just swap the fit locally.
+            setPhotos((prev) => prev.map((p) => (p.id === id ? { ...p, fit } : p)));
+            setViewing((prev) => (prev && prev.id === id ? { ...prev, fit } : prev));
+          }}
+        />
       )}
     </div>
   );
