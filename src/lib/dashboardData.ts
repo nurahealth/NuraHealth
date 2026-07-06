@@ -1615,16 +1615,16 @@ export interface CardioFitnessDetail {
 
 const CARDIO_FITNESS_DETAIL: CardioFitnessDetail = {
   source: "apple-watch",
-  vo2: 48,
+  vo2: 42,
   delta3mo: 1.5,
   zoneMin: 20,
   zoneMax: 60,
   zoneLabels: ["Low", "Below avg", "Above avg", "High"],
-  activeZone: 2,
-  trend: [45.5, 46, 46.2, 46.8, 47.3, 48],
+  activeZone: 2, // 42 → 55% of the 20–60 scale → "Above avg"
+  trend: [40, 40.2, 40.5, 41, 41.5, 42],
   trendMonths: ["Jan", "", "Mar", "", "May", "Now"],
-  trendFloor: 44,
-  trendCeil: 49,
+  trendFloor: 38,
+  trendCeil: 43,
   classification: "Above average",
   statusLabel: "Above avg",
 };

@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { getCardioFitnessDetail } from "@/lib/dashboardData";
 import { hexA, smooth } from "@/components/dashboard/cardChartHelpers";
 import MetricEducation, { type MetricEducationItem } from "@/components/dashboard/MetricEducation";
 
@@ -45,7 +46,9 @@ const Chevron = () => (
 // ─────────────────────────────────────────────────────────────────────────────
 export default function CardioFitnessDetailPage() {
   const router = useRouter();
-  const d = DATA;
+  // VO₂ value comes from the shared real/dev-fallback source so the detail and
+  // the dashboard card always agree; the gauge scale + trend stay local sample.
+  const d = { ...DATA, vo2: getCardioFitnessDetail().vo2 };
 
   return (
     <div style={{ minHeight: "100dvh", background: `radial-gradient(120% 72% at 50% -12%, rgba(232,194,102,0.16), transparent 55%), ${BG}`, color: CREAM, fontFamily: SANS, WebkitFontSmoothing: "antialiased" }}>
@@ -74,7 +77,7 @@ export default function CardioFitnessDetailPage() {
 
         {/* 2/3 — EYEBROW + HERO ARC GAUGE */}
         <div className="cf-reveal" style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-          <div style={{ fontSize: 12, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.18em", color: GOLD, marginBottom: 2 }}>{d.eyebrow}</div>
+          <div style={{ fontSize: 12, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.18em", color: GOLD, marginBottom: 18 }}>{d.eyebrow}</div>
           <ArcGauge value={d.vo2} lo={d.gaugeLo} hi={d.gaugeHi} unit={d.unit} />
         </div>
 
