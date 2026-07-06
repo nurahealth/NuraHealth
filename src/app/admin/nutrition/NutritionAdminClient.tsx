@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import {
   Plus, X, Pencil, Trash2, RefreshCw, Shield, Search,
-  ChevronUp, ChevronDown, Loader2,
+  ChevronUp, ChevronDown, Loader2, Check,
 } from "lucide-react";
 import Sidebar from "@/components/Sidebar";
 import NuraPlexus from "@/components/NuraPlexus";
@@ -82,6 +82,32 @@ function slugify(s: string): string {
   return s.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 80);
 }
 
+// Always read a FRESH access token at call time. The browser client refreshes
+// the session in the background, so a token captured once at mount goes stale
+// (~1h) and every admin write then 401s "Unauthorized". Reading getSession() per
+// request returns the current (auto-refreshed) token, fixing create/edit/delete.
+async function getFreshToken(): Promise<string> {
+  const { data: { session } } = await supabase.auth.getSession();
+  return session?.access_token ?? "";
+}
+
+const IMAGE_EXTS = ["jpg", "jpeg", "png", "webp"];
+const IMAGE_MIMES = ["image/jpeg", "image/png", "image/webp"];
+// One validator shared by click AND drag. Drag-dropped files often have an empty
+// file.type, so accept by MIME *or* extension. HEIC gets its own message.
+function validateImageFile(file: File): string | null {
+  const name = (file.name || "").toLowerCase();
+  const ext = name.includes(".") ? name.split(".").pop()! : "";
+  if (file.type === "image/heic" || file.type === "image/heif" || ext === "heic" || ext === "heif") {
+    return "HEIC isn't supported — export as JPEG or PNG first.";
+  }
+  const okMime = IMAGE_MIMES.includes(file.type);
+  const okExt = IMAGE_EXTS.includes(ext);
+  if (!okMime && !okExt) return "Use a JPEG, PNG, or WebP image.";
+  if (file.size > 5 * 1024 * 1024) return "Image must be under 5MB.";
+  return null;
+}
+
 const inputStyle: React.CSSProperties = {
   width: "100%", padding: "10px 12px", background: SURFACE, border: `0.5px solid ${BORDER}`,
   borderRadius: 10, fontFamily: SANS, fontSize: 14, color: TEXT, outline: "none", boxSizing: "border-box",
@@ -94,6 +120,150 @@ const miniBtn: React.CSSProperties = {
   width: 30, height: 30, display: "flex", alignItems: "center", justifyContent: "center",
   background: "transparent", border: `0.5px solid ${BORDER}`, borderRadius: 8, color: TEXT_SEC, cursor: "pointer", flexShrink: 0,
 };
+
+// ── Combobox option sets (canonical strings pulled from the app's own code) ────
+const CUISINE_OPTIONS = [
+  "American", "Argentinian", "Brazilian", "British", "Cajun/Creole", "Caribbean", "Chinese",
+  "Eastern European", "Ethiopian", "Filipino", "French", "Fusion", "German", "Greek", "Hawaiian",
+  "Indian", "Indonesian", "Israeli", "Italian", "Japanese", "Korean", "Lebanese", "Mediterranean",
+  "Mexican", "Middle Eastern", "Moroccan", "Nordic/Scandinavian", "North African", "Persian",
+  "Peruvian", "Southern (US)", "Spanish", "Tex-Mex", "Thai", "Turkish", "Vietnamese", "West African",
+].sort((a, b) => a.localeCompare(b));
+
+// Exactly the canonical goal tags used by /recipes filtering + the meal engine
+// (GOALS in RecipesBrowseClient / MARKER_GOALS in lib/nutrition).
+const GOAL_TAG_OPTIONS = ["anti-inflammatory", "gut-health", "heart", "energy", "blood-sugar"];
+
+// Distinct physiological system tags present in the recipes + ingredients seed.
+const SYSTEM_TAG_OPTIONS = [
+  "mitochondria", "gut-lining", "gut-health", "inflammation", "detox", "brain", "joints",
+  "immunity", "heart", "energy", "digestion", "blood-sugar", "methylation", "absorption",
+];
+
+// Canonical allergen flags the dietary-pattern filter checks (lib/nutrition
+// PATTERN_BLOCK) plus the common additions, all in the contains-x format.
+const ALLERGEN_OPTIONS = [
+  "contains-dairy", "contains-gluten", "contains-eggs", "contains-soy", "contains-fish",
+  "contains-shellfish", "contains-red-meat", "contains-nuts", "contains-peanuts", "contains-sesame",
+];
+
+// Custom-value normalizers.
+function normalizeTag(raw: string): string {
+  return raw.toLowerCase().trim().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "").replace(/-+/g, "-").replace(/^-|-$/g, "");
+}
+function normalizeAllergen(raw: string): string {
+  const t = normalizeTag(raw);
+  if (!t) return "";
+  return t.startsWith("contains-") ? t : `contains-${t}`;
+}
+
+// ── Combobox — searchable dropdown + "add custom", single or multi select ──────
+type ComboboxProps = {
+  options: string[];
+  placeholder?: string;
+  allowCustom?: boolean;
+  normalize?: (raw: string) => string;
+} & (
+  | { mode: "single"; value: string; onChange: (v: string) => void }
+  | { mode: "multi"; value: string[]; onChange: (v: string[]) => void }
+);
+
+function Combobox(props: ComboboxProps) {
+  const { options, placeholder, allowCustom = true, normalize } = props;
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: MouseEvent) => {
+      if (rootRef.current && !rootRef.current.contains(e.target as Node)) { setOpen(false); setQuery(""); }
+    };
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
+  }, [open]);
+
+  const selected = props.mode === "multi" ? props.value : (props.value ? [props.value] : []);
+  const selectedSet = new Set(selected);
+
+  // Show preset options plus any already-selected custom values, so custom chips
+  // can also be toggled from the list.
+  const allOptions = [...options];
+  for (const v of selected) if (!allOptions.includes(v)) allOptions.push(v);
+
+  const q = query.trim().toLowerCase();
+  const filtered = allOptions.filter((o) => o.toLowerCase().includes(q));
+  const customValue = query.trim() ? (normalize ? normalize(query) : query.trim()) : "";
+  const showAddCustom = allowCustom && !!customValue && !allOptions.some((o) => o.toLowerCase() === customValue.toLowerCase());
+
+  const pick = (val: string) => {
+    if (!val) return;
+    if (props.mode === "single") { props.onChange(val); setOpen(false); setQuery(""); }
+    else {
+      if (selectedSet.has(val)) props.onChange(props.value.filter((v) => v !== val));
+      else props.onChange([...props.value, val]);
+      setQuery("");
+    }
+  };
+  const remove = (val: string) => {
+    if (props.mode === "single") props.onChange("");
+    else props.onChange(props.value.filter((v) => v !== val));
+  };
+
+  const chip: React.CSSProperties = {
+    display: "inline-flex", alignItems: "center", gap: 5, padding: "3px 6px 3px 9px", borderRadius: 999,
+    background: `rgba(${SAGE_RGB},0.12)`, border: `0.5px solid rgba(${SAGE_RGB},0.3)`,
+    fontFamily: SANS, fontSize: 12, fontWeight: 600, color: SAGE,
+  };
+
+  return (
+    <div ref={rootRef} style={{ position: "relative" }}>
+      <div onClick={() => setOpen((o) => !o)} style={{ ...inputStyle, cursor: "pointer", display: "flex", alignItems: "center", flexWrap: "wrap", gap: 6, minHeight: 42, paddingTop: 7, paddingBottom: 7 }}>
+        {selected.length === 0 && <span style={{ color: TEXT_TER }}>{placeholder ?? "Select…"}</span>}
+        {props.mode === "multi" && selected.map((v) => (
+          <span key={v} style={chip}>
+            {v}
+            <button type="button" onClick={(e) => { e.stopPropagation(); remove(v); }} style={{ display: "flex", background: "transparent", border: "none", padding: 0, cursor: "pointer", color: SAGE }}><X size={12} /></button>
+          </span>
+        ))}
+        {props.mode === "single" && selected.length > 0 && <span style={{ color: TEXT, flex: 1 }}>{selected[0]}</span>}
+        <ChevronDown size={15} style={{ marginLeft: "auto", color: TEXT_TER, flexShrink: 0 }} />
+      </div>
+
+      {open && (
+        <div style={{ position: "absolute", zIndex: 30, top: "calc(100% + 4px)", left: 0, right: 0, background: BG, border: `0.5px solid ${BORDER_STRONG}`, borderRadius: 12, boxShadow: "0 14px 36px rgba(0,0,0,0.45)", overflow: "hidden" }}>
+          <div style={{ padding: 8, borderBottom: `0.5px solid ${BORDER}` }}>
+            <input
+              autoFocus value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search or add…"
+              onKeyDown={(e) => { if (e.key === "Enter" && showAddCustom) { e.preventDefault(); pick(customValue); } }}
+              style={{ ...inputStyle, padding: "8px 10px" }}
+            />
+          </div>
+          <div style={{ maxHeight: 224, overflowY: "auto", padding: 6 }}>
+            {filtered.map((o) => {
+              const on = selectedSet.has(o);
+              return (
+                <button key={o} type="button" onClick={() => pick(o)} style={{ width: "100%", display: "flex", alignItems: "center", gap: 9, padding: "9px 10px", background: on && props.mode === "multi" ? `rgba(${SAGE_RGB},0.08)` : "transparent", border: "none", borderRadius: 8, cursor: "pointer", textAlign: "left", fontFamily: SANS, fontSize: 13.5, color: TEXT }}>
+                  {props.mode === "multi" && (
+                    <span style={{ width: 16, height: 16, flexShrink: 0, borderRadius: 4, border: `1.5px solid ${on ? SAGE : BORDER_STRONG}`, background: on ? SAGE : "transparent", display: "flex", alignItems: "center", justifyContent: "center" }}>{on && <Check size={11} color={SAGE_ON} strokeWidth={3} />}</span>
+                  )}
+                  <span style={{ flex: 1 }}>{o}</span>
+                  {props.mode === "single" && on && <Check size={15} color={SAGE} />}
+                </button>
+              );
+            })}
+            {filtered.length === 0 && !showAddCustom && <div style={{ padding: 10, fontFamily: SANS, fontSize: 12.5, color: TEXT_TER }}>No matches</div>}
+            {showAddCustom && (
+              <button type="button" onClick={() => pick(customValue)} style={{ width: "100%", display: "flex", alignItems: "center", gap: 8, padding: "9px 10px", background: "transparent", border: "none", borderRadius: 8, cursor: "pointer", textAlign: "left", fontFamily: SANS, fontSize: 13.5, fontWeight: 600, color: SAGE }}>
+                <Plus size={13} /> Add “{customValue}”
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 // ── Field wrapper ─────────────────────────────────────────────────────────────
 function Field({ label, required, error, children }: { label: string; required?: boolean; error?: string; children: React.ReactNode }) {
@@ -387,9 +557,11 @@ function RecipeModal({ token, editing, ingredients, onClose, onSuccess }: { toke
   // calling row can select it right away. Full deep-dive content is added later.
   const createIngredient = async (draft: { name: string; category: string; tagline: string }): Promise<string | null> => {
     try {
+      const tok = (await getFreshToken()) || token;
+      if (!tok) throw new Error("Your admin session has expired — reload the page and sign in again.");
       const res = await fetch("/api/admin/ingredients", {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${tok}` },
         body: JSON.stringify({ name: draft.name, category: draft.category, tagline: draft.tagline || null, status: "draft" }),
       });
       const data = await res.json() as { ingredient?: AdminIngredient; error?: string };
@@ -406,10 +578,10 @@ function RecipeModal({ token, editing, ingredients, onClose, onSuccess }: { toke
   // on the recipe when the form is submitted.
   const uploadImage = async (file: File) => {
     setError("");
-    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
-      setError("Use a JPEG, PNG, or WebP image"); return;
-    }
-    if (file.size > 5 * 1024 * 1024) { setError("Image must be under 5MB"); return; }
+    const invalid = validateImageFile(file);
+    if (invalid) { setError(invalid); return; }
+    const tok = (await getFreshToken()) || token;
+    if (!tok) { setError("Your admin session has expired — reload the page and sign in again."); return; }
     setUploading(true);
     try {
       const fd = new FormData();
@@ -417,7 +589,7 @@ function RecipeModal({ token, editing, ingredients, onClose, onSuccess }: { toke
       fd.append("slug", slug || slugify(title) || "recipe");
       const res = await fetch("/api/admin/recipes/upload-image", {
         method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${tok}` },
         body: fd,
       });
       const data = await res.json() as { url?: string; error?: string };
@@ -436,7 +608,8 @@ function RecipeModal({ token, editing, ingredients, onClose, onSuccess }: { toke
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch(`/api/admin/recipes/${editing.id}`, { headers: { Authorization: `Bearer ${token}` } });
+        const tok = (await getFreshToken()) || token;
+        const res = await fetch(`/api/admin/recipes/${editing.id}`, { headers: { Authorization: `Bearer ${tok}` } });
         const data = await res.json() as { ingredients?: { ingredient_id: string; amount_text: string | null; primary_system: string | null; context_note: string | null }[] };
         if (cancelled) return;
         setLinks((data.ingredients ?? []).map((l) => ({ ingredient_id: l.ingredient_id, amount_text: l.amount_text ?? "", primary_system: l.primary_system ?? "", context_note: l.context_note ?? "" })));
@@ -455,7 +628,8 @@ function RecipeModal({ token, editing, ingredients, onClose, onSuccess }: { toke
     const cErr = !category ? "Category is required" : "";
     setTitleErr(tErr); setCategoryErr(cErr);
     if (tErr || cErr) { setError("Please fix the highlighted fields."); return; }
-    if (!token) { setError("Your admin session isn't ready yet — reload the page and try again."); return; }
+    const tok = (await getFreshToken()) || token;
+    if (!tok) { setError("Your admin session has expired — reload the page and sign in again."); return; }
     setBusy(true); setError("");
     const payload = {
       title, slug, description, category, cuisine,
@@ -467,7 +641,7 @@ function RecipeModal({ token, editing, ingredients, onClose, onSuccess }: { toke
     try {
       const res = await fetch(editing ? `/api/admin/recipes/${editing.id}` : "/api/admin/recipes", {
         method: editing ? "PATCH" : "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${tok}` },
         body: JSON.stringify(payload),
       });
       if (!res.ok) {
@@ -491,16 +665,16 @@ function RecipeModal({ token, editing, ingredients, onClose, onSuccess }: { toke
             {RECIPE_CATEGORIES.map((c) => <option key={c} value={c}>{pretty(c)}</option>)}
           </select>
         </Field>
-        <Field label="Cuisine"><input value={cuisine} onChange={(e) => setCuisine(e.target.value)} placeholder="e.g. Mediterranean" style={inputStyle} /></Field>
+        <Field label="Cuisine"><Combobox mode="single" value={cuisine} onChange={setCuisine} options={CUISINE_OPTIONS} placeholder="Select or add a cuisine" /></Field>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
         <Field label="Total minutes"><input value={totalMinutes} onChange={(e) => setTotalMinutes(e.target.value)} inputMode="numeric" placeholder="—" style={inputStyle} /></Field>
         <Field label="Servings"><input value={servings} onChange={(e) => setServings(e.target.value)} inputMode="numeric" placeholder="—" style={inputStyle} /></Field>
       </div>
       <Field label="Organic"><Toggle on={isOrganic} onToggle={() => setIsOrganic((v) => !v)} onLabel="Yes — organic" offLabel="Not flagged organic" /></Field>
-      <Field label="Goal tags"><TagInput value={goalTags} onChange={setGoalTags} placeholder="e.g. anti-inflammatory" /></Field>
-      <Field label="System tags"><TagInput value={systemTags} onChange={setSystemTags} placeholder="e.g. gut, immune" /></Field>
-      <Field label="Allergen flags"><TagInput value={allergenFlags} onChange={setAllergenFlags} placeholder="e.g. dairy, gluten" /></Field>
+      <Field label="Goal tags"><Combobox mode="multi" value={goalTags} onChange={setGoalTags} options={GOAL_TAG_OPTIONS} normalize={normalizeTag} placeholder="Add goal tags" /></Field>
+      <Field label="System tags"><Combobox mode="multi" value={systemTags} onChange={setSystemTags} options={SYSTEM_TAG_OPTIONS} normalize={normalizeTag} placeholder="Add system tags" /></Field>
+      <Field label="Allergen flags"><Combobox mode="multi" value={allergenFlags} onChange={setAllergenFlags} options={ALLERGEN_OPTIONS} normalize={normalizeAllergen} placeholder="Add allergen flags" /></Field>
       <Field label="Hero style"><input value={heroStyle} onChange={(e) => setHeroStyle(e.target.value)} placeholder="Optional gradient key (defaults to slug)" style={inputStyle} /></Field>
       <Field label="Photo">
         <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
@@ -509,7 +683,13 @@ function RecipeModal({ token, editing, ingredients, onClose, onSuccess }: { toke
           <div
             onDragOver={(e) => { e.preventDefault(); if (!uploading && !dragOver) setDragOver(true); }}
             onDragLeave={(e) => { e.preventDefault(); setDragOver(false); }}
-            onDrop={(e) => { e.preventDefault(); setDragOver(false); const f = e.dataTransfer.files?.[0]; if (f) uploadImage(f); }}
+            onDrop={(e) => {
+              e.preventDefault(); setDragOver(false);
+              const f = e.dataTransfer.files?.[0];
+              // Dragging an image FROM a browser/Photos yields no file, just a URL.
+              if (!f) { setError("Drag an image file from Finder, or use Upload photo."); return; }
+              uploadImage(f);
+            }}
             style={{ width: 128, height: 88, borderRadius: 10, overflow: "hidden", flexShrink: 0, position: "relative", background: sageGradient(slug || "recipe"), border: dragOver ? `1.5px dashed ${SAGE}` : `0.5px solid ${BORDER}`, transition: "border-color 150ms" }}
           >
             {imageUrl && (
@@ -571,6 +751,8 @@ function IngredientModal({ token, editing, ingredients, onClose, onSuccess }: { 
   const save = async () => {
     if (!name.trim()) { setError("Name is required"); return; }
     if (!category) { setError("Category is required"); return; }
+    const tok = (await getFreshToken()) || token;
+    if (!tok) { setError("Your admin session has expired — reload the page and sign in again."); return; }
     setBusy(true); setError("");
     const payload = {
       name, slug, category, tagline, is_organic: isOrganic,
@@ -580,7 +762,7 @@ function IngredientModal({ token, editing, ingredients, onClose, onSuccess }: { 
     try {
       const res = await fetch(editing ? `/api/admin/ingredients/${editing.id}` : "/api/admin/ingredients", {
         method: editing ? "PATCH" : "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${tok}` },
         body: JSON.stringify(payload),
       });
       if (!res.ok) {
@@ -664,11 +846,12 @@ export default function NutritionAdminClient({ initialRecipes, initialIngredient
   }, []);
 
   const refresh = useCallback(async () => {
-    if (!token) return;
+    const tok = (await getFreshToken()) || token;
+    if (!tok) return;
     try {
       const [r, i] = await Promise.all([
-        fetch("/api/admin/recipes", { headers: { Authorization: `Bearer ${token}` } }),
-        fetch("/api/admin/ingredients", { headers: { Authorization: `Bearer ${token}` } }),
+        fetch("/api/admin/recipes", { headers: { Authorization: `Bearer ${tok}` } }),
+        fetch("/api/admin/ingredients", { headers: { Authorization: `Bearer ${tok}` } }),
       ]);
       if (r.ok) setRecipes(((await r.json()) as { recipes: AdminRecipe[] }).recipes ?? []);
       if (i.ok) setIngredients(((await i.json()) as { ingredients: AdminIngredient[] }).ingredients ?? []);
@@ -679,8 +862,10 @@ export default function NutritionAdminClient({ initialRecipes, initialIngredient
     if (!confirm) return;
     setDeleting(true); setDeleteError("");
     try {
+      const tok = (await getFreshToken()) || token;
+      if (!tok) throw new Error("Your admin session has expired — reload the page and sign in again.");
       const path = confirm.kind === "recipes" ? `/api/admin/recipes/${confirm.id}` : `/api/admin/ingredients/${confirm.id}`;
-      const res = await fetch(path, { method: "DELETE", headers: { Authorization: `Bearer ${token}` } });
+      const res = await fetch(path, { method: "DELETE", headers: { Authorization: `Bearer ${tok}` } });
       if (!res.ok) {
         let msg = "Delete failed";
         try { const b = await res.json() as { error?: string }; if (b.error) msg = b.error; } catch {}

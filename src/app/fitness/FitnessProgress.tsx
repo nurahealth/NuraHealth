@@ -586,6 +586,22 @@ function PhotoViewerModal({ photo, photos, onClose, onUpdate }: {
   );
 }
 
+// ── Milestone badge icons — inner SVG paths, same stroke style as the bottom-nav
+// icons (viewBox 24, currentColor, no fill, round joins). Colour comes from the
+// badge (SAGE unlocked / MUT locked).
+const BADGE_ICON: Record<string, React.ReactNode> = {
+  check: <path d="M20 6L9 17l-5-5" />,
+  flame: <path d="M12 2c1 3-1 4-1 6a3 3 0 0 0 3 3c2 0 3-2 3-4 2 1 3 3 3 5a6 6 0 0 1-12 0c0-4 3-6 4-10z" />,
+  star: <path d="M12 3l2.6 5.6 6 .8-4.4 4.2 1.1 6-5.3-2.9-5.3 2.9 1.1-6L3 9.4l6-.8z" />,
+  medal: <><circle cx="12" cy="15" r="6" /><path d="M9 9.5L6 3M15 9.5L18 3" /></>,
+  trophy: <><path d="M7 4h10v5a5 5 0 0 1-10 0z" /><path d="M7 6H4v1a3 3 0 0 0 3 3M17 6h3v1a3 3 0 0 1-3 3M9 21h6M12 16v5" /></>,
+  zap: <path d="M13 2L4 14h6l-1 8 9-12h-6z" />,
+  calendar: <><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18M9 16l2 2 4-4" /></>,
+  scale: <><circle cx="12" cy="12" r="9" /><path d="M12 12l4-4M12 3v2M3 12h2M19 12h2" /></>,
+  trend: <><polyline points="3 17 9 11 13 15 21 7" /><polyline points="15 7 21 7 21 13" /></>,
+  lock: <><rect x="5" y="11" width="14" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /></>,
+};
+
 export default function FitnessProgress() {
   const router = useRouter();
   const [program, setProgram] = useState<Program | null>(null);
@@ -698,6 +714,69 @@ export default function FitnessProgress() {
       };
     });
   }, [completions, program]);
+
+  // ── Milestones & achievements — all derived from workout_completions +
+  // body_metrics (no new tables). Each badge carries a current/target count so
+  // locked ones can show progress toward the next tier; the grid is ordered
+  // unlocked-first, then by how close it is.
+  const milestones = useMemo(() => {
+    const total = completions.length;
+
+    // Completions per Monday-first week → best single week + longest run of
+    // consecutive weeks that MET the plan target (same week logic as the streak).
+    const weekCounts = new Map<string, number>();
+    for (const c of completions) {
+      const k = localDateKey(startOfWeek(new Date(c.completed_at)));
+      weekCounts.set(k, (weekCounts.get(k) ?? 0) + 1);
+    }
+    const bestWeekCount = weekCounts.size ? Math.max(...weekCounts.values()) : 0;
+    const metWeekTimes = [...weekCounts.entries()]
+      .filter(([, n]) => n >= weeklyTarget)
+      .map(([k]) => new Date(`${k}T00:00:00`).getTime())
+      .sort((a, b) => a - b);
+    let bestMetRun = 0, run = 0, prevT: number | null = null;
+    for (const t of metWeekTimes) {
+      run = prevT !== null && Math.round((t - prevT) / 86400000) === 7 ? run + 1 : 1;
+      bestMetRun = Math.max(bestMetRun, run);
+      prevT = t;
+    }
+
+    // Body: weigh-in count + how many distinct weeks have a weigh-in.
+    const weighIns = bodyMetrics.filter((m) => m.weight != null);
+    const weighWeeks = new Set(weighIns.map((m) => localDateKey(startOfWeek(new Date(`${m.recorded_on}T00:00:00`)))));
+
+    const mk = (id: string, icon: React.ReactNode, title: string, desc: string, current: number, target: number) => ({
+      id, icon, title, desc, target,
+      current: Math.max(0, Math.min(current, target)),   // capped for display
+      unlocked: current >= target,
+      progress: target > 0 ? Math.min(1, current / target) : 0,
+    });
+
+    const list = [
+      mk('first-workout', BADGE_ICON.check, 'First Workout', 'Complete your first workout', total, 1),
+      mk('getting-started', BADGE_ICON.flame, 'Getting Started', 'Log 10 workouts', total, 10),
+      mk('committed', BADGE_ICON.star, 'Committed', 'Log 25 workouts', total, 25),
+      mk('dedicated', BADGE_ICON.medal, 'Dedicated', 'Log 50 workouts', total, 50),
+      mk('century', BADGE_ICON.trophy, 'Century', 'Log 100 workouts', total, 100),
+      mk('streak-1', BADGE_ICON.zap, 'On the Board', 'Reach a 1-week streak', bestStreak, 1),
+      mk('streak-4', BADGE_ICON.zap, 'Four in a Row', 'Reach a 4-week streak', bestStreak, 4),
+      mk('streak-8', BADGE_ICON.zap, 'Two Months', 'Reach an 8-week streak', bestStreak, 8),
+      mk('streak-12', BADGE_ICON.zap, 'Quarter Strong', 'Reach a 12-week streak', bestStreak, 12),
+      mk('perfect-week', BADGE_ICON.calendar, 'Perfect Week', 'Hit your weekly plan target', bestWeekCount, weeklyTarget),
+      mk('perfect-month', BADGE_ICON.calendar, 'Perfect Month', '4 straight weeks on target', bestMetRun, 4),
+      mk('first-weighin', BADGE_ICON.scale, 'First Weigh-in', 'Log your first weight', weighIns.length, 1),
+      mk('tracker', BADGE_ICON.trend, 'Tracker', 'Log weight in 4 different weeks', weighWeeks.size, 4),
+    ];
+
+    // Unlocked first, then most-progressed; keep declaration order as tiebreak.
+    return list
+      .map((b, i) => ({ b, i }))
+      .sort((a, z) =>
+        (Number(z.b.unlocked) - Number(a.b.unlocked)) ||
+        (z.b.progress - a.b.progress) ||
+        (a.i - z.i))
+      .map(({ b }) => b);
+  }, [completions, bodyMetrics, weeklyTarget, bestStreak]);
 
   const remaining = Math.max(0, weeklyTarget - completedThisWeek);
   const statusLine = completedThisWeek === 0
@@ -885,6 +964,51 @@ export default function FitnessProgress() {
             </div>
           </div>
           <div style={{ fontSize: 11, color: MUT, marginBottom: 30 }}>Last {HEATMAP_WEEKS} weeks</div>
+
+          {/* milestones & achievements */}
+          {secHead('Milestones')}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 30 }}>
+            {milestones.map((b) => (
+              <div key={b.id} style={{
+                display: 'flex', flexDirection: 'column', gap: 9,
+                background: SURF, borderRadius: 14, padding: 13,
+                border: `1px solid ${b.unlocked ? 'rgba(155,176,165,.35)' : LINE}`,
+                opacity: b.unlocked ? 1 : 0.7,
+              }}>
+                {/* icon + locked marker */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{
+                    width: 34, height: 34, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    background: b.unlocked ? 'rgba(155,176,165,.14)' : 'rgba(235,230,216,.05)',
+                    border: `1px solid ${b.unlocked ? 'rgba(155,176,165,.3)' : LINE}`,
+                    color: b.unlocked ? SAGE : MUT,
+                  }}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" stroke="currentColor" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">{b.icon}</svg>
+                  </div>
+                  {!b.unlocked && (
+                    <svg width="14" height="14" viewBox="0 0 24 24" stroke={MUT} fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.55 }}>{BADGE_ICON.lock}</svg>
+                  )}
+                </div>
+
+                {/* title + description */}
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: b.unlocked ? TEXT : MUT }}>{b.title}</div>
+                  <div style={{ fontSize: 11, color: MUT, marginTop: 3, lineHeight: 1.4 }}>{b.desc}</div>
+                </div>
+
+                {/* progress — count in mono + a thin bar (bottom-aligned) */}
+                <div style={{ marginTop: 'auto' }}>
+                  <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 5 }}>
+                    <span style={{ fontFamily: MONO, fontSize: 12, fontWeight: 700, color: b.unlocked ? SAGE : TEXT }}>{b.current} / {b.target}</span>
+                    {b.unlocked && <span style={{ fontSize: 9, letterSpacing: '.12em', color: SAGE }}>UNLOCKED</span>}
+                  </div>
+                  <div style={{ height: 5, borderRadius: 3, background: 'rgba(235,230,216,.08)', overflow: 'hidden' }}>
+                    <div style={{ height: '100%', width: `${Math.round(b.progress * 100)}%`, background: b.unlocked ? SAGE : 'rgba(155,176,165,.45)', borderRadius: 3, transition: 'width .5s ease' }} />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
 
           {/* recent activity */}
           {secHead('Recent activity')}

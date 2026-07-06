@@ -9,6 +9,7 @@ export const maxDuration = 60;
 // (so no per-user storage policies are needed), returns a public URL.
 const ALLOWED_EXT = new Set(["jpg", "jpeg", "png", "webp"]);
 const ALLOWED_MIME = new Set(["image/jpeg", "image/png", "image/webp"]);
+const MIME_TO_EXT: Record<string, string> = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" };
 const MAX_BYTES = 5 * 1024 * 1024; // 5MB
 
 function slugify(s: string): string {
@@ -34,14 +35,22 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       return NextResponse.json({ error: "Image must be under 5MB" }, { status: 400 });
     }
 
-    const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
-    if (!ALLOWED_EXT.has(ext) || (file.type && !ALLOWED_MIME.has(file.type))) {
+    const name = (file.name || "").toLowerCase();
+    const ext = name.includes(".") ? name.split(".").pop()! : "";
+    if (file.type === "image/heic" || file.type === "image/heif" || ext === "heic" || ext === "heif") {
+      return NextResponse.json({ error: "HEIC isn't supported — export as JPEG or PNG first." }, { status: 400 });
+    }
+    // Accept by extension OR MIME — drag-dropped files often have an empty type.
+    const okExt = ALLOWED_EXT.has(ext);
+    const okMime = file.type ? ALLOWED_MIME.has(file.type) : false;
+    if (!okExt && !okMime) {
       return NextResponse.json({ error: "Use a JPEG, PNG, or WebP image" }, { status: 400 });
     }
 
     const slugRaw = formData.get("slug");
     const slug = slugify(typeof slugRaw === "string" ? slugRaw : "recipe");
-    const path = `recipes/${slug}-${Date.now()}.${ext}`;
+    const finalExt = okExt ? ext : (MIME_TO_EXT[file.type] ?? "jpg");
+    const path = `recipes/${slug}-${Date.now()}.${finalExt}`;
 
     const buffer = Buffer.from(await file.arrayBuffer());
     const { error: uploadError } = await supabaseAdmin.storage

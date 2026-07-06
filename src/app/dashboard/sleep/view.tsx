@@ -22,9 +22,17 @@ const DEEP = "#5aa0e6";
 const REM = "#5dccae";
 const LIGHT = "#9bb0a5";
 const AWAKE = "#d3a253";
-const HR_CORAL = "#f0a890";
 const DEEP_RGB = "90,160,230";
 const REM_RGB = "93,204,174";
+
+// Overnight-chart identities — each matches its own metric tab (not sleep-blue):
+// Heart rate → red, HRV → aqua-teal. Lighter shades feed the fill/glow.
+const HR_RED = "#e8615c";
+const HR_RED_LIGHT = "#f2998f";
+const HR_RED_GLOW = "242,153,143";
+const HRV_AQUA = "#4fc4d6";
+const HRV_AQUA_LIGHT = "#7fdce8";
+const HRV_AQUA_GLOW = "127,220,232";
 
 // Cool blue→teal aurora pinned to the top, matching the reference.
 const SLEEP_AURORA =
@@ -48,6 +56,22 @@ const Chevron = () => (
 const InfoIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="9" /><path d="M12 11v5M12 8h.01" strokeLinecap="round" /></svg>
 );
+const ChevronRight = ({ color }: { color: string }) => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6" /></svg>
+);
+
+// Header row for a tappable chart card: title (left) + a "View" affordance
+// (right) in the chart's color, so it reads as a shortcut into that metric tab.
+function ChartHeader({ title, color }: { title: string; color: string }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+      <h3 style={{ fontSize: 16, fontWeight: 700, letterSpacing: "-0.2px", margin: 0 }}>{title}</h3>
+      <span style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 12, fontWeight: 600, color }}>
+        View <ChevronRight color={color} />
+      </span>
+    </div>
+  );
+}
 
 // ── Status badge (Optimal = teal · Good = gold · Alert = coral) ────────────────
 const BADGE: Record<MetricStatus, { color: string; rgb: string; label: string }> = {
@@ -107,6 +131,8 @@ export default function SleepDetailPage() {
         .s-reveal { opacity: 0; transform: translateY(18px); animation: s-rise .7s cubic-bezier(.2,.7,.2,1) forwards; }
         @keyframes s-rise { to { opacity: 1; transform: none; } }
         .s-back:hover { color: var(--nura-text-primary) !important; }
+        .s-tap { cursor: pointer; transition: transform .18s ease, border-color .18s ease; }
+        .s-tap:hover { transform: translateY(-1px); border-color: rgba(235,230,216,0.18); }
         * { font-variant-numeric: tabular-nums; }
       `}</style>
 
@@ -230,38 +256,54 @@ export default function SleepDetailPage() {
           </div>
         </GlassCard>
 
-        {/* 6 · Heart rate — nighttime line on the hypnogram timeline */}
-        <GlassCard className="s-reveal" style={{ animationDelay: ".36s", marginTop: 16 }}>
-          <h3 style={{ fontSize: 16, fontWeight: 700, letterSpacing: "-0.2px" }}>Heart rate</h3>
+        {/* 6 · Heart rate — nighttime line, tappable shortcut into the HR tab */}
+        <GlassCard
+          className="s-reveal s-tap"
+          style={{ animationDelay: ".36s", marginTop: 16 }}
+          role="link"
+          tabIndex={0}
+          ariaLabel="Open Heart Rate detail"
+          onClick={() => router.push("/dashboard/heart-rate")}
+          onKeyDown={(e) => { if (e.key === "Enter") router.push("/dashboard/heart-rate"); }}
+        >
+          <ChartHeader title="Heart rate" color={HR_RED} />
           <div style={{ fontSize: 12.5, color: MUTED, margin: "3px 0 6px" }}>Beats per minute while you slept</div>
 
           <NightLineChart
-            data={HR} floor={40} ceil={72} ticks={[45, 55, 65]} unit="bpm"
-            stroke={HR_CORAL} glowRgb="240,168,144" avg={52} avgLabel="avg 52"
+            data={HR} floor={40} ceil={72} ticks={[44, 52, 60, 68]} unit="bpm"
+            stroke={HR_RED} strokeLight={HR_RED_LIGHT} glowRgb={HR_RED_GLOW} avg={52} avgLabel="avg 52"
             seq={SEQ} markers={hrMarkers}
           />
           <Axis labels={d.night.axisLabels} />
 
-          <Caption color={HR_CORAL}>
+          <Caption color={HR_RED}>
             Your heart rate bottomed out at <b style={{ color: TEXT }}>44&nbsp;bpm</b> in deep sleep — about 20% below your
             daytime resting rate, a sign of strong recovery. The gradual climb toward 6&nbsp;a.m. is your body preparing to
             wake, which is completely normal.
           </Caption>
         </GlassCard>
 
-        {/* 7 · Heart rate variability — same treatment, teal line */}
-        <GlassCard className="s-reveal" style={{ animationDelay: ".44s", marginTop: 16 }}>
-          <h3 style={{ fontSize: 16, fontWeight: 700, letterSpacing: "-0.2px" }}>Heart rate variability</h3>
+        {/* 7 · Heart rate variability — tappable shortcut into the HRV tab */}
+        <GlassCard
+          className="s-reveal s-tap"
+          style={{ animationDelay: ".44s", marginTop: 16 }}
+          role="link"
+          tabIndex={0}
+          ariaLabel="Open Heart Rate Variability detail"
+          onClick={() => router.push("/dashboard/hrv")}
+          onKeyDown={(e) => { if (e.key === "Enter") router.push("/dashboard/hrv"); }}
+        >
+          <ChartHeader title="Heart rate variability" color={HRV_AQUA} />
           <div style={{ fontSize: 12.5, color: MUTED, margin: "3px 0 6px" }}>HRV rises with deep, restorative sleep</div>
 
           <NightLineChart
-            data={HRV} floor={30} ceil={100} ticks={[40, 60, 80]} unit="ms"
-            stroke={REM} glowRgb={REM_RGB} avg={63} avgLabel="avg 63"
+            data={HRV} floor={30} ceil={100} ticks={[40, 55, 70, 85]} unit="ms"
+            stroke={HRV_AQUA} strokeLight={HRV_AQUA_LIGHT} glowRgb={HRV_AQUA_GLOW} avg={63} avgLabel="avg 63"
             seq={SEQ} markers={hrvMarkers}
           />
           <Axis labels={d.night.axisLabels} />
 
-          <Caption color={REM}>
+          <Caption color={HRV_AQUA}>
             HRV peaked above your baseline during the night&rsquo;s deep sleep — a marker of nervous-system recovery — then
             eased naturally as REM and light sleep took over toward morning.
           </Caption>
@@ -408,16 +450,21 @@ function runsOf(seq: string[], code: string): [number, number][] {
 }
 
 function NightLineChart({
-  data, floor, ceil, ticks, unit, stroke, glowRgb, avg, avgLabel, seq, markers,
+  data, floor, ceil, ticks, unit, stroke, strokeLight, glowRgb, avg, avgLabel, seq, markers,
 }: {
   data: number[]; floor: number; ceil: number; ticks: number[]; unit: string;
-  stroke: string; glowRgb: string; avg: number; avgLabel: string;
+  stroke: string; strokeLight: string; glowRgb: string; avg: number; avgLabel: string;
   seq: ("D" | "R" | "L" | "A")[]; markers: Marker[];
 }) {
-  const W = 356, top = 16, bot = 104, plotH = bot - top;
-  const n = data.length, slot = W / n;
-  const y = (v: number) => top + (1 - (v - floor) / (ceil - floor)) * plotH;
-  const xMid = (i: number) => i * slot + slot / 2;
+  // Geometry — a left gutter for the aligned y-axis column, and even top/bottom
+  // padding so the plot sits centered with room for the callout labels.
+  const W = 356, H = 132;
+  const padL = 30, padR = 10, padT = 26, padB = 24;
+  const plotL = padL, plotR = W - padR, plotW = plotR - plotL;
+  const plotT = padT, plotB = H - padB, plotH = plotB - plotT;
+  const n = data.length, slot = plotW / n;
+  const y = (v: number) => plotT + (1 - (v - floor) / (ceil - floor)) * plotH;
+  const xMid = (i: number) => plotL + i * slot + slot / 2;
 
   const pts: [number, number][] = data.map((v, i) => [xMid(i), y(v)]);
   const path = smooth(pts);
@@ -428,55 +475,62 @@ function NightLineChart({
   const remWins = runsOf(seq, "R");
   const longestDeep = deepWins.reduce<[number, number]>((a, b) => (b[1] > a[1] ? b : a), [0, 0]);
   const longestRem = remWins.reduce<[number, number]>((a, b) => (b[1] > a[1] ? b : a), [0, 0]);
-  const winX = (start: number, len: number) => ({ x: start * slot, w: len * slot });
+  const winX = (start: number, len: number) => ({ x: plotL + start * slot, w: len * slot });
+
+  // Sleep-context zone bands stay neutral translucent grey (not the line color).
+  const BAND_DEEP = `rgba(${INK},0.08)`;
+  const BAND_REM = `rgba(${INK},0.045)`;
+  const BAND_LABEL = `rgba(${INK},0.5)`;
 
   return (
-    <svg width="100%" height={124} viewBox={`0 0 ${W} 124`} preserveAspectRatio="none" style={{ display: "block", overflow: "visible" }}>
-      {/* Stage shading behind the line */}
+    <svg width="100%" height={H} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" style={{ display: "block", overflow: "visible" }}>
+      {/* Neutral grey stage shading behind the line */}
       {deepWins.map(([s, l], i) => {
         const { x, w } = winX(s, l);
-        return <rect key={`d${i}`} x={x.toFixed(1)} y={top} width={w.toFixed(1)} height={plotH} fill={`rgba(${DEEP_RGB},0.12)`} rx="2" />;
+        return <rect key={`d${i}`} x={x.toFixed(1)} y={plotT} width={w.toFixed(1)} height={plotH} fill={BAND_DEEP} rx="3" />;
       })}
       {longestRem[1] > 0 && (() => { const { x, w } = winX(longestRem[0], longestRem[1]); return (
-        <rect x={x.toFixed(1)} y={top} width={w.toFixed(1)} height={plotH} fill={`rgba(${REM_RGB},0.12)`} rx="2" />
+        <rect x={x.toFixed(1)} y={plotT} width={w.toFixed(1)} height={plotH} fill={BAND_REM} rx="3" />
       ); })()}
       {longestDeep[1] > 0 && (
-        <text x={(longestDeep[0] * slot + (longestDeep[1] * slot) / 2).toFixed(1)} y={top + 9} textAnchor="middle" fontFamily={SANS} fontSize={7.5} fontWeight={600} letterSpacing="0.6px" fill={`rgba(${DEEP_RGB},0.85)`}>DEEP SLEEP</text>
+        <text x={(plotL + longestDeep[0] * slot + (longestDeep[1] * slot) / 2).toFixed(1)} y={10} textAnchor="middle" fontFamily={SANS} fontSize={7.5} fontWeight={600} letterSpacing="0.6px" fill={BAND_LABEL}>DEEP SLEEP</text>
       )}
       {longestRem[1] > 0 && (
-        <text x={(longestRem[0] * slot + (longestRem[1] * slot) / 2).toFixed(1)} y={top + 9} textAnchor="middle" fontFamily={SANS} fontSize={7.5} fontWeight={600} letterSpacing="0.6px" fill={`rgba(${REM_RGB},0.9)`}>REM</text>
+        <text x={(plotL + longestRem[0] * slot + (longestRem[1] * slot) / 2).toFixed(1)} y={10} textAnchor="middle" fontFamily={SANS} fontSize={7.5} fontWeight={600} letterSpacing="0.6px" fill={BAND_LABEL}>REM</text>
       )}
 
-      {/* Gridlines + right-gutter y labels */}
+      {/* Evenly-spaced gridlines + a clean aligned y-axis column in the left gutter */}
       {ticks.map((t, i) => {
         const gy = y(t);
         return (
           <g key={`t${i}`}>
-            <line x1={0} y1={gy.toFixed(1)} x2={W} y2={gy.toFixed(1)} stroke={`rgba(${INK},0.06)`} />
-            <text x={W - 2} y={(gy - 3).toFixed(1)} textAnchor="end" fontFamily={SANS} fontSize={9} fill={`rgba(${INK},0.32)`}>{t}</text>
+            <line x1={plotL} y1={gy.toFixed(1)} x2={plotR} y2={gy.toFixed(1)} stroke={`rgba(${INK},0.06)`} />
+            <text x={plotL - 8} y={(gy + 3).toFixed(1)} textAnchor="end" fontFamily={SANS} fontSize={9} fill={`rgba(${INK},0.4)`}>{t}</text>
           </g>
         );
       })}
+      {/* Unit label atop the number column */}
+      <text x={plotL - 8} y={(plotT - 12).toFixed(1)} textAnchor="end" fontFamily={SANS} fontSize={8.5} fontWeight={600} letterSpacing="0.6px" fill={`rgba(${INK},0.36)`}>{unit}</text>
 
-      {/* Unit label, top-left */}
-      <text x={1} y={9} fontFamily={SANS} fontSize={8.5} fontWeight={600} letterSpacing="0.6px" fill={`rgba(${INK},0.36)`}>{unit}</text>
+      {/* Faint area (lighter shade) + line */}
+      <path d={`${path} L ${pts[n - 1][0].toFixed(1)},${plotB} L ${pts[0][0].toFixed(1)},${plotB} Z`} fill={strokeLight} opacity={0.10} />
+      <path d={path} fill="none" stroke={stroke} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" style={{ filter: `drop-shadow(0 0 4px rgba(${glowRgb},0.45))` }} />
 
-      {/* Faint area + line */}
-      <path d={`${path} L ${pts[n - 1][0].toFixed(1)},${bot} L ${pts[0][0].toFixed(1)},${bot} Z`} fill={stroke} opacity={0.07} />
-      <path d={path} fill="none" stroke={stroke} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" style={{ filter: `drop-shadow(0 0 4px rgba(${glowRgb},0.35))` }} />
+      {/* Dashed average line + tag (neutral) */}
+      <line x1={plotL} y1={y(avg).toFixed(1)} x2={plotR} y2={y(avg).toFixed(1)} stroke={`rgba(${INK},0.3)`} strokeWidth={1} strokeDasharray="4 5" />
+      <text x={(plotL + 3).toFixed(1)} y={(y(avg) - 5).toFixed(1)} textAnchor="start" fontFamily={SANS} fontSize={9} fontWeight={600} fill={`rgba(${INK},0.55)`}>{avgLabel}</text>
 
-      {/* Dashed average line + tag */}
-      <line x1={0} y1={y(avg).toFixed(1)} x2={W} y2={y(avg).toFixed(1)} stroke={`rgba(${INK},0.32)`} strokeWidth={1} strokeDasharray="4 5" />
-      <text x={2} y={(y(avg) - 4).toFixed(1)} textAnchor="start" fontFamily={SANS} fontSize={9} fontWeight={600} fill={`rgba(${INK},0.5)`}>{avgLabel}</text>
-
-      {/* Markers — night low/high, late climb/ease */}
+      {/* Markers — colored dot + label placed to clear the line, bands and each other */}
       {markers.map((m, i) => {
         const mx = xMid(m.i), my = y(m.value);
-        const lx = Math.max(44, Math.min(W - 44, mx));
-        const ly = m.place === "above" ? my - 8 : my + 14;
+        const frac = (m.value - floor) / (ceil - floor);
+        // High points label above (line is below them); low points label below.
+        const ly = frac >= 0.4 ? my - 12 : my + 16;
+        const half = Math.min(72, m.label.length * 2.4);
+        const lx = Math.max(plotL + half, Math.min(plotR - half, mx));
         return (
           <g key={`m${i}`}>
-            <circle cx={mx.toFixed(1)} cy={my.toFixed(1)} r={2.6} fill={stroke} />
+            <circle cx={mx.toFixed(1)} cy={my.toFixed(1)} r={2.8} fill={stroke} style={{ filter: `drop-shadow(0 0 4px rgba(${glowRgb},0.7))` }} />
             <text x={lx.toFixed(1)} y={ly.toFixed(1)} textAnchor="middle" fontFamily={SANS} fontSize={9} fontWeight={600} fill={stroke}>{m.label}</text>
           </g>
         );
