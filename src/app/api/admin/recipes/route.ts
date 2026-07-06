@@ -3,8 +3,14 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 import { requireAdminFromRequest, AdminError } from "@/lib/admin";
 import {
   RECIPE_CATEGORIES, STATUSES, slugify, slugTaken,
-  toStringArray, toNumberedSteps, isMissingColumnError,
+  toStringArray, toNumberedSteps, writeRecipeResilient,
 } from "@/lib/admin-nutrition";
+
+// Clamp an incoming 0–1 focal coordinate, or null.
+function focal(v: unknown): number | null {
+  const n = typeof v === "number" ? v : typeof v === "string" ? Number(v) : NaN;
+  return Number.isFinite(n) ? Math.min(1, Math.max(0, n)) : null;
+}
 
 const CATEGORY_SET = new Set<string>(RECIPE_CATEGORIES);
 const STATUS_SET = new Set<string>(STATUSES);
@@ -83,23 +89,26 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       allergen_flags: toStringArray(body.allergen_flags),
       hero_style: typeof body.hero_style === "string" && body.hero_style.trim() ? body.hero_style.trim() : null,
       image_url: typeof body.image_url === "string" && body.image_url.trim() ? body.image_url.trim() : null,
+      focal_x: focal(body.focal_x),
+      focal_y: focal(body.focal_y),
       method_steps: toNumberedSteps(body.method_steps),
       status,
     };
 
-    let { data, error } = await supabaseAdmin.from("recipes").insert(insert).select("*").single();
-    // image_url is only present once its migration is applied — retry without it
-    // so recipe creation still works (and errors stay loud) before then.
-    if (error && isMissingColumnError(error, "image_url")) {
-      const rest = { ...insert };
-      delete (rest as Record<string, unknown>).image_url;
-      ({ data, error } = await supabaseAdmin.from("recipes").insert(rest).select("*").single());
-    }
+    // Drops image_url / focal_* if those migrations aren't applied yet.
+    const { data, error, dropped } = await writeRecipeResilient(
+      (row) => supabaseAdmin.from("recipes").insert(row).select("*").single(),
+      insert,
+    );
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
     await insertLinks((data as { id: string }).id, body.ingredients);
 
-    return NextResponse.json({ recipe: data }, { status: 201 });
+    return NextResponse.json({
+      recipe: data,
+      imageDropped: dropped.includes("image_url"),
+      focalDropped: dropped.includes("focal_x") || dropped.includes("focal_y"),
+    }, { status: 201 });
   } catch (err) {
     if (err instanceof AdminError) return NextResponse.json({ error: err.message }, { status: err.status });
     console.error("[admin/recipes POST] unexpected:", err);

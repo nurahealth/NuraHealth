@@ -22,6 +22,8 @@ type RecipeEmbed = {
   system_tags: string[] | null;
   status: string;
   image_url: string | null;
+  focal_x: number | null;
+  focal_y: number | null;
 };
 
 export default async function SavedRecipesPage() {
@@ -56,6 +58,8 @@ export default async function SavedRecipesPage() {
         system_tags: r.system_tags ?? [],
         status: r.status,
         image_url: r.image_url ?? null,
+        focal_x: r.focal_x ?? null,
+        focal_y: r.focal_y ?? null,
         ingredientNames: [], // not needed for the card
       } as Recipe;
     })

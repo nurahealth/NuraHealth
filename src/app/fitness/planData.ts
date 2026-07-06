@@ -466,3 +466,89 @@ export async function addProgressPhoto(args: {
 export async function updatePhotoFit(id: string, fit: PhotoFit): Promise<void> {
   await supabase.from('progress_photos').update({ fit }).eq('id', id);
 }
+
+// ── Strength / set logging ───────────────────────────────────────────────────
+// One row per performed set (set_logs). Captures weight + reps per set, the
+// exercise, the date, and an optional link to the workout_completions session.
+
+export type SetLog = {
+  id: string;
+  exercise_id: string;
+  exercise_name: string | null;   // embedded from exercises
+  completion_id: string | null;
+  performed_on: string;           // 'YYYY-MM-DD'
+  set_index: number;
+  weight: number | null;
+  reps: number | null;
+  unit: string;
+  created_at: string;
+};
+
+// Missing-table guard — degrade cleanly until the set_logs migration is applied
+// so the Strength section shows its empty prompt instead of erroring.
+function isMissingSetLogsTable(err: { code?: string; message?: string } | null): boolean {
+  if (!err) return false;
+  if (err.code === 'PGRST205' || err.code === '42P01') return true;
+  return /set_logs/.test(err.message ?? '') && /(schema cache|does not exist)/i.test(err.message ?? '');
+}
+
+// All performed sets for the signed-in user, oldest → newest, with exercise name.
+// Returns [] when the table isn't there yet.
+export async function loadSetLogs(): Promise<SetLog[]> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return [];
+  const { data, error } = await supabase
+    .from('set_logs')
+    .select('id, exercise_id, completion_id, performed_on, set_index, weight, reps, unit, created_at, exercise:exercises(name)')
+    .eq('user_id', user.id)
+    .order('performed_on', { ascending: true })
+    .order('created_at', { ascending: true });
+  if (error) return [];
+  return ((data as Record<string, unknown>[] | null) ?? []).map((r) => {
+    const exRaw = r.exercise as { name?: string } | { name?: string }[] | null;
+    const ex = Array.isArray(exRaw) ? exRaw[0] : exRaw;
+    return {
+      id: r.id as string,
+      exercise_id: r.exercise_id as string,
+      exercise_name: ex?.name ?? null,
+      completion_id: (r.completion_id as string | null) ?? null,
+      performed_on: r.performed_on as string,
+      set_index: (r.set_index as number) ?? 1,
+      weight: (r.weight as number | null) ?? null,
+      reps: (r.reps as number | null) ?? null,
+      unit: (r.unit as string) ?? 'lb',
+      created_at: r.created_at as string,
+    };
+  });
+}
+
+export type LogSetsResult = { ok: true; count: number } | { ok: false; needsMigration: boolean; error: string };
+
+// Persist a batch of performed sets for one exercise (RLS scopes to owner).
+// `completionId` links them to a tracked session when there is one; otherwise
+// null (standalone per-exercise logging). `performedOn` defaults to today.
+export async function logSets(args: {
+  exerciseId: string;
+  sets: { setIndex: number; weight: number; reps: number }[];
+  unit?: string;
+  completionId?: string | null;
+  performedOn?: string;
+}): Promise<LogSetsResult> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { ok: false, needsMigration: false, error: 'Not signed in.' };
+  if (args.sets.length === 0) return { ok: true, count: 0 };
+
+  const rows = args.sets.map((s) => ({
+    user_id: user.id,
+    exercise_id: args.exerciseId,
+    completion_id: args.completionId ?? null,
+    performed_on: args.performedOn || undefined,   // DB defaults to current_date
+    set_index: s.setIndex,
+    weight: s.weight,
+    reps: s.reps,
+    unit: args.unit ?? 'lb',
+  }));
+  const { error } = await supabase.from('set_logs').insert(rows);
+  if (error) return { ok: false, needsMigration: isMissingSetLogsTable(error), error: error.message };
+  return { ok: true, count: rows.length };
+}

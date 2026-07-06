@@ -1,28 +1,32 @@
-// Resilient recipe reads. The `recipes.image_url` column only exists once its
-// migration (20260705000003_recipes_image_url.sql) has been applied. Until then,
-// selecting it errors the ENTIRE query (PostgREST 42703 / PGRST204), which
-// returns null data and 404s / empties every recipe page. This helper runs the
-// select WITH image_url and, if that column is missing, transparently retries
-// WITHOUT it — so recipe pages render (falling back to the sage gradient)
-// regardless of whether the migration has run yet.
+// Resilient recipe reads. The optional photo columns — `image_url`
+// (20260705000003) and `focal_x`/`focal_y` (20260705000004) — only exist once
+// their migrations are applied. Selecting a column that doesn't exist errors the
+// ENTIRE query, which 404s / empties every recipe page. This helper tries the
+// richest column set and progressively drops the optional columns until the
+// query succeeds, so recipe pages render (gradient fallback, centered crop)
+// regardless of which migrations have run yet.
 
-function isMissingImageColumn(err: { code?: string; message?: string } | null): boolean {
+function isMissingColumn(err: { code?: string } | null): boolean {
+  // Base columns always exist, so a 42703 / PGRST204 here can only be one of the
+  // optional photo columns.
   if (!err) return false;
-  const code = err.code ?? "";
-  return (code === "42703" || code === "PGRST204") && (err.message ?? "").includes("image_url");
+  return err.code === "42703" || err.code === "PGRST204";
 }
 
-// `build(imageCol)` must construct the query with `imageCol` spliced into its
-// select list — either ", image_url" (top-level) or the same inside an embedded
-// resource, e.g. `recipes(id, slug, ...${imageCol})`.
+// Column tiers, richest → poorest. `extraCols` is spliced into the caller's
+// select list (top-level `, image_url, …` or inside an embedded resource).
+const TIERS = [", image_url, focal_x, focal_y", ", image_url", ""];
+
 export async function withImageUrlFallback<T>(
-  build: (imageCol: string) => PromiseLike<{ data: unknown; error: { code?: string; message?: string } | null }>,
+  build: (extraCols: string) => PromiseLike<{ data: unknown; error: { code?: string } | null }>,
 ): Promise<T | null> {
-  const withImg = await build(", image_url");
-  if (!withImg.error) return (withImg.data ?? null) as T | null;
-  if (isMissingImageColumn(withImg.error)) {
-    const without = await build("");
-    return (without.data ?? null) as T | null;
+  for (let i = 0; i < TIERS.length; i++) {
+    const res = await build(TIERS[i]);
+    if (!res.error) return (res.data ?? null) as T | null;
+    // Only step down when it's a missing-column error and we still have tiers left.
+    if (!isMissingColumn(res.error) || i === TIERS.length - 1) {
+      return (res.data ?? null) as T | null;
+    }
   }
-  return (withImg.data ?? null) as T | null;
+  return null;
 }

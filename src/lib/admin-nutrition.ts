@@ -18,6 +18,33 @@ export function isMissingColumnError(err: { code?: string; message?: string } | 
   return (code === "42703" || code === "PGRST204") && (err.message ?? "").includes(column);
 }
 
+// Optional recipe columns added by later migrations; dropped from writes if the
+// target DB hasn't run the migration yet.
+export const RECIPE_OPTIONAL_COLS = ["image_url", "focal_x", "focal_y"];
+
+// Run an insert/update of a recipes row, progressively dropping any optional
+// photo column the DB doesn't have yet. Returns the row plus which optional
+// columns were dropped (so the UI can warn, e.g. "photo not saved").
+export async function writeRecipeResilient(
+  run: (row: Record<string, unknown>) => PromiseLike<{ data: unknown; error: { code?: string; message?: string } | null }>,
+  row: Record<string, unknown>,
+): Promise<{ data: unknown; error: { message: string } | null; dropped: string[] }> {
+  const payload = { ...row };
+  const dropped: string[] = [];
+  for (let i = 0; i <= RECIPE_OPTIONAL_COLS.length; i++) {
+    const { data, error } = await run(payload);
+    if (!error) return { data, error: null, dropped };
+    const code = error.code ?? "";
+    const missing = (code === "42703" || code === "PGRST204")
+      ? RECIPE_OPTIONAL_COLS.find((c) => c in payload && (error.message ?? "").includes(c))
+      : undefined;
+    if (!missing) return { data: null, error: { message: error.message ?? "Write failed" }, dropped };
+    delete payload[missing];
+    dropped.push(missing);
+  }
+  return { data: null, error: { message: "Write failed" }, dropped };
+}
+
 // ── Slug helpers ──────────────────────────────────────────────────────────────
 export function slugify(s: string): string {
   return (

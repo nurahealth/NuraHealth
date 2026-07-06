@@ -8,6 +8,7 @@ import { sageGradient } from "@/lib/sageGradient";
 import { resolveBack, type RawSearchParam } from "@/lib/backNav";
 import { isUserAdmin } from "@/lib/admin";
 import { withImageUrlFallback } from "@/lib/recipeSelect";
+import RecipeImg from "@/components/RecipeImg";
 import { SavedRecipesProvider } from "@/components/SavedRecipesProvider";
 import SaveRecipeButton from "@/components/SaveRecipeButton";
 import IngredientRow, { type RecipeIngredient } from "./IngredientRow";
@@ -42,6 +43,8 @@ interface RecipeRow {
   method_steps: Step[] | null;
   hero_style: string | null;
   image_url: string | null;
+  focal_x: number | null;
+  focal_y: number | null;
   status: string;
 }
 
@@ -152,18 +155,20 @@ export default async function RecipeDetailPage({
           <ArrowLeft size={15} style={{ flexShrink: 0 }} /> <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{back.label}</span>
         </Link>
 
-        {/* Hero */}
-        <div style={{ position: "relative", borderRadius: 18, overflow: "hidden", border: `0.5px solid ${BORDER}`, minHeight: 200, background: sageGradient(recipe.hero_style ?? recipe.slug) }}>
+        {/* Hero — tall clamped frame (not aspect-ratio, so mobile stays tall
+            instead of collapsing to a strip). Photo fills it with the focal point
+            honored; gradient fallback uses the same height. */}
+        <div style={{ position: "relative", borderRadius: 18, overflow: "hidden", border: `0.5px solid ${BORDER}`, height: "clamp(300px, 40vw, 400px)", background: sageGradient(recipe.hero_style ?? recipe.slug) }}>
           {recipe.image_url && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={recipe.image_url} alt={recipe.title} decoding="async" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+            <RecipeImg src={recipe.image_url} alt={recipe.title} focalX={recipe.focal_x} focalY={recipe.focal_y} priority />
           )}
+          {/* Soft fade of the bottom edge into the page background */}
+          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, transparent 60%, var(--nura-bg) 100%)", pointerEvents: "none" }} />
           <div style={{ position: "absolute", top: 12, right: 12, zIndex: 2 }}>
             <SavedRecipesProvider userId={user.id} initialSavedIds={initialSaved ? [recipe.id] : []}>
               <SaveRecipeButton recipeId={recipe.id} />
             </SavedRecipesProvider>
           </div>
-          <div style={{ minHeight: 200 }} />
         </div>
 
         {/* Title block */}

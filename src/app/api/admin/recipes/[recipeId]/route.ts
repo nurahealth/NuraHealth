@@ -3,8 +3,13 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 import { requireAdminFromRequest, AdminError } from "@/lib/admin";
 import {
   RECIPE_CATEGORIES, STATUSES, slugify, slugTaken,
-  toStringArray, toNumberedSteps, isMissingColumnError,
+  toStringArray, toNumberedSteps, writeRecipeResilient,
 } from "@/lib/admin-nutrition";
+
+function focal(v: unknown): number | null {
+  const n = typeof v === "number" ? v : typeof v === "string" ? Number(v) : NaN;
+  return Number.isFinite(n) ? Math.min(1, Math.max(0, n)) : null;
+}
 
 const CATEGORY_SET = new Set<string>(RECIPE_CATEGORIES);
 const STATUS_SET = new Set<string>(STATUSES);
@@ -106,24 +111,28 @@ export async function PATCH(
     if (body.allergen_flags !== undefined) update.allergen_flags = toStringArray(body.allergen_flags);
     if (body.hero_style !== undefined) update.hero_style = typeof body.hero_style === "string" && body.hero_style.trim() ? body.hero_style.trim() : null;
     if (body.image_url !== undefined) update.image_url = typeof body.image_url === "string" && body.image_url.trim() ? body.image_url.trim() : null;
+    if (body.focal_x !== undefined) update.focal_x = focal(body.focal_x);
+    if (body.focal_y !== undefined) update.focal_y = focal(body.focal_y);
     if (body.method_steps !== undefined) update.method_steps = toNumberedSteps(body.method_steps);
 
+    let imageDropped = false;
+    let focalDropped = false;
     if (Object.keys(update).length > 0) {
-      let { data, error } = await supabaseAdmin.from("recipes").update(update).eq("id", recipeId).select("*").single();
-      // Degrade gracefully if image_url isn't migrated yet (see POST route).
-      if (error && isMissingColumnError(error, "image_url")) {
-        const rest = { ...update };
-        delete (rest as Record<string, unknown>).image_url;
-        ({ data, error } = await supabaseAdmin.from("recipes").update(rest).eq("id", recipeId).select("*").single());
-      }
+      // Drops image_url / focal_* if those migrations aren't applied yet.
+      const { data, error, dropped } = await writeRecipeResilient(
+        (row) => supabaseAdmin.from("recipes").update(row).eq("id", recipeId).select("*").single(),
+        update,
+      );
       if (error) return NextResponse.json({ error: error.message }, { status: 500 });
       if (!data) return NextResponse.json({ error: "Recipe not found" }, { status: 404 });
+      imageDropped = dropped.includes("image_url");
+      focalDropped = dropped.includes("focal_x") || dropped.includes("focal_y");
     }
 
     if (body.ingredients !== undefined) await replaceLinks(recipeId, body.ingredients);
 
     const { data: fresh } = await supabaseAdmin.from("recipes").select("*").eq("id", recipeId).single();
-    return NextResponse.json({ recipe: fresh });
+    return NextResponse.json({ recipe: fresh, imageDropped, focalDropped });
   } catch (err) {
     if (err instanceof AdminError) return NextResponse.json({ error: err.message }, { status: err.status });
     console.error("[admin/recipes/:id PATCH] unexpected:", err);

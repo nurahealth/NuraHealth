@@ -83,6 +83,7 @@ export default async function FoodDetailPage({
     category: string; cuisine: string | null; total_minutes: number | null;
     servings: number | null; is_organic: boolean;
     goal_tags: string[] | null; system_tags: string[] | null; status: string; image_url: string | null;
+    focal_x: number | null; focal_y: number | null;
   };
   const foundIn: Recipe[] = ((linkRows ?? []) as Array<{ recipes: RecipeEmbed | RecipeEmbed[] | null }>)
     .map((row) => (Array.isArray(row.recipes) ? row.recipes[0] : row.recipes))
@@ -92,7 +93,8 @@ export default async function FoodDetailPage({
       category: r.category, cuisine: r.cuisine, total_minutes: r.total_minutes,
       servings: r.servings, is_organic: r.is_organic,
       goal_tags: r.goal_tags ?? [], system_tags: r.system_tags ?? [],
-      status: r.status, image_url: r.image_url ?? null, ingredientNames: [],
+      status: r.status, image_url: r.image_url ?? null,
+      focal_x: r.focal_x ?? null, focal_y: r.focal_y ?? null, ingredientNames: [],
     }));
 
   // Which pairs_with slugs are real ingredients (linkable)?

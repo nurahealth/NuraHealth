@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { loadExercise, type ExerciseFull } from './planData';
+import { loadExercise, logSets, type ExerciseFull } from './planData';
 import ExerciseMedia, { CLIP_BG, isVideo } from './ExerciseMedia';
 import FitnessBackButton from './FitnessBackButton';
 
@@ -17,6 +17,7 @@ const MUT = 'rgba(235,230,216,.5)';
 const SURF = 'rgba(235,230,216,.045)';
 const LINE = 'rgba(235,230,216,.09)';
 const FONT = '-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,sans-serif';
+const MONO = "'JetBrains Mono', monospace";
 
 // ── Demo viewer — plays the ORIGINAL MoveKit clip on its own light studio
 // background, exactly as MoveKit ships it. No matting, dark backdrop, or tint.
@@ -57,6 +58,17 @@ export default function ExerciseDetail({ exerciseId, sets, reps, rest_seconds, o
 
   const setCount = Math.max(1, sets ?? 3);
   const [done, setDone] = useState<boolean[]>(() => Array(setCount).fill(false));
+  // Per-set performed weight + reps (strings while editing). Reps default to the
+  // low end of the prescribed range so the user usually just types the weight.
+  const defaultReps = useMemo(() => {
+    const m = (reps ?? '').match(/\d+/);
+    return m ? m[0] : '';
+  }, [reps]);
+  const [weights, setWeights] = useState<string[]>(() => Array(setCount).fill(''));
+  const [repsIn, setRepsIn] = useState<string[]>(() => Array(setCount).fill(''));
+  const [saving, setSaving] = useState(false);
+  const [saveMsg, setSaveMsg] = useState<string | null>(null);
+  const [saveErr, setSaveErr] = useState<string | null>(null);
   // Demo source preference: MoveKit clip → self-hosted WorkoutX gif → placeholder.
   // demoIdx walks that list; onError advances to the next candidate.
   const [demoIdx, setDemoIdx] = useState(0);
@@ -72,8 +84,13 @@ export default function ExerciseDetail({ exerciseId, sets, reps, rest_seconds, o
     return () => { cancelled = true; };
   }, [exerciseId]);
 
-  // Keep the set checklist length in sync with the set count.
-  useEffect(() => { setDone(Array(setCount).fill(false)); }, [setCount]);
+  // Keep the set checklist + input arrays in sync with the set count.
+  useEffect(() => {
+    setDone(Array(setCount).fill(false));
+    setWeights(Array(setCount).fill(''));
+    setRepsIn(Array(setCount).fill(''));
+    setSaveMsg(null); setSaveErr(null);
+  }, [setCount]);
 
   const primary = ex?.target_muscles ?? [];
   const secondary = ex?.secondary_muscles ?? [];
@@ -99,13 +116,38 @@ export default function ExerciseDetail({ exerciseId, sets, reps, rest_seconds, o
   const repsLabel = reps ? `${fmtReps(reps)} reps` : '—';
 
   const toggle = (i: number) => setDone((d) => d.map((v, j) => (j === i ? !v : v)));
-  const markComplete = () => setDone(Array(setCount).fill(true));
+
+  // Persist every set that has a weight entered (reps fall back to the plan's
+  // low end). Marks saved sets done and shows a confirmation.
+  const saveSets = async () => {
+    const payload = Array.from({ length: setCount }, (_, i) => {
+      const w = parseFloat(weights[i]);
+      const r = parseInt(repsIn[i] || defaultReps, 10);
+      return Number.isFinite(w) && w > 0 ? { setIndex: i + 1, weight: w, reps: Number.isFinite(r) ? r : 0 } : null;
+    }).filter((s): s is { setIndex: number; weight: number; reps: number } => s !== null);
+
+    if (payload.length === 0) { setSaveErr('Enter a weight on at least one set.'); return; }
+    setSaving(true); setSaveErr(null); setSaveMsg(null);
+    const res = await logSets({ exerciseId, sets: payload });
+    setSaving(false);
+    if (!res.ok) {
+      setSaveErr(res.needsMigration
+        ? 'Strength logging needs a quick database migration — run it to start tracking.'
+        : (res.error || 'Could not save. Please try again.'));
+      return;
+    }
+    setDone((d) => d.map((v, i) => (Number.isFinite(parseFloat(weights[i])) && parseFloat(weights[i]) > 0 ? true : v)));
+    setSaveMsg(`Logged ${res.count} set${res.count === 1 ? '' : 's'} ✓`);
+  };
 
   // ── Section styles (1:1 with the reference CSS) ─────────────────────────────
   const wrap: React.CSSProperties = {
     position: 'fixed', inset: 0, zIndex: 100, overflowY: 'auto',
     minHeight: '100vh', display: 'flex', justifyContent: 'center', padding: 20,
-    background: 'radial-gradient(120% 40% at 50% -5%, #16191780 0%, #0d0d0e 50%)',
+    // Radial tint layered over a SOLID base so the full-screen overlay is opaque
+    // — otherwise the translucent top of the gradient lets the dashboard header
+    // behind this screen bleed through and collide with our own header.
+    background: 'radial-gradient(120% 40% at 50% -5%, #16191780 0%, #0d0d0e 50%), #0d0d0e',
     fontFamily: FONT, color: TEXT,
   };
   const tile = (label: string, value: string) => (
@@ -120,20 +162,22 @@ export default function ExerciseDetail({ exerciseId, sets, reps, rest_seconds, o
 
   return (
     <div style={wrap}>
-      <div style={{ width: '100%', maxWidth: 440, paddingBottom: 30 }}>
+      <div style={{ width: '100%', maxWidth: 440, paddingBottom: 40 }}>
 
-        {/* back */}
+        {/* back — the ONE header for this screen (dashboard header is covered by
+            the opaque overlay behind us) */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
           <FitnessBackButton onClick={onClose} />
           <div style={{ fontSize: 11, letterSpacing: '.18em', color: MUT }}>EXERCISE</div>
         </div>
 
-        {/* demo — looping/muted/autoplay. A MoveKit clip fills the card via cover;
-            a WorkoutX gif placeholder sits on the same solid-white panel so its
-            white background blends edge-to-edge (no inner rectangle / side bars). */}
+        {/* demo — compact (modest landscape height, not full-screen). Looping/
+            muted/autoplay. A MoveKit clip fills the card via cover; a WorkoutX gif
+            placeholder sits on the same solid-white panel so its white background
+            blends edge-to-edge (no inner rectangle / side bars). */}
         <div style={{
           position: 'relative', borderRadius: DEMO.radius, overflow: 'hidden', aspectRatio: DEMO.aspect,
-          marginBottom: 18, background: DEMO.bg, border: `1px solid ${DEMO.border}`,
+          marginBottom: 16, background: DEMO.bg, border: `1px solid ${DEMO.border}`,
         }}>
           {activeDemo ? (
             <div style={{ position: 'absolute', inset: 0, zIndex: 1 }}>
@@ -157,7 +201,7 @@ export default function ExerciseDetail({ exerciseId, sets, reps, rest_seconds, o
           {loading ? '…' : (ex?.name ?? 'Exercise')}
         </h1>
 
-        {/* chips */}
+        {/* chips — target muscle tags */}
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 20 }}>
           {primary.map((m) => (
             <span key={`p-${m}`} style={{ fontSize: 11, borderRadius: 999, padding: '5px 12px', background: SAGE, color: BG, fontWeight: 700 }}>{titleCase(m)}</span>
@@ -167,15 +211,69 @@ export default function ExerciseDetail({ exerciseId, sets, reps, rest_seconds, o
           ))}
         </div>
 
-        {/* meta tiles */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 9, marginBottom: 26 }}>
+        {/* meta tiles — prescribed sets × reps summary (+ rest / equipment / level) */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 9, marginBottom: 28 }}>
           {tile('SETS × REPS', setsReps)}
           {tile('REST', restVal)}
           {tile('EQUIPMENT', equipVal)}
           {tile('LEVEL', levelVal)}
         </div>
 
-        {/* how to */}
+        {/* your sets — log weight × reps per set */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '0 0 6px' }}>
+          {secHead('Your sets', { margin: 0 })}
+          <div style={{ fontSize: 11, color: SAGE }}>log weight × reps</div>
+        </div>
+        {Array.from({ length: setCount }, (_, i) => {
+          const inp: React.CSSProperties = {
+            width: 62, textAlign: 'center', padding: '9px 8px', borderRadius: 10, fontFamily: MONO, fontSize: 14,
+            color: TEXT, background: SURF, border: `1px solid ${LINE}`, outline: 'none',
+          };
+          return (
+            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 0', borderTop: '1px solid rgba(235,230,216,.06)' }}>
+              <div style={{ width: 46, flexShrink: 0 }}>
+                <div style={{ fontSize: 14, fontWeight: 600 }}>Set {i + 1}</div>
+                <div style={{ fontSize: 10, color: MUT, marginTop: 2 }}>{repsLabel}</div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 7, flex: 1, justifyContent: 'center' }}>
+                <input value={weights[i] ?? ''} onChange={(e) => setWeights((w) => w.map((v, j) => (j === i ? e.target.value : v)))}
+                  inputMode="decimal" placeholder="lb" aria-label={`Set ${i + 1} weight`} style={inp} />
+                <span style={{ fontFamily: MONO, fontSize: 13, color: MUT }}>×</span>
+                <input value={repsIn[i] ?? ''} onChange={(e) => setRepsIn((r) => r.map((v, j) => (j === i ? e.target.value : v)))}
+                  inputMode="numeric" placeholder={defaultReps || 'reps'} aria-label={`Set ${i + 1} reps`} style={inp} />
+              </div>
+              <div
+                onClick={() => toggle(i)}
+                style={{
+                  width: 30, height: 30, borderRadius: '50%', cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: '.15s',
+                  border: done[i] ? `1.5px solid ${SAGE}` : '1.5px solid rgba(235,230,216,.2)',
+                  background: done[i] ? SAGE : 'transparent',
+                }}
+              >
+                {done[i] && (
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={BG} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
+                )}
+              </div>
+            </div>
+          );
+        })}
+
+        {saveErr && <div style={{ fontSize: 12.5, color: '#e0a4a4', marginTop: 14 }}>{saveErr}</div>}
+        {saveMsg && <div style={{ fontSize: 12.5, color: SAGE, marginTop: 14 }}>{saveMsg}</div>}
+
+        {/* log sets — primary action for the set logging, centered & full-width
+            within the padded column (matches the modal primary buttons), never
+            flush against the screen edge. */}
+        <button type="button" onClick={saveSets} disabled={saving} style={{
+          display: 'block', width: '100%', margin: '18px 0 34px',
+          background: SAGE, color: BG, border: 'none', borderRadius: 14,
+          padding: 16, fontSize: 15, fontWeight: 700, cursor: saving ? 'default' : 'pointer',
+          opacity: saving ? 0.7 : 1, boxShadow: '0 8px 24px rgba(155,176,165,.28)',
+        }}>
+          {saving ? 'Saving…' : 'Log sets'}
+        </button>
+
+        {/* how to — step-by-step reference at the bottom */}
         {secHead('How to')}
         {instructions.length === 0 ? (
           <div style={{ fontSize: 14, color: MUT, marginBottom: 28 }}>No instructions available for this exercise yet.</div>
@@ -196,39 +294,6 @@ export default function ExerciseDetail({ exerciseId, sets, reps, rest_seconds, o
             <div style={{ fontSize: 13.5, color: 'rgba(235,230,216,.8)', lineHeight: 1.45 }}>{t}</div>
           </div>
         ))}
-
-        {/* your sets */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '30px 0 6px' }}>
-          {secHead('Your sets', { margin: 0 })}
-          <div style={{ fontSize: 11, color: SAGE }}>tap to log</div>
-        </div>
-        {Array.from({ length: setCount }, (_, i) => (
-          <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '13px 0', borderTop: '1px solid rgba(235,230,216,.06)' }}>
-            <div>
-              <div style={{ fontSize: 14, fontWeight: 600 }}>Set {i + 1}</div>
-              <div style={{ fontSize: 11, color: MUT, marginTop: 2 }}>{repsLabel}</div>
-            </div>
-            <div
-              onClick={() => toggle(i)}
-              style={{
-                width: 30, height: 30, borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: '.15s',
-                border: done[i] ? `1.5px solid ${SAGE}` : '1.5px solid rgba(235,230,216,.2)',
-                background: done[i] ? SAGE : 'transparent',
-              }}
-            >
-              {done[i] && (
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={BG} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
-              )}
-            </div>
-          </div>
-        ))}
-
-        <button type="button" onClick={markComplete} style={{
-          width: '100%', marginTop: 22, background: SAGE, color: BG, border: 'none', borderRadius: 14,
-          padding: 16, fontSize: 15, fontWeight: 700, cursor: 'pointer', boxShadow: '0 8px 24px rgba(155,176,165,.28)',
-        }}>
-          Mark complete
-        </button>
 
       </div>
       <style>{`@keyframes nuraFloat{0%,100%{transform:translateY(-5px)}50%{transform:translateY(5px)}}`}</style>

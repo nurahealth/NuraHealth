@@ -46,7 +46,7 @@ export interface AdminRecipe {
   id: string; slug: string; title: string; description: string | null;
   category: string; cuisine: string | null; total_minutes: number | null; servings: number | null;
   is_organic: boolean; goal_tags: string[] | null; system_tags: string[] | null; allergen_flags: string[] | null;
-  method_steps: Step[] | null; hero_style: string | null; image_url: string | null; status: string; created_at?: string;
+  method_steps: Step[] | null; hero_style: string | null; image_url: string | null; focal_x: number | null; focal_y: number | null; status: string; created_at?: string;
 }
 
 interface RecipeLink {
@@ -500,7 +500,7 @@ function LinkEditor({ value, onChange, ingredients, onCreateIngredient }: { valu
 }
 
 // ── Modal shell ───────────────────────────────────────────────────────────────
-function ModalShell({ title, busy, onClose, error, children, onSave, extraAction }: { title: string; busy: boolean; onClose: () => void; error: string; children: React.ReactNode; onSave: () => void; extraAction?: React.ReactNode }) {
+function ModalShell({ title, busy, onClose, error, warn, children, onSave, extraAction }: { title: string; busy: boolean; onClose: () => void; error: string; warn?: string; children: React.ReactNode; onSave: () => void; extraAction?: React.ReactNode }) {
   return (
     <div onClick={() => !busy && onClose()} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.72)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)", padding: "0 16px" }}>
       <div onClick={(e) => e.stopPropagation()} style={{ width: "100%", maxWidth: 560, background: BG, borderRadius: 20, border: `0.5px solid ${BORDER_STRONG}`, maxHeight: "92vh", overflowY: "auto", paddingBottom: 0 }}>
@@ -519,6 +519,7 @@ function ModalShell({ title, busy, onClose, error, children, onSave, extraAction
           {/* Error repeated at the action so a failed save is impossible to miss,
               even when the top of the long form is scrolled out of view. */}
           {error && <div style={{ marginBottom: 12, padding: "10px 12px", background: "rgba(255,76,92,0.08)", border: `0.5px solid rgba(255,76,92,0.4)`, borderRadius: 10 }}><Eyebrow color={DANGER} size={10}>{error}</Eyebrow></div>}
+          {warn && <div style={{ marginBottom: 12, padding: "10px 12px", background: "rgba(211,162,83,0.10)", border: "0.5px solid rgba(211,162,83,0.4)", borderRadius: 10, fontFamily: SANS, fontSize: 12, color: "#d3a253", lineHeight: 1.5 }}>{warn}</div>}
           <div style={{ display: "flex", gap: 10 }}>
             {extraAction}
             <button onClick={onSave} disabled={busy} className="nura-primary-btn" style={{ flex: 1, padding: "13px 16px", background: SAGE, border: "none", borderRadius: 14, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, fontFamily: SANS, fontSize: 12, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", color: SAGE_ON, cursor: busy ? "default" : "pointer", opacity: busy ? 0.7 : 1, transition: "background 200ms, transform 100ms" }}>
@@ -547,7 +548,17 @@ function RecipeModal({ token, editing, ingredients, onClose, onSuccess }: { toke
   const [allergenFlags, setAllergenFlags] = useState<string[]>(editing?.allergen_flags ?? []);
   const [heroStyle, setHeroStyle] = useState(editing?.hero_style ?? "");
   const [imageUrl, setImageUrl] = useState(editing?.image_url ?? "");
+  const [focalX, setFocalX] = useState(editing?.focal_x ?? 0.5);
+  const [focalY, setFocalY] = useState(editing?.focal_y ?? 0.5);
+  const [draggingFocal, setDraggingFocal] = useState(false);
   const [uploading, setUploading] = useState(false);
+
+  // Set the focal point from a pointer position within the preview box (0–1).
+  const setFocalFromEvent = (e: React.PointerEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    setFocalX(Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width)));
+    setFocalY(Math.min(1, Math.max(0, (e.clientY - rect.top) / rect.height)));
+  };
   const [status, setStatus] = useState<Status>((editing?.status as Status) ?? "draft");
   const [steps, setSteps] = useState<string[]>((editing?.method_steps ?? []).slice().sort((a, b) => (a.n ?? 0) - (b.n ?? 0)).map((s) => s.text ?? ""));
   const [links, setLinks] = useState<RecipeLink[]>([]);
@@ -556,7 +567,15 @@ function RecipeModal({ token, editing, ingredients, onClose, onSuccess }: { toke
   const [error, setError] = useState("");
   const [titleErr, setTitleErr] = useState("");
   const [categoryErr, setCategoryErr] = useState("");
+  const [warn, setWarn] = useState("");
   const [dragOver, setDragOver] = useState(false);
+  // After a create, remember the new id so subsequent saves UPDATE it instead of
+  // re-creating (which would collide on slug and lose later edits).
+  const [createdId, setCreatedId] = useState<string | null>(null);
+  // Whether this recipe's ingredient links are safely loaded. New recipes have
+  // none to load; for edits we only touch links once they've loaded, so a failed
+  // load can never silently wipe them.
+  const [linksLoaded, setLinksLoaded] = useState(!editing);
   // Local ingredient list so an inline-created ingredient shows in the picker
   // immediately without waiting for the parent to refetch.
   const [ingredientList, setIngredientList] = useState<AdminIngredient[]>(ingredients);
@@ -603,6 +622,7 @@ function RecipeModal({ token, editing, ingredients, onClose, onSuccess }: { toke
       const data = await res.json() as { url?: string; error?: string };
       if (!res.ok || !data.url) throw new Error(data.error ?? "Upload failed");
       setImageUrl(data.url);
+      setFocalX(0.5); setFocalY(0.5); // recenter for the new image
     } catch (e) {
       setError(e instanceof Error ? e.message : "Upload failed");
     } finally {
@@ -618,10 +638,15 @@ function RecipeModal({ token, editing, ingredients, onClose, onSuccess }: { toke
       try {
         const tok = (await getFreshToken()) || token;
         const res = await fetch(`/api/admin/recipes/${editing.id}`, { headers: { Authorization: `Bearer ${tok}` } });
+        if (!res.ok) throw new Error("Failed to load ingredients");
         const data = await res.json() as { ingredients?: { ingredient_id: string; amount_text: string | null; primary_system: string | null; context_note: string | null }[] };
         if (cancelled) return;
         setLinks((data.ingredients ?? []).map((l) => ({ ingredient_id: l.ingredient_id, amount_text: l.amount_text ?? "", primary_system: l.primary_system ?? "", context_note: l.context_note ?? "" })));
-      } catch { /* keep empty */ } finally {
+        setLinksLoaded(true); // safe to write links now
+      } catch {
+        // Don't mark links loaded — save() will then LEAVE existing links untouched.
+        if (!cancelled) setWarn("Couldn't load this recipe's ingredients — saving will leave them unchanged. Reopen to edit them.");
+      } finally {
         if (!cancelled) setLoadingLinks(false);
       }
     })();
@@ -638,19 +663,30 @@ function RecipeModal({ token, editing, ingredients, onClose, onSuccess }: { toke
     const cErr = !category ? "Category is required" : "";
     setTitleErr(tErr); setCategoryErr(cErr);
     if (tErr || cErr) { setError("Please fix the highlighted fields."); return; }
+    // Don't save mid-upload — the photo URL wouldn't be in the payload yet.
+    if (uploading) { setError("The photo is still uploading — give it a second, then Save."); return; }
     const tok = (await getFreshToken()) || token;
     if (!tok) { setError("Your admin session has expired — reload the page and sign in again."); return; }
-    setBusy(true); setError("");
-    const payload = {
+    setBusy(true); setError(""); setWarn("");
+
+    // Update the recipe we already created this session (or the one being edited);
+    // otherwise create. This is what makes edits AFTER a "Save & preview" stick.
+    const editId = editing?.id ?? createdId;
+    const payload: Record<string, unknown> = {
       title, slug, description, category, cuisine,
       total_minutes: totalMinutes, servings, is_organic: isOrganic,
       goal_tags: goalTags, system_tags: systemTags, allergen_flags: allergenFlags,
-      hero_style: heroStyle, image_url: imageUrl || null, status, method_steps: steps,
-      ingredients: links.filter((l) => l.ingredient_id),
+      hero_style: heroStyle, image_url: imageUrl || null,
+      focal_x: imageUrl ? focalX : null, focal_y: imageUrl ? focalY : null,
+      status, method_steps: steps,
     };
+    // Only send ingredient links when we actually have them loaded — never let a
+    // failed load blank them out.
+    if (linksLoaded) payload.ingredients = links.filter((l) => l.ingredient_id);
+
     try {
-      const res = await fetch(editing ? `/api/admin/recipes/${editing.id}` : "/api/admin/recipes", {
-        method: editing ? "PATCH" : "POST",
+      const res = await fetch(editId ? `/api/admin/recipes/${editId}` : "/api/admin/recipes", {
+        method: editId ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${tok}` },
         body: JSON.stringify(payload),
       });
@@ -659,17 +695,25 @@ function RecipeModal({ token, editing, ingredients, onClose, onSuccess }: { toke
         try { const b = await res.json() as { error?: string }; if (b.error) msg = b.error; } catch {}
         throw new Error(msg);
       }
+      const body = await res.json().catch(() => ({})) as { recipe?: { id?: string; slug?: string; status?: string }; imageDropped?: boolean; focalDropped?: boolean };
+      const saved = body.recipe;
+      // Switch to edit mode after a create so the next save UPDATES this recipe.
+      if (!editId && saved?.id) { setCreatedId(saved.id); setLinksLoaded(true); }
+      if (saved?.slug) { setSlug(saved.slug); setSlugEdited(true); }
+      const photoDropped = !!body.imageDropped && !!imageUrl;
+      const focalUnsaved = !!body.focalDropped && !!imageUrl && (focalX !== 0.5 || focalY !== 0.5);
+      if (photoDropped) setWarn("Photo uploaded to storage, but the database rejected image_url — the recipes.image_url column is missing in the connected project (or PostgREST's schema cache is stale). Apply the migration to THIS project, then run  notify pgrst, 'reload schema';  and Save again.");
+      else if (focalUnsaved) setWarn("Focal point not saved — the recipes focal-point migration (focal_x / focal_y) hasn't been applied. Run it, then Save again.");
+
+      onSuccess(); // refresh the list
+
       if (thenPreview) {
-        // Reflect the just-saved slug/status (server re-slugifies on title change).
-        const body = await res.json().catch(() => ({})) as { recipe?: { slug?: string; status?: string } };
-        const saved = body.recipe;
-        const target = saved?.slug ?? slug;
-        window.open(recipePreviewUrl(target, saved?.status ?? status), "_blank", "noopener,noreferrer");
-        onSuccess(); // refresh the list; keep the form open so you can keep editing
+        window.open(recipePreviewUrl(saved?.slug ?? slug, saved?.status ?? status), "_blank", "noopener,noreferrer");
         setBusy(false);
-        return;
+        return; // keep the form open
       }
-      onSuccess(); onClose();
+      if (photoDropped || focalUnsaved) { setBusy(false); return; } // keep open so the warning is seen
+      onClose();
     } catch (e) { setError(e instanceof Error ? e.message : "Save failed"); setBusy(false); }
   };
 
@@ -679,6 +723,7 @@ function RecipeModal({ token, editing, ingredients, onClose, onSuccess }: { toke
       busy={busy}
       onClose={onClose}
       error={error}
+      warn={warn}
       onSave={() => save(false)}
       extraAction={
         <button
@@ -727,11 +772,20 @@ function RecipeModal({ token, editing, ingredients, onClose, onSuccess }: { toke
               if (!f) { setError("Drag an image file from Finder, or use Upload photo."); return; }
               uploadImage(f);
             }}
-            style={{ width: 128, height: 88, borderRadius: 10, overflow: "hidden", flexShrink: 0, position: "relative", background: sageGradient(slug || "recipe"), border: dragOver ? `1.5px dashed ${SAGE}` : `0.5px solid ${BORDER}`, transition: "border-color 150ms" }}
+            // Click / drag on the photo to set the focal point.
+            onPointerDown={(e) => { if (imageUrl && !uploading) { e.currentTarget.setPointerCapture(e.pointerId); setDraggingFocal(true); setFocalFromEvent(e); } }}
+            onPointerMove={(e) => { if (draggingFocal) setFocalFromEvent(e); }}
+            onPointerUp={() => setDraggingFocal(false)}
+            onPointerCancel={() => setDraggingFocal(false)}
+            style={{ width: 160, height: 108, borderRadius: 10, overflow: "hidden", flexShrink: 0, position: "relative", background: sageGradient(slug || "recipe"), border: dragOver ? `1.5px dashed ${SAGE}` : `0.5px solid ${BORDER}`, cursor: imageUrl ? "crosshair" : "default", transition: "border-color 150ms", touchAction: "none" }}
           >
             {imageUrl && (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={imageUrl} alt="Recipe" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+              <img src={imageUrl} alt="Recipe" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: `${Math.round(focalX * 100)}% ${Math.round(focalY * 100)}%`, pointerEvents: "none" }} />
+            )}
+            {/* Focal-point marker */}
+            {imageUrl && (
+              <div style={{ position: "absolute", left: `${focalX * 100}%`, top: `${focalY * 100}%`, width: 16, height: 16, borderRadius: "50%", transform: "translate(-50%,-50%)", border: "2px solid #fff", boxShadow: "0 0 0 1.5px rgba(0,0,0,0.5), 0 1px 4px rgba(0,0,0,0.5)", pointerEvents: "none" }} />
             )}
             {(dragOver || !imageUrl) && (
               <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", textAlign: "center", padding: 6, background: dragOver ? `rgba(${SAGE_RGB},0.22)` : "transparent", pointerEvents: "none" }}>
@@ -747,11 +801,14 @@ function RecipeModal({ token, editing, ingredients, onClose, onSuccess }: { toke
               <input type="file" accept="image/jpeg,image/png,image/webp" disabled={uploading} style={{ display: "none" }} onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadImage(f); e.target.value = ""; }} />
             </label>
             {imageUrl && (
-              <button type="button" onClick={() => setImageUrl("")} style={{ fontFamily: SANS, fontSize: 11.5, fontWeight: 600, color: DANGER, background: "transparent", border: "none", padding: 0, cursor: "pointer", textAlign: "left" }}>
+              <button type="button" onClick={() => { setImageUrl(""); setFocalX(0.5); setFocalY(0.5); }} style={{ fontFamily: SANS, fontSize: 11.5, fontWeight: 600, color: DANGER, background: "transparent", border: "none", padding: 0, cursor: "pointer", textAlign: "left" }}>
                 Remove
               </button>
             )}
-            <span style={{ fontFamily: SANS, fontSize: 11, color: TEXT_TER }}>JPEG, PNG, or WebP · up to 5MB. Falls back to the gradient when empty.</span>
+            <span style={{ fontFamily: SANS, fontSize: 11, color: TEXT_TER, lineHeight: 1.5 }}>
+              JPEG, PNG, or WebP · up to 5MB. Falls back to the gradient when empty.
+              {imageUrl && <> Click or drag on the photo to set the focal point ({Math.round(focalX * 100)}%, {Math.round(focalY * 100)}%) — the part that stays in frame across crops.</>}
+            </span>
           </div>
         </div>
       </Field>

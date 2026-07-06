@@ -11,6 +11,7 @@ import {
   loadBodyMetrics,
   loadCompletions,
   loadProgressPhotos,
+  loadSetLogs,
   localDateKey,
   logBodyMetric,
   updatePhotoFit,
@@ -18,6 +19,7 @@ import {
   type PhotoFit,
   type Program,
   type ProgressPhoto,
+  type SetLog,
   type WorkoutCompletion,
 } from './planData';
 
@@ -587,6 +589,69 @@ function PhotoViewerModal({ photo, photos, onClose, onUpdate }: {
   );
 }
 
+// ── Weekly volume bars — Σ (weight × reps) per week over the last 8 weeks. Same
+// SAGE / faint-track visual language as the consistency heatmap. Mono numbers.
+function VolumeBars({ weeks }: { weeks: { key: string; date: string; value: number }[] }) {
+  const max = Math.max(1, ...weeks.map((w) => w.value));
+  const anyVol = weeks.some((w) => w.value > 0);
+  const latest = weeks[weeks.length - 1]?.value ?? 0;
+  const FAINT = 'rgba(235,230,216,0.45)';
+  return (
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}>
+        <span style={{ fontFamily: MONO, fontSize: 13, fontWeight: 700, color: SAGE }}>
+          {Math.round(latest).toLocaleString()} <span style={{ fontSize: 10, color: MUT, fontWeight: 400 }}>this wk</span>
+        </span>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6, height: 92 }}>
+        {weeks.map((w) => {
+          const h = anyVol ? Math.max(3, Math.round((w.value / max) * 92)) : 3;
+          return (
+            <div key={w.key} title={`${fmtDay(w.date)} · ${Math.round(w.value).toLocaleString()}`}
+              style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', height: '100%' }}>
+              <div style={{ height: h, borderRadius: 4, background: w.value > 0 ? SAGE : 'rgba(235,230,216,.08)', transition: 'height .4s ease' }} />
+            </div>
+          );
+        })}
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8 }}>
+        <span style={{ fontFamily: MONO, fontSize: 10, color: FAINT }}>{fmtDay(weeks[0].date)}</span>
+        <span style={{ fontFamily: MONO, fontSize: 10, color: FAINT }}>{fmtDay(weeks[weeks.length - 1].date)}</span>
+      </div>
+    </div>
+  );
+}
+
+// ── Per-exercise strength modal — best set + weight-over-time line chart (same
+// chart component / style as the weight trend). Centered shell, never a sheet.
+function ExerciseStrengthModal({ name, unit, points, pr, onClose }: {
+  name: string; unit: string;
+  points: { date: string; value: number }[];
+  pr: { weight: number; reps: number; unit: string } | null;
+  onClose: () => void;
+}) {
+  return (
+    <CenteredModal title={name} onClose={onClose} maxWidth={460}>
+      {pr && (
+        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 16 }}>
+          <div style={{ fontSize: 11, letterSpacing: '.05em', color: MUT }}>BEST SET</div>
+          <div style={{ fontFamily: MONO, fontSize: 16, fontWeight: 700, color: SAGE }}>{fmtWeight(pr.weight)} {pr.unit} × {pr.reps}</div>
+        </div>
+      )}
+      <div style={{ fontSize: 11, letterSpacing: '.05em', color: MUT, marginBottom: 8 }}>WEIGHT OVER TIME</div>
+      {points.length >= 2 ? (
+        <div style={{ background: SURF, border: `1px solid ${LINE}`, borderRadius: 18, padding: '16px 14px' }}>
+          <WeightTrendChart points={points} unit={unit} />
+        </div>
+      ) : (
+        <div style={{ textAlign: 'center', background: SURF, border: `1px dashed ${LINE}`, borderRadius: 18, padding: '26px 20px' }}>
+          <div style={{ fontSize: 13, color: MUT, lineHeight: 1.5 }}>Log this exercise on another day to see a trend.</div>
+        </div>
+      )}
+    </CenteredModal>
+  );
+}
+
 // ── Milestone badge icons — inner SVG paths, same stroke style as the bottom-nav
 // icons (viewBox 24, currentColor, no fill, round joins). Colour comes from the
 // badge (SAGE unlocked / MUT locked).
@@ -609,9 +674,11 @@ export default function FitnessProgress() {
   const [completions, setCompletions] = useState<WorkoutCompletion[]>([]);
   const [bodyMetrics, setBodyMetrics] = useState<BodyMetric[]>([]);
   const [photos, setPhotos] = useState<ProgressPhoto[]>([]);
+  const [setLogs, setSetLogs] = useState<SetLog[]>([]);
   const [logOpen, setLogOpen] = useState(false);
   const [addPhotoOpen, setAddPhotoOpen] = useState(false);
   const [viewing, setViewing] = useState<ProgressPhoto | null>(null);
+  const [strengthEx, setStrengthEx] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   const today = useMemo(() => startOfDay(new Date()), []);
@@ -619,14 +686,15 @@ export default function FitnessProgress() {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const [{ program }, comps, body, pics] = await Promise.all([
-        loadActiveProgram(), loadCompletions(), loadBodyMetrics(), loadProgressPhotos(),
+      const [{ program }, comps, body, pics, sets] = await Promise.all([
+        loadActiveProgram(), loadCompletions(), loadBodyMetrics(), loadProgressPhotos(), loadSetLogs(),
       ]);
       if (cancelled) return;
       setProgram(program);
       setCompletions(comps);
       setBodyMetrics(body);
       setPhotos(pics);
+      setSetLogs(sets);
       setLoading(false);
     })();
     return () => { cancelled = true; };
@@ -778,6 +846,70 @@ export default function FitnessProgress() {
         (a.i - z.i))
       .map(({ b }) => b);
   }, [completions, bodyMetrics, weeklyTarget, bestStreak]);
+
+  // ── Strength — derived from set_logs. Best (heaviest) set per exercise (PRs),
+  // per-exercise weight-over-time series, and weekly training volume (Σ w×reps)
+  // over the last 8 weeks. Null when nothing's logged → the section shows its
+  // empty prompt.
+  const VOL_WEEKS = 8;
+  const strength = useMemo(() => {
+    const withWeight = setLogs.filter((s) => s.weight != null);
+    if (withWeight.length === 0) return null;
+
+    // Group by exercise → heaviest set (tie-break on reps) becomes the PR.
+    const byEx = new Map<string, SetLog[]>();
+    for (const s of withWeight) {
+      const arr = byEx.get(s.exercise_id) ?? [];
+      arr.push(s);
+      byEx.set(s.exercise_id, arr);
+    }
+    const weekAgo = addDays(today, -7);
+    const prs = [...byEx.entries()].map(([exId, logs]) => {
+      const best = logs.reduce((a, b) => {
+        const aw = a.weight ?? 0, bw = b.weight ?? 0;
+        if (bw > aw) return b;
+        if (bw === aw && (b.reps ?? 0) > (a.reps ?? 0)) return b;
+        return a;
+      });
+      return {
+        exId,
+        name: best.exercise_name || 'Exercise',
+        weight: best.weight ?? 0,
+        reps: best.reps ?? 0,
+        unit: best.unit,
+        achievedOn: best.performed_on,
+        isRecent: new Date(`${best.performed_on}T00:00:00`) >= weekAgo,
+      };
+    });
+    // Newest PR first, then heaviest.
+    prs.sort((a, z) => (a.achievedOn < z.achievedOn ? 1 : a.achievedOn > z.achievedOn ? -1 : z.weight - a.weight));
+
+    // Weekly volume, oldest → newest, last VOL_WEEKS Monday-first weeks.
+    const volByWeek = new Map<string, number>();
+    for (const s of withWeight) {
+      if (s.reps == null) continue;
+      const wk = localDateKey(startOfWeek(new Date(`${s.performed_on}T00:00:00`)));
+      volByWeek.set(wk, (volByWeek.get(wk) ?? 0) + (s.weight ?? 0) * s.reps);
+    }
+    const wk0 = startOfWeek(today);
+    const weeklyVolume = Array.from({ length: VOL_WEEKS }, (_, k) => {
+      const d = addDays(wk0, -7 * (VOL_WEEKS - 1 - k));
+      const key = localDateKey(d);
+      return { key, date: key, value: volByWeek.get(key) ?? 0 };
+    });
+
+    // Per-exercise weight-over-time — top weight per day, oldest → newest.
+    const seriesFor = (exId: string) => {
+      const perDay = new Map<string, number>();
+      for (const s of byEx.get(exId) ?? []) {
+        if (s.weight == null) continue;
+        perDay.set(s.performed_on, Math.max(perDay.get(s.performed_on) ?? 0, s.weight));
+      }
+      return [...perDay.entries()].sort((a, z) => (a[0] < z[0] ? -1 : 1)).map(([date, value]) => ({ date, value }));
+    };
+
+    return { prs, weeklyVolume, seriesFor };
+  }, [setLogs, today]);
 
   const remaining = Math.max(0, weeklyTarget - completedThisWeek);
   const statusLine = completedThisWeek === 0
@@ -1014,6 +1146,48 @@ export default function FitnessProgress() {
             ))}
           </div>
 
+          {/* strength & PRs */}
+          {secHead('Strength')}
+          {!strength ? (
+            <div style={{
+              textAlign: 'center', background: SURF, border: `1px dashed ${LINE}`, borderRadius: 18, padding: '26px 20px', marginBottom: 30,
+            }}>
+              <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>No lifts logged yet</div>
+              <div style={{ fontSize: 12.5, color: MUT, lineHeight: 1.5 }}>Log the weights you lift to start tracking strength.</div>
+            </div>
+          ) : (
+            <div style={{ marginBottom: 30 }}>
+              {/* recent PRs — heaviest set per exercise, newest first, tap for trend */}
+              <div style={{ fontSize: 11, letterSpacing: '.05em', color: MUT, marginBottom: 10 }}>RECENT PRs</div>
+              <div style={{ background: SURF, border: `1px solid ${LINE}`, borderRadius: 18, overflow: 'hidden', marginBottom: 18 }}>
+                {strength.prs.slice(0, 6).map((pr, i) => (
+                  <button key={pr.exId} type="button" onClick={() => setStrengthEx(pr.exId)} style={{
+                    appearance: 'none', cursor: 'pointer', width: '100%', textAlign: 'left', background: 'transparent',
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
+                    padding: '13px 15px', border: 'none', borderTop: i === 0 ? 'none' : `1px solid ${LINE}`, color: TEXT, fontFamily: FONT,
+                  }}>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontSize: 14, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{pr.name}</div>
+                      <div style={{ fontSize: 11, color: MUT, marginTop: 2 }}>Best set</div>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                      {pr.isRecent && (
+                        <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '.08em', color: BG, background: SAGE, borderRadius: 999, padding: '3px 7px' }}>NEW PR</span>
+                      )}
+                      <span style={{ fontFamily: MONO, fontSize: 13, fontWeight: 700, color: SAGE }}>{fmtWeight(pr.weight)} {pr.unit} × {pr.reps}</span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+
+              {/* weekly volume — Σ weight×reps over the last 8 weeks */}
+              <div style={{ fontSize: 11, letterSpacing: '.05em', color: MUT, marginBottom: 10 }}>WEEKLY VOLUME · LAST {VOL_WEEKS} WEEKS</div>
+              <div style={{ background: SURF, border: `1px solid ${LINE}`, borderRadius: 18, padding: '16px 14px' }}>
+                <VolumeBars weeks={strength.weeklyVolume} />
+              </div>
+            </div>
+          )}
+
           {/* recent activity */}
           {secHead('Recent activity')}
           {loading ? (
@@ -1079,6 +1253,18 @@ export default function FitnessProgress() {
           }}
         />
       )}
+      {strengthEx && strength && (() => {
+        const pr = strength.prs.find((p) => p.exId === strengthEx) ?? null;
+        return (
+          <ExerciseStrengthModal
+            name={pr?.name ?? 'Exercise'}
+            unit={pr?.unit ?? 'lb'}
+            points={strength.seriesFor(strengthEx)}
+            pr={pr ? { weight: pr.weight, reps: pr.reps, unit: pr.unit } : null}
+            onClose={() => setStrengthEx(null)}
+          />
+        );
+      })()}
     </div>
   );
 }

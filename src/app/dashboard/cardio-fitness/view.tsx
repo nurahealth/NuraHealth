@@ -1,6 +1,6 @@
 "use client";
 
-import { useId } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { hexA, smooth } from "@/components/dashboard/cardChartHelpers";
 import MetricEducation, { type MetricEducationItem } from "@/components/dashboard/MetricEducation";
@@ -16,10 +16,11 @@ const HAIR = "rgba(235,230,216,0.1)";
 const SANS = "var(--font-inter), system-ui, sans-serif";
 
 const GOLD = "#e3b765";
-// Hero arc gradient — gold-only ramp, low → high.
-const GOLD_LO = "#c79a52";
-const GOLD_MID = "#d8ad5d";
-const GOLD_HI = "#e3b765";
+const GOLD_RGB = "232,194,102"; // #e8c266 — rich champagne gold for glows
+// Hero ring gradient — rich gold ramp (deep amber → bright champagne).
+const RING_LO = "#c99a34";
+const RING_MID = "#e8c266";
+const RING_HI = "#f7dd90";
 
 // Built-in example state — rendered as-is so the view never blanks during
 // development with no real data wired in. These are the canonical sample values.
@@ -47,7 +48,7 @@ export default function CardioFitnessDetailPage() {
   const d = DATA;
 
   return (
-    <div style={{ minHeight: "100dvh", background: BG, color: CREAM, fontFamily: SANS, WebkitFontSmoothing: "antialiased" }}>
+    <div style={{ minHeight: "100dvh", background: `radial-gradient(120% 72% at 50% -12%, rgba(232,194,102,0.16), transparent 55%), ${BG}`, color: CREAM, fontFamily: SANS, WebkitFontSmoothing: "antialiased" }}>
       <style>{`
         * { font-variant-numeric: tabular-nums; }
         .cf-reveal { opacity: 0; transform: translateY(16px); animation: cf-rise .6s cubic-bezier(.2,.7,.2,1) forwards; }
@@ -83,7 +84,7 @@ export default function CardioFitnessDetailPage() {
             Your cardio fitness is <b style={{ color: CREAM, fontWeight: 600 }}>above average</b> for your age and sex — one of the strongest single markers of heart and lung health.
           </div>
           <span style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "7px 14px", borderRadius: 30, fontSize: 12.5, fontWeight: 600, color: CREAM, background: hexA(GOLD, 0.1), border: `0.5px solid ${hexA(GOLD, 0.4)}` }}>
-            <span style={{ width: 6, height: 6, borderRadius: "50%", background: GOLD }} />
+            <span style={{ width: 6, height: 6, borderRadius: "50%", background: GOLD, boxShadow: `0 0 8px rgba(${GOLD_RGB},0.9)` }} />
             Above average
           </span>
         </div>
@@ -147,40 +148,97 @@ function Legend() {
   );
 }
 
-// ── 3 · Hero arc gauge ───────────────────────────────────────────────────────
+// ── 3 · Hero ring — full 270° gold load-up ring ──────────────────────────────
+// A 270° arc (gap at bottom-center): a faint warm-gold track + a rich gold
+// gradient fill with a blurred glow layer behind it. On mount the fill (and its
+// glow) sweep from empty up to the value while the VO₂ number counts up 0 →
+// value, both over ~1.5s ease-out. Fill fraction keeps the gauge's
+// (value − lo) / (hi − lo) mapping (≈0.57 for 42). Under prefers-reduced-motion
+// the ring is already filled + glowing and the number is final.
 function ArcGauge({ value, lo, hi, unit }: { value: number; lo: number; hi: number; unit: string }) {
   const uid = useId().replace(/[^a-zA-Z0-9]/g, "");
-  const ARC = "M 14 164 A 146 146 0 0 1 306 164";
-  const arcPoint = (p: number, r: number): [number, number] => {
-    const theta = ((180 - p * 180) * Math.PI) / 180;
-    return [160 + r * Math.cos(theta), 164 - r * Math.sin(theta)];
-  };
-  const pos = Math.max(0, Math.min(1, (value - lo) / (hi - lo)));
-  const [mx, my] = arcPoint(pos, 146);
+  const gid = `cf-ring-${uid}`;
+
+  const size = 204;
+  const stroke = 14;
+  const pad = 22; // room for the blurred glow + drop-shadow
+  const box = size + pad * 2;
+  const r = (size - stroke) / 2;
+  const c = box / 2;
+  const circ = 2 * Math.PI * r;
+  const arc = 270;
+  const arcLen = circ * (arc / 360);
+  const frac = Math.max(0, Math.min(1, (value - lo) / (hi - lo)));
+  const targetOffset = arcLen * (1 - frac);
+  const rotation = -(90 + arc / 2); // -225° → gap centered at bottom
+
+  const [offset, setOffset] = useState(arcLen); // start empty
+  const [shown, setShown] = useState(0); // count up from 0
+  const [reduced, setReduced] = useState(false);
+  const rafRef = useRef(0);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    if (mq.matches) {
+      setReduced(true);
+      setOffset(targetOffset); // already filled
+      setShown(value); // final value
+      return;
+    }
+    const t = setTimeout(() => setOffset(targetOffset), 60);
+    const dur = 1500;
+    const ease = (p: number) => 1 - Math.pow(1 - p, 3);
+    let start = 0;
+    const step = (ts: number) => {
+      if (!start) start = ts;
+      const p = Math.min(1, (ts - start) / dur);
+      setShown(Math.round(value * ease(p)));
+      if (p < 1) rafRef.current = requestAnimationFrame(step);
+    };
+    rafRef.current = requestAnimationFrame(step);
+    return () => { clearTimeout(t); cancelAnimationFrame(rafRef.current); };
+  }, [value, targetOffset]);
+
+  const trans = reduced ? "none" : "stroke-dashoffset 1500ms cubic-bezier(.2,.7,.2,1)";
 
   return (
-    <svg viewBox="0 0 320 192" style={{ display: "block", width: "100%", height: "auto", overflow: "visible" }}>
-      <defs>
-        <linearGradient id={`${uid}-arc`} gradientUnits="userSpaceOnUse" x1="14" y1="0" x2="306" y2="0">
-          <stop offset="0%" stopColor={GOLD_LO} />
-          <stop offset="50%" stopColor={GOLD_MID} />
-          <stop offset="100%" stopColor={GOLD_HI} />
-        </linearGradient>
-      </defs>
-      <path d={ARC} fill="none" stroke="rgba(235,230,216,0.06)" strokeWidth={16} strokeLinecap="round" />
-      <path d={ARC} fill="none" stroke={`url(#${uid}-arc)`} strokeWidth={14} strokeLinecap="round" />
+    <div style={{ position: "relative", width: size, height: size, margin: "0 auto" }}>
+      <svg
+        width={box} height={box} viewBox={`0 0 ${box} ${box}`}
+        style={{ position: "absolute", top: -pad, left: -pad, transform: `rotate(${rotation}deg)`, overflow: "visible", pointerEvents: "none" }}
+      >
+        <defs>
+          <linearGradient id={gid} x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stopColor={RING_LO} />
+            <stop offset="0.5" stopColor={RING_MID} />
+            <stop offset="1" stopColor={RING_HI} />
+          </linearGradient>
+        </defs>
+        {/* faint warm-gold track */}
+        <circle cx={c} cy={c} r={r} fill="none" stroke="rgba(227,183,101,0.15)" strokeWidth={stroke} strokeLinecap="round" strokeDasharray={`${arcLen} ${circ}`} />
+        {/* glow layer — a blurred copy of the fill behind it */}
+        <circle
+          cx={c} cy={c} r={r} fill="none"
+          stroke={`url(#${gid})`} strokeWidth={stroke} strokeLinecap="round"
+          strokeDasharray={`${arcLen} ${circ}`} strokeDashoffset={offset}
+          style={{ filter: "blur(7px)", opacity: 0.55, transition: trans }}
+        />
+        {/* crisp gold fill on top */}
+        <circle
+          cx={c} cy={c} r={r} fill="none"
+          stroke={`url(#${gid})`} strokeWidth={stroke} strokeLinecap="round"
+          strokeDasharray={`${arcLen} ${circ}`} strokeDashoffset={offset}
+          style={{ filter: `drop-shadow(0 0 4px rgba(${GOLD_RGB},0.5))`, transition: trans }}
+        />
+      </svg>
 
-      {/* Marker at the value */}
-      <circle cx={mx.toFixed(1)} cy={my.toFixed(1)} r={7} fill={CREAM} stroke={BG} strokeWidth={3.5} />
-
-      {/* Center readout */}
-      <text x={160} y={120} textAnchor="middle" fontSize={52} fontWeight={600} letterSpacing={-1} fill={CREAM}>{value}</text>
-      <text x={160} y={144} textAnchor="middle" fontSize={12} fill={MUTED}>{unit}</text>
-
-      {/* End labels */}
-      <text x={10} y={186} textAnchor="start" fontSize={11} fill="rgba(235,230,216,0.5)">Low</text>
-      <text x={310} y={186} textAnchor="end" fontSize={11} fill="rgba(235,230,216,0.5)">High</text>
-    </svg>
+      {/* centered content — counting number + unit + label */}
+      <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+        <span style={{ fontFamily: SANS, fontSize: 54, fontWeight: 600, letterSpacing: "-1px", lineHeight: 1, color: CREAM, textShadow: `0 0 18px rgba(${GOLD_RGB},0.45)` }}>{shown}</span>
+        <span style={{ fontFamily: SANS, fontSize: 11.5, color: MUTED, marginTop: 6 }}>{unit}</span>
+        <span style={{ fontFamily: SANS, fontSize: 9.5, fontWeight: 600, letterSpacing: "0.22em", textTransform: "uppercase", color: GOLD, marginTop: 7 }}>Cardio Fitness</span>
+      </div>
+    </div>
   );
 }
 
