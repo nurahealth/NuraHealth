@@ -3,7 +3,7 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 import { requireAdminFromRequest, AdminError } from "@/lib/admin";
 import {
   RECIPE_CATEGORIES, STATUSES, slugify, slugTaken,
-  toStringArray, toNumberedSteps, writeRecipeResilient,
+  toStringArray, toNumberedSteps, writeRecipeResilient, buildLinkRows,
 } from "@/lib/admin-nutrition";
 
 function focal(v: unknown): number | null {
@@ -16,24 +16,12 @@ const STATUS_SET = new Set<string>(STATUSES);
 
 // Replace all ingredient links for a recipe with the provided set (order = index).
 async function replaceLinks(recipeId: string, links: unknown): Promise<void> {
+  // Dedupe BEFORE deleting so a duplicate ingredient_id can't abort the reinsert
+  // after the old links are already gone (that abort is what silently wiped a
+  // recipe's ingredients). UNIQUE(recipe_id, ingredient_id) → 23505 otherwise.
+  const rows = buildLinkRows(recipeId, links);
   const { error: delErr } = await supabaseAdmin.from("recipe_ingredients").delete().eq("recipe_id", recipeId);
   if (delErr) throw new Error(`Failed to clear ingredient links: ${delErr.message}`);
-  if (!Array.isArray(links)) return;
-  const rows = links
-    .map((l, i) => {
-      const o = (l ?? {}) as Record<string, unknown>;
-      const ingredient_id = typeof o.ingredient_id === "string" ? o.ingredient_id : "";
-      if (!ingredient_id) return null;
-      return {
-        recipe_id: recipeId,
-        ingredient_id,
-        amount_text: typeof o.amount_text === "string" && o.amount_text.trim() ? o.amount_text.trim() : null,
-        primary_system: typeof o.primary_system === "string" && o.primary_system.trim() ? o.primary_system.trim() : null,
-        context_note: typeof o.context_note === "string" && o.context_note.trim() ? o.context_note.trim() : null,
-        order_index: i + 1,
-      };
-    })
-    .filter((r): r is NonNullable<typeof r> => r !== null);
   if (rows.length === 0) return;
   const { error } = await supabaseAdmin.from("recipe_ingredients").insert(rows);
   if (error) throw new Error(`Failed to link ingredients: ${error.message}`);
@@ -129,10 +117,20 @@ export async function PATCH(
       focalDropped = dropped.includes("focal_x") || dropped.includes("focal_y");
     }
 
-    if (body.ingredients !== undefined) await replaceLinks(recipeId, body.ingredients);
+    // Surface a link-write failure loudly instead of 500-ing the whole request:
+    // the recipe row already updated, so report the partial save via linkError.
+    let linkError: string | null = null;
+    if (body.ingredients !== undefined) {
+      try {
+        await replaceLinks(recipeId, body.ingredients);
+      } catch (e) {
+        linkError = e instanceof Error ? e.message : "Failed to link ingredients";
+        console.error("[admin/recipes/:id PATCH] ingredient link write failed:", e);
+      }
+    }
 
     const { data: fresh } = await supabaseAdmin.from("recipes").select("*").eq("id", recipeId).single();
-    return NextResponse.json({ recipe: fresh, imageDropped, focalDropped });
+    return NextResponse.json({ recipe: fresh, linkError, imageDropped, focalDropped });
   } catch (err) {
     if (err instanceof AdminError) return NextResponse.json({ error: err.message }, { status: err.status });
     console.error("[admin/recipes/:id PATCH] unexpected:", err);

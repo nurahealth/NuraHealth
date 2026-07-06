@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import {
   Plus, X, Pencil, Trash2, RefreshCw, Shield, Search,
-  ChevronUp, ChevronDown, Loader2, Check, Eye,
+  ChevronUp, ChevronDown, Loader2, Check, Eye, ScanLine,
 } from "lucide-react";
 import Sidebar from "@/components/Sidebar";
 import NuraPlexus from "@/components/NuraPlexus";
@@ -27,7 +27,7 @@ const SERIF = "'DM Serif Display', Georgia, serif";
 const DANGER = "#FF4C5C";
 
 const RECIPE_CATEGORIES = ["breakfast", "lunch", "dinner", "baking", "snack", "drink"];
-const INGREDIENT_CATEGORIES = ["root-spice", "greens", "legumes", "good-fats", "ferments", "protein", "fruit"];
+const INGREDIENT_CATEGORIES = ["root-spice", "greens", "legumes", "good-fats", "ferments", "protein", "fruit", "grains", "staple"];
 type Status = "draft" | "published";
 
 // ── Types (mirror the public /recipes and /foods schema) ──────────────────────
@@ -421,6 +421,275 @@ function BlockEditor({ value, onChange }: { value: Block[]; onChange: (v: Block[
   );
 }
 
+// Fuzzy-match an extracted ingredient name to the knowledge base: exact name /
+// slug first, then substring containment, then token (Jaccard) overlap.
+function matchIngredient(name: string, ingredients: AdminIngredient[]): AdminIngredient | null {
+  const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+  const n = norm(name);
+  if (!n) return null;
+  const nslug = slugify(name);
+  for (const ing of ingredients) {
+    if (norm(ing.name) === n || (ing.slug && ing.slug === nslug)) return ing;
+  }
+  const nTokens = new Set(n.split(" ").filter(Boolean));
+  let best: AdminIngredient | null = null;
+  let bestScore = 0;
+  for (const ing of ingredients) {
+    const iName = norm(ing.name);
+    if (!iName) continue;
+    let score: number;
+    if (n.includes(iName) || iName.includes(n)) {
+      score = 0.85;
+    } else {
+      const iTokens = iName.split(" ").filter(Boolean);
+      const inter = iTokens.filter((t) => nTokens.has(t)).length;
+      const union = new Set([...iTokens, ...nTokens]).size;
+      score = union ? inter / union : 0;
+    }
+    if (score > bestScore) { bestScore = score; best = ing; }
+  }
+  return bestScore >= 0.5 ? best : null;
+}
+
+// Strip prep/amount/descriptor words from a scanned line down to a clean
+// canonical ingredient — "shallot, finely chopped" → "Shallot",
+// "center-cut skinless salmon fillet" → "Salmon Fillet".
+const SCAN_PREP_WORDS = new Set([
+  "finely", "roughly", "coarsely", "thinly", "freshly", "fresh", "dried", "raw", "cooked",
+  "chopped", "diced", "minced", "sliced", "grated", "shredded", "crushed", "ground", "peeled",
+  "cored", "seeded", "deseeded", "trimmed", "halved", "quartered", "cubed", "julienned", "mashed",
+  "whole", "large", "medium", "small", "ripe", "boneless", "skinless", "skin", "on", "off",
+  "center", "centre", "cut", "lean", "extra", "virgin", "organic", "toasted", "roasted",
+  "packed", "drained", "rinsed", "room", "temperature", "softened", "melted", "warm", "cold", "hot",
+  "optional", "approximately", "about", "plus", "more", "for", "serving", "garnish", "to", "taste",
+  "of", "your", "choice", "a", "an", "the", "and", "or", "into", "wedges", "florets",
+]);
+const SCAN_UNIT_WORDS = new Set([
+  "cup", "cups", "tbsp", "tbsps", "tablespoon", "tablespoons", "tsp", "tsps", "teaspoon", "teaspoons",
+  "g", "gram", "grams", "kg", "oz", "ounce", "ounces", "lb", "lbs", "pound", "pounds", "ml", "l", "liter", "liters", "litre", "litres",
+  "can", "cans", "clove", "cloves", "bunch", "bunches", "handful", "handfuls", "pinch", "pinches",
+  "slice", "slices", "piece", "pieces", "package", "packages", "packet", "packets", "stick", "sticks",
+  "sprig", "sprigs", "head", "heads", "stalk", "stalks", "dash", "dashes", "knob",
+]);
+function canonicalScanName(raw: string): string {
+  let s = raw.toLowerCase();
+  s = s.replace(/\([^)]*\)/g, " "); // drop parentheticals
+  s = s.split(",")[0];              // drop prep after the first comma
+  s = s.replace(/[^a-z\s-]/g, " "); // drop digits/punctuation (keep hyphen for splitting)
+  const tokens = s.split(/[\s-]+/).filter(Boolean).filter((t) => !SCAN_PREP_WORDS.has(t) && !SCAN_UNIT_WORDS.has(t));
+  const name = tokens.join(" ").trim().replace(/\b\w/g, (c) => c.toUpperCase());
+  return name || raw.trim();
+}
+
+// Best-effort category for an auto-created scan ingredient. PINNED to
+// INGREDIENT_CATEGORIES — every branch returns a value in that list and the
+// final guard clamps anything unexpected, so this can never emit a category the
+// table's CHECK constraint would reject. Unknown → "staple" (pantry catch-all).
+function inferCategory(name: string): string {
+  const n = name.toLowerCase();
+  const has = (re: RegExp) => re.test(n);
+  let cat = "staple";
+  if (has(/\b(salmon|tuna|sardine|mackerel|cod|halibut|trout|shrimp|scallop|anchov|fish|chicken|turkey|beef|steak|pork|lamb|bacon|egg|tofu|tempeh|seitan|prawn|mussel|meat|fillet)\b/)) cat = "protein";
+  else if (has(/\b(lentil|chickpea|bean|beans|edamame|split pea|hummus)\b/)) cat = "legumes";
+  else if (has(/\b(oat|quinoa|rice|barley|buckwheat|farro|millet|bulgur|couscous|amaranth|teff|pasta|bread|tortilla|polenta|flour|noodle)\b/)) cat = "grains";
+  else if (has(/\b(yogurt|yoghurt|kefir|sauerkraut|kimchi|miso|kombucha|natto|cheese|feta|parmesan|pickle)\b/)) cat = "ferments";
+  else if (has(/\b(oil|avocado|coconut|tahini|almond|walnut|pecan|cashew|pistachio|hazelnut|macadamia|pine nut|peanut|seed|seeds|butter|ghee|olive|chocolate|nut)\b/)) cat = "good-fats";
+  else if (has(/\b(berry|berries|strawberr|blueberr|raspberr|blackberr|cranberr|lemon|lime|orange|grapefruit|apple|banana|pear|grape|mango|pineapple|peach|plum|cherr|pomegranate|kiwi|melon|watermelon|cantaloupe|date|dates|fig|figs|apricot|raisin)\b/)) cat = "fruit";
+  else if (has(/\b(kale|spinach|chard|collard|arugula|lettuce|watercress|broccoli|cauliflower|brussels|cabbage|choy|asparagus|carrot|beet|radish|turnip|parsnip|celery|cucumber|zucchini|squash|pumpkin|potato|tomato|pepper|jalapeno|eggplant|mushroom|onion|shallot|leek|scallion|fennel|artichoke|okra|corn|endive|vegetable)\b/)) cat = "greens";
+  else if (has(/\b(salt|honey|maple|mustard|vinegar|soy sauce|tamari|fish sauce|broth|stock|paste|starch|cornstarch|arrowroot|baking|sugar|molasses|nori|kelp|syrup)\b/)) cat = "staple";
+  else if (has(/\b(turmeric|ginger|garlic|cumin|coriander|paprika|cinnamon|nutmeg|cardamom|clove|allspice|cayenne|chili|chilli|harissa|curry|garam|oregano|thyme|rosemary|sage|basil|parsley|cilantro|mint|dill|bay|saffron|sumac|zaatar|anise|fenugreek|horseradish|lemongrass|vanilla|pepper|spice|herb)\b/)) cat = "root-spice";
+  return (INGREDIENT_CATEGORIES as readonly string[]).includes(cat) ? cat : "staple";
+}
+
+// ── Scan ingredients from a photo (AI extraction → review → add) ──────────────
+type ScanRow = { name: string; amount_text: string; ingredient_id: string; matched: boolean; createdDraft?: boolean };
+
+function ScanPanel({ ingredients, onCreateIngredient, onAdd, onClose }: {
+  ingredients: AdminIngredient[];
+  onCreateIngredient: (draft: { name: string; category: string; tagline: string }) => Promise<string | null>;
+  onAdd: (links: RecipeLink[]) => void;
+  onClose: () => void;
+}) {
+  const [phase, setPhase] = useState<"upload" | "scanning" | "review">("upload");
+  const [dragOver, setDragOver] = useState(false);
+  const [err, setErr] = useState("");
+  const [rows, setRows] = useState<ScanRow[]>([]);
+  const [newFor, setNewFor] = useState<number | null>(null);
+  const [nName, setNName] = useState("");
+  const [nCat, setNCat] = useState("");
+  const [nTag, setNTag] = useState("");
+  const [creating, setCreating] = useState(false);
+  const [nErr, setNErr] = useState("");
+  const [bulkBusy, setBulkBusy] = useState(false);
+
+  const setRow = (i: number, patch: Partial<ScanRow>) => setRows((prev) => prev.map((r, j) => (j === i ? { ...r, ...patch } : r)));
+
+  // Auto-create a clean canonical draft ingredient from a scanned row and select it.
+  const createOne = async (i: number) => {
+    const r = rows[i];
+    if (!r || r.ingredient_id) return;
+    const name = canonicalScanName(r.name);
+    setBulkBusy(true); setErr("");
+    const id = await onCreateIngredient({ name, category: inferCategory(name), tagline: "" });
+    setBulkBusy(false);
+    if (id) setRow(i, { ingredient_id: id, name, matched: false, createdDraft: true });
+    else setErr(`Couldn't create "${name}" — if this category is new, apply the latest category migration in Supabase, then retry.`);
+  };
+
+  const createAllUnmatched = async () => {
+    setBulkBusy(true); setErr("");
+    const snapshot = rows;
+    const updates: { i: number; id: string; name: string }[] = [];
+    let failed = 0;
+    for (let i = 0; i < snapshot.length; i++) {
+      if (snapshot[i].ingredient_id) continue;
+      const name = canonicalScanName(snapshot[i].name);
+      const id = await onCreateIngredient({ name, category: inferCategory(name), tagline: "" }); // sequential — avoids slug races
+      if (id) updates.push({ i, id, name }); else failed++;
+    }
+    setRows((prev) => prev.map((r, i) => {
+      const u = updates.find((x) => x.i === i);
+      return u ? { ...r, ingredient_id: u.id, name: u.name, matched: false, createdDraft: true } : r;
+    }));
+    setBulkBusy(false);
+    if (failed > 0) setErr(`Created ${updates.length}. ${failed} couldn't be created — if a category is new, apply the latest category migration in Supabase, then retry.`);
+  };
+
+  const scan = async (file: File) => {
+    const invalid = validateImageFile(file);
+    if (invalid) { setErr(invalid); return; }
+    const tok = await getFreshToken();
+    if (!tok) { setErr("Your admin session has expired — reload the page and sign in again."); return; }
+    setErr(""); setPhase("scanning");
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/admin/recipes/scan-ingredients", { method: "POST", headers: { Authorization: `Bearer ${tok}` }, body: fd });
+      const data = await res.json() as { items?: { name: string; amount_text: string | null }[]; error?: string };
+      if (!res.ok) throw new Error(data.error ?? "Scan failed");
+      const items = data.items ?? [];
+      if (items.length === 0) { setErr("No ingredients found — use a clear, well-lit photo of just the ingredient list."); setPhase("upload"); return; }
+      setRows(items.map((it) => {
+        const m = matchIngredient(it.name, ingredients);
+        return { name: it.name, amount_text: it.amount_text ?? "", ingredient_id: m?.id ?? "", matched: !!m };
+      }));
+      setPhase("review");
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Scan failed"); setPhase("upload");
+    }
+  };
+
+  const openNew = (i: number, seed: string) => { setNewFor(i); setNName(seed); setNCat(""); setNTag(""); setNErr(""); };
+  const submitNew = async () => {
+    if (newFor === null) return;
+    if (!nName.trim()) { setNErr("Name is required"); return; }
+    if (!nCat) { setNErr("Category is required"); return; }
+    setCreating(true); setNErr("");
+    const id = await onCreateIngredient({ name: nName.trim(), category: nCat, tagline: nTag.trim() });
+    setCreating(false);
+    if (id) { setRow(newFor, { ingredient_id: id, matched: false }); setNewFor(null); }
+    else setNErr("Couldn't create the ingredient — try again.");
+  };
+
+  const resolvedCount = rows.filter((r) => r.ingredient_id).length;
+  const addAll = () => {
+    const resolved = rows.filter((r) => r.ingredient_id);
+    if (resolved.length === 0) { setErr("Match or create an ingredient for at least one row first."); return; }
+    onAdd(resolved.map((r) => ({ ingredient_id: r.ingredient_id, amount_text: r.amount_text, primary_system: "", context_note: "" })));
+    const remaining = rows.filter((r) => !r.ingredient_id);
+    if (remaining.length > 0) { setRows(remaining); setErr(`Added ${resolved.length}. ${remaining.length} row(s) still need an ingredient — pick or create one, or remove them.`); }
+    else onClose();
+  };
+
+  return (
+    <div style={{ background: `rgba(${SAGE_RGB},0.05)`, border: `0.5px solid rgba(${SAGE_RGB},0.28)`, borderRadius: 12, padding: 12, display: "flex", flexDirection: "column", gap: 10 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <Eyebrow color={SAGE} size={9}>Scan ingredients from a photo</Eyebrow>
+        <button type="button" onClick={onClose} style={{ ...miniBtn, width: 26, height: 26 }}><X size={13} /></button>
+      </div>
+
+      {err && <div style={{ fontFamily: SANS, fontSize: 11.5, fontWeight: 600, color: DANGER, lineHeight: 1.5 }}>{err}</div>}
+
+      {phase !== "review" ? (
+        <label
+          onDragOver={(e) => { e.preventDefault(); if (phase === "upload" && !dragOver) setDragOver(true); }}
+          onDragLeave={(e) => { e.preventDefault(); setDragOver(false); }}
+          onDrop={(e) => { e.preventDefault(); setDragOver(false); const f = e.dataTransfer.files?.[0]; if (!f) { setErr("Drag an image file from Finder, or use Choose photo."); return; } scan(f); }}
+          style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8, minHeight: 110, borderRadius: 10, cursor: phase === "scanning" ? "default" : "pointer", border: `1.5px dashed ${dragOver ? SAGE : `rgba(${SAGE_RGB},0.4)`}`, background: dragOver ? `rgba(${SAGE_RGB},0.10)` : "transparent", textAlign: "center", padding: 14 }}
+        >
+          {phase === "scanning" ? (
+            <><Loader2 size={18} color={SAGE} style={{ animation: "spin 1s linear infinite" }} /><span style={{ fontFamily: SANS, fontSize: 12.5, fontWeight: 600, color: SAGE }}>Reading the photo…</span></>
+          ) : (
+            <>
+              <ScanLine size={20} color={SAGE} />
+              <span style={{ fontFamily: SANS, fontSize: 12.5, fontWeight: 600, color: TEXT, lineHeight: 1.4 }}>Drop a photo of an ingredient list, or <span style={{ color: SAGE }}>choose a photo</span></span>
+              <span style={{ fontFamily: SANS, fontSize: 11, color: TEXT_TER }}>JPEG, PNG, or WebP · up to 5MB · the photo is only read, never stored</span>
+            </>
+          )}
+          <input type="file" accept="image/jpeg,image/png,image/webp" disabled={phase === "scanning"} style={{ display: "none" }} onChange={(e) => { const f = e.target.files?.[0]; if (f) scan(f); e.target.value = ""; }} />
+        </label>
+      ) : (
+        <>
+          <span style={{ fontFamily: SANS, fontSize: 11.5, color: TEXT_SEC, lineHeight: 1.5 }}>Review {rows.length} extracted item{rows.length === 1 ? "" : "s"} — edit names/amounts, confirm each match, then add. Nothing is added until you confirm.</span>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {rows.map((r, i) => (
+              <div key={i} style={{ background: SURFACE, border: `0.5px solid ${BORDER}`, borderRadius: 10, padding: 10, display: "flex", flexDirection: "column", gap: 7 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 7 }}>
+                  <input value={r.name} onChange={(e) => setRow(i, { name: e.target.value })} placeholder="Ingredient name" style={inputStyle} />
+                  <input value={r.amount_text} onChange={(e) => setRow(i, { amount_text: e.target.value })} placeholder="Amount (optional)" style={inputStyle} />
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                  {r.ingredient_id
+                    ? <span style={{ display: "inline-flex", alignItems: "center", gap: 5, flexShrink: 0, fontFamily: SANS, fontSize: 11, fontWeight: 600, color: SAGE }}><Check size={12} /> {r.matched ? "Matched" : "Selected"}</span>
+                    : <span style={{ flexShrink: 0, fontFamily: SANS, fontSize: 11, fontWeight: 600, color: "#d3a253" }}>No match</span>}
+                  {r.createdDraft && (
+                    <span style={{ flexShrink: 0, fontFamily: SANS, fontSize: 9.5, fontWeight: 600, letterSpacing: "0.03em", color: "#d3a253", background: "rgba(211,162,83,0.12)", border: "0.5px solid rgba(211,162,83,0.3)", borderRadius: 6, padding: "2px 7px" }}>draft · needs deep-dive</span>
+                  )}
+                  {!r.ingredient_id && (
+                    <button type="button" onClick={() => createOne(i)} disabled={bulkBusy} style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 5, padding: "5px 10px", background: SAGE, border: "none", borderRadius: 8, color: SAGE_ON, fontFamily: SANS, fontSize: 11, fontWeight: 600, cursor: bulkBusy ? "default" : "pointer", opacity: bulkBusy ? 0.7 : 1 }}><Plus size={12} /> Create &amp; match</button>
+                  )}
+                  <select value={r.ingredient_id} onChange={(e) => { if (e.target.value === "__new__") openNew(i, r.name); else setRow(i, { ingredient_id: e.target.value, matched: false, createdDraft: false }); }} style={{ ...inputStyle, flex: 1, minWidth: 130, appearance: "none", cursor: "pointer" }}>
+                    <option value="">Select an ingredient…</option>
+                    {ingredients.map((ing) => <option key={ing.id} value={ing.id}>{ing.name}</option>)}
+                    <option value="__new__">+ New ingredient…</option>
+                  </select>
+                  <button type="button" onClick={() => setRows((prev) => prev.filter((_, j) => j !== i))} aria-label="Remove row" style={{ ...miniBtn, color: DANGER }}><Trash2 size={13} /></button>
+                </div>
+                {newFor === i && (
+                  <div style={{ background: `rgba(${SAGE_RGB},0.06)`, border: `0.5px solid rgba(${SAGE_RGB},0.28)`, borderRadius: 9, padding: 10, display: "flex", flexDirection: "column", gap: 7 }}>
+                    <Eyebrow color={SAGE} size={9}>New ingredient</Eyebrow>
+                    <input value={nName} autoFocus onChange={(e) => { setNName(e.target.value); if (nErr) setNErr(""); }} placeholder="Name" style={inputStyle} />
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 7 }}>
+                      <select value={nCat} onChange={(e) => { setNCat(e.target.value); if (nErr) setNErr(""); }} style={{ ...inputStyle, appearance: "none", cursor: "pointer" }}>
+                        <option value="" disabled>Category…</option>
+                        {INGREDIENT_CATEGORIES.map((c) => <option key={c} value={c}>{pretty(c)}</option>)}
+                      </select>
+                      <input value={nTag} onChange={(e) => setNTag(e.target.value)} placeholder="Tagline (optional)" style={inputStyle} />
+                    </div>
+                    <span style={{ fontFamily: SANS, fontSize: 10.5, color: TEXT_TER, lineHeight: 1.5 }}>Creates a draft ingredient and selects it. Add full deep-dive content later on the ingredient&rsquo;s own admin page.</span>
+                    {nErr && <div style={{ fontFamily: SANS, fontSize: 11, fontWeight: 600, color: DANGER }}>{nErr}</div>}
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <button type="button" onClick={submitNew} disabled={creating} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 12px", background: SAGE, border: "none", borderRadius: 9, color: SAGE_ON, fontFamily: SANS, fontSize: 11.5, fontWeight: 600, cursor: creating ? "default" : "pointer", opacity: creating ? 0.7 : 1 }}>{creating ? <Loader2 size={12} style={{ animation: "spin 1s linear infinite" }} /> : <Plus size={12} />} Create &amp; select</button>
+                      <button type="button" onClick={() => setNewFor(null)} disabled={creating} style={{ padding: "7px 12px", background: "transparent", border: `0.5px solid ${BORDER}`, borderRadius: 9, color: TEXT_SEC, fontFamily: SANS, fontSize: 11.5, fontWeight: 600, cursor: "pointer" }}>Cancel</button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+          <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+            <button type="button" onClick={addAll} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "9px 15px", background: SAGE, border: "none", borderRadius: 10, color: SAGE_ON, fontFamily: SANS, fontSize: 12, fontWeight: 600, cursor: "pointer" }}><Plus size={13} /> Add all ({resolvedCount})</button>
+            {rows.some((r) => !r.ingredient_id) && (
+              <button type="button" onClick={createAllUnmatched} disabled={bulkBusy} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "9px 15px", background: "transparent", border: `0.5px solid rgba(${SAGE_RGB},0.4)`, borderRadius: 10, color: SAGE, fontFamily: SANS, fontSize: 12, fontWeight: 600, cursor: bulkBusy ? "default" : "pointer", opacity: bulkBusy ? 0.7 : 1 }}>{bulkBusy ? <Loader2 size={13} style={{ animation: "spin 1s linear infinite" }} /> : <Plus size={13} />} Create all unmatched ({rows.filter((r) => !r.ingredient_id).length})</button>
+            )}
+            <button type="button" onClick={() => { setPhase("upload"); setRows([]); setErr(""); }} style={{ padding: "9px 15px", background: "transparent", border: `0.5px solid ${BORDER}`, borderRadius: 10, color: TEXT_SEC, fontFamily: SANS, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>Scan another</button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 // ── Recipe ↔ ingredient link editor ──────────────────────────────────────────
 function LinkEditor({ value, onChange, ingredients, onCreateIngredient }: { value: RecipeLink[]; onChange: (v: RecipeLink[]) => void; ingredients: AdminIngredient[]; onCreateIngredient: (draft: { name: string; category: string; tagline: string }) => Promise<string | null> }) {
   const set = (i: number, patch: Partial<RecipeLink>) => onChange(value.map((l, j) => (j === i ? { ...l, ...patch } : l)));
@@ -445,8 +714,24 @@ function LinkEditor({ value, onChange, ingredients, onCreateIngredient }: { valu
     else setNErr("Couldn't create the ingredient — see the error above.");
   };
 
+  const [scanOpen, setScanOpen] = useState(false);
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      {scanOpen && (
+        <ScanPanel
+          ingredients={ingredients}
+          onCreateIngredient={onCreateIngredient}
+          onAdd={(links) => {
+            // Only append ingredients not already linked — recipe_ingredients is
+            // UNIQUE(recipe_id, ingredient_id), and duplicate rows can't both save.
+            const have = new Set(value.map((l) => l.ingredient_id).filter(Boolean));
+            const toAdd = links.filter((l) => l.ingredient_id && !have.has(l.ingredient_id));
+            onChange([...value, ...toAdd]);
+          }}
+          onClose={() => setScanOpen(false)}
+        />
+      )}
       {value.map((l, i) => (
         <div key={i} style={{ background: SURFACE, border: `0.5px solid ${BORDER}`, borderRadius: 12, padding: 12, display: "flex", gap: 8 }}>
           <span style={{ flexShrink: 0, width: 24, height: 24, marginTop: 4, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", background: `rgba(${SAGE_RGB},0.14)`, fontFamily: SANS, fontSize: 11, fontWeight: 600, color: SAGE }}>{i + 1}</span>
@@ -494,7 +779,10 @@ function LinkEditor({ value, onChange, ingredients, onCreateIngredient }: { valu
           </div>
         </div>
       ))}
-      <button type="button" onClick={() => onChange([...value, { ingredient_id: "", amount_text: "", primary_system: "", context_note: "" }])} style={{ alignSelf: "flex-start", display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 12px", background: "transparent", border: `0.5px dashed rgba(${SAGE_RGB},0.4)`, borderRadius: 10, color: SAGE, fontFamily: SANS, fontSize: 12, fontWeight: 600, cursor: "pointer" }}><Plus size={13} /> Add ingredient</button>
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+        <button type="button" onClick={() => onChange([...value, { ingredient_id: "", amount_text: "", primary_system: "", context_note: "" }])} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 12px", background: "transparent", border: `0.5px dashed rgba(${SAGE_RGB},0.4)`, borderRadius: 10, color: SAGE, fontFamily: SANS, fontSize: 12, fontWeight: 600, cursor: "pointer" }}><Plus size={13} /> Add ingredient</button>
+        <button type="button" onClick={() => setScanOpen((o) => !o)} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 12px", background: scanOpen ? `rgba(${SAGE_RGB},0.14)` : "transparent", border: `0.5px solid rgba(${SAGE_RGB},0.4)`, borderRadius: 10, color: SAGE, fontFamily: SANS, fontSize: 12, fontWeight: 600, cursor: "pointer" }}><ScanLine size={13} /> Scan from photo</button>
+      </div>
     </div>
   );
 }
@@ -596,7 +884,12 @@ function RecipeModal({ token, editing, ingredients, onClose, onSuccess }: { toke
       setIngredientList((prev) => [...prev, data.ingredient!].sort((a, b) => a.name.localeCompare(b.name)));
       return data.ingredient.id;
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Couldn't create the ingredient");
+      const raw = e instanceof Error ? e.message : "";
+      // Translate the raw Postgres CHECK-violation into something actionable.
+      const friendly = /ingredients_category_check|violates check constraint/i.test(raw)
+        ? "That ingredient category isn't enabled in the database yet — apply the latest category migration in Supabase, then retry."
+        : (raw || "Couldn't create the ingredient");
+      setError(friendly);
       return null;
     }
   };
@@ -681,8 +974,17 @@ function RecipeModal({ token, editing, ingredients, onClose, onSuccess }: { toke
       status, method_steps: steps,
     };
     // Only send ingredient links when we actually have them loaded — never let a
-    // failed load blank them out.
-    if (linksLoaded) payload.ingredients = links.filter((l) => l.ingredient_id);
+    // failed load blank them out. Dedupe by ingredient_id: recipe_ingredients has
+    // UNIQUE(recipe_id, ingredient_id), so a repeated ingredient would abort the
+    // whole insert. (The server dedupes too; this lets us tell the user.)
+    let dupCount = 0;
+    if (linksLoaded) {
+      const withId = links.filter((l) => l.ingredient_id);
+      const seen = new Set<string>();
+      const deduped = withId.filter((l) => (seen.has(l.ingredient_id) ? false : (seen.add(l.ingredient_id), true)));
+      dupCount = withId.length - deduped.length;
+      payload.ingredients = deduped;
+    }
 
     try {
       const res = await fetch(editId ? `/api/admin/recipes/${editId}` : "/api/admin/recipes", {
@@ -695,15 +997,24 @@ function RecipeModal({ token, editing, ingredients, onClose, onSuccess }: { toke
         try { const b = await res.json() as { error?: string }; if (b.error) msg = b.error; } catch {}
         throw new Error(msg);
       }
-      const body = await res.json().catch(() => ({})) as { recipe?: { id?: string; slug?: string; status?: string }; imageDropped?: boolean; focalDropped?: boolean };
+      const body = await res.json().catch(() => ({})) as { recipe?: { id?: string; slug?: string; status?: string }; linkError?: string | null; imageDropped?: boolean; focalDropped?: boolean };
       const saved = body.recipe;
       // Switch to edit mode after a create so the next save UPDATES this recipe.
       if (!editId && saved?.id) { setCreatedId(saved.id); setLinksLoaded(true); }
       if (saved?.slug) { setSlug(saved.slug); setSlugEdited(true); }
+      // NEVER let a partial save pass silently: the recipe saved but its
+      // ingredients did not. Show a loud red error naming the ingredients part.
+      if (body.linkError) {
+        setError(`The recipe saved, but its INGREDIENTS did NOT save: ${body.linkError} — fix and Save again.`);
+        onSuccess();
+        setBusy(false);
+        return; // keep the form open so the error is seen and can be retried
+      }
       const photoDropped = !!body.imageDropped && !!imageUrl;
       const focalUnsaved = !!body.focalDropped && !!imageUrl && (focalX !== 0.5 || focalY !== 0.5);
       if (photoDropped) setWarn("Photo uploaded to storage, but the database rejected image_url — the recipes.image_url column is missing in the connected project (or PostgREST's schema cache is stale). Apply the migration to THIS project, then run  notify pgrst, 'reload schema';  and Save again.");
       else if (focalUnsaved) setWarn("Focal point not saved — the recipes focal-point migration (focal_x / focal_y) hasn't been applied. Run it, then Save again.");
+      else if (dupCount > 0) setWarn(`${dupCount} duplicate ingredient${dupCount > 1 ? "s were" : " was"} merged — a recipe can list each ingredient once.`);
 
       onSuccess(); // refresh the list
 

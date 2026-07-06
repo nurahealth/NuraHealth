@@ -3,7 +3,7 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 import { requireAdminFromRequest, AdminError } from "@/lib/admin";
 import {
   RECIPE_CATEGORIES, STATUSES, slugify, slugTaken,
-  toStringArray, toNumberedSteps, writeRecipeResilient,
+  toStringArray, toNumberedSteps, writeRecipeResilient, buildLinkRows,
 } from "@/lib/admin-nutrition";
 
 // Clamp an incoming 0–1 focal coordinate, or null.
@@ -17,22 +17,7 @@ const STATUS_SET = new Set<string>(STATUSES);
 
 // Insert recipe_ingredient links for a recipe (order preserved by index).
 async function insertLinks(recipeId: string, links: unknown): Promise<void> {
-  if (!Array.isArray(links)) return;
-  const rows = links
-    .map((l, i) => {
-      const o = (l ?? {}) as Record<string, unknown>;
-      const ingredient_id = typeof o.ingredient_id === "string" ? o.ingredient_id : "";
-      if (!ingredient_id) return null;
-      return {
-        recipe_id: recipeId,
-        ingredient_id,
-        amount_text: typeof o.amount_text === "string" && o.amount_text.trim() ? o.amount_text.trim() : null,
-        primary_system: typeof o.primary_system === "string" && o.primary_system.trim() ? o.primary_system.trim() : null,
-        context_note: typeof o.context_note === "string" && o.context_note.trim() ? o.context_note.trim() : null,
-        order_index: i + 1,
-      };
-    })
-    .filter((r): r is NonNullable<typeof r> => r !== null);
+  const rows = buildLinkRows(recipeId, links);
   if (rows.length === 0) return;
   const { error } = await supabaseAdmin.from("recipe_ingredients").insert(rows);
   if (error) throw new Error(`Failed to link ingredients: ${error.message}`);
@@ -102,10 +87,20 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     );
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-    await insertLinks((data as { id: string }).id, body.ingredients);
+    // The recipe row is committed. If linking its ingredients fails, DON'T 500
+    // (that would orphan the just-created recipe); return it with a loud
+    // linkError so the form can surface the partial save and switch to edit mode.
+    let linkError: string | null = null;
+    try {
+      await insertLinks((data as { id: string }).id, body.ingredients);
+    } catch (e) {
+      linkError = e instanceof Error ? e.message : "Failed to link ingredients";
+      console.error("[admin/recipes POST] ingredient link write failed:", e);
+    }
 
     return NextResponse.json({
       recipe: data,
+      linkError,
       imageDropped: dropped.includes("image_url"),
       focalDropped: dropped.includes("focal_x") || dropped.includes("focal_y"),
     }, { status: 201 });

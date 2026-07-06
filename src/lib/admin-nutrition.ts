@@ -6,8 +6,43 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 
 // ── Enums (kept in sync with the public /recipes and /foods pages) ────────────
 export const RECIPE_CATEGORIES = ["breakfast", "lunch", "dinner", "baking", "snack", "drink"] as const;
-export const INGREDIENT_CATEGORIES = ["root-spice", "greens", "legumes", "good-fats", "ferments", "protein", "fruit"] as const;
+export const INGREDIENT_CATEGORIES = ["root-spice", "greens", "legumes", "good-fats", "ferments", "protein", "fruit", "grains", "staple"] as const;
 export const STATUSES = ["draft", "published"] as const;
+
+// Build recipe_ingredients rows from a payload's `ingredients` array. Skips rows
+// without an ingredient_id and DEDUPES by ingredient_id (keeping the first
+// occurrence) — recipe_ingredients has a UNIQUE(recipe_id, ingredient_id)
+// constraint, so a duplicate would abort the whole batch insert (23505) and, in
+// replaceLinks, that abort lands AFTER the delete has already cleared the old
+// links. Order is renumbered sequentially over the survivors.
+export interface RecipeLinkRow {
+  recipe_id: string;
+  ingredient_id: string;
+  amount_text: string | null;
+  primary_system: string | null;
+  context_note: string | null;
+  order_index: number;
+}
+export function buildLinkRows(recipeId: string, links: unknown): RecipeLinkRow[] {
+  if (!Array.isArray(links)) return [];
+  const seen = new Set<string>();
+  const rows: RecipeLinkRow[] = [];
+  for (const l of links) {
+    const o = (l ?? {}) as Record<string, unknown>;
+    const ingredient_id = typeof o.ingredient_id === "string" ? o.ingredient_id : "";
+    if (!ingredient_id || seen.has(ingredient_id)) continue;
+    seen.add(ingredient_id);
+    rows.push({
+      recipe_id: recipeId,
+      ingredient_id,
+      amount_text: typeof o.amount_text === "string" && o.amount_text.trim() ? o.amount_text.trim() : null,
+      primary_system: typeof o.primary_system === "string" && o.primary_system.trim() ? o.primary_system.trim() : null,
+      context_note: typeof o.context_note === "string" && o.context_note.trim() ? o.context_note.trim() : null,
+      order_index: rows.length + 1,
+    });
+  }
+  return rows;
+}
 
 // PostgREST/Postgres report an unknown column as PGRST204 / 42703. Lets writes
 // degrade gracefully when an optional column (e.g. image_url) hasn't been
