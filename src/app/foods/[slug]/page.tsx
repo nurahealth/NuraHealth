@@ -8,6 +8,7 @@ import { sageGradient } from "@/lib/sageGradient";
 import { resolveBack, withFrom, type RawSearchParam } from "@/lib/backNav";
 import SaveButton from "./SaveButton";
 import { RecipeCard, type Recipe } from "../../recipes/RecipesBrowseClient";
+import { withImageUrlFallback } from "@/lib/recipeSelect";
 
 export const dynamic = "force-dynamic";
 
@@ -70,10 +71,12 @@ export default async function FoodDetailPage({
   const pairsWith = ing.pairs_with ?? [];
 
   // Reverse lookup: recipes that use this ingredient.
-  const { data: linkRows } = await supabaseAdmin
-    .from("recipe_ingredients")
-    .select("recipes(id, slug, title, description, category, cuisine, total_minutes, servings, is_organic, goal_tags, system_tags, status, image_url)")
-    .eq("ingredient_id", ing.id);
+  const linkRows = await withImageUrlFallback<unknown[]>((imageCol) =>
+    supabaseAdmin
+      .from("recipe_ingredients")
+      .select(`recipes(id, slug, title, description, category, cuisine, total_minutes, servings, is_organic, goal_tags, system_tags, status${imageCol})`)
+      .eq("ingredient_id", ing.id)
+  );
 
   type RecipeEmbed = {
     id: string; slug: string; title: string; description: string | null;

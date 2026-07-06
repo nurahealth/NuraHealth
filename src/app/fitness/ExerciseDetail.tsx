@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { loadExercise, type ExerciseFull } from './planData';
 import ExerciseMedia, { CLIP_BG, isVideo } from './ExerciseMedia';
+import FitnessBackButton from './FitnessBackButton';
 
 // Self-hosted demo store (public bucket). WorkoutX gifs are downloaded here so the
 // demo box keeps working after the WorkoutX subscription is cancelled.
@@ -123,12 +124,7 @@ export default function ExerciseDetail({ exerciseId, sets, reps, rest_seconds, o
 
         {/* back */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-          <button type="button" aria-label="Back" onClick={onClose} style={{
-            appearance: 'none', cursor: 'pointer', width: 36, height: 36, borderRadius: 12,
-            background: SURF, border: `1px solid ${LINE}`, display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={TEXT} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
-          </button>
+          <FitnessBackButton onClick={onClose} />
           <div style={{ fontSize: 11, letterSpacing: '.18em', color: MUT }}>EXERCISE</div>
         </div>
 

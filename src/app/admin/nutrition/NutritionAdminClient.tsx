@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import {
   Plus, X, Pencil, Trash2, RefreshCw, Shield, Search,
-  ChevronUp, ChevronDown, Loader2, Check,
+  ChevronUp, ChevronDown, Loader2, Check, Eye,
 } from "lucide-react";
 import Sidebar from "@/components/Sidebar";
 import NuraPlexus from "@/components/NuraPlexus";
@@ -80,6 +80,11 @@ function pretty(t: string): string {
 }
 function slugify(s: string): string {
   return s.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 80);
+}
+
+// Live detail page for published recipes; admin-only ?preview=1 for drafts.
+function recipePreviewUrl(slug: string, status: string): string {
+  return `/recipes/${slug}${status === "published" ? "" : "?preview=1"}`;
 }
 
 // Always read a FRESH access token at call time. The browser client refreshes
@@ -495,7 +500,7 @@ function LinkEditor({ value, onChange, ingredients, onCreateIngredient }: { valu
 }
 
 // ── Modal shell ───────────────────────────────────────────────────────────────
-function ModalShell({ title, busy, onClose, error, children, onSave }: { title: string; busy: boolean; onClose: () => void; error: string; children: React.ReactNode; onSave: () => void }) {
+function ModalShell({ title, busy, onClose, error, children, onSave, extraAction }: { title: string; busy: boolean; onClose: () => void; error: string; children: React.ReactNode; onSave: () => void; extraAction?: React.ReactNode }) {
   return (
     <div onClick={() => !busy && onClose()} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.72)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)", padding: "0 16px" }}>
       <div onClick={(e) => e.stopPropagation()} style={{ width: "100%", maxWidth: 560, background: BG, borderRadius: 20, border: `0.5px solid ${BORDER_STRONG}`, maxHeight: "92vh", overflowY: "auto", paddingBottom: 0 }}>
@@ -514,9 +519,12 @@ function ModalShell({ title, busy, onClose, error, children, onSave }: { title: 
           {/* Error repeated at the action so a failed save is impossible to miss,
               even when the top of the long form is scrolled out of view. */}
           {error && <div style={{ marginBottom: 12, padding: "10px 12px", background: "rgba(255,76,92,0.08)", border: `0.5px solid rgba(255,76,92,0.4)`, borderRadius: 10 }}><Eyebrow color={DANGER} size={10}>{error}</Eyebrow></div>}
-          <button onClick={onSave} disabled={busy} className="nura-primary-btn" style={{ width: "100%", padding: "13px 16px", background: SAGE, border: "none", borderRadius: 14, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, fontFamily: SANS, fontSize: 12, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", color: SAGE_ON, cursor: busy ? "default" : "pointer", opacity: busy ? 0.7 : 1, transition: "background 200ms, transform 100ms" }}>
-            {busy ? <Loader2 size={14} style={{ animation: "spin 1s linear infinite" }} /> : null} Save
-          </button>
+          <div style={{ display: "flex", gap: 10 }}>
+            {extraAction}
+            <button onClick={onSave} disabled={busy} className="nura-primary-btn" style={{ flex: 1, padding: "13px 16px", background: SAGE, border: "none", borderRadius: 14, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, fontFamily: SANS, fontSize: 12, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", color: SAGE_ON, cursor: busy ? "default" : "pointer", opacity: busy ? 0.7 : 1, transition: "background 200ms, transform 100ms" }}>
+              {busy ? <Loader2 size={14} style={{ animation: "spin 1s linear infinite" }} /> : null} Save
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -623,7 +631,9 @@ function RecipeModal({ token, editing, ingredients, onClose, onSuccess }: { toke
   // Auto-derive slug from title until the admin edits it directly.
   useEffect(() => { if (!slugEdited) setSlug(slugify(title)); }, [title, slugEdited]);
 
-  const save = async () => {
+  // thenPreview: save first (so preview reflects the latest SAVED state), then
+  // open the recipe's detail page — live for published, ?preview=1 for drafts.
+  const save = async (thenPreview = false) => {
     const tErr = !title.trim() ? "Title is required" : "";
     const cErr = !category ? "Category is required" : "";
     setTitleErr(tErr); setCategoryErr(cErr);
@@ -649,12 +659,39 @@ function RecipeModal({ token, editing, ingredients, onClose, onSuccess }: { toke
         try { const b = await res.json() as { error?: string }; if (b.error) msg = b.error; } catch {}
         throw new Error(msg);
       }
+      if (thenPreview) {
+        // Reflect the just-saved slug/status (server re-slugifies on title change).
+        const body = await res.json().catch(() => ({})) as { recipe?: { slug?: string; status?: string } };
+        const saved = body.recipe;
+        const target = saved?.slug ?? slug;
+        window.open(recipePreviewUrl(target, saved?.status ?? status), "_blank", "noopener,noreferrer");
+        onSuccess(); // refresh the list; keep the form open so you can keep editing
+        setBusy(false);
+        return;
+      }
       onSuccess(); onClose();
     } catch (e) { setError(e instanceof Error ? e.message : "Save failed"); setBusy(false); }
   };
 
   return (
-    <ModalShell title={editing ? "Edit Recipe" : "Add Recipe"} busy={busy} onClose={onClose} error={error} onSave={save}>
+    <ModalShell
+      title={editing ? "Edit Recipe" : "Add Recipe"}
+      busy={busy}
+      onClose={onClose}
+      error={error}
+      onSave={() => save(false)}
+      extraAction={
+        <button
+          type="button"
+          onClick={() => save(true)}
+          disabled={busy}
+          title="Saves this recipe, then opens its page in a new tab"
+          style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "13px 16px", background: "transparent", border: `0.5px solid ${BORDER_STRONG}`, borderRadius: 14, fontFamily: SANS, fontSize: 12, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", color: TEXT, cursor: busy ? "default" : "pointer", opacity: busy ? 0.7 : 1, whiteSpace: "nowrap" }}
+        >
+          <Eye size={13} /> Save &amp; preview
+        </button>
+      }
+    >
       <Field label="Title" required error={titleErr}><input value={title} onChange={(e) => { setTitle(e.target.value); if (titleErr) setTitleErr(""); }} placeholder="Recipe title" style={inputStyle} /></Field>
       <Field label="Slug" required><input value={slug} onChange={(e) => { setSlugEdited(true); setSlug(e.target.value); }} placeholder="auto-from-title" style={inputStyle} /></Field>
       <Field label="Description"><textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} placeholder="Optional" style={{ ...inputStyle, resize: "vertical", lineHeight: 1.6 }} /></Field>
@@ -984,6 +1021,7 @@ export default function NutritionAdminClient({ initialRecipes, initialIngredient
                       <div style={{ fontFamily: SANS, fontSize: 12, color: TEXT_TER, marginTop: 2 }}>/{r.slug}</div>
                     </div>
                     <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+                      <a href={recipePreviewUrl(r.slug, r.status)} target="_blank" rel="noopener noreferrer" aria-label="Preview recipe" title={r.status === "published" ? "Preview (live)" : "Preview draft"} className="nut-icon-btn" style={{ width: 34, height: 34, display: "flex", alignItems: "center", justifyContent: "center", background: "transparent", border: `0.5px solid ${BORDER}`, borderRadius: 10, color: TEXT_SEC, cursor: "pointer", textDecoration: "none", transition: "border-color 180ms, color 180ms" }}><Eye size={13} /></a>
                       <button onClick={() => setRecipeModal({ editing: r })} aria-label="Edit recipe" className="nut-icon-btn" style={{ width: 34, height: 34, display: "flex", alignItems: "center", justifyContent: "center", background: "transparent", border: `0.5px solid ${BORDER}`, borderRadius: 10, color: TEXT_SEC, cursor: "pointer", transition: "border-color 180ms, color 180ms" }}><Pencil size={13} /></button>
                       <button onClick={() => { setDeleteError(""); setConfirm({ kind: "recipes", id: r.id, name: r.title }); }} aria-label="Delete recipe" className="nut-icon-btn" style={{ width: 34, height: 34, display: "flex", alignItems: "center", justifyContent: "center", background: "transparent", border: `0.5px solid ${BORDER}`, borderRadius: 10, color: TEXT_SEC, cursor: "pointer", transition: "border-color 180ms, color 180ms" }}><Trash2 size={13} /></button>
                     </div>

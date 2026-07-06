@@ -4,6 +4,7 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 import NuraPageShell from "@/components/NuraPageShell";
 import SavedRecipesClient from "./SavedRecipesClient";
 import { type Recipe } from "../../recipes/RecipesBrowseClient";
+import { withImageUrlFallback } from "@/lib/recipeSelect";
 
 export const dynamic = "force-dynamic";
 
@@ -29,13 +30,13 @@ export default async function SavedRecipesPage() {
   if (!user) redirect("/dashboard");
 
   // The user's saved recipes, most-recently-saved first.
-  const { data: savedRows } = await supabaseAdmin
-    .from("saved_recipes")
-    .select(
-      "created_at, recipes(id, slug, title, description, category, cuisine, total_minutes, servings, is_organic, goal_tags, system_tags, status, image_url)"
-    )
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: false });
+  const savedRows = await withImageUrlFallback<unknown[]>((imageCol) =>
+    supabaseAdmin
+      .from("saved_recipes")
+      .select(`created_at, recipes(id, slug, title, description, category, cuisine, total_minutes, servings, is_organic, goal_tags, system_tags, status${imageCol})`)
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+  );
 
   const recipes: Recipe[] = ((savedRows ?? []) as Array<{ recipes: RecipeEmbed | RecipeEmbed[] | null }>)
     .map((row) => {

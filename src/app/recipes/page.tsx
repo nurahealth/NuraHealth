@@ -3,6 +3,7 @@ import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import NuraPageShell from "@/components/NuraPageShell";
 import RecipesBrowseClient, { type Recipe } from "./RecipesBrowseClient";
+import { withImageUrlFallback } from "@/lib/recipeSelect";
 
 export const dynamic = "force-dynamic";
 
@@ -29,11 +30,13 @@ export default async function RecipesPage() {
 
   // All recipes (incl. draft stubs) so the library renders fully for review,
   // plus a lightweight recipe→ingredient-name map to power ingredient search.
-  const [{ data: recipeRows }, { data: linkRows }, { data: savedRows }] = await Promise.all([
-    supabaseAdmin
-      .from("recipes")
-      .select("id, slug, title, description, category, cuisine, total_minutes, servings, is_organic, goal_tags, system_tags, status, image_url")
-      .order("title", { ascending: true }),
+  const [recipeRows, { data: linkRows }, { data: savedRows }] = await Promise.all([
+    withImageUrlFallback<RecipeRow[]>((imageCol) =>
+      supabaseAdmin
+        .from("recipes")
+        .select(`id, slug, title, description, category, cuisine, total_minutes, servings, is_organic, goal_tags, system_tags, status${imageCol}`)
+        .order("title", { ascending: true })
+    ),
     supabaseAdmin
       .from("recipe_ingredients")
       .select("recipe_id, ingredients(name)"),

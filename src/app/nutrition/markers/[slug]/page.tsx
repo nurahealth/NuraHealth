@@ -7,6 +7,7 @@ import NuraPageShell from "@/components/NuraPageShell";
 import { ArrowLeft, Activity, Lightbulb, ChevronRight } from "lucide-react";
 import { resolveBack, withFrom, type RawSearchParam } from "@/lib/backNav";
 import { RecipeCard, type Recipe } from "../../../recipes/RecipesBrowseClient";
+import { withImageUrlFallback } from "@/lib/recipeSelect";
 import {
   resolveMarkerValue,
   computeMarkerGeometry,
@@ -73,17 +74,19 @@ export default async function MarkerDetailPage({
   const marker = markerData as MarkerRow | null;
   if (!marker) notFound();
 
-  const [realBiomarkers, { data: foodRows }, { data: recipeRows }, { data: riRows }] = await Promise.all([
+  const [realBiomarkers, { data: foodRows }, recipeRows, { data: riRows }] = await Promise.all([
     getLatestBiomarkersWith(supabase, user.id),
     supabaseAdmin
       .from("marker_foods")
       .select("food_name, why_text, frequency_text, order_index, ingredients(slug, name)")
       .eq("marker_id", marker.id)
       .order("order_index", { ascending: true }),
-    supabaseAdmin
-      .from("recipes")
-      .select("id, slug, title, description, category, cuisine, total_minutes, servings, is_organic, goal_tags, system_tags, status, image_url")
-      .eq("status", "published"),
+    withImageUrlFallback<unknown[]>((imageCol) =>
+      supabaseAdmin
+        .from("recipes")
+        .select(`id, slug, title, description, category, cuisine, total_minutes, servings, is_organic, goal_tags, system_tags, status${imageCol}`)
+        .eq("status", "published")
+    ),
     supabaseAdmin.from("recipe_ingredients").select("recipe_id, ingredients(slug, name)"),
   ]);
 

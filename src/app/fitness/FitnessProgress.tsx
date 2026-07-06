@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import NuraPlexus from '@/components/NuraPlexus';
+import FitnessBackButton from './FitnessBackButton';
 import { hexA, smooth } from '@/components/dashboard/cardChartHelpers';
 import {
   addProgressPhoto,
@@ -810,9 +811,12 @@ export default function FitnessProgress() {
       <div style={{ position: 'relative', zIndex: 2, display: 'flex', justifyContent: 'center', padding: 20 }}>
         <div style={{ width: '100%', maxWidth: 440, paddingBottom: 100 }}>
 
-          {/* header — eyebrow + serif title */}
+          {/* header — back + eyebrow, then serif title (1:1 with ExerciseDetail) */}
           <div style={{ marginBottom: 22 }}>
-            <div style={{ fontSize: 11, letterSpacing: '.22em', color: MUT }}>FITNESS</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+              <FitnessBackButton onClick={() => router.push('/fitness')} />
+              <div style={{ fontSize: 11, letterSpacing: '.22em', color: MUT }}>FITNESS</div>
+            </div>
             <h1 style={{ fontFamily: SERIF, fontSize: 32, fontWeight: 400, letterSpacing: '-.02em', margin: '4px 0 0', lineHeight: 1.1 }}>Progress</h1>
           </div>
 

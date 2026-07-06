@@ -6,9 +6,12 @@ import NuraPageShell from "@/components/NuraPageShell";
 import { ArrowLeft, Clock, Users, Leaf } from "lucide-react";
 import { sageGradient } from "@/lib/sageGradient";
 import { resolveBack, type RawSearchParam } from "@/lib/backNav";
+import { isUserAdmin } from "@/lib/admin";
+import { withImageUrlFallback } from "@/lib/recipeSelect";
 import { SavedRecipesProvider } from "@/components/SavedRecipesProvider";
 import SaveRecipeButton from "@/components/SaveRecipeButton";
 import IngredientRow, { type RecipeIngredient } from "./IngredientRow";
+import DraftPreviewBanner from "./DraftPreviewBanner";
 
 export const dynamic = "force-dynamic";
 
@@ -71,7 +74,7 @@ export default async function RecipeDetailPage({
   searchParams,
 }: {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ from?: RawSearchParam; label?: RawSearchParam }>;
+  searchParams: Promise<{ from?: RawSearchParam; label?: RawSearchParam; preview?: RawSearchParam }>;
 }) {
   const { slug } = await params;
   const sp = await searchParams;
@@ -81,14 +84,22 @@ export default async function RecipeDetailPage({
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/dashboard");
 
-  const { data: recipeData } = await supabaseAdmin
-    .from("recipes")
-    .select("id, slug, title, description, category, cuisine, total_minutes, servings, is_organic, system_tags, method_steps, hero_style, image_url, status")
-    .eq("slug", slug)
-    .maybeSingle();
-
-  const recipe = recipeData as RecipeRow | null;
+  const recipe = await withImageUrlFallback<RecipeRow>((imageCol) =>
+    supabaseAdmin
+      .from("recipes")
+      .select(`id, slug, title, description, category, cuisine, total_minutes, servings, is_organic, system_tags, method_steps, hero_style, status${imageCol}`)
+      .eq("slug", slug)
+      .maybeSingle()
+  );
   if (!recipe) notFound();
+
+  // Drafts are NOT public. Only an admin hitting ?preview=1 may view one; anyone
+  // else (or a draft without the flag) gets the normal not-found — never draft
+  // content leaking. Published recipes render for any signed-in user as before.
+  const isDraft = recipe.status !== "published";
+  const previewParam = Array.isArray(sp.preview) ? sp.preview[0] : sp.preview;
+  const draftPreview = isDraft && previewParam === "1" && (await isUserAdmin(user.id));
+  if (isDraft && !draftPreview) notFound();
 
   const [{ data: linkRows }, { data: savedRow }] = await Promise.all([
     supabaseAdmin
@@ -133,6 +144,8 @@ export default async function RecipeDetailPage({
   return (
     <NuraPageShell maxWidth={860}>
       <div style={{ display: "flex", flexDirection: "column", gap: 26 }}>
+
+        {draftPreview && <DraftPreviewBanner />}
 
         {/* Back — context-aware (recipes grid, or the food we arrived from) */}
         <Link href={back.href} style={{ display: "inline-flex", alignItems: "center", gap: 6, fontFamily: SANS, fontSize: 13, fontWeight: 600, color: TEXT_SEC, textDecoration: "none", alignSelf: "flex-start", maxWidth: "100%" }}>

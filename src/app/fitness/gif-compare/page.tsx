@@ -1,7 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import FitnessBackButton from '../FitnessBackButton';
 
 // Dev tool: compare the GIF the app actually serves for each exercise (Supabase
 // Storage if migrated, else the WorkoutX proxy) against a local sample dropped
@@ -48,6 +50,7 @@ function Frame({ src, label, alt }: { src: string | null; label: string; alt: st
 }
 
 export default function GifComparePage() {
+  const router = useRouter();
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -65,6 +68,9 @@ export default function GifComparePage() {
   return (
     <div style={{ minHeight: '100vh', background: '#0d0d0e', color: TEXT, fontFamily: "var(--font-inter),system-ui,sans-serif", padding: '24px 18px 80px' }}>
       <div style={{ maxWidth: 760, margin: '0 auto' }}>
+        <div style={{ marginBottom: 16 }}>
+          <FitnessBackButton onClick={() => router.push('/fitness')} />
+        </div>
         <h1 style={{ fontSize: 22, fontWeight: 700, margin: '0 0 6px' }}>GIF compare</h1>
         <p style={{ fontSize: 13.5, color: MUT, lineHeight: 1.6, margin: '0 0 4px' }}>
           Served GIF (Supabase Storage if migrated, else WorkoutX proxy) vs a local
