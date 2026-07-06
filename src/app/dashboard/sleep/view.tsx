@@ -28,11 +28,11 @@ const REM_RGB = "93,204,174";
 // Overnight-chart identities — each matches its own metric tab (not sleep-blue):
 // Heart rate → red, HRV → aqua-teal. Lighter shades feed the fill/glow.
 const HR_RED = "#e8615c";
-const HR_RED_LIGHT = "#f2998f";
-const HR_RED_GLOW = "242,153,143";
+const HR_RED_RGB = "232,97,92"; // #e8615c — pill tint
+const HR_RED_GLOW = "242,153,143"; // #f2998f — lighter shade for the glow
 const HRV_AQUA = "#4fc4d6";
-const HRV_AQUA_LIGHT = "#7fdce8";
-const HRV_AQUA_GLOW = "127,220,232";
+const HRV_AQUA_RGB = "79,196,214"; // #4fc4d6 — pill tint
+const HRV_AQUA_GLOW = "127,220,232"; // #7fdce8 — lighter shade for the glow
 
 // Cool blue→teal aurora pinned to the top, matching the reference.
 const SLEEP_AURORA =
@@ -68,6 +68,22 @@ function ChartHeader({ title, color }: { title: string; color: string }) {
       <h3 style={{ fontSize: 16, fontWeight: 700, letterSpacing: "-0.2px", margin: 0 }}>{title}</h3>
       <span style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 12, fontWeight: 600, color }}>
         View <ChevronRight color={color} />
+      </span>
+    </div>
+  );
+}
+
+// Subtitle row: caption (left) + an "Avg …" stat pill (right) in the chart color.
+function ChartSubhead({ caption, avg, color, rgb }: { caption: string; avg: string; color: string; rgb: string }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, margin: "3px 0 6px" }}>
+      <span style={{ fontSize: 12.5, color: MUTED }}>{caption}</span>
+      <span style={{
+        display: "inline-flex", alignItems: "center", flexShrink: 0, whiteSpace: "nowrap",
+        padding: "3px 9px", borderRadius: 999, fontSize: 11.5, fontWeight: 600,
+        color, background: `rgba(${rgb},0.12)`, border: `1px solid rgba(${rgb},0.28)`,
+      }}>
+        {avg}
       </span>
     </div>
   );
@@ -267,11 +283,11 @@ export default function SleepDetailPage() {
           onKeyDown={(e) => { if (e.key === "Enter") router.push("/dashboard/heart-rate"); }}
         >
           <ChartHeader title="Heart rate" color={HR_RED} />
-          <div style={{ fontSize: 12.5, color: MUTED, margin: "3px 0 6px" }}>Beats per minute while you slept</div>
+          <ChartSubhead caption="Beats per minute while you slept" avg="Avg 52 bpm" color={HR_RED} rgb={HR_RED_RGB} />
 
           <NightLineChart
             data={HR} floor={40} ceil={72} ticks={[44, 52, 60, 68]} unit="bpm"
-            stroke={HR_RED} strokeLight={HR_RED_LIGHT} glowRgb={HR_RED_GLOW} avg={52} avgLabel="avg 52"
+            stroke={HR_RED} glowRgb={HR_RED_GLOW} avg={52}
             seq={SEQ} markers={hrMarkers}
           />
           <Axis labels={d.night.axisLabels} />
@@ -294,11 +310,11 @@ export default function SleepDetailPage() {
           onKeyDown={(e) => { if (e.key === "Enter") router.push("/dashboard/hrv"); }}
         >
           <ChartHeader title="Heart rate variability" color={HRV_AQUA} />
-          <div style={{ fontSize: 12.5, color: MUTED, margin: "3px 0 6px" }}>HRV rises with deep, restorative sleep</div>
+          <ChartSubhead caption="HRV rises with deep, restorative sleep" avg="Avg 63 ms" color={HRV_AQUA} rgb={HRV_AQUA_RGB} />
 
           <NightLineChart
             data={HRV} floor={30} ceil={100} ticks={[40, 55, 70, 85]} unit="ms"
-            stroke={HRV_AQUA} strokeLight={HRV_AQUA_LIGHT} glowRgb={HRV_AQUA_GLOW} avg={63} avgLabel="avg 63"
+            stroke={HRV_AQUA} glowRgb={HRV_AQUA_GLOW} avg={63}
             seq={SEQ} markers={hrvMarkers}
           />
           <Axis labels={d.night.axisLabels} />
@@ -450,14 +466,17 @@ function runsOf(seq: string[], code: string): [number, number][] {
 }
 
 function NightLineChart({
-  data, floor, ceil, ticks, unit, stroke, strokeLight, glowRgb, avg, avgLabel, seq, markers,
+  data, floor, ceil, ticks, unit, stroke, glowRgb, avg, seq, markers,
 }: {
   data: number[]; floor: number; ceil: number; ticks: number[]; unit: string;
-  stroke: string; strokeLight: string; glowRgb: string; avg: number; avgLabel: string;
+  stroke: string; glowRgb: string; avg: number;
   seq: ("D" | "R" | "L" | "A")[]; markers: Marker[];
 }) {
-  // Geometry — a left gutter for the aligned y-axis column, and even top/bottom
-  // padding so the plot sits centered with room for the callout labels.
+  const rawId = useId();
+  const uid = `night-${rawId.replace(/[^a-zA-Z0-9]/g, "")}`;
+
+  // Geometry — a left gutter holds the aligned y-axis number column; even
+  // top/bottom padding so the plot sits centered with room for callouts.
   const W = 356, H = 132;
   const padL = 30, padR = 10, padT = 26, padB = 24;
   const plotL = padL, plotR = W - padR, plotW = plotR - plotL;
@@ -482,8 +501,19 @@ function NightLineChart({
   const BAND_REM = `rgba(${INK},0.045)`;
   const BAND_LABEL = `rgba(${INK},0.5)`;
 
+  // Average is shown as a pill in the card header (see ChartSubhead); here we
+  // only draw the dashed reference line — no inline label to collide with.
+  const avgY = y(avg);
+
   return (
     <svg width="100%" height={H} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" style={{ display: "block", overflow: "visible" }}>
+      <defs>
+        <linearGradient id={`${uid}-fill`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={stroke} stopOpacity="0.2" />
+          <stop offset="100%" stopColor={stroke} stopOpacity="0" />
+        </linearGradient>
+      </defs>
+
       {/* Neutral grey stage shading behind the line */}
       {deepWins.map(([s, l], i) => {
         const { x, w } = winX(s, l);
@@ -512,13 +542,12 @@ function NightLineChart({
       {/* Unit label atop the number column */}
       <text x={plotL - 8} y={(plotT - 12).toFixed(1)} textAnchor="end" fontFamily={SANS} fontSize={8.5} fontWeight={600} letterSpacing="0.6px" fill={`rgba(${INK},0.36)`}>{unit}</text>
 
-      {/* Faint area (lighter shade) + line */}
-      <path d={`${path} L ${pts[n - 1][0].toFixed(1)},${plotB} L ${pts[0][0].toFixed(1)},${plotB} Z`} fill={strokeLight} opacity={0.10} />
+      {/* Gradient area fill (line color → transparent) + smooth line */}
+      <path d={`${path} L ${pts[n - 1][0].toFixed(1)},${plotB} L ${pts[0][0].toFixed(1)},${plotB} Z`} fill={`url(#${uid}-fill)`} />
       <path d={path} fill="none" stroke={stroke} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" style={{ filter: `drop-shadow(0 0 4px rgba(${glowRgb},0.45))` }} />
 
-      {/* Dashed average line + tag (neutral) */}
-      <line x1={plotL} y1={y(avg).toFixed(1)} x2={plotR} y2={y(avg).toFixed(1)} stroke={`rgba(${INK},0.3)`} strokeWidth={1} strokeDasharray="4 5" />
-      <text x={(plotL + 3).toFixed(1)} y={(y(avg) - 5).toFixed(1)} textAnchor="start" fontFamily={SANS} fontSize={9} fontWeight={600} fill={`rgba(${INK},0.55)`}>{avgLabel}</text>
+      {/* Dashed average line (its value lives in the header pill, not inline) */}
+      <line x1={plotL} y1={avgY.toFixed(1)} x2={plotR} y2={avgY.toFixed(1)} stroke={`rgba(${INK},0.3)`} strokeWidth={1} strokeDasharray="4 5" />
 
       {/* Markers — colored dot + label placed to clear the line, bands and each other */}
       {markers.map((m, i) => {
