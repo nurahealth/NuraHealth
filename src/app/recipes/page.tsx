@@ -19,6 +19,7 @@ interface RecipeRow {
   goal_tags: string[] | null;
   system_tags: string[] | null;
   status: string;
+  image_url: string | null;
 }
 
 export default async function RecipesPage() {
@@ -31,7 +32,7 @@ export default async function RecipesPage() {
   const [{ data: recipeRows }, { data: linkRows }, { data: savedRows }] = await Promise.all([
     supabaseAdmin
       .from("recipes")
-      .select("id, slug, title, description, category, cuisine, total_minutes, servings, is_organic, goal_tags, system_tags, status")
+      .select("id, slug, title, description, category, cuisine, total_minutes, servings, is_organic, goal_tags, system_tags, status, image_url")
       .order("title", { ascending: true }),
     supabaseAdmin
       .from("recipe_ingredients")
@@ -67,6 +68,7 @@ export default async function RecipesPage() {
     goal_tags: r.goal_tags ?? [],
     system_tags: r.system_tags ?? [],
     status: r.status,
+    image_url: r.image_url ?? null,
     ingredientNames: namesByRecipe.get(r.id) ?? [],
   }));
 

@@ -82,7 +82,7 @@ export default async function MarkerDetailPage({
       .order("order_index", { ascending: true }),
     supabaseAdmin
       .from("recipes")
-      .select("id, slug, title, description, category, cuisine, total_minutes, servings, is_organic, goal_tags, system_tags, status")
+      .select("id, slug, title, description, category, cuisine, total_minutes, servings, is_organic, goal_tags, system_tags, status, image_url")
       .eq("status", "published"),
     supabaseAdmin.from("recipe_ingredients").select("recipe_id, ingredients(slug, name)"),
   ]);
@@ -165,6 +165,7 @@ export default async function MarkerDetailPage({
     goal_tags: string[] | null;
     system_tags: string[] | null;
     status: string;
+    image_url: string | null;
   }>)
     .filter((r) => {
       const tags = r.goal_tags ?? [];
@@ -186,6 +187,7 @@ export default async function MarkerDetailPage({
       goal_tags: r.goal_tags ?? [],
       system_tags: r.system_tags ?? [],
       status: r.status,
+      image_url: r.image_url ?? null,
       ingredientNames: namesByRecipe.get(r.id) ?? [],
     }));
 

@@ -20,6 +20,7 @@ type RecipeEmbed = {
   goal_tags: string[] | null;
   system_tags: string[] | null;
   status: string;
+  image_url: string | null;
 };
 
 export default async function SavedRecipesPage() {
@@ -31,7 +32,7 @@ export default async function SavedRecipesPage() {
   const { data: savedRows } = await supabaseAdmin
     .from("saved_recipes")
     .select(
-      "created_at, recipes(id, slug, title, description, category, cuisine, total_minutes, servings, is_organic, goal_tags, system_tags, status)"
+      "created_at, recipes(id, slug, title, description, category, cuisine, total_minutes, servings, is_organic, goal_tags, system_tags, status, image_url)"
     )
     .eq("user_id", user.id)
     .order("created_at", { ascending: false });
@@ -53,6 +54,7 @@ export default async function SavedRecipesPage() {
         goal_tags: r.goal_tags ?? [],
         system_tags: r.system_tags ?? [],
         status: r.status,
+        image_url: r.image_url ?? null,
         ingredientNames: [], // not needed for the card
       } as Recipe;
     })

@@ -82,6 +82,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       system_tags: toStringArray(body.system_tags),
       allergen_flags: toStringArray(body.allergen_flags),
       hero_style: typeof body.hero_style === "string" && body.hero_style.trim() ? body.hero_style.trim() : null,
+      image_url: typeof body.image_url === "string" && body.image_url.trim() ? body.image_url.trim() : null,
       method_steps: toNumberedSteps(body.method_steps),
       status,
     };

@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import Sidebar from "@/components/Sidebar";
 import NuraPlexus from "@/components/NuraPlexus";
+import { sageGradient } from "@/lib/sageGradient";
 
 // ── Design tokens (locked NŪRA system — same as the Lab admin) ────────────────
 const BG = "var(--nura-bg)";
@@ -45,7 +46,7 @@ export interface AdminRecipe {
   id: string; slug: string; title: string; description: string | null;
   category: string; cuisine: string | null; total_minutes: number | null; servings: number | null;
   is_organic: boolean; goal_tags: string[] | null; system_tags: string[] | null; allergen_flags: string[] | null;
-  method_steps: Step[] | null; hero_style: string | null; status: string; created_at?: string;
+  method_steps: Step[] | null; hero_style: string | null; image_url: string | null; status: string; created_at?: string;
 }
 
 interface RecipeLink {
@@ -315,12 +316,42 @@ function RecipeModal({ token, editing, ingredients, onClose, onSuccess }: { toke
   const [systemTags, setSystemTags] = useState<string[]>(editing?.system_tags ?? []);
   const [allergenFlags, setAllergenFlags] = useState<string[]>(editing?.allergen_flags ?? []);
   const [heroStyle, setHeroStyle] = useState(editing?.hero_style ?? "");
+  const [imageUrl, setImageUrl] = useState(editing?.image_url ?? "");
+  const [uploading, setUploading] = useState(false);
   const [status, setStatus] = useState<Status>((editing?.status as Status) ?? "draft");
   const [steps, setSteps] = useState<string[]>((editing?.method_steps ?? []).slice().sort((a, b) => (a.n ?? 0) - (b.n ?? 0)).map((s) => s.text ?? ""));
   const [links, setLinks] = useState<RecipeLink[]>([]);
   const [loadingLinks, setLoadingLinks] = useState(!!editing);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+
+  // Upload a photo to the recipe-images bucket; the returned public URL is saved
+  // on the recipe when the form is submitted.
+  const uploadImage = async (file: File) => {
+    setError("");
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+      setError("Use a JPEG, PNG, or WebP image"); return;
+    }
+    if (file.size > 5 * 1024 * 1024) { setError("Image must be under 5MB"); return; }
+    setUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("slug", slug || slugify(title) || "recipe");
+      const res = await fetch("/api/admin/recipes/upload-image", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: fd,
+      });
+      const data = await res.json() as { url?: string; error?: string };
+      if (!res.ok || !data.url) throw new Error(data.error ?? "Upload failed");
+      setImageUrl(data.url);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Upload failed");
+    } finally {
+      setUploading(false);
+    }
+  };
 
   // Load existing ingredient links for the edit form.
   useEffect(() => {
@@ -350,7 +381,7 @@ function RecipeModal({ token, editing, ingredients, onClose, onSuccess }: { toke
       title, slug, description, category, cuisine,
       total_minutes: totalMinutes, servings, is_organic: isOrganic,
       goal_tags: goalTags, system_tags: systemTags, allergen_flags: allergenFlags,
-      hero_style: heroStyle, status, method_steps: steps,
+      hero_style: heroStyle, image_url: imageUrl || null, status, method_steps: steps,
       ingredients: links.filter((l) => l.ingredient_id),
     };
     try {
@@ -391,6 +422,28 @@ function RecipeModal({ token, editing, ingredients, onClose, onSuccess }: { toke
       <Field label="System tags"><TagInput value={systemTags} onChange={setSystemTags} placeholder="e.g. gut, immune" /></Field>
       <Field label="Allergen flags"><TagInput value={allergenFlags} onChange={setAllergenFlags} placeholder="e.g. dairy, gluten" /></Field>
       <Field label="Hero style"><input value={heroStyle} onChange={(e) => setHeroStyle(e.target.value)} placeholder="Optional gradient key (defaults to slug)" style={inputStyle} /></Field>
+      <Field label="Photo">
+        <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
+          <div style={{ width: 96, height: 72, borderRadius: 10, overflow: "hidden", flexShrink: 0, position: "relative", background: sageGradient(slug || "recipe"), border: `0.5px solid ${BORDER}` }}>
+            {imageUrl && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={imageUrl} alt="Recipe" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+            )}
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
+            <label style={{ display: "inline-flex", alignItems: "center", gap: 7, cursor: uploading ? "default" : "pointer", fontFamily: SANS, fontSize: 12.5, fontWeight: 600, color: SAGE, background: `rgba(${SAGE_RGB},0.10)`, border: `0.5px solid rgba(${SAGE_RGB},0.28)`, borderRadius: 10, padding: "8px 14px", opacity: uploading ? 0.6 : 1 }}>
+              {uploading ? "Uploading…" : imageUrl ? "Replace photo" : "Upload photo"}
+              <input type="file" accept="image/jpeg,image/png,image/webp" disabled={uploading} style={{ display: "none" }} onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadImage(f); e.target.value = ""; }} />
+            </label>
+            {imageUrl && (
+              <button type="button" onClick={() => setImageUrl("")} style={{ fontFamily: SANS, fontSize: 11.5, fontWeight: 600, color: DANGER, background: "transparent", border: "none", padding: 0, cursor: "pointer", textAlign: "left" }}>
+                Remove
+              </button>
+            )}
+            <span style={{ fontFamily: SANS, fontSize: 11, color: TEXT_TER }}>JPEG, PNG, or WebP · up to 5MB. Falls back to the gradient when empty.</span>
+          </div>
+        </div>
+      </Field>
       <Field label="Status"><StatusSelect status={status} onChange={setStatus} /></Field>
       <Field label="Method steps"><StepEditor value={steps} onChange={setSteps} placeholder="Describe this step…" /></Field>
       <Field label="Ingredients">

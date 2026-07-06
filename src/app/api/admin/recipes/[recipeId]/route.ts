@@ -105,6 +105,7 @@ export async function PATCH(
     if (body.system_tags !== undefined) update.system_tags = toStringArray(body.system_tags);
     if (body.allergen_flags !== undefined) update.allergen_flags = toStringArray(body.allergen_flags);
     if (body.hero_style !== undefined) update.hero_style = typeof body.hero_style === "string" && body.hero_style.trim() ? body.hero_style.trim() : null;
+    if (body.image_url !== undefined) update.image_url = typeof body.image_url === "string" && body.image_url.trim() ? body.image_url.trim() : null;
     if (body.method_steps !== undefined) update.method_steps = toNumberedSteps(body.method_steps);
 
     if (Object.keys(update).length > 0) {

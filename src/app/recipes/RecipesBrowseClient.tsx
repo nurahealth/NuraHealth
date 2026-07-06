@@ -36,6 +36,7 @@ export interface Recipe {
   goal_tags: string[];
   system_tags: string[];
   status: string;
+  image_url: string | null;
   ingredientNames: string[];
 }
 
@@ -86,11 +87,16 @@ export function RecipeCard({ r, from, fromLabel }: { r: Recipe; from?: string; f
         overflow: "hidden", textDecoration: "none", color: "inherit",
       }}
     >
-      {/* Gradient placeholder */}
-      <div style={{ position: "relative", width: "100%", aspectRatio: "4 / 3", background: sageGradient(r.slug) }}>
-        <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <UtensilsCrossed size={26} color={`rgba(${FG_RGB},0.20)`} strokeWidth={1.5} />
-        </div>
+      {/* Photo when present, else the deterministic sage-gradient placeholder */}
+      <div style={{ position: "relative", width: "100%", aspectRatio: "4 / 3", background: sageGradient(r.slug), overflow: "hidden" }}>
+        {r.image_url ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={r.image_url} alt={r.title} loading="lazy" decoding="async" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+        ) : (
+          <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <UtensilsCrossed size={26} color={`rgba(${FG_RGB},0.20)`} strokeWidth={1.5} />
+          </div>
+        )}
         {r.is_organic && (
           <span style={{
             position: "absolute", top: 8, left: 8, display: "inline-flex", alignItems: "center", gap: 4,
@@ -281,6 +287,10 @@ export default function RecipesBrowseClient({
             marginBottom: 26, minHeight: 200, background: sageGradient(featured.slug),
           }}
         >
+          {featured.image_url && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={featured.image_url} alt={featured.title} decoding="async" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+          )}
           <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, transparent 30%, rgba(13,13,14,0.82) 100%)" }} />
           <div style={{ position: "relative", display: "flex", flexDirection: "column", justifyContent: "flex-end", minHeight: 200, padding: 18, gap: 6 }}>
             <span style={{ fontFamily: SANS, fontSize: 9.5, fontWeight: 600, letterSpacing: "0.14em", textTransform: "uppercase", color: SAGE }}>

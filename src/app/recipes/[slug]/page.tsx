@@ -38,6 +38,7 @@ interface RecipeRow {
   system_tags: string[] | null;
   method_steps: Step[] | null;
   hero_style: string | null;
+  image_url: string | null;
   status: string;
 }
 
@@ -82,7 +83,7 @@ export default async function RecipeDetailPage({
 
   const { data: recipeData } = await supabaseAdmin
     .from("recipes")
-    .select("id, slug, title, description, category, cuisine, total_minutes, servings, is_organic, system_tags, method_steps, hero_style, status")
+    .select("id, slug, title, description, category, cuisine, total_minutes, servings, is_organic, system_tags, method_steps, hero_style, image_url, status")
     .eq("slug", slug)
     .maybeSingle();
 
@@ -140,6 +141,10 @@ export default async function RecipeDetailPage({
 
         {/* Hero */}
         <div style={{ position: "relative", borderRadius: 18, overflow: "hidden", border: `0.5px solid ${BORDER}`, minHeight: 200, background: sageGradient(recipe.hero_style ?? recipe.slug) }}>
+          {recipe.image_url && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={recipe.image_url} alt={recipe.title} decoding="async" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+          )}
           <div style={{ position: "absolute", top: 12, right: 12, zIndex: 2 }}>
             <SavedRecipesProvider userId={user.id} initialSavedIds={initialSaved ? [recipe.id] : []}>
               <SaveRecipeButton recipeId={recipe.id} />
