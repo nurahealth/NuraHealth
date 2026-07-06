@@ -1,10 +1,12 @@
 import React from "react";
 
 const SANS = "var(--font-inter), system-ui, sans-serif";
-const OX = "#4fc4d6";
+// Ice / platinum identity — crisp on the dark bg, cool-blue lean.
+const OX = "#cbd8e6"; // line / markers (bright platinum for contrast)
+const OX_RGB = "174,191,207"; // #aebfcf — fills / band / glow
 const CREAM = "#ebe6d8";
 const FAINT = "rgba(235,230,216,0.45)";
-const BAND = "rgba(79,196,214,0.08)";
+const BAND = `rgba(${OX_RGB},0.1)`;
 
 const yFor = (v) => 48 + (100 - v) * 12;
 const xFor = (i, n) => (n <= 1 ? 182 : 68 + ((296 - 68) * i) / (n - 1));
@@ -33,7 +35,7 @@ function Frame({ children, guides }) {
       <g stroke="rgba(235,230,216,0.045)">
         {guides.map((gx, i) => (<line key={i} x1={gx} y1="48" x2={gx} y2="190" />))}
       </g>
-      <line x1="44" y1={yFor(95)} x2="320" y2={yFor(95)} stroke="rgba(79,196,214,0.3)" strokeWidth="1" strokeDasharray="2 4" />
+      <line x1="44" y1={yFor(95)} x2="320" y2={yFor(95)} stroke="rgba(235,230,216,0.28)" strokeWidth="1" strokeDasharray="2 4" />
       <line x1="44" y1={yFor(100)} x2="320" y2={yFor(100)} stroke="rgba(235,230,216,0.04)" />
       <line x1="44" y1={yFor(90)} x2="320" y2={yFor(90)} stroke="rgba(235,230,216,0.04)" />
       <text x="38" y={yFor(100) + 4} textAnchor="end" fontSize="9.5" fill="rgba(235,230,216,0.4)">100</text>
@@ -49,7 +51,7 @@ function Legend({ lineLabel }) {
   return (
     <div style={{ display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap", marginTop: 12, fontSize: 11, color: FAINT }}>
       <span><i style={{ display: "inline-block", verticalAlign: "middle", marginRight: 5, width: 14, height: 2, borderRadius: 2, background: OX }} />{lineLabel}</span>
-      <span><i style={{ display: "inline-block", verticalAlign: "middle", marginRight: 5, width: 12, height: 9, borderRadius: 2, background: "rgba(79,196,214,0.16)", border: "0.5px solid rgba(79,196,214,0.4)" }} />normal range (≥95%)</span>
+      <span><i style={{ display: "inline-block", verticalAlign: "middle", marginRight: 5, width: 12, height: 9, borderRadius: 2, background: "rgba(174,191,207,0.16)", border: "0.5px solid rgba(174,191,207,0.4)" }} />normal range (≥95%)</span>
     </div>
   );
 }
@@ -92,8 +94,8 @@ export default function BloodOxygenTrends({
         <Frame guides={timeX}>
           <defs>
             <linearGradient id="oxfillA" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0" stopColor="rgba(79,196,214,0.26)" />
-              <stop offset="1" stopColor="rgba(79,196,214,0)" />
+              <stop offset="0" stopColor="rgba(174,191,207,0.28)" />
+              <stop offset="1" stopColor="rgba(174,191,207,0)" />
             </linearGradient>
           </defs>
           <path d={n1area} fill="url(#oxfillA)" />
@@ -103,7 +105,7 @@ export default function BloodOxygenTrends({
           <circle cx={n1[lowIdx][0]} cy={n1[lowIdx][1]} r="3.5" fill={CREAM} stroke="#070708" strokeWidth="1.5" />
           <text x={n1[lowIdx][0]} y={n1[lowIdx][1] + 16} textAnchor="middle" fontSize="10" fontWeight="600" fill={CREAM}>{lastNight[lowIdx]}%</text>
           <text x={n1[lowIdx][0]} y={n1[lowIdx][1] + 28} textAnchor="middle" fontSize="9" fill="rgba(235,230,216,0.5)">low</text>
-          <circle cx={n1[n1.length - 1][0]} cy={n1[n1.length - 1][1]} r="8" fill="rgba(79,196,214,0.18)" />
+          <circle cx={n1[n1.length - 1][0]} cy={n1[n1.length - 1][1]} r="8" fill="rgba(174,191,207,0.2)" />
           <circle cx={n1[n1.length - 1][0]} cy={n1[n1.length - 1][1]} r="4.5" fill={OX} stroke="#070708" strokeWidth="1.8" />
           <text x={n1[n1.length - 1][0]} y={n1[n1.length - 1][1] - 12} textAnchor="middle" fontSize="10" fontWeight="600" fill={CREAM}>{lastNight[lastNight.length - 1]}%</text>
           {times.map((t, i) => (<text key={i} x={timeX[i]} y="207" textAnchor="middle" fontSize="10" fill={FAINT}>{t}</text>))}
@@ -116,8 +118,8 @@ export default function BloodOxygenTrends({
         <Frame guides={n7.map((p) => p[0])}>
           <defs>
             <linearGradient id="oxfillB" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0" stopColor="rgba(79,196,214,0.26)" />
-              <stop offset="1" stopColor="rgba(79,196,214,0)" />
+              <stop offset="0" stopColor="rgba(174,191,207,0.28)" />
+              <stop offset="1" stopColor="rgba(174,191,207,0)" />
             </linearGradient>
           </defs>
           <path d={n7area} fill="url(#oxfillB)" />
@@ -128,14 +130,14 @@ export default function BloodOxygenTrends({
               <g key={i}>
                 {isLast ? (
                   <>
-                    <circle cx={p[0]} cy={p[1]} r="8" fill="rgba(79,196,214,0.18)" />
+                    <circle cx={p[0]} cy={p[1]} r="8" fill="rgba(174,191,207,0.2)" />
                     <circle cx={p[0]} cy={p[1]} r="4.5" fill={OX} stroke="#070708" strokeWidth="1.8" />
                     <text x={p[0]} y={p[1] - 13} textAnchor="middle" fontSize="10.5" fontWeight="600" fill={CREAM}>{sevenNights[i].v}</text>
                   </>
                 ) : (
                   <>
                     <circle cx={p[0]} cy={p[1]} r="2.4" fill={OX} />
-                    <text x={p[0]} y={p[1] - 12} textAnchor="middle" fontSize="9" fill="rgba(79,196,214,0.7)">{sevenNights[i].v}</text>
+                    <text x={p[0]} y={p[1] - 12} textAnchor="middle" fontSize="9" fill="rgba(203,216,230,0.85)">{sevenNights[i].v}</text>
                   </>
                 )}
                 <text x={p[0]} y="207" textAnchor="middle" fontSize="10" fill={FAINT}>{sevenNights[i].day}</text>
