@@ -4,7 +4,7 @@ import { useId } from "react";
 import { useRouter } from "next/navigation";
 import { getActiveEnergyDetail, SOURCE_LABEL, type ActiveEnergyDetail } from "@/lib/dashboardData";
 import AuroraBackground from "@/components/dashboard/AuroraBackground";
-import RadialGauge from "@/components/dashboard/RadialGauge";
+import ActiveEnergyRing from "@/components/dashboard/ActiveEnergyRing";
 import GlassCard from "@/components/dashboard/GlassCard";
 import ActiveEnergyTodayChart, { colorAt, light } from "@/components/dashboard/ActiveEnergyTodayChart";
 import MetricEducation, { type MetricEducationItem } from "@/components/dashboard/MetricEducation";
@@ -13,18 +13,18 @@ import MetricEducation, { type MetricEducationItem } from "@/components/dashboar
 const TEXT = "var(--nura-text-primary)";
 const MUTED = "var(--nura-text-secondary)";
 const FAINT = "var(--nura-text-tertiary)";
-const AMBER = "var(--nura-amber)";
-const EMERALD = "var(--nura-optimal)";
+const EMBER = "#e07a3c";
+const EMBER_LIGHT = "#f0a05a";
 const INK = "235,230,216"; // warm off-white (matches --nura-fg-rgb in dark)
-const AMBER_RGB = "224,162,62";
+const EMBER_RGB = "224,122,60";
 const SANS = "var(--font-inter), system-ui, sans-serif";
 const bStyle: React.CSSProperties = { color: TEXT, fontWeight: 600 };
 
-// Warm amber/coral ambient so this reads as the energy / activity page.
-const AMBER_AURORA =
-  "radial-gradient(80% 60% at 50% -6%, rgba(232,116,90,0.26), transparent 60%)," +
-  "radial-gradient(60% 50% at 86% 6%, rgba(224,162,62,0.18), transparent 60%)," +
-  "radial-gradient(70% 40% at 8% 14%, rgba(230,180,84,0.12), transparent 60%)";
+// Dark-ember ambient so this reads as the energy / activity page (no teal/green).
+const EMBER_AURORA =
+  "radial-gradient(80% 60% at 50% -6%, rgba(224,122,60,0.26), transparent 60%)," +
+  "radial-gradient(60% 50% at 86% 6%, rgba(240,160,90,0.16), transparent 60%)," +
+  "radial-gradient(70% 40% at 8% 14%, rgba(224,122,60,0.12), transparent 60%)";
 
 // ── Icons ───────────────────────────────────────────────────────────────────
 const Chevron = () => (
@@ -81,7 +81,7 @@ export default function ActiveEnergyDetailPage() {
     <div style={{
       position: "relative", minHeight: "100dvh", overflow: "hidden",
       color: TEXT, fontFamily: SANS,
-      background: "radial-gradient(130% 80% at 50% -8%, #2e1c0a 0%, #160f06 34%, var(--nura-bg) 72%)",
+      background: "radial-gradient(130% 80% at 50% -8%, #2e1608 0%, #150a05 34%, var(--nura-bg) 72%)",
     }}>
       <style>{`
         .ae-reveal { opacity: 0; transform: translateY(18px); animation: ae-rise .7s cubic-bezier(.2,.7,.2,1) forwards; }
@@ -90,7 +90,7 @@ export default function ActiveEnergyDetailPage() {
         * { font-variant-numeric: tabular-nums; }
       `}</style>
 
-      <AuroraBackground gradient={AMBER_AURORA} />
+      <AuroraBackground gradient={EMBER_AURORA} />
 
       <div style={{ position: "relative", zIndex: 1, maxWidth: 480, margin: "0 auto", padding: "calc(env(safe-area-inset-top, 0px) + 46px) 18px 44px" }}>
         {/* Header shell — back · NŪRA wordmark · info */}
@@ -109,36 +109,30 @@ export default function ActiveEnergyDetailPage() {
 
         {/* Title + source tag */}
         <div className="ae-reveal" style={{ animationDelay: ".05s", margin: "18px 0 2px" }}>
-          <div style={{ fontSize: 10, letterSpacing: "0.9px", textTransform: "uppercase", color: AMBER, fontWeight: 600, marginBottom: 6 }}>
+          <div style={{ fontSize: 10, letterSpacing: "0.9px", textTransform: "uppercase", color: EMBER, fontWeight: 600, marginBottom: 6 }}>
             {SOURCE_LABEL[d.source]}
           </div>
           <h1 style={{ fontSize: 26, fontWeight: 600, letterSpacing: "-0.02em", margin: 0 }}>Active Energy</h1>
         </div>
         <div className="ae-reveal" style={{ animationDelay: ".05s", color: MUTED, fontSize: 14, marginBottom: 6 }}>{d.subtitle}</div>
 
-        {/* Hero — 270° goal ring + status pill */}
+        {/* Hero — animated 270° ember goal ring + status pill */}
         <div className="ae-reveal" style={{ animationDelay: ".1s", display: "flex", flexDirection: "column", alignItems: "center", padding: "14px 0 6px" }}>
-          <RadialGauge
-            value={d.activeEnergy}
-            max={d.moveGoal}
+          <ActiveEnergyRing
+            kcal={d.activeEnergy}
+            goal={d.moveGoal}
             size={208}
             stroke={13}
-            arc={270}
-            label={`of ${d.moveGoal} kcal`}
-            valueFontSize={48}
-            labelGap={8}
-            gradientFrom="#e6b454"
-            gradientMid="#e0a23e"
-            gradientTo="#e8745a"
-            glowRgb={AMBER_RGB}
+            fillMs={1500}
+            innerLabel={`of ${d.moveGoal} goal`}
           />
           <span style={{
             display: "inline-flex", alignItems: "center", gap: 6, marginTop: 12,
             padding: "6px 15px", borderRadius: 999, fontSize: 12, fontWeight: 600, letterSpacing: "0.5px",
-            color: AMBER, border: `1px solid rgba(${AMBER_RGB},0.4)`,
+            color: EMBER, border: `1px solid rgba(${EMBER_RGB},0.4)`,
           }}>
-            <span style={{ width: 6, height: 6, borderRadius: "50%", background: AMBER, boxShadow: `0 0 8px ${AMBER}` }} />
-            {percent}% to goal · on track
+            <span style={{ width: 6, height: 6, borderRadius: "50%", background: EMBER, boxShadow: `0 0 8px ${EMBER}` }} />
+            {percent}% to goal · {percent >= 100 ? "goal reached" : "on track"}
           </span>
         </div>
 
@@ -175,8 +169,8 @@ export default function ActiveEnergyDetailPage() {
               <span key={i} style={{ display: "inline-flex", alignItems: "center" }}>
                 {i > 0 && <span style={{ width: 3, height: 3, borderRadius: "50%", background: `rgba(${INK},0.3)`, margin: "0 9px", flexShrink: 0 }} />}
                 <span>
-                  <b style={{ fontWeight: 700, color: it.warm ? "#e0a23e" : "#ebe6d8" }}>{it.num}</b>
-                  <span style={{ color: it.warm ? "#e0a23e" : `rgba(${INK},0.55)` }}>{it.words}</span>
+                  <b style={{ fontWeight: 700, color: it.warm ? "#e07a3c" : "#ebe6d8" }}>{it.num}</b>
+                  <span style={{ color: it.warm ? "#e07a3c" : `rgba(${INK},0.55)` }}>{it.words}</span>
                 </span>
               </span>
             ))}
@@ -203,21 +197,21 @@ export default function ActiveEnergyDetailPage() {
           <ActiveWeekChart d={d} />
 
           <div style={{ display: "flex", alignItems: "center", gap: 7, marginTop: 6, fontSize: 11.5, color: MUTED }}>
-            <span style={{ color: EMERALD, fontWeight: 700 }}>✓</span>
+            <span style={{ color: EMBER, fontWeight: 700 }}>✓</span>
             Reached your {d.moveGoal} move goal on {hits} of 7 days
           </div>
         </GlassCard>
 
         {/* NŪRA insight */}
         <GlassCard className="ae-reveal" style={{ animationDelay: ".42s", marginTop: 16, borderRadius: 20, padding: 17, position: "relative", overflow: "hidden" }}>
-          <div aria-hidden style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 3, background: "linear-gradient(180deg,var(--nura-amber),var(--nura-alert))", boxShadow: `0 0 16px rgba(${AMBER_RGB},0.5)` }} />
-          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "2.5px", color: AMBER, textTransform: "uppercase" }}>NŪRA</div>
+          <div aria-hidden style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 3, background: `linear-gradient(180deg, ${EMBER_LIGHT}, ${EMBER})`, boxShadow: `0 0 16px rgba(${EMBER_RGB},0.5)` }} />
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "2.5px", color: EMBER, textTransform: "uppercase" }}>NŪRA</div>
           <p style={{ fontSize: 13.5, lineHeight: 1.6, marginTop: 9 }}>{d.insight}</p>
         </GlassCard>
 
         {/* Understanding (shared MetricEducation) */}
         <div className="ae-reveal" style={{ animationDelay: ".5s", marginTop: 16 }}>
-          <MetricEducation accent={AMBER} title="Understanding your active energy" items={eduItems} />
+          <MetricEducation accent={EMBER} title="Understanding your active energy" items={eduItems} />
         </div>
       </div>
     </div>

@@ -6,20 +6,19 @@ import type { ActiveEnergyDetail } from "@/lib/dashboardData";
 // Shared "Active Energy — Today" intraday chart, rendered by BOTH the Active
 // Energy detail page and the dashboard Active Energy card.
 //
-// Amber→coral lit-glass pills (per-bar vertical gradient + glow on the hottest
+// Ember-orange lit-glass pills (per-bar vertical gradient + glow on the hottest
 // bars), faint horizontal gridlines, a glowing dashed average curve with an
 // "avg" tag, a "KCAL / HR" unit label, a glowing peak readout, and a faint
 // dashed "now" marker at the right edge.
 
 const SANS = "var(--font-inter), system-ui, sans-serif";
 const INK = "235,230,216"; // warm off-white (matches --nura-fg-rgb in dark)
-const CORAL_RGB = "232,116,90";
-const AMBER_RGB = "224,162,62";
+const EMBER_RGB = "224,122,60"; // #e07a3c — ember glow
 
 // ── Chart helpers (hex · lerp · light · colorAt · smooth) ─────────────────────
-// The intraday + weekly bars interpolate along an amber→coral ramp, so the work
+// The intraday + weekly bars interpolate along an ember-orange ramp, so the work
 // happens on raw [r,g,b] triplets rather than CSS vars.
-const RAMP = ["#e6b454", "#e0a23e", "#e8745a"]; // amber → deep amber → coral
+const RAMP = ["#f0a05a", "#e07a3c", "#c85e28"]; // light ember → ember → deep ember
 
 export function hex(h: string): [number, number, number] {
   const s = h.replace("#", "");
@@ -131,9 +130,9 @@ export default function ActiveEnergyTodayChart({ d, height = 170 }: { d: ActiveE
 
         {/* Glowing dashed average curve + tag */}
         {curve && (
-          <path d={curve} fill="none" stroke={`rgba(${INK},0.5)`} strokeWidth={1.6} strokeDasharray="4 5" strokeLinecap="round" style={{ filter: `drop-shadow(0 0 5px rgba(${AMBER_RGB},0.45))` }} />
+          <path d={curve} fill="none" stroke={`rgba(${INK},0.5)`} strokeWidth={1.6} strokeDasharray="4 5" strokeLinecap="round" style={{ filter: `drop-shadow(0 0 5px rgba(${EMBER_RGB},0.45))` }} />
         )}
-        <text x={(W - 14).toFixed(1)} y={(avgEnd[1] - 6).toFixed(1)} textAnchor="end" fill={`rgba(${AMBER_RGB},0.9)`} style={{ fontFamily: SANS, fontSize: 9, fontWeight: 600 }}>avg</text>
+        <text x={(W - 14).toFixed(1)} y={(avgEnd[1] - 6).toFixed(1)} textAnchor="end" fill={`rgba(${EMBER_RGB},0.9)`} style={{ fontFamily: SANS, fontSize: 9, fontWeight: 600 }}>avg</text>
 
         {/* Faint dashed "now" marker at the right edge */}
         <line x1={W - 1} x2={W - 1} y1={top} y2={base} stroke={`rgba(${INK},0.2)`} strokeWidth={1} strokeDasharray="3 4" />
@@ -147,7 +146,7 @@ export default function ActiveEnergyTodayChart({ d, height = 170 }: { d: ActiveE
         <text x={1} y={11} fill={`rgba(${INK},0.42)`} style={{ fontFamily: SANS, fontSize: 8.5, fontWeight: 600, letterSpacing: "1px" }}>KCAL / HR</text>
 
         {/* Peak readout — glowing label */}
-        <text x={labelX.toFixed(1)} y={labelY.toFixed(1)} textAnchor="middle" fill={`rgb(${INK})`} style={{ fontFamily: SANS, fontSize: 9.5, fontWeight: 700, letterSpacing: "0.5px", filter: `drop-shadow(0 0 5px rgba(${CORAL_RGB},0.6))` }}>
+        <text x={labelX.toFixed(1)} y={labelY.toFixed(1)} textAnchor="middle" fill="#f0a05a" style={{ fontFamily: SANS, fontSize: 9.5, fontWeight: 700, letterSpacing: "0.5px", filter: `drop-shadow(0 0 5px rgba(${EMBER_RGB},0.6))` }}>
           {peakLabel}
         </text>
       </svg>

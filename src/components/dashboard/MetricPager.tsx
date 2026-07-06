@@ -24,7 +24,7 @@ const METRICS: MetricMeta[] = [
   { id: "hrv", accent: "#4fc4d6", View: HrvView },
   { id: "resting-hr", accent: "#3fc488", View: RestingHrView },
   { id: "steps", accent: "#e3a263", View: StepsView },
-  { id: "active-energy", accent: "var(--nura-amber)", View: ActiveEnergyView },
+  { id: "active-energy", accent: "#e07a3c", View: ActiveEnergyView },
   { id: "heart-rate", accent: "var(--nura-alert)", View: HeartRateView },
   { id: "blood-oxygen", accent: "#4fc4d6", View: BloodOxygenView },
   { id: "respiratory-rate", accent: "#bca6e3", View: RespiratoryRateView },
