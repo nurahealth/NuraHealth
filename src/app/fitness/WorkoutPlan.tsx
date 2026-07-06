@@ -7,6 +7,7 @@ import { GOAL_LABELS } from './FitnessOnboarding';
 import { mapProgram, PROGRAM_SELECT, type CatalogEx, type Program, type WEx, type Workout } from './planData';
 import ExerciseDetail from './ExerciseDetail';
 import ExerciseMedia, { CLIP_BG } from './ExerciseMedia';
+import { MOVEKIT_GIF_LIKE } from '@/lib/movekit';
 
 // ── Palette (NŪRA) ───────────────────────────────────────────────────────────
 const SAGE = '#9bb0a5';
@@ -468,7 +469,8 @@ export default function WorkoutPlan() {
         .maybeSingle(),
       supabase
         .from('exercises')
-        .select('id,name,target_muscles,secondary_muscles,body_part,equipment,gif_url'),
+        .select('id,name,target_muscles,secondary_muscles,body_part,equipment,gif_url')
+        .like('gif_url', MOVEKIT_GIF_LIKE), // swap picker → MoveKit-covered only
     ]);
 
     setCatalog((catRes.data as CatalogEx[] | null) ?? []);

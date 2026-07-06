@@ -1,6 +1,7 @@
 'use client';
 
 import { supabase } from '@/lib/supabase';
+import { MOVEKIT_GIF_LIKE } from '@/lib/movekit';
 
 // Shared types + loaders for a user's active training program. Used by both the
 // Workout Plan screen and the Calendar so they stay in sync.
@@ -117,12 +118,13 @@ export async function loadExercise(id: string): Promise<ExerciseFull | null> {
   return (data as ExerciseFull | null) ?? null;
 }
 
-// Load the full exercise catalog (used for swaps / add-exercise). Any authed
-// user may read it (RLS). Stays small (~140 rows today).
+// Load the exercise catalog for swaps / add-exercise — MoveKit-covered only
+// (see @/lib/movekit). Non-MoveKit exercises are never offered as swap targets.
 export async function loadCatalog(): Promise<CatalogEx[]> {
   const { data } = await supabase
     .from('exercises')
-    .select('id,name,target_muscles,secondary_muscles,body_part,equipment,gif_url');
+    .select('id,name,target_muscles,secondary_muscles,body_part,equipment,gif_url')
+    .like('gif_url', MOVEKIT_GIF_LIKE);
   return (data as CatalogEx[] | null) ?? [];
 }
 

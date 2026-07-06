@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase';
 import ExerciseDetail from './ExerciseDetail';
 import ExerciseMedia, { CLIP_BG } from './ExerciseMedia';
 import { MUSCLE_GROUPS, inGroup } from './muscleGroups';
+import { MOVEKIT_GIF_LIKE } from '@/lib/movekit';
 
 // ── Palette (NŪRA) ───────────────────────────────────────────────────────────
 const SAGE = '#9bb0a5';
@@ -103,7 +104,8 @@ export default function MuscleMap() {
     (async () => {
       const { data } = await supabase
         .from('exercises')
-        .select('id,name,gif_url,target_muscles,body_part,equipment');
+        .select('id,name,gif_url,target_muscles,body_part,equipment')
+        .like('gif_url', MOVEKIT_GIF_LIKE); // browse-by-muscle → MoveKit-covered only
       if (!cancelled) {
         setExercises((data as Ex[] | null) ?? []);
         setLoading(false);

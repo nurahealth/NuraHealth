@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabase-server';
 import { generateProgram, type CatalogExercise, type GeneratorProfile } from '@/lib/program-generator';
+import { MOVEKIT_GIF_LIKE } from '@/lib/movekit';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -36,10 +37,12 @@ export async function POST(req: Request): Promise<NextResponse> {
     return NextResponse.json({ error: 'Complete fitness onboarding first' }, { status: 400 });
   }
 
-  // 2. The exercises catalog (RLS allows any authenticated user to read).
+  // 2. The exercises catalog — MoveKit-covered only (see @/lib/movekit). Only
+  // exercises with a 3D clip are eligible for generated programs.
   const { data: catalog, error: catErr } = await supabase
     .from('exercises')
-    .select('id,name,target_muscles,secondary_muscles,body_part,equipment,gif_url');
+    .select('id,name,target_muscles,secondary_muscles,body_part,equipment,gif_url')
+    .like('gif_url', MOVEKIT_GIF_LIKE);
   if (catErr) return NextResponse.json({ error: `Catalog read failed: ${catErr.message}` }, { status: 500 });
 
   // 2b. Merge any request overrides over the stored profile (?? keeps [] and 0).

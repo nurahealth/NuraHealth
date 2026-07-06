@@ -1,10 +1,26 @@
 'use client';
 
+import { useState } from 'react';
+
 // One simple renderer for every exercise — the ORIGINAL MoveKit clip, exactly as
 // it ships (no matting, keying, tint, or dark/light routing).
 //  - default: looping, muted, autoplay <video> for .mp4/.webm (with its poster);
 //    <img> for anything else.
-//  - thumb: the original static poster (.webp).
+//  - thumb: the original static poster (.webp); on load error → sage placeholder.
+
+const PH_SAGE = '#9bb0a5';
+
+// Clean sage line-art placeholder — shown for a thumbnail whose image fails to
+// load (e.g. a non-MoveKit exercise whose GIF is gone). Never a broken image.
+function ThumbPlaceholder({ style }: { style?: React.CSSProperties }) {
+  return (
+    <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: CLIP_BG, ...style }}>
+      <svg width="42%" height="42%" viewBox="0 0 24 24" fill="none" stroke={PH_SAGE} strokeWidth="1.3" strokeLinecap="round" style={{ opacity: 0.7, maxWidth: 48, maxHeight: 48 }}>
+        <path d="M6.5 6.5 17.5 17.5M3 8l3-3M16 21l3-3M8 3 5 6M21 16l-3 3" />
+      </svg>
+    </div>
+  );
+}
 
 export function posterFor(src: string | null | undefined): string | undefined {
   if (!src) return undefined;
@@ -34,11 +50,19 @@ export default function ExerciseMedia({ src, alt, fit = 'cover', thumb = false, 
   // backdrop so there are never dark gaps behind the video/poster.
   const base: React.CSSProperties = { width: '100%', height: '100%', objectFit: fit, display: 'block', backgroundColor: CLIP_BG, ...style };
 
-  // Lists → original static poster.
+  // Thumb load-failure state — reset during render when src changes (React's
+  // recommended pattern) so a recycled row doesn't keep a stale placeholder.
+  const [thumbFailed, setThumbFailed] = useState(false);
+  const [thumbSrc, setThumbSrc] = useState(src);
+  if (src !== thumbSrc) { setThumbSrc(src); setThumbFailed(false); }
+
+  // Lists → original static poster; a broken/missing image falls back to the
+  // clean sage placeholder instead of a broken-image glyph.
   if (thumb) {
+    if (thumbFailed) return <ThumbPlaceholder style={style} />;
     const posterSrc = posterFor(src) ?? src;
     // eslint-disable-next-line @next/next/no-img-element
-    return <img src={posterSrc} alt={alt} onError={onError} style={base} />;
+    return <img src={posterSrc} alt={alt} onError={() => { setThumbFailed(true); onError?.(); }} style={base} />;
   }
 
   if (isVideo(src)) {

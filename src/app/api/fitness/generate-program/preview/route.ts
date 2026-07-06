@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { generateProgram, type CatalogExercise, type GeneratorProfile } from '@/lib/program-generator';
+import { MOVEKIT_GIF_LIKE } from '@/lib/movekit';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -30,7 +31,8 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
 
   const { data: catalog, error } = await supabaseAdmin
     .from('exercises')
-    .select('id,name,target_muscles,secondary_muscles,body_part,equipment,gif_url');
+    .select('id,name,target_muscles,secondary_muscles,body_part,equipment,gif_url')
+    .like('gif_url', MOVEKIT_GIF_LIKE); // MoveKit-covered only
   if (error) {
     return NextResponse.json({ error: `Failed to read catalog: ${error.message}` }, { status: 500 });
   }
