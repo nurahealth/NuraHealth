@@ -2,6 +2,7 @@
 
 import { useId } from "react";
 import { getStepsDetail, SOURCE_LABEL, type DashboardMetric, type StepsWeekDay } from "@/lib/dashboardData";
+import { useThemeTokens } from "@/lib/themeTokens";
 
 const SANS = "var(--font-inter), system-ui, sans-serif";
 const TEXT = "var(--nura-text-primary)";
@@ -15,10 +16,15 @@ const EYEBROW: React.CSSProperties = {
 };
 
 // Bar fills — warm orange when the day hits goal, muted grey when it falls short.
-const OR_TOP = "#f3c795", OR_BOT = "#e3a263";
-const GREY_TOP = "#615c53", GREY_BOT = "#403c36";
-const CREAM = "#ebe6d8";
-const CREAM_RGB = "235,230,216";
+// SVG gradient stops — concrete hex required.
+const TOKENS = {
+  orTop: ["--nura-orange-hi", "#f3c795"],
+  orBot: ["--nura-orange", "#e3a263"],
+  greyTop: ["--nura-bar-dim-top", "#615c53"],
+  greyBot: ["--nura-bar-dim-bot", "#403c36"],
+  cream: ["--nura-text-primary", "#ebe6d8"],
+  creamRgb: ["--nura-fg-rgb", "235,230,216"],
+} as const;
 
 // Dev fallback — mirrors the sample StepsDetail week when the store has none.
 const FALLBACK_WEEK: StepsWeekDay[] = [
@@ -40,6 +46,7 @@ const fmtK = (v: number) => `${(v / 1000).toFixed(1)}k`;
 // reserved right-side gutter so it's never covered. Today's bar is outlined and
 // its weekday label is bold cream.
 function WeeklyBars({ week, goal }: { week: StepsWeekDay[]; goal: number }) {
+  const { orTop: OR_TOP, orBot: OR_BOT, greyTop: GREY_TOP, greyBot: GREY_BOT, cream: CREAM, creamRgb: CREAM_RGB } = useThemeTokens(TOKENS);
   const rawId = useId();
   const uid = `steps-${rawId.replace(/[^a-zA-Z0-9]/g, "")}`;
 
@@ -147,6 +154,7 @@ function WeeklyBars({ week, goal }: { week: StepsWeekDay[]; goal: number }) {
 // Standalone dashboard tile: today's total + a weekly Mon–Sun bar chart. Reads
 // real weekly step data (dev fallback if the store has none). Tappable → detail.
 export default function StepsCard({ metric, onClick }: { metric: DashboardMetric; onClick: () => void }) {
+  const { orTop: OR_TOP, orBot: OR_BOT, greyTop: GREY_TOP, greyBot: GREY_BOT } = useThemeTokens(TOKENS);
   const d = getStepsDetail();
   const week = d.week?.length ? d.week : FALLBACK_WEEK;
   const goal = d.weekGoal || d.goal || 10000;

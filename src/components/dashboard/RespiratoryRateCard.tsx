@@ -3,13 +3,15 @@
 import { getRespiratoryDetail, type DashboardMetric } from "@/lib/dashboardData";
 import MetricCardShell from "@/components/dashboard/MetricCardShell";
 import OvernightTraceChart from "@/components/dashboard/OvernightTraceChart";
+import { useThemeTokens } from "@/lib/themeTokens";
 
-const MAUVE = "#a98fc4";
+const TOKENS = { mauve: ["--nura-mauve", "#a98fc4"] } as const;
 const TEXT = "var(--nura-text-primary)";
 
 // Respiratory Rate card — overnight br/min trace with a dashed personal-baseline
 // line on the same 11p–7a sleep-window axis.
 export default function RespiratoryRateCard({ metric, onClick }: { metric: DashboardMetric; onClick: () => void }) {
+  const { mauve: MAUVE } = useThemeTokens(TOKENS);
   const d = getRespiratoryDetail();
   return (
     <MetricCardShell

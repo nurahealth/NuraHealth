@@ -10,8 +10,8 @@ const CARD = "var(--nura-card)";
 const BORDER = "var(--nura-border)";
 
 // Ember-orange identity — matches the Active Energy detail page.
-const EMBER = "#e07a3c";
-const EMBER_RGB = "224,122,60";
+const EMBER = "var(--nura-ember)";
+const EMBER_RGB = "var(--nura-ember-rgb)";
 
 const EYEBROW: React.CSSProperties = {
   fontFamily: SANS, fontSize: 10, fontWeight: 600, letterSpacing: "1.6px", textTransform: "uppercase",

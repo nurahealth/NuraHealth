@@ -58,8 +58,8 @@ export default function OvernightTraceChart({
         const y = yAt(t);
         return (
           <g key={t}>
-            <line x1={padL} y1={y.toFixed(1)} x2={W - padR} y2={y.toFixed(1)} stroke="rgba(235,230,216,0.06)" strokeWidth={1} />
-            <text x={W - padR + 5} y={(y + 3).toFixed(1)} fontSize={9} fill="rgba(235,230,216,0.40)">{t}</text>
+            <line x1={padL} y1={y.toFixed(1)} x2={W - padR} y2={y.toFixed(1)} stroke="var(--nura-hairline)" strokeWidth={1} />
+            <text x={W - padR + 5} y={(y + 3).toFixed(1)} fontSize={9} fill="var(--nura-text-tertiary)">{t}</text>
           </g>
         );
       })}
@@ -76,7 +76,7 @@ export default function OvernightTraceChart({
       {axisLabels.map((l, k) => {
         const x = padL + (k / (axisLabels.length - 1)) * (W - padL - padR);
         return (
-          <text key={k} x={x.toFixed(1)} y={H - 6} fontSize={9} fill="rgba(235,230,216,0.40)" textAnchor={k === 0 ? "start" : k === axisLabels.length - 1 ? "end" : "middle"}>{l}</text>
+          <text key={k} x={x.toFixed(1)} y={H - 6} fontSize={9} fill="var(--nura-text-tertiary)" textAnchor={k === 0 ? "start" : k === axisLabels.length - 1 ? "end" : "middle"}>{l}</text>
         );
       })}
     </svg>

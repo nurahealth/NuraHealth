@@ -110,6 +110,22 @@
   --nura-orange: #e3a263;               /* steps */
   --nura-orange-rgb: 227, 162, 99;
 
+  /* Ramp endpoints — the light/deep ends of the card gradients and rings. */
+  --nura-gold-ring-lo: #c99a34;
+  --nura-gold-ring-hi: #f7dd90;
+  --nura-aqua-hi: #7fdce8;
+  --nura-ice-hi: #dbe6ef;
+  --nura-ember-hi: #f0a05a;
+  --nura-ember-lo: #c85e28;
+  --nura-orange-hi: #f3c795;
+  --nura-orange-mid: #f0bc84;
+  /* Dimmed/inactive bars (e.g. days before today on the steps strip). */
+  --nura-bar-dim-top: #615c53;
+  --nura-bar-dim-bot: #403c36;
+  /* A value marker drawn ON TOP of a filled accent bar or ring. */
+  --nura-marker: #ffffff;
+  --nura-tick-on-accent: rgba(13, 13, 14, 0.5);
+
   /* ── Aliases (semantic names requested by the design system) ────────── */
   --nura-accent: var(--nura-sage);
   --nura-text-muted: var(--nura-text-tertiary);
@@ -215,6 +231,22 @@
   --nura-gold-ring-rgb: 138, 100, 16;
   --nura-orange: #9c5f14;               /*  5.2:1 */
   --nura-orange-rgb: 156, 95, 20;
+
+  /* Ramp endpoints — kept dark-to-light in the same direction as the dark
+     column so gradients read the same way round, just darker overall. */
+  --nura-gold-ring-lo: #6f4f0c;
+  --nura-gold-ring-hi: #b0810f;
+  --nura-aqua-hi: #1293a8;
+  --nura-ice-hi: #63819a;
+  --nura-ember-hi: #c46524;
+  --nura-ember-lo: #7d3d10;
+  --nura-orange-hi: #c07a1a;
+  --nura-orange-mid: #ad6c16;
+  --nura-bar-dim-top: #d8d5cd;
+  --nura-bar-dim-bot: #c2beb4;
+  /* On white cards the accent bars are dark, so the marker/tick invert. */
+  --nura-marker: #1a1a1a;
+  --nura-tick-on-accent: rgba(255, 255, 255, 0.7);
 }
 
 @theme inline {

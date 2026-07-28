@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import { SOURCE_LABEL, type DashboardMetric } from "@/lib/dashboardData";
+import { useThemeTokens } from "@/lib/themeTokens";
 
 const SANS = "var(--font-inter), system-ui, sans-serif";
 const TEXT = "var(--nura-text-primary)";
@@ -11,9 +12,12 @@ const CARD = "var(--nura-card)";
 const BORDER = "var(--nura-border)";
 
 // Aqua-teal identity — matches the HRV detail page.
-const AQUA = "#4fc4d6";
-const AQUA_LIGHT = "#7fdce8";
-const AQUA_RGB = "79,196,214"; // #4fc4d6
+// Fed to hexA()/SVG gradient stops, so these must be concrete hex.
+const TOKENS = {
+  aqua: ["--nura-aqua", "#4fc4d6"],
+  aquaLight: ["--nura-aqua-hi", "#7fdce8"],
+  aquaRgb: ["--nura-aqua-rgb", "79,196,214"],
+} as const;
 
 const EYEBROW: React.CSSProperties = {
   fontFamily: SANS, fontSize: 10, fontWeight: 600, letterSpacing: "1.6px", textTransform: "uppercase",
@@ -29,6 +33,7 @@ const FILL_MS = 1300;
 // the fill loads up while the centered value counts up (~1.3s). Motion is disabled
 // under prefers-reduced-motion (ring already filled, number at its final value).
 function HrvMiniRing({ hrv }: { hrv: number }) {
+  const { aqua: AQUA, aquaLight: AQUA_LIGHT, aquaRgb: AQUA_RGB } = useThemeTokens(TOKENS);
   const rawId = useId();
   const gid = `hrvcard-${rawId.replace(/[^a-zA-Z0-9]/g, "")}`;
 
@@ -116,6 +121,7 @@ function HrvMiniRing({ hrv }: { hrv: number }) {
 // Aqua-teal mini-ring tile matching the HRV detail page. Reads the metric's real
 // value / delta / status (dev fallback if the store ever lacks them).
 export default function HrvCard({ metric, onClick }: { metric: DashboardMetric; onClick: () => void }) {
+  const { aqua: AQUA, aquaRgb: AQUA_RGB } = useThemeTokens(TOKENS);
   const hrv = metric.value ?? 62;
   const delta = metric.delta ?? { value: 8, dir: "up" as const };
   const status = metric.status ?? "optimal";

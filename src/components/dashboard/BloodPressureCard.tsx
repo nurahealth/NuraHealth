@@ -13,7 +13,7 @@ const TEXT_SEC = "var(--nura-text-secondary)";
 const TEXT_TER = "var(--nura-text-tertiary)";
 const CARD = "var(--nura-card)";
 const BORDER = "var(--nura-border)";
-const FAINT = "rgba(235,230,216,0.45)";
+const FAINT = "var(--nura-ink-faint)";
 
 const EYEBROW: React.CSSProperties = {
   fontFamily: SANS, fontSize: 10, fontWeight: 600, letterSpacing: "1.6px", textTransform: "uppercase",
@@ -30,8 +30,8 @@ function CardMeter({ name, value, gradient, tickPct, pct }: { name: string; valu
       </div>
       <div style={{ position: "relative", height: 7 }}>
         <div style={{ position: "absolute", inset: 0, borderRadius: 999, background: gradient }} />
-        <div style={{ position: "absolute", top: -1, left: `${tickPct}%`, transform: "translateX(-50%)", width: 1.5, height: 9, borderRadius: 1, background: "rgba(13,13,14,0.5)" }} />
-        <div style={{ position: "absolute", top: "50%", left: `${pct.toFixed(1)}%`, transform: "translate(-50%,-50%)", width: 4, height: 15, borderRadius: 2.5, background: "#ebe6d8", boxShadow: `0 0 0 2.5px ${CARD}` }} />
+        <div style={{ position: "absolute", top: -1, left: `${tickPct}%`, transform: "translateX(-50%)", width: 1.5, height: 9, borderRadius: 1, background: "var(--nura-tick-on-accent)" }} />
+        <div style={{ position: "absolute", top: "50%", left: `${pct.toFixed(1)}%`, transform: "translate(-50%,-50%)", width: 4, height: 15, borderRadius: 2.5, background: "var(--nura-marker)", boxShadow: `0 0 0 2.5px ${CARD}` }} />
       </div>
     </div>
   );

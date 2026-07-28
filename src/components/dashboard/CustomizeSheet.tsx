@@ -68,12 +68,12 @@ function Switch({ on }: { on: boolean }) {
     <span style={{
       width: 42, height: 24, borderRadius: 999, flex: "none", position: "relative",
       transition: "background .18s",
-      background: on ? SAGE : "rgba(235,230,216,0.14)",
-      border: on ? "none" : "1px solid rgba(235,230,216,0.12)",
+      background: on ? SAGE : "rgba(var(--nura-fg-rgb),0.14)",
+      border: on ? "none" : "1px solid rgba(var(--nura-fg-rgb),0.12)",
     }}>
       <span style={{
         position: "absolute", top: 2, left: on ? 20 : 2,
-        width: 20, height: 20, borderRadius: "50%", background: "#fff",
+        width: 20, height: 20, borderRadius: "50%", background: "var(--nura-marker)",
         transition: "left .18s", boxShadow: "0 1px 3px rgba(0,0,0,0.45)",
       }} />
     </span>
@@ -121,7 +121,7 @@ export default function CustomizeSheet({
           backdropFilter: "blur(24px) saturate(1.2)", WebkitBackdropFilter: "blur(24px) saturate(1.2)",
           borderTop: "1px solid var(--nura-glass-line)",
           borderTopLeftRadius: 24, borderTopRightRadius: 24,
-          boxShadow: "0 -22px 60px rgba(0,0,0,.5)",
+          boxShadow: "0 -22px 60px rgba(0,0,0,.5)", // sheet lift — intentionally neutral in both themes
           padding: "10px 16px max(env(safe-area-inset-bottom), 18px)",
           color: TEXT, fontFamily: SANS,
           animation: "cs-rise .26s cubic-bezier(.2,.7,.2,1) forwards",
@@ -130,7 +130,7 @@ export default function CustomizeSheet({
       >
         {/* Drag handle */}
         <div style={{ display: "flex", justifyContent: "center", padding: "2px 0 12px" }}>
-          <span style={{ width: 40, height: 4, borderRadius: 999, background: "rgba(235,230,216,0.22)" }} />
+          <span style={{ width: 40, height: 4, borderRadius: 999, background: "rgba(var(--nura-fg-rgb),0.22)" }} />
         </div>
 
         {/* Title + subtitle */}
@@ -157,7 +157,7 @@ export default function CustomizeSheet({
                 onClick={() => onToggle(m.id)}
                 style={{
                   display: "flex", alignItems: "center", gap: 12, padding: "12px 2px", cursor: "pointer",
-                  borderTop: "1px solid rgba(235,230,216,0.07)",
+                  borderTop: "1px solid var(--nura-hairline)",
                   opacity: on ? 1 : 0.45, transition: "opacity .18s",
                 }}
               >

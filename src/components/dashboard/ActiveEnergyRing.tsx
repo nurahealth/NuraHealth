@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
+import { useThemeTokens } from "@/lib/themeTokens";
 
 // ── Animated ember-orange goal ring ───────────────────────────────────────────
 // A 270° arc (gap at bottom-center): a faint track + an ember-orange gradient
@@ -10,8 +11,11 @@ import { useEffect, useId, useRef, useState } from "react";
 // the dashboard card (mini). Motion is disabled under prefers-reduced-motion
 // (ring already filled, number at its final value).
 const SANS = "var(--font-inter), system-ui, sans-serif";
-const EMBER = "#e07a3c";
-const EMBER_LIGHT = "#f0a05a";
+// SVG gradient stops — concrete hex required.
+const TOKENS = {
+  ember: ["--nura-ember", "#e07a3c"],
+  emberLight: ["--nura-ember-hi", "#f0a05a"],
+} as const;
 const EMBER_RGB = "224,122,60";
 
 export default function ActiveEnergyRing({
@@ -30,6 +34,7 @@ export default function ActiveEnergyRing({
   /** Optional muted line shown inside the ring, beneath the number (e.g. "of 750 goal"). */
   innerLabel?: string;
 }) {
+  const { ember: EMBER, emberLight: EMBER_LIGHT } = useThemeTokens(TOKENS);
   const rawId = useId();
   const gid = `aering-${rawId.replace(/[^a-zA-Z0-9]/g, "")}`;
 

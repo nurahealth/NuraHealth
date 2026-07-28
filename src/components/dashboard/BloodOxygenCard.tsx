@@ -3,6 +3,7 @@
 import { getBloodOxygenDetail, SOURCE_LABEL, type DashboardMetric } from "@/lib/dashboardData";
 import { hexA } from "@/components/dashboard/cardChartHelpers";
 import { spo2Status, spo2FooterMessage } from "@/lib/bloodOxygen";
+import { useThemeTokens } from "@/lib/themeTokens";
 
 const SANS = "var(--font-inter), system-ui, sans-serif";
 const TEXT = "var(--nura-text-primary)";
@@ -13,9 +14,11 @@ const BORDER = "var(--nura-border)";
 
 // Ice / platinum identity — matches the Blood Oxygen detail page. A cool-blue-
 // leaning silver kept crisp (not washed out) on the dark card via a soft glow.
-const ICE = "#aebfcf";
-const ICE_LIGHT = "#dbe6ef";
-const ICE_RGB = "174,191,207";
+const TOKENS = {
+  ice: ["--nura-ice", "#aebfcf"],
+  iceLight: ["--nura-ice-hi", "#dbe6ef"],
+} as const;
+const ICE_RGB = "var(--nura-ice-rgb)";
 
 const EYEBROW: React.CSSProperties = {
   fontFamily: SANS, fontSize: 10, fontWeight: 600, letterSpacing: "1.6px", textTransform: "uppercase",
@@ -24,6 +27,7 @@ const EYEBROW: React.CSSProperties = {
 // Compact Blood Oxygen tile — big % readout, a platinum range bar (90–100, with
 // the 95–100 "normal" portion brighter) marking the reading, and a status pill.
 export default function BloodOxygenCard({ metric, onClick }: { metric: DashboardMetric; onClick: () => void }) {
+  const { ice: ICE, iceLight: ICE_LIGHT } = useThemeTokens(TOKENS);
   const d = getBloodOxygenDetail();
   const status = spo2Status(d.lastNight);
   // Range bar: 90 → 100 scale; marker at the reading, tick at the 95 threshold.
@@ -62,7 +66,7 @@ export default function BloodOxygenCard({ metric, onClick }: { metric: Dashboard
           <div style={{ position: "relative", height: 7 }}>
             <div style={{ position: "absolute", inset: 0, borderRadius: 999, background: hexA(ICE, 0.16) }} />
             <div style={{ position: "absolute", top: 0, bottom: 0, left: "50%", right: 0, borderRadius: "0 999px 999px 0", background: hexA(ICE, 0.55), boxShadow: `0 0 8px rgba(${ICE_RGB},0.35)` }} />
-            <div style={{ position: "absolute", top: -1, left: "50%", transform: "translateX(-50%)", width: 1.5, height: 9, borderRadius: 1, background: "rgba(13,13,14,0.5)" }} />
+            <div style={{ position: "absolute", top: -1, left: "50%", transform: "translateX(-50%)", width: 1.5, height: 9, borderRadius: 1, background: "var(--nura-tick-on-accent)" }} />
             <div style={{ position: "absolute", top: "50%", left: `${markPct.toFixed(1)}%`, transform: "translate(-50%,-50%)", width: 4, height: 15, borderRadius: 2.5, background: ICE_LIGHT, boxShadow: `0 0 0 2.5px ${CARD}, 0 0 7px rgba(${ICE_RGB},0.7)` }} />
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6, fontFamily: SANS, fontSize: 10, color: TEXT_TER }}>

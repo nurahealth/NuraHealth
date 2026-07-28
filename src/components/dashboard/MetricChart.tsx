@@ -2,6 +2,7 @@
 
 import { useId, type ReactElement } from "react";
 import type { MetricChartData } from "@/lib/dashboardData";
+import { useThemeTokens } from "@/lib/themeTokens";
 
 // Shared dashboard metric-card chart.
 //
@@ -25,18 +26,28 @@ import type { MetricChartData } from "@/lib/dashboardData";
 // renders exactly as before — Heart Rate and every other card are untouched.
 
 const SANS = "var(--font-inter), system-ui, sans-serif";
-const INK = "235,230,216"; // warm-white, matches --nura-fg-rgb (dark)
+// Every colour here feeds hex interpolation (mix/rampColor/lighten) or an SVG
+// presentation attribute, so all of it resolves to concrete hex via tokens.
 // High-tech is a Steps-only treatment → a pure-orange identity (no teal/green).
-const HT_GLOW = "227,162,99"; // #e3a263 orange — high-tech glows / hotspot / peak
-const HT_STOPS: [string, string, string] = ["#f3c795", "#f0bc84", "#e3a263"]; // lightest → light → base
+const TOKENS = {
+  ink:     ["--nura-fg-rgb", "235,230,216"],
+  htGlow:  ["--nura-orange-rgb", "227,162,99"],
+  htHi:    ["--nura-orange-hi", "#f3c795"],
+  htMid:   ["--nura-orange-mid", "#f0bc84"],
+  htBase:  ["--nura-orange", "#e3a263"],
+  teal:    ["--nura-teal", "#5dccae"],
+  amber:   ["--nura-amber", "#e0a23e"],
+  coral:   ["--nura-alert", "#e8745a"],
+  sage:    ["--nura-sage", "#9bb0a5"],
+  emerald: ["--nura-optimal", "#5fbf8c"],
+} as const;
+type ChartTokens = Record<keyof typeof TOKENS, string>;
 
-// Ramp stops mirror tokens: teal=--nura-teal, amber=--nura-amber,
-// coral=--nura-alert, sage=--nura-sage, emerald=--nura-optimal.
-const RAMPS: Record<MetricChartData["ramp"], [string, string, string]> = {
-  hr: ["#5dccae", "#e0a23e", "#e8745a"],            // cool teal → amber → coral
-  higherBetter: ["#e0a23e", "#9bb0a5", "#5fbf8c"],  // amber → sage → emerald
-  lowerBetter: ["#5fbf8c", "#9bb0a5", "#e0a23e"],   // emerald → sage → amber
-};
+const rampsFor = (t: ChartTokens): Record<MetricChartData["ramp"], [string, string, string]> => ({
+  hr: [t.teal, t.amber, t.coral],
+  higherBetter: [t.amber, t.sage, t.emerald],
+  lowerBetter: [t.emerald, t.sage, t.amber],
+});
 
 function hexToRgb(h: string): [number, number, number] {
   const s = h.replace("#", "");
@@ -92,6 +103,11 @@ export default function MetricChart({
   height?: number;
   highTech?: boolean;
 }) {
+  const tk = useThemeTokens(TOKENS);
+  const INK = tk.ink;
+  const HT_GLOW = tk.htGlow;
+  const HT_STOPS: [string, string, string] = [tk.htHi, tk.htMid, tk.htBase];
+
   const { readings, baseline, floor, ceiling, gridlines, ramp } = data;
   const W = 356, H = height;
   const top = 12, base = H - 16, plotH = base - top;
@@ -102,7 +118,7 @@ export default function MetricChart({
   const n = readings.length;
   const slot = W / n;
   const bw = Math.min(slot * 0.6, 4);
-  const stops = RAMPS[ramp];
+  const stops = rampsFor(tk)[ramp];
   const HOT = 0.72;
 
   // Unique gradient-id prefix so multiple charts on a page never collide.
@@ -214,7 +230,7 @@ export default function MetricChart({
           {/* Peak readout — label (peak dot removed) */}
           <text
             x={labelX.toFixed(1)} y={labelY.toFixed(1)} textAnchor="middle"
-            fill="#f3c795" style={{ fontFamily: SANS, fontSize: 9.5, fontWeight: 700, letterSpacing: "0.5px", filter: `drop-shadow(0 0 5px rgba(${HT_GLOW},0.6))` }}
+            fill={tk.htHi} style={{ fontFamily: SANS, fontSize: 9.5, fontWeight: 700, letterSpacing: "0.5px", filter: `drop-shadow(0 0 5px rgba(${HT_GLOW},0.6))` }}
           >
             {peakLabel}
           </text>

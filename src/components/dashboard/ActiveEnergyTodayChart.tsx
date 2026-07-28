@@ -2,6 +2,7 @@
 
 import { useId } from "react";
 import type { ActiveEnergyDetail } from "@/lib/dashboardData";
+import { useThemeTokens } from "@/lib/themeTokens";
 
 // Shared "Active Energy — Today" intraday chart, rendered by BOTH the Active
 // Energy detail page and the dashboard Active Energy card.
@@ -12,13 +13,20 @@ import type { ActiveEnergyDetail } from "@/lib/dashboardData";
 // dashed "now" marker at the right edge.
 
 const SANS = "var(--font-inter), system-ui, sans-serif";
-const INK = "235,230,216"; // warm off-white (matches --nura-fg-rgb in dark)
-const EMBER_RGB = "224,122,60"; // #e07a3c — ember glow
+
 
 // ── Chart helpers (hex · lerp · light · colorAt · smooth) ─────────────────────
 // The intraday + weekly bars interpolate along an ember-orange ramp, so the work
 // happens on raw [r,g,b] triplets rather than CSS vars.
-const RAMP = ["#f0a05a", "#e07a3c", "#c85e28"]; // light ember → ember → deep ember
+// Bar colours are interpolated and fed to SVG attributes, so they resolve to
+// concrete hex via tokens. RAMP order: light ember → ember → deep ember.
+const TOKENS = {
+  ink:       ["--nura-fg-rgb", "235,230,216"],
+  emberRgb:  ["--nura-ember-rgb", "224,122,60"],
+  emberHi:   ["--nura-ember-hi", "#f0a05a"],
+  ember:     ["--nura-ember", "#e07a3c"],
+  emberLo:   ["--nura-ember-lo", "#c85e28"],
+} as const;
 
 export function hex(h: string): [number, number, number] {
   const s = h.replace("#", "");
@@ -32,9 +40,14 @@ export function light([r, g, b]: [number, number, number], amt: number): [number
   return [Math.round(lerp(r, 255, amt)), Math.round(lerp(g, 255, amt)), Math.round(lerp(b, 255, amt))];
 }
 /** Resolve a 0–1 intensity to an [r,g,b] along the amber→coral ramp. */
-export function colorAt(t: number): [number, number, number] {
+/** Dark-theme ember ramp. Only used as the default for callers that have not
+ *  been migrated onto tokens yet (the Active Energy detail page); migrated
+ *  callers pass a theme-resolved ramp. */
+const RAMP_DARK = ["#f0a05a", "#e07a3c", "#c85e28"] as const;
+
+export function colorAt(t: number, ramp: readonly string[] = RAMP_DARK): [number, number, number] {
   const u = Math.max(0, Math.min(1, t));
-  const [a, b, c] = RAMP.map(hex);
+  const [a, b, c] = ramp.map(hex);
   const s = u < 0.5 ? a : b;
   const e = u < 0.5 ? b : c;
   const k = u < 0.5 ? u / 0.5 : (u - 0.5) / 0.5;
@@ -63,6 +76,10 @@ function hourLabel(h24: number): string {
 }
 
 export default function ActiveEnergyTodayChart({ d, height = 170 }: { d: ActiveEnergyDetail; height?: number }) {
+  const tk = useThemeTokens(TOKENS);
+  const INK = tk.ink;
+  const EMBER_RGB = tk.emberRgb;
+  const RAMP = [tk.emberHi, tk.ember, tk.emberLo] as const;
   const rawId = useId();
   const uid = `ae-today-${rawId.replace(/[^a-zA-Z0-9]/g, "")}`;
 
@@ -94,7 +111,7 @@ export default function ActiveEnergyTodayChart({ d, height = 170 }: { d: ActiveE
       <svg width="100%" height={H} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" style={{ display: "block", overflow: "visible" }}>
         <defs>
           {data.map((v, i) => {
-            const [r, g, b] = colorAt(normOf(v));
+            const [r, g, b] = colorAt(normOf(v), RAMP);
             const [lr, lg, lb] = light([r, g, b], 0.5);
             return (
               <linearGradient key={i} id={`${uid}-${i}`} x1="0" y1="0" x2="0" y2="1">
@@ -118,7 +135,7 @@ export default function ActiveEnergyTodayChart({ d, height = 170 }: { d: ActiveE
           const x = i * slot + (slot - bw) / 2;
           const y = base - h;
           const rx = Math.min(bw / 2, h / 2);
-          const [r, g, b] = colorAt(norm);
+          const [r, g, b] = colorAt(norm, RAMP);
           return (
             <rect
               key={i} x={x.toFixed(1)} y={y.toFixed(1)} width={bw.toFixed(1)} height={h.toFixed(1)}
@@ -146,7 +163,7 @@ export default function ActiveEnergyTodayChart({ d, height = 170 }: { d: ActiveE
         <text x={1} y={11} fill={`rgba(${INK},0.42)`} style={{ fontFamily: SANS, fontSize: 8.5, fontWeight: 600, letterSpacing: "1px" }}>KCAL / HR</text>
 
         {/* Peak readout — glowing label */}
-        <text x={labelX.toFixed(1)} y={labelY.toFixed(1)} textAnchor="middle" fill="#f0a05a" style={{ fontFamily: SANS, fontSize: 9.5, fontWeight: 700, letterSpacing: "0.5px", filter: `drop-shadow(0 0 5px rgba(${EMBER_RGB},0.6))` }}>
+        <text x={labelX.toFixed(1)} y={labelY.toFixed(1)} textAnchor="middle" fill={tk.emberHi} style={{ fontFamily: SANS, fontSize: 9.5, fontWeight: 700, letterSpacing: "0.5px", filter: `drop-shadow(0 0 5px rgba(${EMBER_RGB},0.6))` }}>
           {peakLabel}
         </text>
       </svg>
