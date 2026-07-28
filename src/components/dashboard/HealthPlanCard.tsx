@@ -118,9 +118,9 @@ export default function HealthPlanCard() {
       <style>{`
         .hp-step b, .hp-proj b, .hp-dd b { font-weight: 700; }
         .hp-step b { color: ${TEXT}; }
-        .hp-proj b { color: ${SAGE}; }
+        .hp-proj b { color: var(--nura-accent-text); }
         .hp-dd b { color: ${TEXT}; font-weight: 600; }
-        .hp-dd .sg { color: ${SAGE}; font-weight: 600; }
+        .hp-dd .sg { color: var(--nura-accent-text); font-weight: 600; }
       `}</style>
 
       {/* Header */}
