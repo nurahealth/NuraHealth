@@ -99,7 +99,7 @@ function SavedGrid({ recipes }: { recipes: Recipe[] }) {
 
       {/* Header */}
       <div style={{ marginBottom: 22 }}>
-        <span style={{ fontFamily: SANS, fontSize: 10, fontWeight: 600, letterSpacing: "0.14em", textTransform: "uppercase", color: SAGE }}>
+        <span style={{ fontFamily: SANS, fontSize: 10, fontWeight: 600, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--nura-accent-label)" }}>
           Your collection
         </span>
         <h1 style={{ fontFamily: SANS, fontSize: "clamp(28px, 5vw, 38px)", fontWeight: 600, color: TEXT, margin: "6px 0 8px", letterSpacing: "-0.02em", lineHeight: 1.1 }}>

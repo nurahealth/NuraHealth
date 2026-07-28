@@ -218,7 +218,7 @@ function Combobox(props: ComboboxProps) {
   const chip: React.CSSProperties = {
     display: "inline-flex", alignItems: "center", gap: 5, padding: "3px 6px 3px 9px", borderRadius: 999,
     background: `rgba(${SAGE_RGB},0.12)`, border: `0.5px solid rgba(${SAGE_RGB},0.3)`,
-    fontFamily: SANS, fontSize: 12, fontWeight: 600, color: SAGE,
+    fontFamily: SANS, fontSize: 12, fontWeight: 600, color: "var(--nura-accent-text)",
   };
 
   return (
@@ -323,7 +323,7 @@ function TagInput({ value, onChange, placeholder }: { value: string[]; onChange:
   return (
     <div style={{ ...inputStyle, padding: 8, display: "flex", flexWrap: "wrap", gap: 6, minHeight: 42, cursor: "text" }}>
       {value.map((t) => (
-        <span key={t} style={{ display: "inline-flex", alignItems: "center", gap: 5, background: `rgba(${SAGE_RGB},0.12)`, border: `0.5px solid rgba(${SAGE_RGB},0.3)`, borderRadius: 999, padding: "3px 9px", fontFamily: SANS, fontSize: 12, fontWeight: 500, color: SAGE }}>
+        <span key={t} style={{ display: "inline-flex", alignItems: "center", gap: 5, background: `rgba(${SAGE_RGB},0.12)`, border: `0.5px solid rgba(${SAGE_RGB},0.3)`, borderRadius: 999, padding: "3px 9px", fontFamily: SANS, fontSize: 12, fontWeight: 500, color: "var(--nura-accent-text)" }}>
           {t}
           <button type="button" onClick={() => onChange(value.filter((x) => x !== t))} style={{ background: "none", border: "none", cursor: "pointer", color: SAGE, display: "flex", padding: 0 }}><X size={11} /></button>
         </span>
@@ -353,7 +353,7 @@ function SlugMultiSelect({ value, onChange, options }: { value: string[]; onChan
       {value.length > 0 && (
         <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
           {value.map((slug) => (
-            <span key={slug} style={{ display: "inline-flex", alignItems: "center", gap: 5, background: `rgba(${SAGE_RGB},0.12)`, border: `0.5px solid rgba(${SAGE_RGB},0.3)`, borderRadius: 999, padding: "4px 10px", fontFamily: SANS, fontSize: 12, fontWeight: 500, color: SAGE }}>
+            <span key={slug} style={{ display: "inline-flex", alignItems: "center", gap: 5, background: `rgba(${SAGE_RGB},0.12)`, border: `0.5px solid rgba(${SAGE_RGB},0.3)`, borderRadius: 999, padding: "4px 10px", fontFamily: SANS, fontSize: 12, fontWeight: 500, color: "var(--nura-accent-text)" }}>
               {nameOf(slug)}
               <button type="button" onClick={() => onChange(value.filter((x) => x !== slug))} style={{ background: "none", border: "none", cursor: "pointer", color: SAGE, display: "flex", padding: 0 }}><X size={11} /></button>
             </span>
@@ -388,7 +388,7 @@ function StepEditor({ value, onChange, placeholder }: { value: string[]; onChang
     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
       {value.map((text, i) => (
         <div key={i} style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
-          <span style={{ flexShrink: 0, width: 26, height: 26, marginTop: 6, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", background: `rgba(${SAGE_RGB},0.14)`, border: `0.5px solid rgba(${SAGE_RGB},0.3)`, fontFamily: SANS, fontSize: 12, fontWeight: 600, color: SAGE }}>{i + 1}</span>
+          <span style={{ flexShrink: 0, width: 26, height: 26, marginTop: 6, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", background: `rgba(${SAGE_RGB},0.14)`, border: `0.5px solid rgba(${SAGE_RGB},0.3)`, fontFamily: SANS, fontSize: 12, fontWeight: 600, color: "var(--nura-accent-text)" }}>{i + 1}</span>
           <textarea value={text} onChange={(e) => onChange(value.map((v, j) => (j === i ? e.target.value : v)))} rows={2} placeholder={placeholder} style={{ ...inputStyle, resize: "vertical", lineHeight: 1.5 }} />
           <ReorderButtons i={i} len={value.length} move={(f, t) => onChange(move(value, f, t))} />
           <button type="button" onClick={() => onChange(value.filter((_, j) => j !== i))} style={{ ...miniBtn, marginTop: 0, color: DANGER }}><Trash2 size={13} /></button>
@@ -618,11 +618,11 @@ function ScanPanel({ ingredients, onCreateIngredient, onAdd, onClose }: {
           style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8, minHeight: 110, borderRadius: 10, cursor: phase === "scanning" ? "default" : "pointer", border: `1.5px dashed ${dragOver ? SAGE : `rgba(${SAGE_RGB},0.4)`}`, background: dragOver ? `rgba(${SAGE_RGB},0.10)` : "transparent", textAlign: "center", padding: 14 }}
         >
           {phase === "scanning" ? (
-            <><Loader2 size={18} color={SAGE} style={{ animation: "spin 1s linear infinite" }} /><span style={{ fontFamily: SANS, fontSize: 12.5, fontWeight: 600, color: SAGE }}>Reading the photo…</span></>
+            <><Loader2 size={18} color={SAGE} style={{ animation: "spin 1s linear infinite" }} /><span style={{ fontFamily: SANS, fontSize: 12.5, fontWeight: 600, color: "var(--nura-accent-text)" }}>Reading the photo…</span></>
           ) : (
             <>
               <ScanLine size={20} color={SAGE} />
-              <span style={{ fontFamily: SANS, fontSize: 12.5, fontWeight: 600, color: TEXT, lineHeight: 1.4 }}>Drop a photo of an ingredient list, or <span style={{ color: SAGE }}>choose a photo</span></span>
+              <span style={{ fontFamily: SANS, fontSize: 12.5, fontWeight: 600, color: TEXT, lineHeight: 1.4 }}>Drop a photo of an ingredient list, or <span style={{ color: "var(--nura-accent-text)" }}>choose a photo</span></span>
               <span style={{ fontFamily: SANS, fontSize: 11, color: TEXT_TER }}>JPEG, PNG, or WebP · up to 5MB · the photo is only read, never stored</span>
             </>
           )}
@@ -640,7 +640,7 @@ function ScanPanel({ ingredients, onCreateIngredient, onAdd, onClose }: {
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                   {r.ingredient_id
-                    ? <span style={{ display: "inline-flex", alignItems: "center", gap: 5, flexShrink: 0, fontFamily: SANS, fontSize: 11, fontWeight: 600, color: SAGE }}><Check size={12} /> {r.matched ? "Matched" : "Selected"}</span>
+                    ? <span style={{ display: "inline-flex", alignItems: "center", gap: 5, flexShrink: 0, fontFamily: SANS, fontSize: 11, fontWeight: 600, color: "var(--nura-accent-text)" }}><Check size={12} /> {r.matched ? "Matched" : "Selected"}</span>
                     : <span style={{ flexShrink: 0, fontFamily: SANS, fontSize: 11, fontWeight: 600, color: "var(--nura-good)" }}>No match</span>}
                   {r.createdDraft && (
                     <span style={{ flexShrink: 0, fontFamily: SANS, fontSize: 9.5, fontWeight: 600, letterSpacing: "0.03em", color: "var(--nura-good)", background: "rgba(var(--nura-good-rgb),0.12)", border: "0.5px solid rgba(var(--nura-good-rgb),0.3)", borderRadius: 6, padding: "2px 7px" }}>draft · needs deep-dive</span>
@@ -734,7 +734,7 @@ function LinkEditor({ value, onChange, ingredients, onCreateIngredient }: { valu
       )}
       {value.map((l, i) => (
         <div key={i} style={{ background: SURFACE, border: `0.5px solid ${BORDER}`, borderRadius: 12, padding: 12, display: "flex", gap: 8 }}>
-          <span style={{ flexShrink: 0, width: 24, height: 24, marginTop: 4, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", background: `rgba(${SAGE_RGB},0.14)`, fontFamily: SANS, fontSize: 11, fontWeight: 600, color: SAGE }}>{i + 1}</span>
+          <span style={{ flexShrink: 0, width: 24, height: 24, marginTop: 4, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", background: `rgba(${SAGE_RGB},0.14)`, fontFamily: SANS, fontSize: 11, fontWeight: 600, color: "var(--nura-accent-text)" }}>{i + 1}</span>
           <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 8 }}>
             <select value={l.ingredient_id} onChange={(e) => { if (e.target.value === "__new__") openNew(i); else set(i, { ingredient_id: e.target.value }); }} style={{ ...inputStyle, appearance: "none", cursor: "pointer" }}>
               <option value="">Select an ingredient…</option>
@@ -1107,7 +1107,7 @@ function RecipeModal({ token, editing, ingredients, onClose, onSuccess }: { toke
             )}
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
-            <label style={{ display: "inline-flex", alignItems: "center", gap: 7, cursor: uploading ? "default" : "pointer", fontFamily: SANS, fontSize: 12.5, fontWeight: 600, color: SAGE, background: `rgba(${SAGE_RGB},0.10)`, border: `0.5px solid rgba(${SAGE_RGB},0.28)`, borderRadius: 10, padding: "8px 14px", opacity: uploading ? 0.6 : 1 }}>
+            <label style={{ display: "inline-flex", alignItems: "center", gap: 7, cursor: uploading ? "default" : "pointer", fontFamily: SANS, fontSize: 12.5, fontWeight: 600, color: "var(--nura-accent-text)", background: `rgba(${SAGE_RGB},0.10)`, border: `0.5px solid rgba(${SAGE_RGB},0.28)`, borderRadius: 10, padding: "8px 14px", opacity: uploading ? 0.6 : 1 }}>
               {uploading ? "Uploading…" : imageUrl ? "Replace photo" : "Upload photo"}
               <input type="file" accept="image/jpeg,image/png,image/webp" disabled={uploading} style={{ display: "none" }} onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadImage(f); e.target.value = ""; }} />
             </label>
@@ -1316,7 +1316,7 @@ export default function NutritionAdminClient({ initialRecipes, initialIngredient
         </button>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <span style={{ fontFamily: SERIF, fontSize: 17, fontWeight: 500, color: TEXT, letterSpacing: "0.3px" }}>Nutrition</span>
-          <span style={{ fontFamily: SANS, fontSize: 9, fontWeight: 600, letterSpacing: "0.14em", textTransform: "uppercase", color: SAGE, background: "transparent", border: `0.5px solid rgba(${SAGE_RGB},0.5)`, borderRadius: 999, padding: "3px 8px" }}>Admin</span>
+          <span style={{ fontFamily: SANS, fontSize: 9, fontWeight: 600, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--nura-accent-label)", background: "transparent", border: `0.5px solid rgba(${SAGE_RGB},0.5)`, borderRadius: 999, padding: "3px 8px" }}>Admin</span>
         </div>
         <button onClick={refresh} style={{ width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", background: "none", border: "none", cursor: "pointer", color: TEXT_TER, borderRadius: 8, padding: 0 }}>
           <RefreshCw size={14} />
@@ -1346,7 +1346,7 @@ export default function NutritionAdminClient({ initialRecipes, initialIngredient
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16, marginBottom: 18 }}>
           {stats.map((s) => (
             <Panel key={s.label} style={{ padding: "14px 8px", textAlign: "center" }}>
-              <div style={{ fontFamily: SERIF, fontSize: 22, fontWeight: 500, color: SAGE, lineHeight: 1, marginBottom: 6 }}>{s.value}</div>
+              <div style={{ fontFamily: SERIF, fontSize: 22, fontWeight: 500, color: "var(--nura-accent-text)", lineHeight: 1, marginBottom: 6 }}>{s.value}</div>
               <Eyebrow color={TEXT_TER} size={9}>{s.label}</Eyebrow>
             </Panel>
           ))}

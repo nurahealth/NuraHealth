@@ -168,7 +168,7 @@ export default function MuscleMap() {
                     <span style={{ display: 'block', fontSize: 15.5, fontWeight: 600, color: 'var(--nura-text-primary)', letterSpacing: '-0.2px' }}>
                       {group.label}
                     </span>
-                    <span style={{ display: 'block', fontSize: 11.5, fontFamily: MONO, letterSpacing: '0.5px', color: SAGE, marginTop: 3 }}>
+                    <span style={{ display: 'block', fontSize: 11.5, fontFamily: MONO, letterSpacing: '0.5px', color: "var(--nura-accent-label)", marginTop: 3 }}>
                       {items.length} {items.length === 1 ? 'exercise' : 'exercises'}
                     </span>
                   </span>

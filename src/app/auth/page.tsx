@@ -241,7 +241,7 @@ function AuthContent() {
         {/* TOP BRAND */}
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: 32 }}>
           <div style={{
-            fontFamily: SANS, fontWeight: 600, fontSize: 32, color: SAGE,
+            fontFamily: SANS, fontWeight: 600, fontSize: 32, color: "var(--nura-accent-text)",
             letterSpacing: "0.16em", lineHeight: 1,
           }}>
             NŪRA
@@ -329,7 +329,7 @@ function AuthContent() {
             <div style={{
               padding: "10px 14px", borderRadius: 10, marginBottom: 12,
               background: `rgba(var(--nura-sage-rgb),0.08)`, border: `0.5px solid rgba(var(--nura-sage-rgb),0.35)`,
-              fontFamily: SANS, fontSize: 12.5, color: SAGE, lineHeight: 1.5,
+              fontFamily: SANS, fontSize: 12.5, color: "var(--nura-accent-text)", lineHeight: 1.5,
             }}>
               {message}
             </div>

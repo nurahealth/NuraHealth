@@ -127,11 +127,11 @@ export default function HealthPlanCard() {
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", padding: "0 4px" }}>
         <div>
           <div style={{ fontFamily: SERIF, fontSize: 23, letterSpacing: "-0.2px", color: TEXT }}>
-            Your health <span style={{ fontStyle: "italic", color: SAGE }}>plan</span>
+            Your health <span style={{ fontStyle: "italic", color: "var(--nura-accent-text)" }}>plan</span>
           </div>
           <div style={{ fontSize: 12, color: MUTED, marginTop: 4, lineHeight: 1.45 }}>{p.subtitle}</div>
         </div>
-        <div style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: "0.8px", textTransform: "uppercase", color: SAGE, border: "1px solid var(--nura-tint-accent-border)", padding: "5px 10px", borderRadius: 999, background: "var(--nura-tint-accent)", whiteSpace: "nowrap" }}>
+        <div style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: "0.8px", textTransform: "uppercase", color: "var(--nura-accent-label)", border: "1px solid var(--nura-tint-accent-border)", padding: "5px 10px", borderRadius: 999, background: "var(--nura-tint-accent)", whiteSpace: "nowrap" }}>
           Personalized
         </div>
       </div>
@@ -148,7 +148,7 @@ export default function HealthPlanCard() {
         </div>
         <div style={{ textAlign: "center", flex: "none" }}>
           <div style={{ fontSize: 9, letterSpacing: "0.8px", textTransform: "uppercase", color: FAINT, fontWeight: 600 }}>Target</div>
-          <div style={{ fontSize: 22, fontWeight: 700, letterSpacing: "-0.5px", color: SAGE }}>{p.target}</div>
+          <div style={{ fontSize: 22, fontWeight: 700, letterSpacing: "-0.5px", color: "var(--nura-accent-text)" }}>{p.target}</div>
         </div>
       </div>
       <div style={{ fontSize: 11, color: FAINT, textAlign: "center", marginTop: 7 }}>{p.targetCaption}</div>
@@ -157,7 +157,7 @@ export default function HealthPlanCard() {
       <div style={{ borderTop: "1px solid var(--nura-hairline)", marginTop: 14 }}>
         <div onClick={() => setDeepOpen((v) => !v)} style={{ display: "flex", gap: 12, alignItems: "flex-start", padding: "13px 2px", cursor: "pointer" }}>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "1.2px", textTransform: "uppercase", color: SAGE, marginBottom: 6 }}>{DEEP.label}</div>
+            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "1.2px", textTransform: "uppercase", color: "var(--nura-accent-label)", marginBottom: 6 }}>{DEEP.label}</div>
             <div style={{ fontFamily: SERIF, fontSize: 17, lineHeight: 1.25, color: TEXT, letterSpacing: "-0.1px" }}>{DEEP.headline}</div>
             {!deepOpen && <div style={{ fontSize: 12, color: MUTED, marginTop: 5, lineHeight: 1.45 }}>{DEEP.teaser}</div>}
           </div>
@@ -174,7 +174,7 @@ export default function HealthPlanCard() {
 
       {/* This week's focus */}
       <div style={{ margin: "16px 0 4px", padding: "0 2px" }}>
-        <div style={{ fontSize: 10, letterSpacing: "1.2px", textTransform: "uppercase", color: SAGE, fontWeight: 700, marginBottom: 9 }}>This week&apos;s focus</div>
+        <div style={{ fontSize: 10, letterSpacing: "1.2px", textTransform: "uppercase", color: "var(--nura-accent-label)", fontWeight: 700, marginBottom: 9 }}>This week&apos;s focus</div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
           {p.focus.map((f) => (
             <span key={f} style={{ fontSize: 12, fontWeight: 600, color: TEXT, padding: "7px 12px", borderRadius: 999, background: "var(--nura-tint-accent-strong)", border: "1px solid var(--nura-tint-accent-border)" }}>{f}</span>

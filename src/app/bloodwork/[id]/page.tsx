@@ -85,7 +85,7 @@ function HealthDonut({ score, size = 96 }: { score: HealthScore; size?: number }
         )}
       </svg>
       <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-        <div style={{ fontFamily: SERIF, fontSize: 24, fontWeight: 500, color: SAGE, lineHeight: 1 }}>{score.score}</div>
+        <div style={{ fontFamily: SERIF, fontSize: 24, fontWeight: 500, color: "var(--nura-accent-text)", lineHeight: 1 }}>{score.score}</div>
         <div style={{ fontFamily: SANS, fontSize: 9, color: TEXT_TER, letterSpacing: "1px", marginTop: 4 }}>%OPT</div>
       </div>
     </div>
@@ -762,7 +762,7 @@ export default function BloodworkDetailPage({ params }: { params: Promise<{ id: 
                 width: 22, height: 22, borderRadius: "50%", flexShrink: 0, marginTop: 1,
                 background: `rgba(var(--nura-sage-rgb),0.18)`, border: `0.5px solid rgba(var(--nura-sage-rgb),0.4)`,
                 display: "flex", alignItems: "center", justifyContent: "center",
-                fontFamily: SANS, fontSize: 11, fontWeight: 600, color: SAGE,
+                fontFamily: SANS, fontSize: 11, fontWeight: 600, color: "var(--nura-accent-text)",
               }}>{idx + 1}</div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontFamily: SANS, fontSize: 13.5, fontWeight: 500, color: TEXT, marginBottom: 4 }}>{action.title}</div>
@@ -790,7 +790,7 @@ export default function BloodworkDetailPage({ params }: { params: Promise<{ id: 
           {/* Save protocol */}
           <div style={{ marginTop: 16, paddingTop: 14, borderTop: `0.5px solid ${BORDER}` }}>
             {protocolSaved ? (
-              <div style={{ textAlign: "center", padding: "6px 0", fontSize: 11, color: SAGE, fontWeight: 500, letterSpacing: "0.5px" }}>
+              <div style={{ textAlign: "center", padding: "6px 0", fontSize: 11, color: "var(--nura-accent-label)", fontWeight: 500, letterSpacing: "0.5px" }}>
                 ✓ Saved as protocol
               </div>
             ) : showProtocolForm ? (

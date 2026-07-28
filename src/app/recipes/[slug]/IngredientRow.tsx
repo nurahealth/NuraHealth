@@ -72,7 +72,7 @@ export default function IngredientRow({
         {ing.primarySystem && (
           <span style={{
             flexShrink: 0, fontFamily: SANS, fontSize: 9.5, fontWeight: 600, letterSpacing: "0.04em",
-            color: SAGE, background: `rgba(${SAGE_RGB},0.12)`, border: `0.5px solid rgba(${SAGE_RGB},0.28)`,
+            color: "var(--nura-accent-text)", background: `rgba(${SAGE_RGB},0.12)`, border: `0.5px solid rgba(${SAGE_RGB},0.28)`,
             borderRadius: 6, padding: "3px 8px", whiteSpace: "nowrap",
           }}>
             {pretty(ing.primarySystem)}
@@ -93,7 +93,7 @@ export default function IngredientRow({
           <div style={{ padding: "0 14px 14px" }}>
             <div style={{ borderTop: `0.5px solid ${BORDER}`, paddingTop: 12 }}>
               {ing.primaryCompound && (
-                <div style={{ fontFamily: SANS, fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: SAGE, marginBottom: 6 }}>
+                <div style={{ fontFamily: SANS, fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--nura-accent-label)", marginBottom: 6 }}>
                   Key compound · {ing.primaryCompound}
                 </div>
               )}

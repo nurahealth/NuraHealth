@@ -81,7 +81,7 @@ export default function ChatsListPage() {
             <path d="M4 6h16M4 12h16M4 18h16"/>
           </svg>
         </button>
-        <span style={{ fontFamily: SANS, fontSize: 19, fontWeight: 600, color: SAGE, letterSpacing: "0.16em" }}>NŪRA</span>
+        <span style={{ fontFamily: SANS, fontSize: 19, fontWeight: 600, color: "var(--nura-accent-text)", letterSpacing: "0.16em" }}>NŪRA</span>
         <ThemeToggle size={40} />
       </header>
 

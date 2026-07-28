@@ -108,7 +108,7 @@ function SuccessContent() {
             <h1 style={{ fontSize: 24, fontWeight: 600, color: TEXT, margin: "0 0 8px", letterSpacing: "-0.3px" }}>
               Just a moment...
             </h1>
-            <div style={{ fontFamily: MONO, fontSize: 9, fontWeight: 700, letterSpacing: "2px", color: SAGE }}>
+            <div style={{ fontFamily: MONO, fontSize: 9, fontWeight: 700, letterSpacing: "2px", color: "var(--nura-accent-label)" }}>
               ACTIVATING YOUR ACCOUNT
             </div>
           </div>
@@ -156,7 +156,7 @@ function SuccessContent() {
             {isTrial && (
               <div style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 12px", borderRadius: 20, background: 'var(--nura-tint-accent-strong)', border: `1px solid rgba(var(--nura-sage-rgb),0.3)`, marginBottom: 14 }}>
                 <div style={{ width: 5, height: 5, borderRadius: "50%", background: SAGE }} />
-                <span style={{ fontFamily: MONO, fontSize: 8, fontWeight: 700, letterSpacing: "1.5px", color: SAGE }}>FREE TRIAL ACTIVE · 3 DAYS</span>
+                <span style={{ fontFamily: MONO, fontSize: 8, fontWeight: 700, letterSpacing: "1.5px", color: "var(--nura-accent-text)" }}>FREE TRIAL ACTIVE · 3 DAYS</span>
               </div>
             )}
 

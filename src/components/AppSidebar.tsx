@@ -278,7 +278,7 @@ export default function AppSidebar() {
                 {subBadge && (
                   <span style={{
                     fontSize: 8, fontWeight: 700, letterSpacing: "0.6px",
-                    color: SAGE, background: 'var(--nura-tint-accent-strong)', border: '0.5px solid var(--nura-tint-accent-border)',
+                    color: "var(--nura-accent-text)", background: 'var(--nura-tint-accent-strong)', border: '0.5px solid var(--nura-tint-accent-border)',
                     padding: "2px 6px", borderRadius: 4, whiteSpace: "nowrap", flexShrink: 0,
                   }}>{subBadge}</span>
                 )}
@@ -346,7 +346,7 @@ export default function AppSidebar() {
               fontFamily: SANS,
             }}
           >
-            <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: "1.2px", color: SAGE, textTransform: "uppercase" }}>
+            <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: "1.2px", color: "var(--nura-accent-label)", textTransform: "uppercase" }}>
               Recent chats
             </span>
             <span style={{

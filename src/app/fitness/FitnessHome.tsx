@@ -86,7 +86,7 @@ export default function FitnessHome({ profile, onEdit }: {
         borderRadius: 18, padding: 20, marginBottom: 30,
       }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-          <span style={{ fontSize: 10, fontFamily: MONO, letterSpacing: '2px', color: SAGE, textTransform: 'uppercase' }}>
+          <span style={{ fontSize: 10, fontFamily: MONO, letterSpacing: '2px', color: "var(--nura-accent-label)", textTransform: 'uppercase' }}>
             Fitness profile
           </span>
           <button

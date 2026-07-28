@@ -211,7 +211,7 @@ export default function ExerciseDetail({ exerciseId, sets, reps, rest_seconds, o
             <span key={`p-${m}`} style={{ fontSize: 11, borderRadius: 999, padding: '5px 12px', background: SAGE, color: BG, fontWeight: 700 }}>{titleCase(m)}</span>
           ))}
           {secondary.map((m) => (
-            <span key={`s-${m}`} style={{ fontSize: 11, borderRadius: 999, padding: '5px 12px', border: '1px solid rgba(var(--nura-sage-rgb),.4)', color: SAGE }}>{titleCase(m)}</span>
+            <span key={`s-${m}`} style={{ fontSize: 11, borderRadius: 999, padding: '5px 12px', border: '1px solid rgba(var(--nura-sage-rgb),.4)', color: "var(--nura-accent-text)" }}>{titleCase(m)}</span>
           ))}
         </div>
 
@@ -226,7 +226,7 @@ export default function ExerciseDetail({ exerciseId, sets, reps, rest_seconds, o
         {/* your sets — log weight × reps per set */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '0 0 6px' }}>
           {secHead('Your sets', { margin: 0 })}
-          <div style={{ fontSize: 11, color: SAGE }}>log weight × reps</div>
+          <div style={{ fontSize: 11, color: "var(--nura-accent-text)" }}>log weight × reps</div>
         </div>
         {Array.from({ length: setCount }, (_, i) => {
           const inp: React.CSSProperties = {
@@ -263,7 +263,7 @@ export default function ExerciseDetail({ exerciseId, sets, reps, rest_seconds, o
         })}
 
         {saveErr && <div style={{ fontSize: 12.5, color: 'var(--nura-danger-soft)', marginTop: 14 }}>{saveErr}</div>}
-        {saveMsg && <div style={{ fontSize: 12.5, color: SAGE, marginTop: 14 }}>{saveMsg}</div>}
+        {saveMsg && <div style={{ fontSize: 12.5, color: "var(--nura-accent-text)", marginTop: 14 }}>{saveMsg}</div>}
 
         {/* log sets — primary action for the set logging, centered & full-width
             within the padded column (matches the modal primary buttons), never
@@ -284,7 +284,7 @@ export default function ExerciseDetail({ exerciseId, sets, reps, rest_seconds, o
         ) : (
           instructions.map((step, i) => (
             <div key={i} style={{ display: 'flex', gap: 13, marginBottom: i === instructions.length - 1 ? 28 : 15 }}>
-              <div style={{ width: 25, height: 25, borderRadius: '50%', background: 'rgba(var(--nura-sage-rgb),.16)', color: SAGE, fontSize: 12, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{i + 1}</div>
+              <div style={{ width: 25, height: 25, borderRadius: '50%', background: 'rgba(var(--nura-sage-rgb),.16)', color: "var(--nura-accent-text)", fontSize: 12, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{i + 1}</div>
               <div style={{ fontSize: 14, lineHeight: 1.5, color: 'var(--nura-text-primary)' }}>{step}</div>
             </div>
           ))

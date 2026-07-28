@@ -700,7 +700,7 @@ function SupplementsPageInner() {
             padding: "6px 12px", borderRadius: 9999,
             background: `rgba(var(--nura-sage-rgb),0.12)`,
             border: `0.5px solid rgba(var(--nura-sage-rgb),0.32)`,
-            fontFamily: SANS, fontSize: 13, color: SAGE,
+            fontFamily: SANS, fontSize: 13, color: "var(--nura-accent-text)",
             animation: "nura-fade-in 220ms ease both",
           }}>
             <CheckGlyph size={13} />
@@ -989,7 +989,7 @@ function TimeToTakeSection({
       <style>{`@keyframes nura-check-draw { to { stroke-dashoffset: 0; } }`}</style>
       <div style={{
         fontFamily: SANS, fontSize: 10, fontWeight: 600, letterSpacing: "1.5px",
-        color: SAGE, textTransform: "uppercase", marginBottom: 14,
+        color: "var(--nura-accent-label)", textTransform: "uppercase", marginBottom: 14,
         display: "flex", alignItems: "center", gap: 8,
       }}>
         <Check size={13} strokeWidth={2.2} aria-hidden />
@@ -1075,7 +1075,7 @@ function StackList({
     <section>
       <div style={{
         fontFamily: SANS, fontSize: 10, fontWeight: 600, letterSpacing: "1.5px",
-        color: SAGE, textTransform: "uppercase", marginBottom: 6,
+        color: "var(--nura-accent-label)", textTransform: "uppercase", marginBottom: 6,
       }}>
         All supplements
       </div>
@@ -1206,7 +1206,7 @@ function StackCard({
               {saved && (
                 <span style={{
                   display: "inline-flex", alignItems: "center", gap: 4,
-                  fontFamily: SANS, fontSize: 11, color: SAGE,
+                  fontFamily: SANS, fontSize: 11, color: "var(--nura-accent-text)",
                   animation: "nura-fade-in 200ms ease both",
                 }}>
                   <CheckGlyph size={10} />
@@ -1481,7 +1481,7 @@ function MealSection({
     <section style={{ marginBottom: 24 }}>
       <div style={{
         fontFamily: SANS, fontSize: 10, fontWeight: 600, letterSpacing: "1.5px",
-        color: SAGE, textTransform: "uppercase", marginBottom: 12,
+        color: "var(--nura-accent-label)", textTransform: "uppercase", marginBottom: 12,
       }}>
         {MEAL_LABEL[meal]}
       </div>
@@ -1563,7 +1563,7 @@ function ScheduleCard({
           <div style={{
             display: "inline-flex", alignItems: "center", gap: 5,
             marginTop: supplement.dose ? 4 : 0,
-            fontFamily: SANS, fontSize: 13, color: SAGE,
+            fontFamily: SANS, fontSize: 13, color: "var(--nura-accent-text)",
           }}>
             <Clock size={12} strokeWidth={1.8} aria-hidden />
             {timeLabel}
@@ -1594,7 +1594,7 @@ function ReminderSection({
     <section style={{ marginBottom: 24 }}>
       <div style={{
         fontFamily: SANS, fontSize: 10, fontWeight: 600, letterSpacing: "1.5px",
-        color: SAGE, textTransform: "uppercase", marginBottom: 12,
+        color: "var(--nura-accent-label)", textTransform: "uppercase", marginBottom: 12,
       }}>
         Reminders
       </div>
@@ -1948,7 +1948,7 @@ function WeeklyComplianceCard({ stats }: { stats: Stats | null }) {
           This week
         </span>
         <span style={{ fontFamily: SANS, fontSize: 12, color: TEXT_SEC }}>
-          <span style={{ color: SAGE_TEXT, fontWeight: 600 }}>{compliance_pct}%</span>{" "}
+          <span style={{ color: "var(--nura-accent-text)", fontWeight: 600 }}>{compliance_pct}%</span>{" "}
           compliance
         </span>
       </div>
@@ -2293,7 +2293,7 @@ function SupplementModal({
           <>
             <div style={{
               fontFamily: SANS, fontSize: 10, fontWeight: 600, letterSpacing: "1.5px",
-              color: SAGE, textTransform: "uppercase", marginBottom: 12,
+              color: "var(--nura-accent-label)", textTransform: "uppercase", marginBottom: 12,
             }}>
               When do you take this?
             </div>
@@ -2324,7 +2324,7 @@ function SupplementModal({
 
             <div style={{
               fontFamily: SANS, fontSize: 10, fontWeight: 600, letterSpacing: "1.5px",
-              color: SAGE, textTransform: "uppercase", marginBottom: 10,
+              color: "var(--nura-accent-label)", textTransform: "uppercase", marginBottom: 10,
             }}>
               With which meals?
             </div>
@@ -2848,7 +2848,7 @@ function ConfirmScanScreen({
               padding: "2px 8px", borderRadius: 9999,
               background: "rgba(0,0,0,0.65)",
               border: `0.5px solid rgba(var(--nura-sage-rgb), 0.5)`,
-              fontFamily: SANS, fontSize: 10, fontWeight: 600, color: SAGE_TEXT,
+              fontFamily: SANS, fontSize: 10, fontWeight: 600, color: "var(--nura-accent-text)",
               whiteSpace: "nowrap",
             }}>
               <Sparkles size={11} strokeWidth={2} aria-hidden />
@@ -2984,7 +2984,7 @@ function ScannedField({
             border: `0.5px solid rgba(var(--nura-sage-rgb), 0.32)`,
             fontFamily: SANS, fontSize: 9, fontWeight: 600,
             letterSpacing: "0.06em",
-            color: SAGE_TEXT, textTransform: "uppercase",
+            color: "var(--nura-accent-label)", textTransform: "uppercase",
           }}>
             <Sparkles size={10} strokeWidth={2} aria-hidden />
             From label
@@ -3727,7 +3727,7 @@ function LiveBarcodeScreen({
         {statusMessage && (
           <div style={{
             textAlign: "center",
-            fontFamily: SANS, fontSize: 12, color: SAGE_TEXT,
+            fontFamily: SANS, fontSize: 12, color: "var(--nura-accent-text)",
             marginBottom: 10,
             animation: "nura-fade-in 200ms ease both",
           }}>

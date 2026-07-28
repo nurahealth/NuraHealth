@@ -258,7 +258,7 @@ function ExerciseRow({
               {name}
             </span>
             <span style={{ display: 'flex', flexWrap: 'wrap', gap: '2px 8px', marginTop: 4 }}>
-              <span style={{ fontSize: 11.5, fontFamily: MONO, letterSpacing: '0.3px', color: SAGE }}>
+              <span style={{ fontSize: 11.5, fontFamily: MONO, letterSpacing: '0.3px', color: "var(--nura-accent-label)" }}>
                 {prescription(we)}
               </span>
               {muscleLabel(we.exercise) && (
@@ -360,7 +360,7 @@ function DayCard({
           </div>
         </div>
         <span style={{
-          fontSize: 11, fontFamily: MONO, letterSpacing: '0.5px', color: SAGE,
+          fontSize: 11, fontFamily: MONO, letterSpacing: '0.5px', color: "var(--nura-accent-label)",
           padding: '5px 11px', borderRadius: 999,
           background: 'rgba(var(--nura-sage-rgb),0.12)', border: '1px solid rgba(var(--nura-sage-rgb),0.28)',
         }}>
@@ -409,7 +409,7 @@ function RecommendCard({ onGenerate, generating, error }: {
       }}>
         <SparkIcon size={24} />
       </span>
-      <div style={{ fontSize: 10.5, fontFamily: MONO, letterSpacing: '2px', color: SAGE, textTransform: 'uppercase', marginBottom: 10 }}>
+      <div style={{ fontSize: 10.5, fontFamily: MONO, letterSpacing: '2px', color: "var(--nura-accent-label)", textTransform: 'uppercase', marginBottom: 10 }}>
         NŪRA recommends
       </div>
       <h3 style={{ fontSize: 20, fontWeight: 600, color: 'var(--nura-text-primary)', margin: '0 0 8px', letterSpacing: '-0.4px' }}>

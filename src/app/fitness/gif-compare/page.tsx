@@ -74,7 +74,7 @@ export default function GifComparePage() {
         <h1 style={{ fontSize: 22, fontWeight: 700, margin: '0 0 6px' }}>GIF compare</h1>
         <p style={{ fontSize: 13.5, color: MUT, lineHeight: 1.6, margin: '0 0 4px' }}>
           Served GIF (Supabase Storage if migrated, else WorkoutX proxy) vs a local
-          sample from <code style={{ color: SAGE }}>public/gif-samples/&lt;id&gt;.gif</code>.
+          sample from <code style={{ color: "var(--nura-accent-text)" }}>public/gif-samples/&lt;id&gt;.gif</code>.
         </p>
         <p style={{ fontSize: 12, color: MUT, margin: '0 0 20px' }}>
           {loading ? 'Loading…' : `${rows.length} exercises · ${onStorage} on Storage · ${rows.length - onStorage} on WorkoutX`}
@@ -91,7 +91,7 @@ export default function GifComparePage() {
             <div key={r.id} style={{ background: SURF, border: `1px solid ${LINE}`, borderRadius: 16, padding: 14 }}>
               <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 10, marginBottom: 10 }}>
                 <span style={{ fontSize: 14, fontWeight: 600 }}>{r.name}</span>
-                <span style={{ fontSize: 11, fontFamily: "'JetBrains Mono',monospace", color: SAGE }}>{r.id} · {sourceLabel(r.gif_url)}</span>
+                <span style={{ fontSize: 11, fontFamily: "'JetBrains Mono',monospace", color: "var(--nura-accent-text)" }}>{r.id} · {sourceLabel(r.gif_url)}</span>
               </div>
               <div style={{ display: 'flex', gap: 12 }}>
                 <Frame src={servedSrc(r.gif_url)} label="Served (app)" alt={`${r.name} served`} />

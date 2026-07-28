@@ -87,7 +87,7 @@ export default function BodyScan({
     ring.rotation.x = Math.PI / 2; scene.add(ring);
     const ringGlow = new THREE.Mesh(
       new THREE.TorusGeometry(RING, 0.11, 8, 160),
-      new THREE.MeshBasicMaterial({ color: SAGE, transparent: true, opacity: 0.18, blending: THREE.AdditiveBlending, depthWrite: false })
+      new THREE.MeshBasicMaterial({ color: "var(--nura-accent-text)", transparent: true, opacity: 0.18, blending: THREE.AdditiveBlending, depthWrite: false })
     );
     ringGlow.rotation.x = Math.PI / 2; scene.add(ringGlow);
 
@@ -100,7 +100,7 @@ export default function BodyScan({
     const ambGeo = new THREE.BufferGeometry();
     ambGeo.setAttribute("position", new THREE.BufferAttribute(amb, 3));
     const ambient = new THREE.Points(ambGeo, new THREE.PointsMaterial({
-      color: SAGE, size: 0.04, map: sprite, transparent: true, opacity: 0.25, blending: THREE.AdditiveBlending, depthWrite: false,
+      color: "var(--nura-accent-text)", size: 0.04, map: sprite, transparent: true, opacity: 0.25, blending: THREE.AdditiveBlending, depthWrite: false,
     }));
     scene.add(ambient);
 

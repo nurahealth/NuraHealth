@@ -353,7 +353,7 @@ function BloodworkPageInner() {
                 <path d="M5 13l4 4L19 7"/>
               </svg>
             </div>
-            <div style={{ fontFamily: SANS, fontSize: 15, fontWeight: 500, color: SAGE }}>
+            <div style={{ fontFamily: SANS, fontSize: 15, fontWeight: 500, color: "var(--nura-accent-text)" }}>
               Analysis complete
             </div>
             <div style={{ fontFamily: SANS, fontSize: 11, color: TEXT_TER, letterSpacing: "1px", textTransform: "uppercase" }}>
@@ -373,7 +373,7 @@ function BloodworkPageInner() {
             </div>
             <div style={{
               fontFamily: SANS, fontSize: 10, fontWeight: 600, letterSpacing: "1.5px",
-              color: SAGE, textTransform: "uppercase",
+              color: "var(--nura-accent-label)", textTransform: "uppercase",
             }}>
               PDF · LABCORP · QUEST · OTHERS
             </div>
@@ -413,7 +413,7 @@ function BloodworkPageInner() {
         }}>
           <div style={{
             fontFamily: SANS, fontSize: 10, fontWeight: 600, letterSpacing: "1.5px",
-            color: SAGE, textTransform: "uppercase", marginBottom: 8,
+            color: "var(--nura-accent-label)", textTransform: "uppercase", marginBottom: 8,
           }}>
             Latest read
           </div>

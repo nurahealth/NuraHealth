@@ -96,7 +96,7 @@ export default function UpgradePage() {
           {/* Trial badge */}
           <div style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "5px 14px", borderRadius: 20, background: 'var(--nura-tint-accent-strong)', border: `1px solid rgba(var(--nura-sage-rgb),0.3)`, marginBottom: 16 }}>
             <div style={{ width: 6, height: 6, borderRadius: "50%", background: SAGE }} />
-            <span style={{ fontFamily: MONO, fontSize: 9, fontWeight: 700, letterSpacing: "1.5px", color: SAGE }}>3-DAY FREE TRIAL</span>
+            <span style={{ fontFamily: MONO, fontSize: 9, fontWeight: 700, letterSpacing: "1.5px", color: "var(--nura-accent-label)" }}>3-DAY FREE TRIAL</span>
           </div>
 
           <h1 style={{ fontSize: 30, fontWeight: 600, color: TEXT, margin: "0 0 10px", letterSpacing: "-0.5px", lineHeight: 1.2 }}>
@@ -119,7 +119,7 @@ export default function UpgradePage() {
                 width: 22, height: 22, borderRadius: "50%", flexShrink: 0,
                 background: 'var(--nura-tint-accent-strong)', border: `1px solid rgba(var(--nura-sage-rgb),0.25)`,
                 display: "flex", alignItems: "center", justifyContent: "center",
-                fontSize: 9, color: SAGE,
+                fontSize: 9, color: "var(--nura-accent-text)",
               }}>
                 {f.icon}
               </div>
@@ -134,7 +134,7 @@ export default function UpgradePage() {
           background: `rgba(var(--nura-sage-rgb),0.07)`, border: `1px solid rgba(var(--nura-sage-rgb),0.2)`,
         }}>
           <div style={{ fontSize: 12, color: TEXT_SEC, lineHeight: 1.6 }}>
-            <span style={{ color: SAGE, fontWeight: 600 }}>Free for 3 days.</span>
+            <span style={{ color: "var(--nura-accent-text)", fontWeight: 600 }}>Free for 3 days.</span>
             {" "}Your card is saved now but won&apos;t be charged until day 4. Cancel any time before then — no cost.
           </div>
         </div>

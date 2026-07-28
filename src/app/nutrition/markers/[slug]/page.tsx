@@ -284,12 +284,12 @@ export default async function MarkerDetailPage({
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
                       <span style={{ fontFamily: SANS, fontSize: 15, fontWeight: 600, color: TEXT, letterSpacing: "-0.01em" }}>{f.label}</span>
                       {f.freq && (
-                        <span style={{ flexShrink: 0, fontFamily: SANS, fontSize: 10.5, fontWeight: 600, color: SAGE, background: `rgba(${SAGE_RGB},0.12)`, border: `0.5px solid rgba(${SAGE_RGB},0.28)`, borderRadius: 999, padding: "3px 10px" }}>{f.freq}</span>
+                        <span style={{ flexShrink: 0, fontFamily: SANS, fontSize: 10.5, fontWeight: 600, color: "var(--nura-accent-text)", background: `rgba(${SAGE_RGB},0.12)`, border: `0.5px solid rgba(${SAGE_RGB},0.28)`, borderRadius: 999, padding: "3px 10px" }}>{f.freq}</span>
                       )}
                     </div>
                     {f.why && <p style={{ fontFamily: SANS, fontSize: 13, color: TEXT_SEC, lineHeight: 1.55, margin: "7px 0 0" }}>{f.why}</p>}
                     {f.slug && (
-                      <div style={{ display: "inline-flex", alignItems: "center", gap: 4, fontFamily: SANS, fontSize: 12, fontWeight: 600, color: SAGE, marginTop: 9 }}>
+                      <div style={{ display: "inline-flex", alignItems: "center", gap: 4, fontFamily: SANS, fontSize: 12, fontWeight: 600, color: "var(--nura-accent-text)", marginTop: 9 }}>
                         Full food profile <ChevronRight size={13} />
                       </div>
                     )}

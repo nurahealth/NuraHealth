@@ -275,7 +275,7 @@ export default async function LabProductPage({ params }: { params: Promise<{ slu
               <div style={{ display: "flex", gap: 16, justifyContent: "space-between", alignItems: "flex-start" }}>
                 <div style={{ minWidth: 0 }}>
                   {category && (
-                    <span style={{ display: "inline-block", fontFamily: SANS, fontSize: 9, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", color: SAGE, background: `rgba(${SAGE_RGB},0.14)`, border: `0.5px solid rgba(${SAGE_RGB},0.3)`, borderRadius: 8, padding: "3px 8px", marginBottom: 10 }}>
+                    <span style={{ display: "inline-block", fontFamily: SANS, fontSize: 9, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--nura-accent-label)", background: `rgba(${SAGE_RGB},0.14)`, border: `0.5px solid rgba(${SAGE_RGB},0.3)`, borderRadius: 8, padding: "3px 8px", marginBottom: 10 }}>
                       {category.name}
                     </span>
                   )}

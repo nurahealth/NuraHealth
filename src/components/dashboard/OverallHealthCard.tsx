@@ -109,7 +109,7 @@ export default function OverallHealthCard() {
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", padding: "0 4px", position: "relative" }}>
         <div>
           <div style={{ fontFamily: SERIF, fontSize: 22, letterSpacing: "-0.2px", color: TEXT }}>
-            Overall <span style={{ fontStyle: "italic", color: SAGE }}>health</span>
+            Overall <span style={{ fontStyle: "italic", color: "var(--nura-accent-text)" }}>health</span>
           </div>
           <div style={{ fontSize: 12, color: FAINT, marginTop: 3 }}>
             A complete read on how your body&apos;s doing · <span style={{ color: "var(--nura-teal)" }}>▲ {d.weeklyTrend}</span> this week
@@ -130,7 +130,7 @@ export default function OverallHealthCard() {
         <b style={{ color: TEXT, fontWeight: 600 }}>Your Health Score</b> is a weighted blend of six pillars — your single best read on how your whole body is doing right now.
       </div>
       {!selected && (
-        <div style={{ fontSize: 11, color: SAGE, fontWeight: 600, textAlign: "center", marginTop: 12, letterSpacing: "0.2px" }}>
+        <div style={{ fontSize: 11, color: "var(--nura-accent-label)", fontWeight: 600, textAlign: "center", marginTop: 12, letterSpacing: "0.2px" }}>
           Tap a pillar to see what it means ↓
         </div>
       )}

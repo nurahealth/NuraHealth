@@ -174,11 +174,11 @@ export default async function RecipeDetailPage({
         {/* Title block */}
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10, flexWrap: "wrap" }}>
-            <span style={{ fontFamily: SANS, fontSize: 9, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", color: SAGE, background: `rgba(${SAGE_RGB},0.14)`, border: `0.5px solid rgba(${SAGE_RGB},0.3)`, borderRadius: 8, padding: "3px 8px" }}>
+            <span style={{ fontFamily: SANS, fontSize: 9, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--nura-accent-label)", background: `rgba(${SAGE_RGB},0.14)`, border: `0.5px solid rgba(${SAGE_RGB},0.3)`, borderRadius: 8, padding: "3px 8px" }}>
               {categoryLabel(recipe.category)}{recipe.cuisine ? ` · ${recipe.cuisine}` : ""}
             </span>
             {recipe.is_organic && (
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontFamily: SANS, fontSize: 9, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: SAGE, border: `0.5px solid rgba(${SAGE_RGB},0.3)`, borderRadius: 8, padding: "3px 8px" }}>
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontFamily: SANS, fontSize: 9, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--nura-accent-label)", border: `0.5px solid rgba(${SAGE_RGB},0.3)`, borderRadius: 8, padding: "3px 8px" }}>
                 <Leaf size={10} /> Organic
               </span>
             )}
@@ -211,7 +211,7 @@ export default async function RecipeDetailPage({
         {/* What this bowl works on (system tags) */}
         {systemTags.length > 0 && (
           <section style={{ ...card, padding: "16px 18px" }}>
-            <div style={{ fontFamily: SANS, fontSize: 10, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", color: SAGE, marginBottom: 10 }}>
+            <div style={{ fontFamily: SANS, fontSize: 10, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--nura-accent-label)", marginBottom: 10 }}>
               What this bowl works on
             </div>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -256,7 +256,7 @@ export default async function RecipeDetailPage({
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {steps.map((s, i) => (
                 <div key={i} style={{ ...card, padding: "14px 16px", display: "flex", gap: 13 }}>
-                  <span style={{ flexShrink: 0, width: 26, height: 26, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", background: `rgba(${SAGE_RGB},0.14)`, border: `0.5px solid rgba(${SAGE_RGB},0.3)`, fontFamily: SANS, fontSize: 12.5, fontWeight: 600, color: SAGE }}>
+                  <span style={{ flexShrink: 0, width: 26, height: 26, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", background: `rgba(${SAGE_RGB},0.14)`, border: `0.5px solid rgba(${SAGE_RGB},0.3)`, fontFamily: SANS, fontSize: 12.5, fontWeight: 600, color: "var(--nura-accent-text)" }}>
                     {s.n ?? i + 1}
                   </span>
                   <p style={{ fontFamily: SANS, fontSize: 14, color: TEXT_SEC, lineHeight: 1.6, margin: "2px 0 0" }}>{s.text}</p>

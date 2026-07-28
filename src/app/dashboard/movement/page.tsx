@@ -172,7 +172,7 @@ export default function MovementDetailPage() {
         {/* NŪRA insight */}
         <GlassCard className="m-reveal" style={{ animationDelay: ".45s", marginTop: 16, borderRadius: 20, padding: 17, position: "relative", overflow: "hidden" }}>
           <div aria-hidden style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 3, background: "linear-gradient(180deg,var(--nura-sage),var(--nura-amber))", boxShadow: "0 0 16px rgba(var(--nura-sage-rgb),0.5)" }} />
-          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "2.5px", color: SAGE, textTransform: "uppercase" }}>NŪRA</div>
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "2.5px", color: "var(--nura-accent-label)", textTransform: "uppercase" }}>NŪRA</div>
           <p style={{ fontSize: 13.5, lineHeight: 1.6, marginTop: 9 }}>{d.insight}</p>
         </GlassCard>
       </div>

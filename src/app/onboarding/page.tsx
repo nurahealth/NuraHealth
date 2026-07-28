@@ -398,7 +398,7 @@ function Step4Goals({ goals, onToggle, animKey }: {
             fontSize: 11, fontFamily: MONO, letterSpacing: '0.5px',
             padding: '4px 10px', borderRadius: 20,
             background: `rgba(var(--nura-sage-rgb),0.18)`,
-            color: SAGE,
+            color: "var(--nura-accent-label)",
             border: `1px solid rgba(var(--nura-sage-rgb),0.35)`,
             transition: 'all 250ms ease', whiteSpace: 'nowrap', flexShrink: 0,
           }}>
@@ -540,7 +540,7 @@ function Step7Done({ state, animKey }: { state: FormState; animKey: number }) {
           width: '100%', background: 'var(--nura-surface)', border: `1px solid ${BORDER}`,
           borderRadius: 16, padding: '20px', marginBottom: 24, textAlign: 'left',
         }}>
-          <div style={{ fontSize: 10, fontFamily: MONO, letterSpacing: '2px', color: SAGE, textTransform: 'uppercase', marginBottom: 12 }}>
+          <div style={{ fontSize: 10, fontFamily: MONO, letterSpacing: '2px', color: "var(--nura-accent-label)", textTransform: 'uppercase', marginBottom: 12 }}>
             NŪRA FOCUS ON
           </div>
           <p style={{ fontSize: 13.5, color: TEXT_SEC, fontFamily: SANS, lineHeight: 1.7, margin: '0 0 14px' }}>
@@ -550,7 +550,7 @@ function Step7Done({ state, animKey }: { state: FormState; animKey: number }) {
                 <span style={{
                   display: 'inline-block', padding: '2px 10px', borderRadius: 20,
                   background: `rgba(var(--nura-sage-rgb),0.15)`, border: `1px solid rgba(var(--nura-sage-rgb),0.3)`,
-                  color: SAGE, fontSize: 12, fontWeight: 500, margin: '0 2px',
+                  color: "var(--nura-accent-text)", fontSize: 12, fontWeight: 500, margin: '0 2px',
                 }}>{g}</span>
                 {i < displayGoals.length - 1 ? ', ' : ''}
               </span>
@@ -831,7 +831,7 @@ function OnboardingContent() {
               padding: '10px 14px', marginBottom: 14, borderRadius: 10,
               background: `rgba(var(--nura-sage-rgb),0.10)`,
               border: `0.5px solid rgba(var(--nura-sage-rgb),0.35)`,
-              fontFamily: SANS, fontSize: 12, color: SAGE, lineHeight: 1.5,
+              fontFamily: SANS, fontSize: 12, color: "var(--nura-accent-text)", lineHeight: 1.5,
             }}>
               Editing your profile — changes save when you complete the flow
             </div>

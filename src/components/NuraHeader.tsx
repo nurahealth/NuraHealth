@@ -80,7 +80,7 @@ export default function NuraHeader({ rightAction, title }: Props) {
         fontFamily: SANS,
         fontSize: 18,
         fontWeight: 600,
-        color: SAGE,
+        color: "var(--nura-accent-text)",
         letterSpacing: title ? "-0.02em" : "0.16em",
       }}>
         {title ?? "NŪRA"}

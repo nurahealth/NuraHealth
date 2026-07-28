@@ -151,7 +151,7 @@ export default function NutritionHome({
       <style>{CARD_LIST_CSS}</style>
       {/* Header */}
       <div>
-        <div style={{ fontFamily: SANS, fontSize: 11, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", color: SAGE, marginBottom: 8 }}>{dateLabel}</div>
+        <div style={{ fontFamily: SANS, fontSize: 11, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--nura-accent-label)", marginBottom: 8 }}>{dateLabel}</div>
         <h1 style={{ fontFamily: SANS, fontSize: "clamp(28px, 5vw, 36px)", fontWeight: 600, color: TEXT, margin: "0 0 6px", letterSpacing: "-0.025em", lineHeight: 1.1 }}>Nutrition</h1>
         <p style={{ fontFamily: SANS, fontSize: 15, color: TEXT_SEC, margin: 0, lineHeight: 1.5 }}>Your plan, built around your latest bloodwork.</p>
       </div>
@@ -173,7 +173,7 @@ export default function NutritionHome({
             <ScoreRing score={summary.onPlanPct} size={66} />
           </div>
           <div style={{ minWidth: 0 }}>
-            <div style={{ fontFamily: SANS, fontSize: 10, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", color: SAGE, marginBottom: 6 }}>This week&rsquo;s focus</div>
+            <div style={{ fontFamily: SANS, fontSize: 10, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--nura-accent-label)", marginBottom: 6 }}>This week&rsquo;s focus</div>
             <p style={{ fontFamily: SANS, fontSize: 14, color: TEXT_SEC, lineHeight: 1.55, margin: 0 }}>{summary.narrative}</p>
           </div>
         </div>

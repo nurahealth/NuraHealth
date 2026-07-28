@@ -54,7 +54,7 @@ export function FoodCard({ f }: { f: Food }) {
             {f.supports_systems.slice(0, 2).map((s) => (
               <span key={s} style={{
                 fontFamily: SANS, fontSize: 9.5, fontWeight: 600, letterSpacing: "0.04em",
-                color: SAGE, background: `rgba(${SAGE_RGB},0.12)`, border: `0.5px solid rgba(${SAGE_RGB},0.28)`,
+                color: "var(--nura-accent-text)", background: `rgba(${SAGE_RGB},0.12)`, border: `0.5px solid rgba(${SAGE_RGB},0.28)`,
                 borderRadius: 6, padding: "2px 7px",
               }}>
                 {pretty(s)}
@@ -96,7 +96,7 @@ export default function FoodsBrowseClient({ foods }: { foods: Food[] }) {
 
       {/* Header */}
       <div style={{ marginBottom: 18 }}>
-        <span style={{ fontFamily: SANS, fontSize: 10, fontWeight: 600, letterSpacing: "0.14em", textTransform: "uppercase", color: SAGE }}>
+        <span style={{ fontFamily: SANS, fontSize: 10, fontWeight: 600, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--nura-accent-label)" }}>
           The knowledge base
         </span>
         <h1 style={{ fontFamily: SANS, fontSize: "clamp(30px, 5vw, 40px)", fontWeight: 600, color: TEXT, margin: "6px 0 8px", letterSpacing: "-0.02em", lineHeight: 1.1 }}>

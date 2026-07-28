@@ -269,7 +269,7 @@ function headingStyle(): React.CSSProperties {
     fontFamily: SANS,
     fontSize: 22,
     fontWeight: 500,
-    color: SAGE,
+    color: "var(--nura-accent-text)",
     margin: "28px 0 12px",
     letterSpacing: "1px",
     textTransform: "uppercase",
@@ -295,7 +295,7 @@ function renderInline(text: string): React.ReactNode {
   while ((match = regex.exec(text)) !== null) {
     if (match.index > lastIndex) parts.push(text.slice(lastIndex, match.index));
     parts.push(
-      <strong key={key++} style={{ color: SAGE, fontWeight: 500 }}>
+      <strong key={key++} style={{ color: "var(--nura-accent-text)", fontWeight: 500 }}>
         {match[1]}
       </strong>
     );

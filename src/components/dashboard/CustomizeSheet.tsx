@@ -142,7 +142,7 @@ export default function CustomizeSheet({
         </div>
 
         {/* Count */}
-        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "1.2px", textTransform: "uppercase", color: SAGE, margin: "16px 2px 6px" }}>
+        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "1.2px", textTransform: "uppercase", color: "var(--nura-accent-label)", margin: "16px 2px 6px" }}>
           {shown} of {total} shown
         </div>
 

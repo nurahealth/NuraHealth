@@ -103,7 +103,7 @@ export function RecipeCard({ r, from, fromLabel }: { r: Recipe; from?: string; f
           <span style={{
             position: "absolute", top: 8, left: 8, display: "inline-flex", alignItems: "center", gap: 4,
             fontFamily: SANS, fontSize: 9, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase",
-            color: SAGE, background: "rgba(var(--nura-bg-rgb),0.55)", backdropFilter: "blur(4px)",
+            color: "var(--nura-accent-label)", background: "rgba(var(--nura-bg-rgb),0.55)", backdropFilter: "blur(4px)",
             border: `0.5px solid rgba(${SAGE_RGB},0.4)`, borderRadius: 7, padding: "3px 7px",
           }}>
             <Leaf size={10} /> Organic
@@ -142,7 +142,7 @@ export function RecipeCard({ r, from, fromLabel }: { r: Recipe; from?: string; f
           {primaryGoal && (
             <span style={{
               fontFamily: SANS, fontSize: 9.5, fontWeight: 600, letterSpacing: "0.04em",
-              color: SAGE, background: `rgba(${SAGE_RGB},0.12)`, border: `0.5px solid rgba(${SAGE_RGB},0.28)`,
+              color: "var(--nura-accent-text)", background: `rgba(${SAGE_RGB},0.12)`, border: `0.5px solid rgba(${SAGE_RGB},0.28)`,
               borderRadius: 6, padding: "2px 7px",
             }}>
               {prettyTag(primaryGoal)}
@@ -246,7 +246,7 @@ export default function RecipesBrowseClient({
 
       {/* Header */}
       <div style={{ marginBottom: 18 }}>
-        <span style={{ fontFamily: SANS, fontSize: 10, fontWeight: 600, letterSpacing: "0.14em", textTransform: "uppercase", color: SAGE }}>
+        <span style={{ fontFamily: SANS, fontSize: 10, fontWeight: 600, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--nura-accent-label)" }}>
           Real food · real science
         </span>
         <h1 style={{ fontFamily: SANS, fontSize: "clamp(30px, 5vw, 40px)", fontWeight: 600, color: TEXT, margin: "6px 0 8px", letterSpacing: "-0.02em", lineHeight: 1.1 }}>
@@ -294,7 +294,7 @@ export default function RecipesBrowseClient({
           )}
           <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, transparent 30%, rgba(var(--nura-bg-rgb),0.82) 100%)" }} />
           <div style={{ position: "relative", height: "100%", display: "flex", flexDirection: "column", justifyContent: "flex-end", padding: 18, gap: 6 }}>
-            <span style={{ fontFamily: SANS, fontSize: 9.5, fontWeight: 600, letterSpacing: "0.14em", textTransform: "uppercase", color: SAGE }}>
+            <span style={{ fontFamily: SANS, fontSize: 9.5, fontWeight: 600, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--nura-accent-label)" }}>
               Recipe of the day
             </span>
             <h2 style={{ fontFamily: SANS, fontSize: "clamp(22px, 4vw, 28px)", fontWeight: 600, color: "var(--nura-text-primary)", margin: 0, letterSpacing: "-0.02em", lineHeight: 1.15 }}>
@@ -314,7 +314,7 @@ export default function RecipesBrowseClient({
                   <Clock size={13} /> {featured.total_minutes} min
                 </span>
               )}
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontFamily: SANS, fontSize: 12, fontWeight: 600, color: SAGE }}>
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontFamily: SANS, fontSize: 12, fontWeight: 600, color: "var(--nura-accent-text)" }}>
                 View recipe <ArrowRight size={13} />
               </span>
             </div>

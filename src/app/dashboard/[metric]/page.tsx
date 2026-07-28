@@ -65,7 +65,7 @@ export default function MetricDetailPage({ params }: { params: Promise<{ metric:
         </div>
       ) : (
         <div style={{ background: CARD, border: `0.5px solid ${BORDER}`, borderRadius: 22, padding: 26 }}>
-          <div style={{ ...EYEBROW, color: SAGE, marginBottom: 8 }}>Unknown metric</div>
+          <div style={{ ...EYEBROW, color: "var(--nura-accent-label)", marginBottom: 8 }}>Unknown metric</div>
           <p style={{ fontFamily: SANS, fontSize: 14, color: TEXT, margin: 0 }}>
             No metric found for “{metric}”.
           </p>

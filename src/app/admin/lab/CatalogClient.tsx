@@ -529,7 +529,7 @@ function DocumentsManager({ token, productId }: { token: string; productId: stri
             {adding ? (
               <>
                 <Loader2 size={20} color={SAGE} style={{ animation: "spin 0.8s linear infinite" }} />
-                <span style={{ fontFamily: SANS, fontSize: 12.5, fontWeight: 600, color: SAGE }}>Uploading…</span>
+                <span style={{ fontFamily: SANS, fontSize: 12.5, fontWeight: 600, color: "var(--nura-accent-text)" }}>Uploading…</span>
               </>
             ) : pendingFile ? (
               <>
@@ -785,7 +785,7 @@ function MeasurementsManager({ token, productId }: { token: string; productId: s
         ) : (
           grouped.map((g) => (
             <div key={g.kind} style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              <span style={{ fontFamily: SANS, fontSize: 9.5, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", color: SAGE }}>{g.label}</span>
+              <span style={{ fontFamily: SANS, fontSize: 9.5, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--nura-accent-label)" }}>{g.label}</span>
               {g.items.map((m) => (
                 editId === m.id ? (
                   <div key={m.id} style={{ display: "flex", flexDirection: "column", gap: 8, padding: 12, background: SURFACE, border: `0.5px solid rgba(${SAGE_RGB},0.4)`, borderRadius: 10 }}>
@@ -1551,7 +1551,7 @@ export default function CatalogClient({ initialProducts, categories }: {
         </button>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <span style={{ fontFamily: SERIF, fontSize: 17, fontWeight: 500, color: TEXT, letterSpacing: "0.3px" }}>Lab Catalog</span>
-          <span style={{ fontFamily: SANS, fontSize: 9, fontWeight: 600, letterSpacing: "0.14em", textTransform: "uppercase", color: SAGE, background: "transparent", border: `0.5px solid rgba(${SAGE_RGB},0.5)`, borderRadius: 999, padding: "3px 8px" }}>Admin</span>
+          <span style={{ fontFamily: SANS, fontSize: 9, fontWeight: 600, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--nura-accent-label)", background: "transparent", border: `0.5px solid rgba(${SAGE_RGB},0.5)`, borderRadius: 999, padding: "3px 8px" }}>Admin</span>
         </div>
         <button onClick={refresh} style={{ width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", background: "none", border: "none", cursor: "pointer", color: TEXT_TER, borderRadius: 8, padding: 0 }}>
           <RefreshCw size={14} />
@@ -1572,7 +1572,7 @@ export default function CatalogClient({ initialProducts, categories }: {
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 16, marginBottom: 18 }}>
           {stats.map((s) => (
             <Panel key={s.label} style={{ padding: "14px 8px", textAlign: "center" }}>
-              <div style={{ fontFamily: SERIF, fontSize: 22, fontWeight: 500, color: SAGE, lineHeight: 1, marginBottom: 6 }}>{s.value}</div>
+              <div style={{ fontFamily: SERIF, fontSize: 22, fontWeight: 500, color: "var(--nura-accent-text)", lineHeight: 1, marginBottom: 6 }}>{s.value}</div>
               <Eyebrow color={TEXT_TER} size={9}>{s.label}</Eyebrow>
             </Panel>
           ))}

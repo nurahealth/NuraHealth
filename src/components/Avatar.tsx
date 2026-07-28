@@ -52,7 +52,7 @@ export default function Avatar({ user, size = 40, className }: Props) {
         width: size, height: size, borderRadius: "50%", flexShrink: 0,
         background: `rgba(var(--nura-sage-rgb),0.18)`,
         border: `0.5px solid rgba(var(--nura-sage-rgb),0.4)`,
-        color: SAGE, fontFamily: SANS, fontSize, fontWeight: 500,
+        color: "var(--nura-accent-text)", fontFamily: SANS, fontSize, fontWeight: 500,
         display: "flex", alignItems: "center", justifyContent: "center",
       }}
     >

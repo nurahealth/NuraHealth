@@ -217,7 +217,7 @@ function AddSheet({ workout, catalog, onPick, onClose, busy }: {
               }}>
                 <span style={{ fontSize: 14.5, fontWeight: 600 }}>{group.label}</span>
                 <span style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
-                  <span style={{ fontSize: 11, fontWeight: 600, color: SAGE, padding: '3px 9px', borderRadius: 999, background: 'rgba(var(--nura-sage-rgb),.12)', border: '1px solid rgba(var(--nura-sage-rgb),.3)' }}>
+                  <span style={{ fontSize: 11, fontWeight: 600, color: "var(--nura-accent-text)", padding: '3px 9px', borderRadius: 999, background: 'rgba(var(--nura-sage-rgb),.12)', border: '1px solid rgba(var(--nura-sage-rgb),.3)' }}>
                     {items.length}
                   </span>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={SAGE} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6" /></svg>
@@ -516,7 +516,7 @@ const app: React.CSSProperties = { width: '100%', maxWidth: 'var(--fit-frame, 44
             </button>
             <div style={{
               display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(var(--nura-sage-rgb),.14)',
-              border: '1px solid rgba(var(--nura-sage-rgb),.3)', color: SAGE, fontSize: 11, fontWeight: 700,
+              border: '1px solid rgba(var(--nura-sage-rgb),.3)', color: "var(--nura-accent-text)", fontSize: 11, fontWeight: 700,
               letterSpacing: '.08em', padding: '7px 12px', borderRadius: 999,
             }}>★ PRO</div>
           </div>
@@ -643,7 +643,7 @@ const app: React.CSSProperties = { width: '100%', maxWidth: 'var(--fit-frame, 44
               <svg style={{ position: 'absolute', right: -10, bottom: -30, opacity: 0.13 }} width="150" height="150" viewBox="0 0 24 24" fill="none" stroke={SAGE} strokeWidth="1.2">
                 <path d="M6.5 6.5 17.5 17.5M3 8l3-3M16 21l3-3M8 3 5 6M21 16l-3 3" />
               </svg>
-              <div style={{ fontSize: 11, letterSpacing: '.16em', color: SAGE, position: 'relative' }}>{heroEyebrow}</div>
+              <div style={{ fontSize: 11, letterSpacing: '.16em', color: "var(--nura-accent-text)", position: 'relative' }}>{heroEyebrow}</div>
               <h2 style={{ fontSize: 24, fontWeight: 700, margin: '6px 0 4px', position: 'relative' }}>
                 {training ? focusOf(selWorkout) : 'Rest & recover'}
               </h2>
@@ -662,7 +662,7 @@ const app: React.CSSProperties = { width: '100%', maxWidth: 'var(--fit-frame, 44
                   <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
                     {selectedDone ? (
                       // Already logged for this day — show a clear "done" state.
-                      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9, background: 'rgba(var(--nura-sage-rgb),.16)', color: SAGE, border: '1px solid rgba(var(--nura-sage-rgb),.4)', borderRadius: 13, padding: 14, fontSize: 15, fontWeight: 700 }}>
+                      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9, background: 'rgba(var(--nura-sage-rgb),.16)', color: "var(--nura-accent-text)", border: '1px solid rgba(var(--nura-sage-rgb),.4)', borderRadius: 13, padding: 14, fontSize: 15, fontWeight: 700 }}>
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={SAGE} strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
                         Completed
                       </div>
@@ -694,7 +694,7 @@ const app: React.CSSProperties = { width: '100%', maxWidth: 'var(--fit-frame, 44
               <div style={{ background: SURF, border: `1px solid ${LINE}`, borderRadius: 18, padding: '6px 16px 14px', marginBottom: 22 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 0 6px' }}>
                   <span style={{ fontSize: 13, letterSpacing: '.04em', color: MUT }}>{editEyebrow}</span>
-                  <span style={{ fontSize: 13, letterSpacing: '.04em', color: SAGE }}>{savingCount > 0 ? 'saving…' : 'auto-saves'}</span>
+                  <span style={{ fontSize: 13, letterSpacing: '.04em', color: "var(--nura-accent-text)" }}>{savingCount > 0 ? 'saving…' : 'auto-saves'}</span>
                 </div>
                 {selWorkout!.exercises.map((we, i) => (
                   <div
@@ -725,7 +725,7 @@ const app: React.CSSProperties = { width: '100%', maxWidth: 'var(--fit-frame, 44
                       onClick={() => we.exercise && setDetailEx({ id: we.exercise.id, sets: we.sets, reps: we.reps, rest_seconds: we.rest_seconds })}
                       style={{ appearance: 'none', textAlign: 'left', border: 'none', background: 'transparent', padding: 0, flex: 1, minWidth: 0, cursor: 'pointer', color: TEXT, fontFamily: FONT, display: 'flex', alignItems: 'center', gap: 12 }}
                     >
-                      <span style={{ width: 38, height: 38, borderRadius: 10, overflow: 'hidden', background: CLIP_BG, border: '1px solid rgba(var(--nura-sage-rgb),.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: SAGE, fontSize: 11, flexShrink: 0 }}>
+                      <span style={{ width: 38, height: 38, borderRadius: 10, overflow: 'hidden', background: CLIP_BG, border: '1px solid rgba(var(--nura-sage-rgb),.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: "var(--nura-accent-text)", fontSize: 11, flexShrink: 0 }}>
                         {we.exercise?.gif_url ? <ExerciseMedia src={we.exercise.gif_url} alt={we.exercise.name} fit="cover" thumb /> : '▶'}
                       </span>
                       <span style={{ minWidth: 0 }}>
@@ -783,7 +783,7 @@ const app: React.CSSProperties = { width: '100%', maxWidth: 'var(--fit-frame, 44
                       <div style={{ display: 'block', height: '100%', background: SAGE, borderRadius: 6, width: `${pct}%` }} />
                     </div>
                   </div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: SAGE }}>{pct}%</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "var(--nura-accent-text)" }}>{pct}%</div>
                 </div>
               );
             })}

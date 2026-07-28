@@ -223,7 +223,7 @@ export default function SavedPage() {
                     padding: "3px 8px", borderRadius: 4,
                     background: `rgba(var(--nura-sage-rgb),0.14)`,
                     fontFamily: SANS, fontSize: 9, fontWeight: 600, letterSpacing: "0.8px",
-                    color: SAGE, textTransform: "uppercase",
+                    color: "var(--nura-accent-label)", textTransform: "uppercase",
                   }}>
                     {TYPE_LABEL[item.type].toUpperCase()}
                   </span>

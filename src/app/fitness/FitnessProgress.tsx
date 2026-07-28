@@ -395,7 +395,7 @@ function AddPhotoModal({ onClose, onSaved }: { onClose: () => void; onSaved: () 
   const pickBtn: React.CSSProperties = {
     flex: 1, appearance: 'none', cursor: 'pointer', boxSizing: 'border-box',
     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
-    color: SAGE, background: 'rgba(var(--nura-sage-rgb),.12)', border: '1px solid rgba(var(--nura-sage-rgb),.3)',
+    color: "var(--nura-accent-text)", background: 'rgba(var(--nura-sage-rgb),.12)', border: '1px solid rgba(var(--nura-sage-rgb),.3)',
     borderRadius: 11, padding: '11px 12px', fontSize: 13.5, fontWeight: 700, fontFamily: FONT,
   };
 
@@ -500,7 +500,7 @@ function PhotoViewerModal({ photo, photos, onClose, onUpdate }: {
 
   const caption = (p: ProgressPhoto, align: 'left' | 'center' = 'center') => (
     <div style={{ textAlign: align, marginTop: 8 }}>
-      <div style={{ fontFamily: MONO, fontSize: 12, color: SAGE }}>{fmtPhotoDate(p.taken_on)}</div>
+      <div style={{ fontFamily: MONO, fontSize: 12, color: "var(--nura-accent-text)" }}>{fmtPhotoDate(p.taken_on)}</div>
       {p.pose && <div style={{ fontSize: 12, color: MUT, marginTop: 3 }}>{p.pose}</div>}
       {p.notes && <div style={{ fontSize: 12.5, color: TEXT, marginTop: 6, lineHeight: 1.5 }}>{p.notes}</div>}
     </div>
@@ -524,7 +524,7 @@ function PhotoViewerModal({ photo, photos, onClose, onUpdate }: {
               </div>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={p.url ?? ''} alt={`Progress photo ${p.taken_on}`} style={img(p.id === photo.id ? fit : p.fit)} />
-              <div style={{ fontFamily: MONO, fontSize: 12, color: SAGE, marginTop: 8, textAlign: 'center' }}>{fmtPhotoDate(p.taken_on)}</div>
+              <div style={{ fontFamily: MONO, fontSize: 12, color: "var(--nura-accent-text)", marginTop: 8, textAlign: 'center' }}>{fmtPhotoDate(p.taken_on)}</div>
             </div>
           ))}
         </div>
@@ -600,7 +600,7 @@ function VolumeBars({ weeks }: { weeks: { key: string; date: string; value: numb
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}>
-        <span style={{ fontFamily: MONO, fontSize: 13, fontWeight: 700, color: SAGE }}>
+        <span style={{ fontFamily: MONO, fontSize: 13, fontWeight: 700, color: "var(--nura-accent-text)" }}>
           {Math.round(latest).toLocaleString()} <span style={{ fontSize: 10, color: MUT, fontWeight: 400 }}>this wk</span>
         </span>
       </div>
@@ -636,7 +636,7 @@ function ExerciseStrengthModal({ name, unit, points, pr, onClose }: {
       {pr && (
         <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 16 }}>
           <div style={{ fontSize: 11, letterSpacing: '.05em', color: MUT }}>BEST SET</div>
-          <div style={{ fontFamily: MONO, fontSize: 16, fontWeight: 700, color: SAGE }}>{fmtWeight(pr.weight)} {pr.unit} × {pr.reps}</div>
+          <div style={{ fontFamily: MONO, fontSize: 16, fontWeight: 700, color: "var(--nura-accent-text)" }}>{fmtWeight(pr.weight)} {pr.unit} × {pr.reps}</div>
         </div>
       )}
       <div style={{ fontSize: 11, letterSpacing: '.05em', color: MUT, marginBottom: 8 }}>WEIGHT OVER TIME</div>
@@ -982,7 +982,7 @@ export default function FitnessProgress() {
 
             {/* short line beside it */}
             <div style={{ position: 'relative' }}>
-              <div style={{ fontSize: 11, letterSpacing: '.16em', color: SAGE }}>THIS WEEK</div>
+              <div style={{ fontSize: 11, letterSpacing: '.16em', color: "var(--nura-accent-text)" }}>THIS WEEK</div>
               <div style={{ fontSize: 18, fontWeight: 700, margin: '6px 0 4px' }}>Workouts completed</div>
               <div style={{ fontSize: 13, color: MUT }}>{statusLine}</div>
             </div>
@@ -1138,7 +1138,7 @@ export default function FitnessProgress() {
                 <div style={{ marginTop: 'auto' }}>
                   <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 5 }}>
                     <span style={{ fontFamily: MONO, fontSize: 12, fontWeight: 700, color: b.unlocked ? SAGE : TEXT }}>{b.current} / {b.target}</span>
-                    {b.unlocked && <span style={{ fontSize: 9, letterSpacing: '.12em', color: SAGE }}>UNLOCKED</span>}
+                    {b.unlocked && <span style={{ fontSize: 9, letterSpacing: '.12em', color: "var(--nura-accent-text)" }}>UNLOCKED</span>}
                   </div>
                   <div style={{ height: 5, borderRadius: 3, background: 'rgba(var(--nura-bg-tint-rgb),.08)', overflow: 'hidden' }}>
                     <div style={{ height: '100%', width: `${Math.round(b.progress * 100)}%`, background: b.unlocked ? SAGE : 'rgba(var(--nura-sage-rgb),.45)', borderRadius: 3, transition: 'width .5s ease' }} />
@@ -1176,7 +1176,7 @@ export default function FitnessProgress() {
                       {pr.isRecent && (
                         <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '.08em', color: BG, background: SAGE, borderRadius: 999, padding: '3px 7px' }}>NEW PR</span>
                       )}
-                      <span style={{ fontFamily: MONO, fontSize: 13, fontWeight: 700, color: SAGE }}>{fmtWeight(pr.weight)} {pr.unit} × {pr.reps}</span>
+                      <span style={{ fontFamily: MONO, fontSize: 13, fontWeight: 700, color: "var(--nura-accent-text)" }}>{fmtWeight(pr.weight)} {pr.unit} × {pr.reps}</span>
                     </div>
                   </button>
                 ))}
@@ -1206,7 +1206,7 @@ export default function FitnessProgress() {
                   <div style={{ fontSize: 14, fontWeight: 600 }}>{r.name}</div>
                   <div style={{ fontSize: 11, color: MUT, marginTop: 2 }}>{r.date}</div>
                 </div>
-                <div style={{ fontFamily: MONO, fontSize: 13, color: SAGE }}>{r.duration}</div>
+                <div style={{ fontFamily: MONO, fontSize: 13, color: "var(--nura-accent-text)" }}>{r.duration}</div>
               </div>
             ))
           )}

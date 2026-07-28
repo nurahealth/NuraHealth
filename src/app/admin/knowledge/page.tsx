@@ -974,7 +974,7 @@ export default function AdminKnowledgePage() {
         </button>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <span style={{ fontFamily: SERIF, fontSize: 17, fontWeight: 500, color: TEXT, letterSpacing: "0.3px" }}>Knowledge Base</span>
-          <span style={{ fontFamily: SANS, fontSize: 9, fontWeight: 600, letterSpacing: "0.14em", textTransform: "uppercase", color: SAGE, background: "transparent", border: `0.5px solid rgba(${SAGE_RGB},0.5)`, borderRadius: 999, padding: "3px 8px" }}>Admin</span>
+          <span style={{ fontFamily: SANS, fontSize: 9, fontWeight: 600, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--nura-accent-label)", background: "transparent", border: `0.5px solid rgba(${SAGE_RGB},0.5)`, borderRadius: 999, padding: "3px 8px" }}>Admin</span>
         </div>
         <button onClick={loadSources} style={{ width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", background: "none", border: "none", cursor: "pointer", color: TEXT_TER, borderRadius: 8, padding: 0 }}>
           <RefreshCw size={14} />
@@ -1000,7 +1000,7 @@ export default function AdminKnowledgePage() {
             { label: "Queries", value: "—" },
           ].map((s) => (
             <Panel key={s.label} style={{ padding: "14px 8px", textAlign: "center" }}>
-              <div style={{ fontFamily: SERIF, fontSize: 22, fontWeight: 500, color: SAGE, lineHeight: 1, marginBottom: 6 }}>{s.value}</div>
+              <div style={{ fontFamily: SERIF, fontSize: 22, fontWeight: 500, color: "var(--nura-accent-text)", lineHeight: 1, marginBottom: 6 }}>{s.value}</div>
               <Eyebrow color={TEXT_TER} size={9}>{s.label}</Eyebrow>
             </Panel>
           ))}
@@ -1047,7 +1047,7 @@ export default function AdminKnowledgePage() {
         {topicFilter && (
           <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", background: `rgba(${SAGE_RGB},0.08)`, border: `0.5px solid rgba(${SAGE_RGB},0.35)`, borderRadius: 14, marginBottom: 14 }}>
             <Eyebrow color={TEXT_TER} size={9}>Filtering by topic</Eyebrow>
-            <span style={{ flex: 1, minWidth: 0, fontFamily: SANS, fontSize: 12.5, fontWeight: 500, color: SAGE, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            <span style={{ flex: 1, minWidth: 0, fontFamily: SANS, fontSize: 12.5, fontWeight: 500, color: "var(--nura-accent-text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
               {topicFilter}
             </span>
             <button
@@ -1101,7 +1101,7 @@ export default function AdminKnowledgePage() {
                   <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 6, flexWrap: "wrap" }}>
-                        <span style={{ fontFamily: SANS, fontSize: 9, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", color: SAGE, background: `rgba(${SAGE_RGB},0.14)`, border: `0.5px solid rgba(${SAGE_RGB},0.25)`, borderRadius: 8, padding: "3px 8px" }}>
+                        <span style={{ fontFamily: SANS, fontSize: 9, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--nura-accent-label)", background: `rgba(${SAGE_RGB},0.14)`, border: `0.5px solid rgba(${SAGE_RGB},0.25)`, borderRadius: 8, padding: "3px 8px" }}>
                           {s.source_type}
                         </span>
                         {isProcessing && (

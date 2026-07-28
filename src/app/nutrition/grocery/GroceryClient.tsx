@@ -248,7 +248,7 @@ export default function GroceryClient({ items: initial, planItems, tableReady, u
         </div>
       )}
       {error && <div style={{ ...card, padding: "11px 14px", borderColor: "var(--nura-tint-danger-border)", background: "var(--nura-tint-danger)", fontFamily: SANS, fontSize: 13, color: DANGER }}>{error}</div>}
-      {info && <div style={{ ...card, padding: "11px 14px", borderColor: `rgba(${SAGE_RGB},0.4)`, background: `rgba(${SAGE_RGB},0.08)`, fontFamily: SANS, fontSize: 13, color: SAGE }}>{info}</div>}
+      {info && <div style={{ ...card, padding: "11px 14px", borderColor: `rgba(${SAGE_RGB},0.4)`, background: `rgba(${SAGE_RGB},0.08)`, fontFamily: SANS, fontSize: 13, color: "var(--nura-accent-text)" }}>{info}</div>}
     </>
   );
 
@@ -268,7 +268,7 @@ export default function GroceryClient({ items: initial, planItems, tableReady, u
       {Back}
 
       <div>
-        <div style={{ fontFamily: SANS, fontSize: 11, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", color: SAGE, marginBottom: 8 }}>This week</div>
+        <div style={{ fontFamily: SANS, fontSize: 11, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--nura-accent-label)", marginBottom: 8 }}>This week</div>
         <h1 style={heading}>Grocery list</h1>
         {total > 0 && (
           <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "8px 0 0", flexWrap: "wrap" }}>
@@ -304,7 +304,7 @@ export default function GroceryClient({ items: initial, planItems, tableReady, u
       ) : (
         sections.map((section) => (
           <section key={section.category}>
-            <div style={{ fontFamily: SANS, fontSize: 10, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", color: SAGE, marginBottom: 10 }}>{section.label}</div>
+            <div style={{ fontFamily: SANS, fontSize: 10, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--nura-accent-label)", marginBottom: 10 }}>{section.label}</div>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {section.items.map((item) => {
                 const checked = item.is_checked;

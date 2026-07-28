@@ -353,7 +353,7 @@ export default function Home() {
           top: "max(env(safe-area-inset-top), 16px)", height: 40,
           display: "flex", alignItems: "center", justifyContent: "center",
           pointerEvents: "none",
-          fontFamily: SANS, fontSize: 19, fontWeight: 600, color: SAGE, letterSpacing: "0.16em",
+          fontFamily: SANS, fontSize: 19, fontWeight: 600, color: "var(--nura-accent-text)", letterSpacing: "0.16em",
         }}>
           NŪRA
         </span>
@@ -390,7 +390,7 @@ export default function Home() {
           color: TEXT, margin: "0 0 14px", letterSpacing: "-0.02em",
         }}>
           How can I help you on your{" "}
-          <em style={{ fontFamily: SERIF, fontStyle: "italic", color: SAGE, fontWeight: 500 }}>wellness</em>
+          <em style={{ fontFamily: SERIF, fontStyle: "italic", color: "var(--nura-accent-text)", fontWeight: 500 }}>wellness</em>
           {" "}journey?
         </h1>
 

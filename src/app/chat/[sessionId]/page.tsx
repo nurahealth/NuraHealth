@@ -153,13 +153,13 @@ const MD = {
     <p style={{ margin: "0 0 8px", lineHeight: 1.6 }}>{children}</p>
   ),
   strong: ({ children }: { children?: React.ReactNode }) => (
-    <strong style={{ color: SAGE, fontWeight: 500 }}>{children}</strong>
+    <strong style={{ color: "var(--nura-accent-text)", fontWeight: 500 }}>{children}</strong>
   ),
   ul: ({ children }: { children?: React.ReactNode }) => (
     <ul style={{ margin: "0 0 8px", paddingLeft: 14, listStyle: "none" }}>{children}</ul>
   ),
   ol: ({ children }: { children?: React.ReactNode }) => (
-    <ol style={{ margin: "0 0 8px", paddingLeft: 18, color: SAGE }}>{children}</ol>
+    <ol style={{ margin: "0 0 8px", paddingLeft: 18, color: "var(--nura-accent-text)" }}>{children}</ol>
   ),
   li: ({ children }: { children?: React.ReactNode }) => (
     <li style={{ position: "relative", paddingLeft: 14, margin: "0 0 4px", color: TEXT, listStyle: "none" }}>
@@ -168,7 +168,7 @@ const MD = {
     </li>
   ),
   code: ({ children }: { children?: React.ReactNode }) => (
-    <code style={{ background: "var(--nura-surface-elevated)", color: SAGE, padding: "1px 5px", borderRadius: 3, fontSize: "0.85em", fontFamily: "'JetBrains Mono', monospace" }}>{children}</code>
+    <code style={{ background: "var(--nura-surface-elevated)", color: "var(--nura-accent-text)", padding: "1px 5px", borderRadius: 3, fontSize: "0.85em", fontFamily: "'JetBrains Mono', monospace" }}>{children}</code>
   ),
   a: ({ href, children }: { href?: string; children?: React.ReactNode }) => (
     <a href={href} target="_blank" rel="noopener noreferrer" style={{ color: SAGE, textDecoration: "none" }}
@@ -360,7 +360,7 @@ export default function ChatSessionPage({ params }: { params: Promise<{ sessionI
           <Menu />
         </button>
 
-        <span style={{ fontFamily: SANS, fontSize: 18, fontWeight: 600, color: SAGE, letterSpacing: "0.16em" }}>
+        <span style={{ fontFamily: SANS, fontSize: 18, fontWeight: 600, color: "var(--nura-accent-text)", letterSpacing: "0.16em" }}>
           NŪRA
         </span>
 

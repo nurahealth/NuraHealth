@@ -42,7 +42,7 @@ function Switch({ on }: { on: boolean }) {
   );
 }
 
-const labelStyle: React.CSSProperties = { fontFamily: SANS, fontSize: 10, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: SAGE, margin: "18px 2px 9px" };
+const labelStyle: React.CSSProperties = { fontFamily: SANS, fontSize: 10, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--nura-accent-text)", margin: "18px 2px 9px" };
 
 function Chip({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
   return (

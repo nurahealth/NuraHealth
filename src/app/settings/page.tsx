@@ -367,7 +367,7 @@ function CardLabel({ children }: { children: React.ReactNode }) {
   return (
     <div style={{
       fontFamily: SANS, fontSize: 10, fontWeight: 600, letterSpacing: "1.5px",
-      color: SAGE, textTransform: "uppercase", marginBottom: 14,
+      color: "var(--nura-accent-label)", textTransform: "uppercase", marginBottom: 14,
     }}>
       {children}
     </div>
@@ -968,7 +968,7 @@ function EditProfileModal({
 
           {photoSuccess && (
             <div style={{
-              marginTop: 10, fontFamily: SANS, fontSize: 12, color: SAGE, textAlign: "center",
+              marginTop: 10, fontFamily: SANS, fontSize: 12, color: "var(--nura-accent-text)", textAlign: "center",
             }}>
               Photo updated
             </div>
@@ -1030,7 +1030,7 @@ function EditProfileModal({
             padding: "9px 12px", borderRadius: 9, marginBottom: 14,
             background: 'var(--nura-tint-accent-strong)',
             border: `0.5px solid rgba(var(--nura-sage-rgb),0.35)`,
-            color: SAGE, fontFamily: SANS, fontSize: 12,
+            color: "var(--nura-accent-text)", fontFamily: SANS, fontSize: 12,
           }}>Profile updated</div>
         )}
 
@@ -1318,7 +1318,7 @@ function SecurityModal({ user, onClose }: { user: User; onClose: () => void }) {
 
             {success && (
               <div style={{
-                marginTop: 12, fontFamily: SANS, fontSize: 12, color: SAGE, textAlign: "center",
+                marginTop: 12, fontFamily: SANS, fontSize: 12, color: "var(--nura-accent-text)", textAlign: "center",
               }}>
                 Password updated
               </div>

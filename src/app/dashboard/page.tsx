@@ -122,7 +122,7 @@ export default function DashboardPage() {
 
       {/* 1 — Date eyebrow + greeting */}
       <div style={{ marginBottom: 22 }}>
-        <div style={{ ...EYEBROW, color: SAGE, marginBottom: 8 }}>
+        <div style={{ ...EYEBROW, color: "var(--nura-accent-label)", marginBottom: 8 }}>
           Today · {dateLabel}
         </div>
         <h1 style={{
@@ -390,7 +390,7 @@ function InsightCard({ text, ctaLabel, onCta }: { text: string; ctaLabel: string
       background: `linear-gradient(135deg, rgba(var(--nura-sage-rgb),0.06), transparent 60%), ${CARD}`,
       border: `0.5px solid ${BORDER}`, borderLeft: `2px solid ${SAGE}`,
     }}>
-      <div style={{ ...EYEBROW, color: SAGE, letterSpacing: "2px", marginBottom: 10 }}>NŪRA</div>
+      <div style={{ ...EYEBROW, color: "var(--nura-accent-label)", letterSpacing: "2px", marginBottom: 10 }}>NŪRA</div>
       <p style={{ fontFamily: SANS, fontSize: 14, color: TEXT, margin: 0, lineHeight: 1.65 }}>{text}</p>
       <button
         className="dash-cta"

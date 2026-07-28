@@ -76,7 +76,7 @@ export function ProductCard({ p }: { p: LabProduct }) {
           <span style={{
             alignSelf: "flex-start",
             fontFamily: SANS, fontSize: 8.5, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase",
-            color: SAGE, background: `rgba(${SAGE_RGB},0.14)`, border: `0.5px solid rgba(${SAGE_RGB},0.3)`,
+            color: "var(--nura-accent-label)", background: `rgba(${SAGE_RGB},0.14)`, border: `0.5px solid rgba(${SAGE_RGB},0.3)`,
             borderRadius: 6, padding: "2px 6px", marginBottom: 2,
           }}>
             Lab tested
@@ -158,7 +158,7 @@ export default function LabBrowseClient({ categories, products }: {
 
       {/* Header */}
       <div style={{ marginBottom: 18 }}>
-        <span style={{ fontFamily: SANS, fontSize: 10, fontWeight: 600, letterSpacing: "0.14em", textTransform: "uppercase", color: SAGE }}>
+        <span style={{ fontFamily: SANS, fontSize: 10, fontWeight: 600, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--nura-accent-label)" }}>
           Lab
         </span>
         <h1 style={{ fontFamily: SANS, fontSize: "clamp(30px, 5vw, 40px)", fontWeight: 600, color: TEXT, margin: "6px 0 8px", letterSpacing: "-0.02em", lineHeight: 1.1 }}>

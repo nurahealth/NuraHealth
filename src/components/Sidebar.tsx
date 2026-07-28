@@ -63,7 +63,7 @@ function SageBadge({ children }: { children: React.ReactNode }) {
       fontWeight: 600,
       letterSpacing: "0.12em",
       textTransform: "uppercase",
-      color: SAGE,
+      color: "var(--nura-accent-label)",
       background: "transparent",
       border: `0.5px solid rgba(${SAGE_RGB},0.5)`,
       borderRadius: 8,
@@ -232,7 +232,7 @@ export default function Sidebar({ open, onClose, userName, userInitial }: Sideba
             fontFamily: SANS,
             fontSize: 22,
             fontWeight: 600,
-            color: SAGE,
+            color: "var(--nura-accent-text)",
             letterSpacing: "0.16em",
           }}>
             NŪRA
@@ -362,7 +362,7 @@ export default function Sidebar({ open, onClose, userName, userInitial }: Sideba
                   fontWeight: 600,
                   letterSpacing: "0.14em",
                   textTransform: "uppercase",
-                  color: SAGE,
+                  color: "var(--nura-accent-label)",
                 }}>
                   Upgrade to Pro
                 </div>

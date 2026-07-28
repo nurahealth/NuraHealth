@@ -332,7 +332,7 @@ export default function BillingPage() {
             </button>
             {pmUpdatedSuccess && (
               <div style={{
-                marginTop: 12, fontFamily: SANS, fontSize: 12, color: SAGE,
+                marginTop: 12, fontFamily: SANS, fontSize: 12, color: "var(--nura-accent-text)",
               }}>
                 Payment method updated
               </div>
@@ -390,7 +390,7 @@ export default function BillingPage() {
                 </button>
                 {cancelSuccess && (
                   <div style={{
-                    marginTop: 12, fontFamily: SANS, fontSize: 12, color: SAGE,
+                    marginTop: 12, fontFamily: SANS, fontSize: 12, color: "var(--nura-accent-text)",
                   }}>
                     Subscription canceled
                   </div>
@@ -464,7 +464,7 @@ function CardLabel({ children }: { children: React.ReactNode }) {
   return (
     <div style={{
       fontFamily: SANS, fontSize: 10, fontWeight: 600, letterSpacing: "1.5px",
-      color: SAGE, textTransform: "uppercase", marginBottom: 14,
+      color: "var(--nura-accent-label)", textTransform: "uppercase", marginBottom: 14,
     }}>
       {children}
     </div>
@@ -967,7 +967,7 @@ function UpdatePaymentForm({
           marginTop: 14, padding: "11px 14px",
           background: `rgba(var(--nura-sage-rgb),0.10)`,
           border: `0.5px solid rgba(var(--nura-sage-rgb),0.3)`,
-          borderRadius: 10, fontFamily: SANS, fontSize: 12, color: SAGE,
+          borderRadius: 10, fontFamily: SANS, fontSize: 12, color: "var(--nura-accent-text)",
         }}>
           Payment method updated
         </div>

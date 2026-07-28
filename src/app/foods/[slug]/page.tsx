@@ -143,7 +143,7 @@ export default async function FoodDetailPage({
 
         {/* Title block */}
         <div>
-          <span style={{ display: "inline-block", fontFamily: SANS, fontSize: 9, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", color: SAGE, background: `rgba(${SAGE_RGB},0.14)`, border: `0.5px solid rgba(${SAGE_RGB},0.3)`, borderRadius: 8, padding: "3px 8px", marginBottom: 10 }}>
+          <span style={{ display: "inline-block", fontFamily: SANS, fontSize: 9, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--nura-accent-label)", background: `rgba(${SAGE_RGB},0.14)`, border: `0.5px solid rgba(${SAGE_RGB},0.3)`, borderRadius: 8, padding: "3px 8px", marginBottom: 10 }}>
             {pretty(ing.category)}{ing.is_organic ? " · Organic" : ""}
           </span>
           <h1 style={{ fontFamily: SANS, fontSize: "clamp(26px, 4.5vw, 34px)", fontWeight: 600, color: TEXT, margin: "0 0 8px", letterSpacing: "-0.02em", lineHeight: 1.12 }}>
@@ -161,13 +161,13 @@ export default async function FoodDetailPage({
           <section style={{ ...card, padding: "16px 18px", display: "flex", flexDirection: "column", gap: 16 }}>
             {supports.length > 0 && (
               <div>
-                <div style={{ fontFamily: SANS, fontSize: 10, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", color: SAGE, marginBottom: 10 }}>Supports</div>
+                <div style={{ fontFamily: SANS, fontSize: 10, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--nura-accent-label)", marginBottom: 10 }}>Supports</div>
                 <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>{supports.map((s) => chip(pretty(s), s))}</div>
               </div>
             )}
             {compounds.length > 0 && (
               <div>
-                <div style={{ fontFamily: SANS, fontSize: 10, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", color: SAGE, marginBottom: 10 }}>Active compounds</div>
+                <div style={{ fontFamily: SANS, fontSize: 10, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--nura-accent-label)", marginBottom: 10 }}>Active compounds</div>
                 <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>{compounds.map((c) => chip(c, c))}</div>
               </div>
             )}
@@ -200,7 +200,7 @@ export default async function FoodDetailPage({
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {howTo.map((s, i) => (
                 <div key={i} style={{ ...card, padding: "14px 16px", display: "flex", gap: 13 }}>
-                  <span style={{ flexShrink: 0, width: 26, height: 26, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", background: `rgba(${SAGE_RGB},0.14)`, border: `0.5px solid rgba(${SAGE_RGB},0.3)`, fontFamily: SANS, fontSize: 12.5, fontWeight: 600, color: SAGE }}>
+                  <span style={{ flexShrink: 0, width: 26, height: 26, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", background: `rgba(${SAGE_RGB},0.14)`, border: `0.5px solid rgba(${SAGE_RGB},0.3)`, fontFamily: SANS, fontSize: 12.5, fontWeight: 600, color: "var(--nura-accent-text)" }}>
                     {s.n ?? i + 1}
                   </span>
                   <p style={{ fontFamily: SANS, fontSize: 14, color: TEXT_SEC, lineHeight: 1.6, margin: "2px 0 0" }}>{s.text}</p>

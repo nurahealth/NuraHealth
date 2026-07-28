@@ -143,7 +143,7 @@ export default function IntegrationsPage() {
             width: 80, height: 80, borderRadius: 14, flexShrink: 0,
             background: `rgba(var(--nura-sage-rgb),0.12)`,
             border: `0.5px solid rgba(var(--nura-sage-rgb),0.35)`,
-            color: SAGE,
+            color: "var(--nura-accent-text)",
             display: "flex", alignItems: "center", justifyContent: "center",
           }}>
             <Watch size={36} />
@@ -152,7 +152,7 @@ export default function IntegrationsPage() {
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{
               fontFamily: SANS, fontSize: 10, fontWeight: 600, letterSpacing: "1.5px",
-              color: SAGE, textTransform: "uppercase", marginBottom: 6,
+              color: "var(--nura-accent-label)", textTransform: "uppercase", marginBottom: 6,
             }}>
               Featured
             </div>
@@ -182,7 +182,7 @@ export default function IntegrationsPage() {
       {/* ALL DEVICES */}
       <div style={{
         fontFamily: SANS, fontSize: 10, fontWeight: 600, letterSpacing: "1.5px",
-        color: SAGE, textTransform: "uppercase", marginBottom: 12,
+        color: "var(--nura-accent-label)", textTransform: "uppercase", marginBottom: 12,
       }}>
         All devices
       </div>
@@ -244,7 +244,7 @@ function ProviderCard({ provider, onClick }: { provider: Provider; onClick: () =
         padding: "3px 8px", borderRadius: 4,
         background: `rgba(var(--nura-sage-rgb),0.12)`,
         fontFamily: SANS, fontSize: 9, fontWeight: 600, letterSpacing: "0.8px",
-        color: SAGE, textTransform: "uppercase",
+        color: "var(--nura-accent-label)", textTransform: "uppercase",
       }}>
         Coming soon
       </span>

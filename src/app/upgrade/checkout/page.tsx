@@ -321,7 +321,7 @@ function CheckoutContent() {
 
         {/* ── Order summary ── */}
         <div style={{ background: "rgba(var(--nura-bg-tint-rgb),0.03)", border: `0.5px solid rgba(var(--nura-sage-rgb),0.2)`, borderRadius: 16, padding: "20px", marginBottom: 24 }}>
-          <div style={{ fontFamily: MONO, fontSize: 10, fontWeight: 700, letterSpacing: "1.5px", color: SAGE, marginBottom: 14 }}>
+          <div style={{ fontFamily: MONO, fontSize: 10, fontWeight: 700, letterSpacing: "1.5px", color: "var(--nura-accent-label)", marginBottom: 14 }}>
             ORDER SUMMARY
           </div>
 

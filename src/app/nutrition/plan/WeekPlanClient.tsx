@@ -220,7 +220,7 @@ export default function WeekPlanClient({ days, totalPlanned, candidates, prefs, 
       {/* Header + regenerate */}
       <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
         <div>
-          <div style={{ fontFamily: SANS, fontSize: 11, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", color: SAGE, marginBottom: 8 }}>Next 7 days</div>
+          <div style={{ fontFamily: SANS, fontSize: 11, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--nura-accent-label)", marginBottom: 8 }}>Next 7 days</div>
           <h1 style={heading}>This week&rsquo;s plan</h1>
         </div>
         <button onClick={regenerate} disabled={regenerating} style={{ display: "inline-flex", alignItems: "center", gap: 7, fontFamily: SANS, fontSize: 12.5, fontWeight: 600, color: SAGE, background: `rgba(${SAGE_RGB},0.10)`, border: `0.5px solid rgba(${SAGE_RGB},0.28)`, borderRadius: 999, padding: "8px 14px", cursor: regenerating ? "default" : "pointer", opacity: regenerating ? 0.7 : 1 }}>
@@ -238,7 +238,7 @@ export default function WeekPlanClient({ days, totalPlanned, candidates, prefs, 
             <span style={{ fontFamily: SANS, fontSize: 14.5, fontWeight: 600, color: TEXT }}>{day.weekday}</span>
             <span style={{ fontFamily: SANS, fontSize: 12.5, color: TEXT_TER }}>{day.dateLabel}</span>
             {day.isToday && (
-              <span style={{ fontFamily: SANS, fontSize: 9, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: SAGE, background: `rgba(${SAGE_RGB},0.14)`, border: `0.5px solid rgba(${SAGE_RGB},0.35)`, borderRadius: 8, padding: "3px 8px" }}>Today</span>
+              <span style={{ fontFamily: SANS, fontSize: 9, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--nura-accent-label)", background: `rgba(${SAGE_RGB},0.14)`, border: `0.5px solid rgba(${SAGE_RGB},0.35)`, borderRadius: 8, padding: "3px 8px" }}>Today</span>
             )}
           </div>
 
@@ -263,7 +263,7 @@ export default function WeekPlanClient({ days, totalPlanned, candidates, prefs, 
                             </span>
                           )}
                           {meal.targetMarkerName && (
-                            <span style={{ fontFamily: SANS, fontSize: 10, fontWeight: 600, letterSpacing: "0.04em", color: SAGE, background: `rgba(${SAGE_RGB},0.12)`, border: `0.5px solid rgba(${SAGE_RGB},0.28)`, borderRadius: 999, padding: "2px 8px" }}>
+                            <span style={{ fontFamily: SANS, fontSize: 10, fontWeight: 600, letterSpacing: "0.04em", color: "var(--nura-accent-text)", background: `rgba(${SAGE_RGB},0.12)`, border: `0.5px solid rgba(${SAGE_RGB},0.28)`, borderRadius: 999, padding: "2px 8px" }}>
                               For {meal.targetMarkerName}
                             </span>
                           )}
@@ -341,7 +341,7 @@ export default function WeekPlanClient({ days, totalPlanned, candidates, prefs, 
                             <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontFamily: SANS, fontSize: 11, color: TEXT_TER }}><Clock size={10} /> {c.total_minutes} min</span>
                           )}
                           {tgt && markerNames[tgt] && (
-                            <span style={{ fontFamily: SANS, fontSize: 10, fontWeight: 600, color: SAGE, background: `rgba(${SAGE_RGB},0.12)`, border: `0.5px solid rgba(${SAGE_RGB},0.28)`, borderRadius: 999, padding: "2px 8px" }}>For {markerNames[tgt]}</span>
+                            <span style={{ fontFamily: SANS, fontSize: 10, fontWeight: 600, color: "var(--nura-accent-text)", background: `rgba(${SAGE_RGB},0.12)`, border: `0.5px solid rgba(${SAGE_RGB},0.28)`, borderRadius: 999, padding: "2px 8px" }}>For {markerNames[tgt]}</span>
                           )}
                         </span>
                       </span>

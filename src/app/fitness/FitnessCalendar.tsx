@@ -226,7 +226,7 @@ function MonthView({ cursor, byDay, today, completedKeys, onPick }: {
               ) : training ? (
                 <span style={{
                   fontSize: 8.5, fontFamily: MONO, letterSpacing: '0.2px', lineHeight: 1.1, textAlign: 'center',
-                  color: SAGE, maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                  color: "var(--nura-accent-text)", maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                 }}>
                   {(w!.focus || 'Train').split(' ')[0]}
                 </span>
@@ -313,7 +313,7 @@ function DaySheet({ date, workout, done, onClose }: {
               {focusOf(workout)}
             </div>
             {done && (
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginTop: 8, padding: '4px 10px', borderRadius: 999, background: 'rgba(var(--nura-sage-rgb),0.16)', border: '1px solid rgba(var(--nura-sage-rgb),0.4)', color: SAGE, fontSize: 12, fontWeight: 600, fontFamily: SANS }}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginTop: 8, padding: '4px 10px', borderRadius: 999, background: 'rgba(var(--nura-sage-rgb),0.16)', border: '1px solid rgba(var(--nura-sage-rgb),0.4)', color: "var(--nura-accent-text)", fontSize: 12, fontWeight: 600, fontFamily: SANS }}>
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={SAGE} strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
                 Completed
               </span>
@@ -351,7 +351,7 @@ function DaySheet({ date, workout, done, onClose }: {
                       {we.exercise?.name ?? 'Exercise'}
                     </div>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2px 8px', marginTop: 4 }}>
-                      <span style={{ fontSize: 11.5, fontFamily: MONO, letterSpacing: '0.3px', color: SAGE }}>{prescription(we)}</span>
+                      <span style={{ fontSize: 11.5, fontFamily: MONO, letterSpacing: '0.3px', color: "var(--nura-accent-label)" }}>{prescription(we)}</span>
                       {muscleLabel(we.exercise) && (
                         <span style={{ fontSize: 11.5, color: `var(--nura-text-tertiary)` }}>{muscleLabel(we.exercise)}</span>
                       )}

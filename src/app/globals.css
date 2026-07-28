@@ -62,6 +62,18 @@
   --nura-accent-soft: rgba(155, 176, 165, 0.10);       /* tinted accent chip fill */
   --nura-accent-soft-border: rgba(155, 176, 165, 0.22);
 
+  /* ── Accent-as-TEXT ─────────────────────────────────────────────────────
+     Dark wears sage as a typographic colour: the NURA wordmark, the serif
+     italic accents ("Overall *health*"), section eyebrows. That is the brand
+     look and it stays.
+
+     Light does not. There, sage is reserved for things whose colour is
+     functional — buttons, active nav, fills, links, icons — and every piece of
+     running text is neutral ink. These two tokens carry that difference, so
+     the split lives here rather than in 300 component call sites. */
+  --nura-accent-text: var(--nura-sage);    /* headings, emphasis, wordmark */
+  --nura-accent-label: var(--nura-sage);   /* small uppercase eyebrows */
+
   /* Emphasis above text-primary (hover states) + data-viz focal points that
      were hardcoded to pure white and would vanish on a light card. */
   --nura-text-strong: #ffffff;
@@ -254,9 +266,13 @@
   --nura-sage-rgb: 79, 111, 92;
   --nura-accent-soft: rgba(79, 111, 92, 0.09);
   --nura-accent-soft-border: rgba(79, 111, 92, 0.20);
+  /* Accent-as-text goes neutral in light — see the note in the dark column.
+     --nura-sage itself is unchanged and stays the functional accent. */
+  --nura-accent-text: var(--nura-text-primary);     /* 17.4:1 */
+  --nura-accent-label: var(--nura-text-secondary);  /*  7.2:1 */
   --nura-text-strong: #000000;
   --nura-score-from: #1a1a1a;
-  --nura-score-to: #4f6f5c;
+  --nura-score-to: #3d3a35;   /* neutral, not sage — the number is not a status */
   --nura-ring-head: #2e2c28;
 
   /* ── Status ─────────────────────────────────────────────────────────── */

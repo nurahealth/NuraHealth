@@ -304,7 +304,7 @@ function Step4Equipment({ value, onToggle, animKey }: {
       </div>
       <Hint text="Select all that apply — NŪRA only programs what you can use." />
       <div style={{
-        fontSize: 11, fontFamily: MONO, letterSpacing: '1.5px', color: SAGE_HEX,
+        fontSize: 11, fontFamily: MONO, letterSpacing: '1.5px', color: "var(--nura-accent-label)",
         textTransform: 'uppercase', marginTop: 2, marginBottom: 14, minHeight: 14,
         opacity: count ? 1 : 0, transition: 'opacity 160ms ease',
       }}>
@@ -388,7 +388,7 @@ function Step7Done({ state, animKey }: { state: FitState; animKey: number }) {
           width: '100%', background: 'var(--nura-surface)', border: `1px solid ${BORDER}`,
           borderRadius: 16, padding: '20px', marginBottom: 24, textAlign: 'left',
         }}>
-          <div style={{ fontSize: 10, fontFamily: MONO, letterSpacing: '2px', color: SAGE, textTransform: 'uppercase', marginBottom: 12 }}>
+          <div style={{ fontSize: 10, fontFamily: MONO, letterSpacing: '2px', color: "var(--nura-accent-label)", textTransform: 'uppercase', marginBottom: 12 }}>
             TRAINING WITH
           </div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
@@ -396,7 +396,7 @@ function Step7Done({ state, animKey }: { state: FitState; animKey: number }) {
               <span key={e} style={{
                 display: 'inline-block', padding: '4px 12px', borderRadius: 20,
                 background: `rgba(var(--nura-sage-rgb),0.15)`, border: `1px solid rgba(var(--nura-sage-rgb),0.3)`,
-                color: SAGE, fontSize: 12, fontWeight: 500,
+                color: "var(--nura-accent-text)", fontSize: 12, fontWeight: 500,
               }}>{e}</span>
             ))}
           </div>
@@ -600,7 +600,7 @@ export default function FitnessOnboarding({ initial, onComplete }: {
               padding: '10px 14px', marginBottom: 14, borderRadius: 10,
               background: `rgba(var(--nura-sage-rgb),0.10)`,
               border: `0.5px solid rgba(var(--nura-sage-rgb),0.35)`,
-              fontFamily: SANS, fontSize: 12, color: SAGE, lineHeight: 1.5,
+              fontFamily: SANS, fontSize: 12, color: "var(--nura-accent-text)", lineHeight: 1.5,
             }}>
               Editing your fitness profile — changes save when you finish the flow
             </div>

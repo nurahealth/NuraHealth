@@ -276,13 +276,13 @@ export default function PlanSettings() {
 
         <div style={{
           fontSize: 11, fontFamily: MONO, letterSpacing: '2.4px', textTransform: 'uppercase',
-          color: SAGE, marginBottom: 12,
+          color: "var(--nura-accent-label)", marginBottom: 12,
         }}>Customize your plan</div>
         <h1 style={{
           fontFamily: SERIF, fontWeight: 400, fontSize: 38, lineHeight: 1.05, letterSpacing: '-0.5px',
           color: 'var(--nura-text-primary)', margin: '0 0 12px',
         }}>
-          Plan <em style={{ fontFamily: SERIF, fontStyle: 'italic', color: SAGE }}>settings</em>
+          Plan <em style={{ fontFamily: SERIF, fontStyle: 'italic', color: "var(--nura-accent-text)" }}>settings</em>
         </h1>
         <p style={{ fontSize: 14.5, color: `var(--nura-ink-muted)`, fontFamily: SANS, lineHeight: 1.6, margin: '0 0 34px', maxWidth: 440 }}>
           Shape how NŪRA builds your training week. Adjust anything below, then regenerate.
@@ -341,11 +341,11 @@ export default function PlanSettings() {
           }}>
             <div style={{ fontSize: 12.5, color: `var(--nura-ink-muted)`, fontFamily: SANS, lineHeight: 1.5, minWidth: 0 }}>
               <div>
-                <span style={{ fontFamily: SERIF, color: SAGE, fontSize: 15 }}>{days}</span> days
+                <span style={{ fontFamily: SERIF, color: "var(--nura-accent-text)", fontSize: 15 }}>{days}</span> days
                 {' · '}{split}{' · '}{goalLabel}
               </div>
               <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                <span style={{ fontFamily: SERIF, color: SAGE, fontSize: 15 }}>{sessionMin}</span> min
+                <span style={{ fontFamily: SERIF, color: "var(--nura-accent-text)", fontSize: 15 }}>{sessionMin}</span> min
                 {' · '}{equipment.length ? equipment.join(', ') : 'No equipment set'}
                 {focus.length > 0 && <> · focus: {focus.join(', ')}</>}
               </div>

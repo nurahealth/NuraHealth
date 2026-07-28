@@ -81,14 +81,14 @@ function statusChipColors(status: string): { bg: string; border: string; color: 
     return {
       bg: `rgba(var(--nura-sage-rgb),0.14)`,
       border: `rgba(var(--nura-sage-rgb),0.4)`,
-      color: SAGE,
+      color: "var(--nura-accent-text)",
     };
   }
   // optimal / unknown
   return {
     bg: `rgba(var(--nura-sage-rgb),0.10)`,
     border: `rgba(var(--nura-sage-rgb),0.3)`,
-    color: SAGE,
+    color: "var(--nura-accent-text)",
   };
 }
 
@@ -316,7 +316,7 @@ export default function StoryMode({
                 }}>
                   <div style={{
                     fontFamily: SANS, fontSize: 10, fontWeight: 600, letterSpacing: "1.2px",
-                    color: SAGE, textTransform: "uppercase", marginBottom: 6,
+                    color: "var(--nura-accent-label)", textTransform: "uppercase", marginBottom: 6,
                   }}>
                     {l.category}
                   </div>
@@ -456,7 +456,7 @@ function CardLabel({ children }: { children: React.ReactNode }) {
   return (
     <div style={{
       fontFamily: SANS, fontSize: 10, fontWeight: 600, letterSpacing: "1.5px",
-      color: SAGE, textTransform: "uppercase", marginBottom: 14,
+      color: "var(--nura-accent-label)", textTransform: "uppercase", marginBottom: 14,
     }}>
       {children}
     </div>
@@ -467,7 +467,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
     <div style={{
       fontFamily: SANS, fontSize: 10, fontWeight: 600, letterSpacing: "1.5px",
-      color: SAGE, textTransform: "uppercase", margin: "10px 0 12px",
+      color: "var(--nura-accent-label)", textTransform: "uppercase", margin: "10px 0 12px",
     }}>
       {children}
     </div>
@@ -491,7 +491,7 @@ function MarkerBody({ label, body, last }: { label: string; body: string; last?:
     <div style={{ marginBottom: last ? 0 : 12 }}>
       <div style={{
         fontFamily: SANS, fontSize: 10, fontWeight: 600, letterSpacing: "1.2px",
-        color: SAGE, textTransform: "uppercase", marginBottom: 5,
+        color: "var(--nura-accent-label)", textTransform: "uppercase", marginBottom: 5,
       }}>
         {label}
       </div>

@@ -166,7 +166,7 @@ export default function AcceptTermsPage() {
         {/* Top brand */}
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: 28 }}>
           <div style={{
-            fontFamily: SANS, fontWeight: 600, fontSize: 28, color: SAGE,
+            fontFamily: SANS, fontWeight: 600, fontSize: 28, color: "var(--nura-accent-text)",
             letterSpacing: "0.16em", lineHeight: 1,
           }}>
             NŪRA
@@ -189,7 +189,7 @@ export default function AcceptTermsPage() {
         <div style={{ marginBottom: 24 }}>
           <div style={{
             fontFamily: SANS, fontSize: 11, fontWeight: 600, letterSpacing: "1.5px",
-            color: SAGE, textTransform: "uppercase", marginBottom: 14,
+            color: "var(--nura-accent-label)", textTransform: "uppercase", marginBottom: 14,
           }}>
             Required agreements
           </div>
