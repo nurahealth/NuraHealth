@@ -298,8 +298,8 @@ export default function Home() {
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         html, body { margin: 0; padding: 0; background: ${BG}; }
         @keyframes mic-pulse {
-          0%, 100% { box-shadow: 0 0 0 0 rgba(255,76,92,0.4); }
-          50%      { box-shadow: 0 0 0 6px rgba(255,76,92,0); }
+          0%, 100% { box-shadow: 0 0 0 0 rgba(var(--nura-record-rgb),0.4); }
+          50%      { box-shadow: 0 0 0 6px rgba(var(--nura-record-rgb),0); }
         }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         .nura-content {
@@ -480,8 +480,8 @@ export default function Home() {
               aria-label={recording ? "Stop recording" : "Voice input"}
               style={{
                 width: 38, height: 38, borderRadius: 9, border: "none",
-                background: recording ? "rgba(255,76,92,0.12)" : hovMic ? `rgba(var(--nura-sage-rgb),0.08)` : "transparent",
-                color: recording ? "#ff4c5c" : hovMic ? SAGE : TEXT_SEC,
+                background: recording ? "rgba(var(--nura-record-rgb),0.12)" : hovMic ? `rgba(var(--nura-sage-rgb),0.08)` : "transparent",
+                color: recording ? "var(--nura-record)" : hovMic ? SAGE : TEXT_SEC,
                 display: "flex", alignItems: "center", justifyContent: "center",
                 cursor: "pointer", flexShrink: 0, transition: "all 200ms",
                 animation: recording ? "mic-pulse 1.4s ease-in-out infinite" : "none",
@@ -510,7 +510,7 @@ export default function Home() {
               aria-label="Send"
               style={{
                 width: 40, height: 40, borderRadius: 11, border: "none",
-                background: sending ? `rgba(var(--nura-sage-rgb),0.4)` : hovSend ? SAGE_HOV : SAGE,
+                background: sending ? 'var(--nura-accent-disabled)' : hovSend ? SAGE_HOV : SAGE,
                 color: SAGE_ON,
                 display: "flex", alignItems: "center", justifyContent: "center",
                 cursor: sending ? "not-allowed" : "pointer", flexShrink: 0, marginLeft: 2,
@@ -518,7 +518,7 @@ export default function Home() {
               }}
             >
               {sending ? (
-                <div style={{ width: 14, height: 14, borderRadius: "50%", border: `2px solid rgba(13,13,14,0.3)`, borderTopColor: SAGE_ON, animation: "spin 0.8s linear infinite" }} />
+                <div style={{ width: 14, height: 14, borderRadius: "50%", border: `2px solid rgba(var(--nura-bg-rgb),0.3)`, borderTopColor: SAGE_ON, animation: "spin 0.8s linear infinite" }} />
               ) : (
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M12 19V5M5 12l7-7 7 7"/>
@@ -530,8 +530,8 @@ export default function Home() {
           {sendError && (
             <div style={{
               marginTop: 4, padding: "8px 12px", borderRadius: 10,
-              background: "rgba(255,76,92,0.08)", border: "1px solid rgba(255,76,92,0.25)",
-              color: "#ff8a96", fontSize: 12,
+              background: "var(--nura-tint-danger)", border: "1px solid var(--nura-tint-danger-border)",
+              color: "var(--nura-danger)", fontSize: 12,
             }}>
               {sendError}
             </div>

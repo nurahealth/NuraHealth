@@ -95,8 +95,8 @@ function NavRow({ item, active, onClick }: { item: NavItem; active: boolean; onC
       style={{
         display: "flex", alignItems: "center", gap: 11,
         width: "100%", padding: 10, borderRadius: 9,
-        background: active ? `rgba(var(--nura-sage-rgb),0.1)` : hov ? "var(--nura-surface)" : "transparent",
-        border: active ? `0.5px solid rgba(var(--nura-sage-rgb),0.28)` : "0.5px solid transparent",
+        background: active ? 'var(--nura-tint-accent)' : hov ? "var(--nura-surface)" : "transparent",
+        border: active ? '0.5px solid var(--nura-tint-accent-border)' : "0.5px solid transparent",
         color: isHighlighted ? TEXT : "rgba(var(--nura-fg-rgb),0.85)",
         fontFamily: SANS, fontSize: 14, fontWeight: active ? 500 : 400,
         cursor: "pointer", textAlign: "left",
@@ -267,7 +267,7 @@ export default function AppSidebar() {
                 {subBadge && (
                   <span style={{
                     fontSize: 8, fontWeight: 700, letterSpacing: "0.6px",
-                    color: SAGE, background: `rgba(var(--nura-sage-rgb),0.16)`, border: `0.5px solid rgba(var(--nura-sage-rgb),0.3)`,
+                    color: SAGE, background: 'var(--nura-tint-accent-strong)', border: '0.5px solid var(--nura-tint-accent-border)',
                     padding: "2px 6px", borderRadius: 4, whiteSpace: "nowrap", flexShrink: 0,
                   }}>{subBadge}</span>
                 )}
@@ -284,8 +284,8 @@ export default function AppSidebar() {
             style={{
               width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
               padding: "10px 14px", borderRadius: 11,
-              background: `rgba(var(--nura-sage-rgb),0.12)`,
-              border: `0.5px solid rgba(var(--nura-sage-rgb),0.4)`,
+              background: 'var(--nura-tint-accent-strong)',
+              border: '0.5px solid var(--nura-tint-accent-border)',
               color: SAGE, fontFamily: SANS, fontSize: 13, fontWeight: 500,
               cursor: "pointer", marginBottom: 18,
             }}

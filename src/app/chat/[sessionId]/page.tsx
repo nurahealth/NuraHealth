@@ -325,8 +325,8 @@ export default function ChatSessionPage({ params }: { params: Promise<{ sessionI
         @keyframes typing-dot { 0%, 80%, 100% { opacity: 0.25; transform: translateY(0); } 40% { opacity: 1; transform: translateY(-3px); } }
         @keyframes toast-in { from { opacity: 0; transform: translate(-50%, 10px); } to { opacity: 1; transform: translate(-50%, 0); } }
         @keyframes mic-pulse {
-          0%, 100% { box-shadow: 0 0 0 0 rgba(255,76,92,0.4); }
-          50%      { box-shadow: 0 0 0 6px rgba(255,76,92,0); }
+          0%, 100% { box-shadow: 0 0 0 0 rgba(var(--nura-record-rgb),0.4); }
+          50%      { box-shadow: 0 0 0 6px rgba(var(--nura-record-rgb),0); }
         }
       `}</style>
 
@@ -364,7 +364,7 @@ export default function ChatSessionPage({ params }: { params: Promise<{ sessionI
           aria-label="Bookmark conversation"
           style={{
             width: 38, height: 38, borderRadius: 11,
-            background: chatBookmarked ? `rgba(var(--nura-sage-rgb),0.12)` : SURFACE,
+            background: chatBookmarked ? 'var(--nura-tint-accent-strong)' : SURFACE,
             border: `0.5px solid ${chatBookmarked ? `rgba(var(--nura-sage-rgb),0.35)` : BORDER}`,
             display: "flex", alignItems: "center", justifyContent: "center",
             cursor: "pointer", color: chatBookmarked ? SAGE : TEXT_SEC,
@@ -400,7 +400,7 @@ export default function ChatSessionPage({ params }: { params: Promise<{ sessionI
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                   <div style={{
                     width: 18, height: 18, borderRadius: "50%",
-                    background: `rgba(var(--nura-sage-rgb),0.18)`, border: `0.5px solid rgba(var(--nura-sage-rgb),0.4)`,
+                    background: 'var(--nura-tint-accent-strong)', border: '0.5px solid var(--nura-tint-accent-border)',
                     display: "flex", alignItems: "center", justifyContent: "center",
                   }}>
                     <div style={{ width: 6, height: 6, borderRadius: "50%", background: SAGE }} />
@@ -448,7 +448,7 @@ export default function ChatSessionPage({ params }: { params: Promise<{ sessionI
           {sending && (
             <div style={{ alignSelf: "flex-start", maxWidth: "88%", display: "flex", flexDirection: "column", gap: 6, animation: "msg-in 240ms ease both" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <div style={{ width: 18, height: 18, borderRadius: "50%", background: `rgba(var(--nura-sage-rgb),0.18)`, border: `0.5px solid rgba(var(--nura-sage-rgb),0.4)`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <div style={{ width: 18, height: 18, borderRadius: "50%", background: 'var(--nura-tint-accent-strong)', border: '0.5px solid var(--nura-tint-accent-border)', display: "flex", alignItems: "center", justifyContent: "center" }}>
                   <div style={{ width: 6, height: 6, borderRadius: "50%", background: SAGE }} />
                 </div>
                 <span style={{ fontSize: 10, fontWeight: 500, letterSpacing: "1.2px", color: `rgba(var(--nura-sage-rgb),0.85)`, textTransform: "uppercase" }}>NŪRA</span>
@@ -472,8 +472,8 @@ export default function ChatSessionPage({ params }: { params: Promise<{ sessionI
           {error && (
             <div style={{
               alignSelf: "flex-start", padding: "10px 14px", borderRadius: 12,
-              background: "rgba(255,76,92,0.08)", border: "1px solid rgba(255,76,92,0.25)",
-              color: "#ff8a96", fontSize: 13, maxWidth: "88%",
+              background: "var(--nura-tint-danger)", border: "1px solid var(--nura-tint-danger-border)",
+              color: "var(--nura-danger)", fontSize: 13, maxWidth: "88%",
             }}>
               {error}
             </div>
@@ -485,7 +485,7 @@ export default function ChatSessionPage({ params }: { params: Promise<{ sessionI
       {toast && (
         <div style={{
           position: "fixed", bottom: 110, left: "50%", transform: "translateX(-50%)",
-          background: "rgba(var(--nura-bg-elevated-rgb),0.95)", border: `0.5px solid rgba(var(--nura-sage-rgb),0.3)`,
+          background: "rgba(var(--nura-bg-elevated-rgb),0.95)", border: '0.5px solid var(--nura-tint-accent-border)',
           color: TEXT, padding: "8px 14px", borderRadius: 20, fontSize: 12,
           zIndex: 60, animation: "toast-in 220ms ease both",
         }}>
@@ -546,8 +546,8 @@ export default function ChatSessionPage({ params }: { params: Promise<{ sessionI
               aria-label={recording ? "Stop recording" : "Voice input"}
               style={{
                 width: 38, height: 38, borderRadius: 9, border: "none",
-                background: recording ? "rgba(255,76,92,0.12)" : hovMic ? `rgba(var(--nura-sage-rgb),0.08)` : "transparent",
-                color: recording ? "#ff4c5c" : hovMic ? SAGE : TEXT_SEC,
+                background: recording ? "rgba(var(--nura-record-rgb),0.12)" : hovMic ? `rgba(var(--nura-sage-rgb),0.08)` : "transparent",
+                color: recording ? "var(--nura-record)" : hovMic ? SAGE : TEXT_SEC,
                 display: "flex", alignItems: "center", justifyContent: "center",
                 cursor: "pointer", flexShrink: 0, transition: "all 200ms",
                 animation: recording ? "mic-pulse 1.4s ease-in-out infinite" : "none",
@@ -564,7 +564,7 @@ export default function ChatSessionPage({ params }: { params: Promise<{ sessionI
               aria-label="Send"
               style={{
                 width: 38, height: 38, borderRadius: 11, border: "none",
-                background: (sending || !value.trim()) ? `rgba(var(--nura-sage-rgb),0.4)` : hovSend ? SAGE_HOV : SAGE,
+                background: (sending || !value.trim()) ? 'var(--nura-accent-disabled)' : hovSend ? SAGE_HOV : SAGE,
                 color: SAGE_ON,
                 display: "flex", alignItems: "center", justifyContent: "center",
                 cursor: (sending || !value.trim()) ? "not-allowed" : "pointer",

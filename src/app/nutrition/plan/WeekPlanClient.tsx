@@ -186,7 +186,7 @@ export default function WeekPlanClient({ days, totalPlanned, candidates, prefs, 
   );
 
   const errorBar = error ? (
-    <div style={{ ...card, padding: "11px 14px", borderColor: "rgba(255,76,92,0.4)", background: "rgba(255,76,92,0.08)", fontFamily: SANS, fontSize: 13, color: "#FF4C5C" }}>{error}</div>
+    <div style={{ ...card, padding: "11px 14px", borderColor: "var(--nura-tint-danger-border)", background: "var(--nura-tint-danger)", fontFamily: SANS, fontSize: 13, color: "var(--nura-danger)" }}>{error}</div>
   ) : null;
 
   // ── Empty state ─────────────────────────────────────────────────────────────
@@ -359,7 +359,7 @@ export default function WeekPlanClient({ days, totalPlanned, candidates, prefs, 
         @keyframes spin { to { transform: rotate(360deg); } }
         .wp-meal:hover { border-color: rgba(${SAGE_RGB},0.4) !important; }
         .wp-icon:hover, .wp-add:hover { border-color: rgba(${SAGE_RGB},0.45) !important; color: ${SAGE} !important; }
-        .wp-trash:hover { border-color: rgba(255,76,92,0.45) !important; color: #FF4C5C !important; }
+        .wp-trash:hover { border-color: rgba(var(--nura-danger-rgb),0.45) !important; color: var(--nura-danger) !important; }
         .wp-opt:hover { border-color: rgba(${SAGE_RGB},0.4) !important; background: rgba(${SAGE_RGB},0.05) !important; }
       `}</style>
     </div>

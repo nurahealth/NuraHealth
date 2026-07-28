@@ -391,7 +391,7 @@ function SageButton({ label, onClick, disabled }: { label: string; onClick: () =
       onMouseLeave={(e) => { if (!disabled) e.currentTarget.style.background = SAGE; }}
       style={{
         padding: "10px 18px", borderRadius: 11, border: "none",
-        background: disabled ? `rgba(var(--nura-sage-rgb),0.4)` : SAGE,
+        background: disabled ? 'var(--nura-accent-disabled)' : SAGE,
         color: SAGE_ON, fontFamily: SANS, fontSize: 13, fontWeight: 500,
         cursor: disabled ? "not-allowed" : "pointer", transition: "background 200ms",
       }}
@@ -840,7 +840,7 @@ function EditProfileModal({
                 onMouseLeave={(e) => { if (!uploading && croppedAreaPixels) e.currentTarget.style.background = SAGE; }}
                 style={{
                   flex: 1, padding: "11px 16px", borderRadius: 11, border: "none",
-                  background: (uploading || !croppedAreaPixels) ? `rgba(var(--nura-sage-rgb),0.4)` : SAGE,
+                  background: (uploading || !croppedAreaPixels) ? 'var(--nura-accent-disabled)' : SAGE,
                   color: SAGE_ON, fontFamily: SANS, fontSize: 13, fontWeight: 500,
                   cursor: (uploading || !croppedAreaPixels) ? "not-allowed" : "pointer",
                   transition: "background 200ms",
@@ -882,7 +882,7 @@ function EditProfileModal({
               position: "absolute", inset: 0, borderRadius: "50%",
               background: "rgba(0,0,0,0.4)",
               display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-              gap: 4, color: "#fff",
+              gap: 4, color: "var(--nura-sage-bg-on)",
               opacity: overlayVisible ? 1 : 0,
               transition: "opacity 180ms ease",
               pointerEvents: "none",
@@ -890,7 +890,7 @@ function EditProfileModal({
               {uploading ? (
                 <div style={{
                   width: 22, height: 22, borderRadius: "50%",
-                  border: "2px solid rgba(255,255,255,0.35)", borderTopColor: "#fff",
+                  border: "2px solid rgba(var(--nura-bg-rgb),0.35)", borderTopColor: "var(--nura-sage-bg-on)",
                   animation: "nura-spin 0.8s linear infinite",
                 }} />
               ) : (
@@ -1028,7 +1028,7 @@ function EditProfileModal({
         {success && (
           <div style={{
             padding: "9px 12px", borderRadius: 9, marginBottom: 14,
-            background: `rgba(var(--nura-sage-rgb),0.12)`,
+            background: 'var(--nura-tint-accent-strong)',
             border: `0.5px solid rgba(var(--nura-sage-rgb),0.35)`,
             color: SAGE, fontFamily: SANS, fontSize: 12,
           }}>Profile updated</div>
@@ -1042,7 +1042,7 @@ function EditProfileModal({
             onMouseLeave={(e) => { if (!saving && !success && name.trim()) e.currentTarget.style.background = SAGE; }}
             style={{
               flex: 1, padding: "11px 16px", borderRadius: 11, border: "none",
-              background: (saving || success || !name.trim()) ? `rgba(var(--nura-sage-rgb),0.4)` : SAGE,
+              background: (saving || success || !name.trim()) ? 'var(--nura-accent-disabled)' : SAGE,
               color: SAGE_ON, fontFamily: SANS, fontSize: 13, fontWeight: 500,
               cursor: (saving || success || !name.trim()) ? "not-allowed" : "pointer",
               transition: "background 200ms",
@@ -1294,7 +1294,7 @@ function SecurityModal({ user, onClose }: { user: User; onClose: () => void }) {
                 onMouseLeave={(e) => { if (!saving && !success) e.currentTarget.style.background = SAGE; }}
                 style={{
                   flex: 1, padding: "11px 16px", borderRadius: 11, border: "none",
-                  background: (saving || success) ? `rgba(var(--nura-sage-rgb),0.4)` : SAGE,
+                  background: (saving || success) ? 'var(--nura-accent-disabled)' : SAGE,
                   color: SAGE_ON, fontFamily: SANS, fontSize: 13, fontWeight: 500,
                   cursor: (saving || success) ? "not-allowed" : "pointer",
                   transition: "background 200ms",

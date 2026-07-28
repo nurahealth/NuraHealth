@@ -102,7 +102,7 @@ function SuccessContent() {
         {/* ── Syncing ── */}
         {syncState === "syncing" && (
           <div style={{ animation: "fade-up 400ms ease both" }}>
-            <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 64, height: 64, borderRadius: "50%", background: `rgba(var(--nura-sage-rgb),0.1)`, border: `1px solid rgba(var(--nura-sage-rgb),0.2)`, marginBottom: 24 }}>
+            <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 64, height: 64, borderRadius: "50%", background: 'var(--nura-tint-accent)', border: `1px solid rgba(var(--nura-sage-rgb),0.2)`, marginBottom: 24 }}>
               <div style={{ width: 28, height: 28, borderRadius: "50%", border: `2.5px solid rgba(var(--nura-sage-rgb),0.2)`, borderTopColor: SAGE, animation: "spin 0.9s linear infinite" }} />
             </div>
             <h1 style={{ fontSize: 24, fontWeight: 600, color: TEXT, margin: "0 0 8px", letterSpacing: "-0.3px" }}>
@@ -117,8 +117,8 @@ function SuccessContent() {
         {/* ── Error ── */}
         {syncState === "error" && (
           <div style={{ animation: "fade-up 400ms ease both" }}>
-            <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 64, height: 64, borderRadius: "50%", background: "rgba(255,76,92,0.08)", border: "1px solid rgba(255,76,92,0.3)", marginBottom: 24 }}>
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ff4c5c" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 64, height: 64, borderRadius: "50%", background: "var(--nura-tint-danger)", border: "1px solid var(--nura-tint-danger-border)", marginBottom: 24 }}>
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--nura-record)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
                 <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
               </svg>
@@ -130,7 +130,7 @@ function SuccessContent() {
             <div style={{ background: "var(--nura-surface)", border: `1px solid ${BORDER}`, borderRadius: 10, padding: "12px 14px", marginBottom: 24, textAlign: "left" }}>
               <div style={{ fontFamily: MONO, fontSize: 8, color: TEXT_TER, letterSpacing: "1px", marginBottom: 4 }}>REFERENCE</div>
               <div style={{ fontFamily: MONO, fontSize: 10, color: TEXT_SEC, wordBreak: "break-all" }}>{subscriptionId || sessionId}</div>
-              {syncError && <div style={{ fontFamily: MONO, fontSize: 8, color: "#ff4c5c", marginTop: 6 }}>{syncError}</div>}
+              {syncError && <div style={{ fontFamily: MONO, fontSize: 8, color: "var(--nura-record)", marginTop: 6 }}>{syncError}</div>}
             </div>
             <button onClick={() => router.push("/")} style={ctaStyle(false)}>GO TO DASHBOARD</button>
           </div>
@@ -154,7 +154,7 @@ function SuccessContent() {
 
             {/* Trial pill */}
             {isTrial && (
-              <div style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 12px", borderRadius: 20, background: `rgba(var(--nura-sage-rgb),0.12)`, border: `1px solid rgba(var(--nura-sage-rgb),0.3)`, marginBottom: 14 }}>
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 12px", borderRadius: 20, background: 'var(--nura-tint-accent-strong)', border: `1px solid rgba(var(--nura-sage-rgb),0.3)`, marginBottom: 14 }}>
                 <div style={{ width: 5, height: 5, borderRadius: "50%", background: SAGE }} />
                 <span style={{ fontFamily: MONO, fontSize: 8, fontWeight: 700, letterSpacing: "1.5px", color: SAGE }}>FREE TRIAL ACTIVE · 3 DAYS</span>
               </div>
@@ -177,7 +177,7 @@ function SuccessContent() {
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {PRO_BENEFITS.map((b) => (
                   <div key={b} style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                    <div style={{ width: 20, height: 20, borderRadius: "50%", background: `rgba(var(--nura-sage-rgb),0.12)`, border: `1px solid rgba(var(--nura-sage-rgb),0.25)`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <div style={{ width: 20, height: 20, borderRadius: "50%", background: 'var(--nura-tint-accent-strong)', border: `1px solid rgba(var(--nura-sage-rgb),0.25)`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                       <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke={SAGE} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M2 6l3 3 5-5"/>
                       </svg>

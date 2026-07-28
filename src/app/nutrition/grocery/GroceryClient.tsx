@@ -15,7 +15,7 @@ const SURFACE = "var(--nura-surface)";
 const SAGE = "var(--nura-sage)";
 const SAGE_RGB = "var(--nura-sage-rgb)";
 const SANS = "var(--font-inter), system-ui, sans-serif";
-const DANGER = "#FF4C5C";
+const DANGER = "var(--nura-danger)";
 
 const card: React.CSSProperties = { background: SURFACE, border: `0.5px solid ${BORDER}`, borderRadius: 14 };
 const heading: React.CSSProperties = { fontFamily: SANS, fontSize: 22, fontWeight: 600, color: TEXT, margin: 0, letterSpacing: "-0.02em" };
@@ -243,11 +243,11 @@ export default function GroceryClient({ items: initial, planItems, tableReady, u
   const banner = (
     <>
       {!tableReady && (
-        <div style={{ ...card, padding: "11px 14px", borderColor: "rgba(211,162,83,0.4)", background: "rgba(211,162,83,0.08)", fontFamily: SANS, fontSize: 12.5, color: "#d3a253", lineHeight: 1.5 }}>
+        <div style={{ ...card, padding: "11px 14px", borderColor: "var(--nura-tint-warn-border)", background: "var(--nura-tint-warn)", fontFamily: SANS, fontSize: 12.5, color: "var(--nura-good)", lineHeight: 1.5 }}>
           Run the new migration (<code>20260619000003_grocery_items.sql</code>) to enable saving your grocery list.
         </div>
       )}
-      {error && <div style={{ ...card, padding: "11px 14px", borderColor: "rgba(255,76,92,0.4)", background: "rgba(255,76,92,0.08)", fontFamily: SANS, fontSize: 13, color: DANGER }}>{error}</div>}
+      {error && <div style={{ ...card, padding: "11px 14px", borderColor: "var(--nura-tint-danger-border)", background: "var(--nura-tint-danger)", fontFamily: SANS, fontSize: 13, color: DANGER }}>{error}</div>}
       {info && <div style={{ ...card, padding: "11px 14px", borderColor: `rgba(${SAGE_RGB},0.4)`, background: `rgba(${SAGE_RGB},0.08)`, fontFamily: SANS, fontSize: 13, color: SAGE }}>{info}</div>}
     </>
   );
@@ -338,7 +338,7 @@ export default function GroceryClient({ items: initial, planItems, tableReady, u
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
         .gl-row:hover { border-color: rgba(${SAGE_RGB},0.4); }
-        .gl-trash:hover { border-color: rgba(255,76,92,0.45) !important; color: ${DANGER} !important; }
+        .gl-trash:hover { border-color: rgba(var(--nura-danger-rgb),0.45) !important; color: ${DANGER} !important; }
         .gl-uncheck:hover { border-color: rgba(${SAGE_RGB},0.45); color: ${SAGE}; }
       `}</style>
     </div>

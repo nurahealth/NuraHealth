@@ -214,7 +214,7 @@ export function RemovableChip({ label, onRemove }: { label: string; onRemove: ()
       display: 'inline-flex', alignItems: 'center', gap: 6,
       padding: '5px 6px 5px 12px', borderRadius: 18,
       border: `1px solid rgba(var(--nura-sage-rgb),0.45)`,
-      background: `rgba(var(--nura-sage-rgb),0.10)`,
+      background: 'var(--nura-tint-accent)',
       fontSize: 12, fontFamily: SANS, color: SAGE, fontWeight: 500,
     }}>
       {label}

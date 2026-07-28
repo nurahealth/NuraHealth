@@ -155,6 +155,9 @@
   --nura-inset-dark: rgba(13, 13, 14, 0.35);   /* chips sitting on imagery */
   --nura-modal: linear-gradient(180deg, #161718, #131314);
   --nura-danger-soft: #d98b8b;                 /* inline error text */
+  --nura-record: #ff4c5c;                      /* live mic / recording state */
+  --nura-record-rgb: 255, 76, 92;
+  --nura-accent-disabled: rgba(155, 176, 165, 0.4);  /* filled button, inactive */
 
   /* ── Aliases (semantic names requested by the design system) ────────── */
   --nura-accent: var(--nura-sage);
@@ -299,6 +302,9 @@
   --nura-inset-dark: #f0eeea;
   --nura-modal: #ffffff;
   --nura-danger-soft: #b8392f;          /*  5.7:1 */
+  --nura-record: #c62828;               /*  5.6:1 — #ff4c5c is only 3.3:1 on white */
+  --nura-record-rgb: 198, 40, 40;
+  --nura-accent-disabled: #8fa398;      /* solid, so the label stays readable */
 }
 
 @theme inline {

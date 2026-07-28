@@ -48,7 +48,7 @@ const BORDER = "var(--nura-border)";
 const SURFACE = "var(--nura-surface)";
 const SAGE = "var(--nura-sage)";
 const SAGE_RGB = "var(--nura-sage-rgb)";
-const AMBER = "#d3a253";
+const AMBER = "var(--nura-good)";
 const AMBER_RGB = "211,162,83";
 const SANS = "var(--font-inter), system-ui, sans-serif";
 

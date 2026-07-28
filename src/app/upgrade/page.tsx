@@ -90,11 +90,11 @@ export default function UpgradePage() {
         {/* Logo wordmark */}
         <div style={{ textAlign: "center", marginBottom: 40 }}>
           <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 64, height: 64, borderRadius: "50%", background: BG, border: `0.5px solid rgba(var(--nura-sage-rgb),0.45)`, marginBottom: 20, animation: "pulse-ring 2.8s ease-in-out infinite" }}>
-            <span style={{ fontFamily: SANS, fontWeight: 600, fontSize: 16, color: "#fff", letterSpacing: "0.16em" }}>NŪRA</span>
+            <span style={{ fontFamily: SANS, fontWeight: 600, fontSize: 16, color: "var(--nura-text-primary)", letterSpacing: "0.16em" }}>NŪRA</span>
           </div>
 
           {/* Trial badge */}
-          <div style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "5px 14px", borderRadius: 20, background: `rgba(var(--nura-sage-rgb),0.12)`, border: `1px solid rgba(var(--nura-sage-rgb),0.3)`, marginBottom: 16 }}>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "5px 14px", borderRadius: 20, background: 'var(--nura-tint-accent-strong)', border: `1px solid rgba(var(--nura-sage-rgb),0.3)`, marginBottom: 16 }}>
             <div style={{ width: 6, height: 6, borderRadius: "50%", background: SAGE }} />
             <span style={{ fontFamily: MONO, fontSize: 9, fontWeight: 700, letterSpacing: "1.5px", color: SAGE }}>3-DAY FREE TRIAL</span>
           </div>
@@ -117,7 +117,7 @@ export default function UpgradePage() {
             }}>
               <div style={{
                 width: 22, height: 22, borderRadius: "50%", flexShrink: 0,
-                background: `rgba(var(--nura-sage-rgb),0.12)`, border: `1px solid rgba(var(--nura-sage-rgb),0.25)`,
+                background: 'var(--nura-tint-accent-strong)', border: `1px solid rgba(var(--nura-sage-rgb),0.25)`,
                 display: "flex", alignItems: "center", justifyContent: "center",
                 fontSize: 9, color: SAGE,
               }}>
