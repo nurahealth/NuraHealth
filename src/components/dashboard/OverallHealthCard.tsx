@@ -115,7 +115,7 @@ export default function OverallHealthCard() {
             A complete read on how your body&apos;s doing · <span style={{ color: "var(--nura-teal)" }}>▲ {d.weeklyTrend}</span> this week
           </div>
         </div>
-        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.8px", textTransform: "uppercase", color: "var(--nura-teal)", border: "1px solid rgba(var(--nura-teal-rgb),0.4)", padding: "5px 11px", borderRadius: 999, background: "rgba(var(--nura-teal-rgb),0.07)", whiteSpace: "nowrap" }}>
+        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.8px", textTransform: "uppercase", color: "var(--nura-teal)", border: "1px solid var(--nura-tint-accent-border)", padding: "5px 11px", borderRadius: 999, background: "var(--nura-tint-accent)", whiteSpace: "nowrap" }}>
           {d.status}
         </div>
       </div>
@@ -185,7 +185,7 @@ export default function OverallHealthCard() {
       </div>
 
       {/* What to improve */}
-      <div style={{ marginTop: 14, padding: 15, borderRadius: 16, border: "1px solid rgba(var(--nura-good-rgb),0.22)", background: "linear-gradient(135deg, rgba(var(--nura-good-rgb),0.08), rgba(var(--nura-alert-rgb),0.03))" }}>
+      <div style={{ marginTop: 14, padding: 15, borderRadius: 16, border: "1px solid var(--nura-tint-warn-border)", background: "var(--nura-tint-warn)" }}>
         <div style={{ fontSize: 10.5, letterSpacing: "1.4px", textTransform: "uppercase", color: GOLD, fontWeight: 700 }}>What to improve</div>
         <div style={{ fontSize: 11.5, color: FAINT, marginTop: 3 }}>Personalized from your readings — tap any to go deeper</div>
 

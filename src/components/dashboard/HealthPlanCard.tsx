@@ -131,7 +131,7 @@ export default function HealthPlanCard() {
           </div>
           <div style={{ fontSize: 12, color: MUTED, marginTop: 4, lineHeight: 1.45 }}>{p.subtitle}</div>
         </div>
-        <div style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: "0.8px", textTransform: "uppercase", color: SAGE, border: "1px solid rgba(var(--nura-sage-rgb),0.4)", padding: "5px 10px", borderRadius: 999, background: "rgba(var(--nura-sage-rgb),0.07)", whiteSpace: "nowrap" }}>
+        <div style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: "0.8px", textTransform: "uppercase", color: SAGE, border: "1px solid var(--nura-tint-accent-border)", padding: "5px 10px", borderRadius: 999, background: "var(--nura-tint-accent)", whiteSpace: "nowrap" }}>
           Personalized
         </div>
       </div>
@@ -177,13 +177,13 @@ export default function HealthPlanCard() {
         <div style={{ fontSize: 10, letterSpacing: "1.2px", textTransform: "uppercase", color: SAGE, fontWeight: 700, marginBottom: 9 }}>This week&apos;s focus</div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
           {p.focus.map((f) => (
-            <span key={f} style={{ fontSize: 12, fontWeight: 600, color: TEXT, padding: "7px 12px", borderRadius: 999, background: "rgba(var(--nura-sage-rgb),0.1)", border: "1px solid rgba(var(--nura-sage-rgb),0.22)" }}>{f}</span>
+            <span key={f} style={{ fontSize: 12, fontWeight: 600, color: TEXT, padding: "7px 12px", borderRadius: 999, background: "var(--nura-tint-accent-strong)", border: "1px solid var(--nura-tint-accent-border)" }}>{f}</span>
           ))}
         </div>
       </div>
 
       {/* Intro — soft sage-tinted box above the domain list */}
-      <div className="hp-dd" style={{ margin: "14px 2px 4px", padding: "13px 15px", borderRadius: 14, background: "rgba(var(--nura-sage-rgb),0.07)", border: "1px solid rgba(var(--nura-sage-rgb),0.18)", fontSize: 12.5, lineHeight: 1.5, color: MUTED }} dangerouslySetInnerHTML={{ __html: INTRO_HTML }} />
+      <div className="hp-dd" style={{ margin: "14px 2px 4px", padding: "13px 15px", borderRadius: 14, background: "var(--nura-tint-accent)", border: "1px solid var(--nura-tint-accent-border)", fontSize: 12.5, lineHeight: 1.5, color: MUTED }} dangerouslySetInnerHTML={{ __html: INTRO_HTML }} />
 
       {/* Domain accordions */}
       <div>

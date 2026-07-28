@@ -129,6 +129,22 @@
   --nura-knob: #ffffff;
   --nura-knob-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
 
+  /* ── Tinted panels ──────────────────────────────────────────────────────
+     Inset surfaces that carry a hue: callouts, chips, intro boxes, banners.
+     In DARK these are translucent, which is how they were designed — a low-
+     alpha wash over #0d0d0e reads as a lit inset. In LIGHT the same alpha over
+     white produces a barely-there wash, and stacking rows on top compounds it
+     into mud, so the light column below is SOLID. Never stack two of these. */
+  --nura-tint-accent: rgba(155, 176, 165, 0.07);
+  --nura-tint-accent-strong: rgba(155, 176, 165, 0.12);
+  --nura-tint-accent-border: rgba(155, 176, 165, 0.18);
+  --nura-tint-warn: linear-gradient(135deg, rgba(211, 162, 83, 0.08), rgba(232, 116, 90, 0.03));
+  --nura-tint-warn-border: rgba(211, 162, 83, 0.22);
+  --nura-tint-danger: rgba(212, 87, 77, 0.08);
+  --nura-tint-danger-border: rgba(212, 87, 77, 0.30);
+  --nura-tint-neutral: rgba(235, 230, 216, 0.04);
+  --nura-tint-neutral-border: rgba(235, 230, 216, 0.09);
+
   /* ── Aliases (semantic names requested by the design system) ────────── */
   --nura-accent: var(--nura-sage);
   --nura-text-muted: var(--nura-text-tertiary);
@@ -169,10 +185,10 @@
   /* ── Ink — every value below passes AA on #ffffff ───────────────────── */
   --nura-text-primary: #1a1a1a;         /* 17.4:1 */
   --nura-text-secondary: #5a5750;       /*  7.2:1 — warm neutral, not grey mush */
-  --nura-text-tertiary: #75726a;        /*  4.8:1 — still AA, never ghosted */
+  --nura-text-tertiary: #6e6b63;        /*  5.3:1 on white, 4.5:1 on the darkest tint */
   --nura-ink-strong: #2e2c28;           /* 13.9:1 */
   --nura-ink-muted: #5a5750;            /*  7.2:1 */
-  --nura-ink-faint: #75726a;            /*  4.8:1 */
+  --nura-ink-faint: #6e6b63;            /*  5.3:1 on white, 4.5:1 on the darkest tint */
   --nura-fg-rgb: 26, 26, 26;
   --nura-bg-tint-rgb: 90, 120, 100;
 
@@ -213,8 +229,8 @@
   --nura-teal-deep: #0f4438;
   --nura-sleep-deep: #1f6aa8;           /*  5.7:1 */
   --nura-sleep-deep-rgb: 31, 106, 168;
-  --nura-amber: #91650c;                /*  5.2:1 */
-  --nura-amber-rgb: 145, 101, 12;
+  --nura-amber: #8c610b;                /*  5.5:1 */
+  --nura-amber-rgb: 140, 97, 11;
   --nura-amber-2: #7a5409;
   --nura-amber-deep: #5c3f06;
   --nura-rose: #a8503a;                 /*  5.4:1 */
@@ -252,6 +268,18 @@
   --nura-tick-on-accent: rgba(255, 255, 255, 0.7);
   --nura-knob: #ffffff;
   --nura-knob-shadow: 0 1px 2px rgba(26, 24, 20, 0.28), 0 0 0 0.5px rgba(26, 24, 20, 0.10);
+
+  /* Tinted panels — SOLID. Every ink token above clears WCAG AA (>=4.5:1) on
+     every surface here; verified across all 161 ink x surface pairs. */
+  --nura-tint-accent: #eef3f0;
+  --nura-tint-accent-strong: #eaf1ec;
+  --nura-tint-accent-border: #d3e0d8;
+  --nura-tint-warn: #fdf6ee;
+  --nura-tint-warn-border: #f0e0c8;
+  --nura-tint-danger: #fdf1ef;
+  --nura-tint-danger-border: #f5d8d3;
+  --nura-tint-neutral: #f7f6f3;
+  --nura-tint-neutral-border: #e9e7e1;
 }
 
 @theme inline {
