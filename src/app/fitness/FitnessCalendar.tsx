@@ -5,9 +5,8 @@ import Link from 'next/link';
 import { loadActiveProgram, loadCompletions, localDateKey, type Program, type WEx, type Workout } from './planData';
 
 // ── Palette (NŪRA) ───────────────────────────────────────────────────────────
-const SAGE = '#9bb0a5';
-const OFF = '235,230,216'; // off-white rgb (#ebe6d8)
-const BG = '#0d0d0e';
+const SAGE = 'var(--nura-sage)';
+const BG = 'var(--nura-bg)';
 const SANS = "var(--font-inter), system-ui, sans-serif";
 const MONO = "'JetBrains Mono', monospace";
 
@@ -64,7 +63,7 @@ function ViewToggle({ view, setView }: { view: 'week' | 'month'; setView: (v: 'w
   return (
     <div style={{
       display: 'inline-flex', padding: 3, borderRadius: 11, gap: 2,
-      background: `rgba(${OFF},0.05)`, border: `1px solid rgba(${OFF},0.12)`,
+      background: `rgba(var(--nura-bg-tint-rgb),0.05)`, border: `1px solid rgba(var(--nura-bg-tint-rgb),0.12)`,
     }}>
       {(['week', 'month'] as const).map((v) => {
         const active = view === v;
@@ -77,7 +76,7 @@ function ViewToggle({ view, setView }: { view: 'week' | 'month'; setView: (v: 'w
               appearance: 'none', cursor: 'pointer', border: 'none',
               padding: '6px 16px', borderRadius: 8, fontFamily: SANS, fontSize: 13, fontWeight: 600,
               textTransform: 'capitalize', transition: 'all 150ms ease',
-              color: active ? BG : `rgba(${OFF},0.6)`,
+              color: active ? BG : `var(--nura-ink-muted)`,
               background: active ? SAGE : 'transparent',
             }}
           >
@@ -95,8 +94,8 @@ function PeriodNav({ label, onPrev, onNext, onToday }: {
 }) {
   const navBtn: React.CSSProperties = {
     appearance: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-    width: 34, height: 34, borderRadius: 10, color: `rgba(${OFF},0.7)`,
-    background: `rgba(${OFF},0.05)`, border: `1px solid rgba(${OFF},0.12)`,
+    width: 34, height: 34, borderRadius: 10, color: `var(--nura-ink-strong)`,
+    background: `rgba(var(--nura-bg-tint-rgb),0.05)`, border: `1px solid rgba(var(--nura-bg-tint-rgb),0.12)`,
   };
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -106,7 +105,7 @@ function PeriodNav({ label, onPrev, onNext, onToday }: {
         onClick={onToday}
         style={{
           appearance: 'none', cursor: 'pointer', minWidth: 132, textAlign: 'center',
-          fontFamily: SANS, fontSize: 15, fontWeight: 600, color: `rgb(${OFF})`,
+          fontFamily: SANS, fontSize: 15, fontWeight: 600, color: 'var(--nura-text-primary)',
           background: 'transparent', border: 'none', letterSpacing: '-0.2px',
         }}
       >
@@ -139,24 +138,24 @@ function WeekView({ cursor, byDay, today, completedKeys, onPick }: {
               appearance: 'none', cursor: 'pointer', textAlign: 'left', width: '100%',
               display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px', borderRadius: 14,
               fontFamily: SANS,
-              background: training ? 'rgba(155,176,165,0.07)' : `rgba(${OFF},0.02)`,
-              border: `1px solid ${isToday ? 'rgba(155,176,165,0.55)' : training ? 'rgba(155,176,165,0.2)' : `rgba(${OFF},0.08)`}`,
+              background: training ? 'rgba(var(--nura-sage-rgb),0.07)' : `rgba(var(--nura-bg-tint-rgb),0.02)`,
+              border: `1px solid ${isToday ? 'rgba(var(--nura-sage-rgb),0.55)' : training ? 'rgba(var(--nura-sage-rgb),0.2)' : `rgba(var(--nura-bg-tint-rgb),0.08)`}`,
               transition: 'border-color 150ms ease',
             }}
           >
             <div style={{ width: 44, flexShrink: 0, textAlign: 'center' }}>
-              <div style={{ fontSize: 10, fontFamily: MONO, letterSpacing: '1px', color: `rgba(${OFF},0.45)`, textTransform: 'uppercase' }}>
+              <div style={{ fontSize: 10, fontFamily: MONO, letterSpacing: '1px', color: `var(--nura-text-tertiary)`, textTransform: 'uppercase' }}>
                 {WEEKDAYS[i]}
               </div>
-              <div style={{ fontSize: 20, fontWeight: 600, color: isToday ? SAGE : `rgb(${OFF})`, marginTop: 2 }}>
+              <div style={{ fontSize: 20, fontWeight: 600, color: isToday ? SAGE : 'var(--nura-text-primary)', marginTop: 2 }}>
                 {date.getDate()}
               </div>
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 15.5, fontWeight: 600, color: training ? `rgb(${OFF})` : `rgba(${OFF},0.55)`, letterSpacing: '-0.2px' }}>
+              <div style={{ fontSize: 15.5, fontWeight: 600, color: training ? 'var(--nura-text-primary)' : `var(--nura-text-secondary)`, letterSpacing: '-0.2px' }}>
                 {focusOf(w)}
               </div>
-              <div style={{ fontSize: 12, color: done ? SAGE : training ? SAGE : `rgba(${OFF},0.4)`, fontFamily: training ? MONO : SANS, marginTop: 3, letterSpacing: training ? '0.3px' : 0 }}>
+              <div style={{ fontSize: 12, color: done ? SAGE : training ? SAGE : `var(--nura-text-tertiary)`, fontFamily: training ? MONO : SANS, marginTop: 3, letterSpacing: training ? '0.3px' : 0 }}>
                 {done ? 'Completed ✓' : training ? `${w!.exercises.length} ${w!.exercises.length === 1 ? 'exercise' : 'exercises'}` : 'Recovery'}
               </div>
             </div>
@@ -165,11 +164,11 @@ function WeekView({ cursor, byDay, today, completedKeys, onPick }: {
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={BG} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
               </span>
             ) : training ? (
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={`rgba(${OFF},0.3)`} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={`var(--nura-ink-faint)`} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
                 <path d="M9 6l6 6-6 6" />
               </svg>
             ) : (
-              <span style={{ color: `rgba(${OFF},0.3)`, flexShrink: 0 }}><RestIcon size={18} /></span>
+              <span style={{ color: `var(--nura-ink-faint)`, flexShrink: 0 }}><RestIcon size={18} /></span>
             )}
           </button>
         );
@@ -189,7 +188,7 @@ function MonthView({ cursor, byDay, today, completedKeys, onPick }: {
       {/* weekday header */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 6, marginBottom: 8 }}>
         {WEEKDAYS_MIN.map((d, i) => (
-          <div key={i} style={{ textAlign: 'center', fontSize: 10, fontFamily: MONO, letterSpacing: '0.5px', color: `rgba(${OFF},0.4)`, textTransform: 'uppercase' }}>
+          <div key={i} style={{ textAlign: 'center', fontSize: 10, fontFamily: MONO, letterSpacing: '0.5px', color: `var(--nura-text-tertiary)`, textTransform: 'uppercase' }}>
             {d}
           </div>
         ))}
@@ -212,12 +211,12 @@ function MonthView({ cursor, byDay, today, completedKeys, onPick }: {
                 aspectRatio: '1 / 1', minHeight: 0, padding: '6px 4px 5px',
                 display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', gap: 3,
                 borderRadius: 11, opacity: inMonth ? 1 : 0.32,
-                background: training && inMonth ? 'rgba(155,176,165,0.1)' : `rgba(${OFF},0.02)`,
-                border: `1px solid ${isToday ? 'rgba(155,176,165,0.6)' : training && inMonth ? 'rgba(155,176,165,0.22)' : `rgba(${OFF},0.07)`}`,
+                background: training && inMonth ? 'rgba(var(--nura-sage-rgb),0.1)' : `rgba(var(--nura-bg-tint-rgb),0.02)`,
+                border: `1px solid ${isToday ? 'rgba(var(--nura-sage-rgb),0.6)' : training && inMonth ? 'rgba(var(--nura-sage-rgb),0.22)' : `rgba(var(--nura-bg-tint-rgb),0.07)`}`,
                 transition: 'border-color 150ms ease',
               }}
             >
-              <span style={{ fontSize: 13, fontWeight: 600, lineHeight: 1, color: isToday ? SAGE : `rgb(${OFF})` }}>
+              <span style={{ fontSize: 13, fontWeight: 600, lineHeight: 1, color: isToday ? SAGE : 'var(--nura-text-primary)' }}>
                 {date.getDate()}
               </span>
               {done ? (
@@ -232,7 +231,7 @@ function MonthView({ cursor, byDay, today, completedKeys, onPick }: {
                   {(w!.focus || 'Train').split(' ')[0]}
                 </span>
               ) : (
-                <span style={{ width: 4, height: 4, borderRadius: 999, background: `rgba(${OFF},0.18)`, marginTop: 2 }} />
+                <span style={{ width: 4, height: 4, borderRadius: 999, background: `rgba(var(--nura-bg-tint-rgb),0.18)`, marginTop: 2 }} />
               )}
             </button>
           );
@@ -240,13 +239,13 @@ function MonthView({ cursor, byDay, today, completedKeys, onPick }: {
       </div>
       {/* legend */}
       <div style={{ display: 'flex', gap: 18, marginTop: 14, paddingLeft: 2 }}>
-        <span style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 11.5, color: `rgba(${OFF},0.5)`, fontFamily: SANS }}>
-          <span style={{ width: 11, height: 11, borderRadius: 4, background: 'rgba(155,176,165,0.22)', border: '1px solid rgba(155,176,165,0.4)' }} /> Training
+        <span style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 11.5, color: `var(--nura-text-secondary)`, fontFamily: SANS }}>
+          <span style={{ width: 11, height: 11, borderRadius: 4, background: 'rgba(var(--nura-sage-rgb),0.22)', border: '1px solid rgba(var(--nura-sage-rgb),0.4)' }} /> Training
         </span>
-        <span style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 11.5, color: `rgba(${OFF},0.5)`, fontFamily: SANS }}>
-          <span style={{ width: 4, height: 4, borderRadius: 999, background: `rgba(${OFF},0.18)` }} /> Rest
+        <span style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 11.5, color: `var(--nura-text-secondary)`, fontFamily: SANS }}>
+          <span style={{ width: 4, height: 4, borderRadius: 999, background: `rgba(var(--nura-bg-tint-rgb),0.18)` }} /> Rest
         </span>
-        <span style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 11.5, color: `rgba(${OFF},0.5)`, fontFamily: SANS }}>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 11.5, color: `var(--nura-text-secondary)`, fontFamily: SANS }}>
           <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 13, height: 13, borderRadius: '50%', background: SAGE }}>
             <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke={BG} strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
           </span> Done
@@ -298,8 +297,8 @@ function DaySheet({ date, workout, done, onClose }: {
     }}>
       <div onClick={(e) => e.stopPropagation()} style={{
         width: '100%', maxWidth: 420, maxHeight: '80vh', display: 'flex', flexDirection: 'column',
-        background: '#161918', borderRadius: 22, overflow: 'hidden',
-        border: `1px solid rgba(${OFF},.09)`, padding: '18px 16px',
+        background: 'var(--nura-card)', borderRadius: 22, overflow: 'hidden',
+        border: `1px solid rgba(var(--nura-bg-tint-rgb),.09)`, padding: '18px 16px',
         fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,sans-serif',
         opacity: visible ? 1 : 0, transform: visible ? 'scale(1)' : 'scale(.96)',
         transition: 'opacity 200ms ease, transform 200ms ease',
@@ -307,23 +306,23 @@ function DaySheet({ date, workout, done, onClose }: {
         {/* header (date + focus + completed badge, ✕ close) — pinned */}
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 18, flexShrink: 0 }}>
           <div>
-            <div style={{ fontSize: 11, fontFamily: MONO, letterSpacing: '1.4px', color: `rgba(${OFF},0.45)`, textTransform: 'uppercase' }}>
+            <div style={{ fontSize: 11, fontFamily: MONO, letterSpacing: '1.4px', color: `var(--nura-text-tertiary)`, textTransform: 'uppercase' }}>
               {heading}
             </div>
-            <div style={{ fontSize: 22, fontWeight: 700, color: training ? `rgb(${OFF})` : `rgba(${OFF},0.7)`, marginTop: 5, letterSpacing: '-0.4px' }}>
+            <div style={{ fontSize: 22, fontWeight: 700, color: training ? 'var(--nura-text-primary)' : `var(--nura-ink-strong)`, marginTop: 5, letterSpacing: '-0.4px' }}>
               {focusOf(workout)}
             </div>
             {done && (
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginTop: 8, padding: '4px 10px', borderRadius: 999, background: 'rgba(155,176,165,0.16)', border: '1px solid rgba(155,176,165,0.4)', color: SAGE, fontSize: 12, fontWeight: 600, fontFamily: SANS }}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginTop: 8, padding: '4px 10px', borderRadius: 999, background: 'rgba(var(--nura-sage-rgb),0.16)', border: '1px solid rgba(var(--nura-sage-rgb),0.4)', color: SAGE, fontSize: 12, fontWeight: 600, fontFamily: SANS }}>
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={SAGE} strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
                 Completed
               </span>
             )}
           </div>
           <button type="button" aria-label="Close" onClick={requestClose} style={{
-            appearance: 'none', cursor: 'pointer', width: 32, height: 32, borderRadius: 9, color: `rgba(${OFF},.5)`,
+            appearance: 'none', cursor: 'pointer', width: 32, height: 32, borderRadius: 9, color: `var(--nura-text-secondary)`,
             display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-            background: 'rgba(235,230,216,.05)', border: `1px solid rgba(${OFF},.09)`,
+            background: 'rgba(var(--nura-bg-tint-rgb),.05)', border: `1px solid rgba(var(--nura-bg-tint-rgb),.09)`,
           }}>✕</button>
         </div>
 
@@ -332,10 +331,10 @@ function DaySheet({ date, workout, done, onClose }: {
           {!training ? (
             <div style={{
               display: 'flex', alignItems: 'center', gap: 12, padding: '18px 16px', borderRadius: 14,
-              background: `rgba(${OFF},0.02)`, border: `1px dashed rgba(${OFF},0.1)`,
+              background: `rgba(var(--nura-bg-tint-rgb),0.02)`, border: `1px dashed rgba(var(--nura-bg-tint-rgb),0.1)`,
             }}>
-              <span style={{ color: `rgba(${OFF},0.45)` }}><RestIcon size={20} /></span>
-              <span style={{ fontSize: 14, color: `rgba(${OFF},0.6)`, fontFamily: SANS }}>Rest &amp; recover — no training scheduled.</span>
+              <span style={{ color: `var(--nura-text-tertiary)` }}><RestIcon size={20} /></span>
+              <span style={{ fontSize: 14, color: `var(--nura-ink-muted)`, fontFamily: SANS }}>Rest &amp; recover — no training scheduled.</span>
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -344,17 +343,17 @@ function DaySheet({ date, workout, done, onClose }: {
                   key={we.id}
                   style={{
                     display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', borderRadius: 12,
-                    background: `rgba(${OFF},0.03)`, border: `1px solid rgba(${OFF},0.08)`,
+                    background: `rgba(var(--nura-bg-tint-rgb),0.03)`, border: `1px solid rgba(var(--nura-bg-tint-rgb),0.08)`,
                   }}
                 >
                   <div style={{ minWidth: 0, flex: 1 }}>
-                    <div style={{ fontSize: 14.5, fontWeight: 500, color: `rgb(${OFF})`, lineHeight: 1.3 }}>
+                    <div style={{ fontSize: 14.5, fontWeight: 500, color: 'var(--nura-text-primary)', lineHeight: 1.3 }}>
                       {we.exercise?.name ?? 'Exercise'}
                     </div>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2px 8px', marginTop: 4 }}>
                       <span style={{ fontSize: 11.5, fontFamily: MONO, letterSpacing: '0.3px', color: SAGE }}>{prescription(we)}</span>
                       {muscleLabel(we.exercise) && (
-                        <span style={{ fontSize: 11.5, color: `rgba(${OFF},0.42)` }}>{muscleLabel(we.exercise)}</span>
+                        <span style={{ fontSize: 11.5, color: `var(--nura-text-tertiary)` }}>{muscleLabel(we.exercise)}</span>
                       )}
                     </div>
                   </div>
@@ -368,8 +367,8 @@ function DaySheet({ date, workout, done, onClose }: {
             style={{
               display: 'block', textAlign: 'center', marginTop: 18, textDecoration: 'none',
               fontSize: 13, fontWeight: 500, color: SAGE, fontFamily: SANS,
-              padding: '11px', borderRadius: 11, background: 'rgba(155,176,165,0.1)',
-              border: '1px solid rgba(155,176,165,0.3)',
+              padding: '11px', borderRadius: 11, background: 'rgba(var(--nura-sage-rgb),0.1)',
+              border: '1px solid rgba(var(--nura-sage-rgb),0.3)',
             }}
           >
             Edit in plan →
@@ -433,22 +432,22 @@ export default function FitnessCalendar() {
     <div>
       {/* Heading */}
       <div style={{ marginBottom: 20 }}>
-        <h1 style={{ fontSize: 26, fontWeight: 600, color: `rgb(${OFF})`, fontFamily: SANS, margin: '0 0 6px', letterSpacing: '-0.5px' }}>
+        <h1 style={{ fontSize: 26, fontWeight: 600, color: 'var(--nura-text-primary)', fontFamily: SANS, margin: '0 0 6px', letterSpacing: '-0.5px' }}>
           Calendar
         </h1>
-        <p style={{ fontSize: 14, color: `rgba(${OFF},0.55)`, fontFamily: SANS, margin: 0, lineHeight: 1.6 }}>
+        <p style={{ fontSize: 14, color: `var(--nura-text-secondary)`, fontFamily: SANS, margin: 0, lineHeight: 1.6 }}>
           {subtitle}
         </p>
       </div>
 
       {loading ? (
-        <div style={{ fontSize: 13, color: `rgba(${OFF},0.45)`, fontFamily: SANS, padding: '8px 2px' }}>Loading your schedule…</div>
+        <div style={{ fontSize: 13, color: `var(--nura-text-tertiary)`, fontFamily: SANS, padding: '8px 2px' }}>Loading your schedule…</div>
       ) : !program ? (
         <div style={{
           borderRadius: 18, padding: '28px 24px', textAlign: 'center',
-          background: 'rgba(155,176,165,0.05)', border: '1px solid rgba(155,176,165,0.22)',
+          background: 'rgba(var(--nura-sage-rgb),0.05)', border: '1px solid rgba(var(--nura-sage-rgb),0.22)',
         }}>
-          <p style={{ fontSize: 14.5, color: `rgba(${OFF},0.7)`, fontFamily: SANS, lineHeight: 1.6, margin: '0 0 18px' }}>
+          <p style={{ fontSize: 14.5, color: `var(--nura-ink-strong)`, fontFamily: SANS, lineHeight: 1.6, margin: '0 0 18px' }}>
             No active program yet — build your weekly plan and it&apos;ll show up here.
           </p>
           <Link
@@ -463,7 +462,7 @@ export default function FitnessCalendar() {
         </div>
       ) : (
         <>
-          {error && <div style={{ fontSize: 12.5, color: '#d98b8b', fontFamily: SANS, marginBottom: 12 }}>{error}</div>}
+          {error && <div style={{ fontSize: 12.5, color: 'var(--nura-danger-soft)', fontFamily: SANS, marginBottom: 12 }}>{error}</div>}
 
           {/* controls */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 18 }}>

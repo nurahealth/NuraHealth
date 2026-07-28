@@ -8,7 +8,7 @@ import { useState } from 'react';
 //    <img> for anything else.
 //  - thumb: the original static poster (.webp); on load error → sage placeholder.
 
-const PH_SAGE = '#9bb0a5';
+const PH_SAGE = 'var(--nura-sage)';
 
 // Clean sage line-art placeholder — shown for a thumbnail whose image fails to
 // load (e.g. a non-MoveKit exercise whose GIF is gone). Never a broken image.

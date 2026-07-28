@@ -15,14 +15,13 @@ import { saveFitnessOnboarding, type FitnessProfileData } from './actions';
 const TOTAL_STEPS = 7;
 
 // ─── Design-system palette (explicit, per spec) ──────────────────────────────
-const SAGE_HEX = '#9bb0a5';
-const SAGE_HOVER = '#abc0b5';
-const DARK = '#0d0d0e';
-const OFF = '235,230,216';               // off-white rgb (#ebe6d8)
-const TILE_BG = `rgba(${OFF},0.045)`;
-const TILE_BORDER = `rgba(${OFF},0.12)`;
-const TILE_LABEL = `rgba(${OFF},0.92)`;
-const TILE_DESC = `rgba(${OFF},0.5)`;
+const SAGE_HEX = 'var(--nura-sage)';
+const SAGE_HOVER = 'var(--nura-sage-hover)';
+const DARK = 'var(--nura-bg)';
+const TILE_BG = `rgba(var(--nura-bg-tint-rgb),0.045)`;
+const TILE_BORDER = `rgba(var(--nura-bg-tint-rgb),0.12)`;
+const TILE_LABEL = `var(--nura-text-primary)`;
+const TILE_DESC = `var(--nura-text-secondary)`;
 
 // Fitness-only overrides. The shared GLOBAL_CSS presses every button to
 // scale(.97); the CTA / back instead nudge down 1px (higher specificity wins).
@@ -30,7 +29,7 @@ const FIT_CSS = `
   .fit-press:active { transform: translateY(1px) !important; }
   .fit-tile { outline: none; }
   .fit-tile:focus { outline: none; }
-  .fit-tile:focus-visible { outline: 2px solid rgba(155,176,165,0.55); outline-offset: 2px; }
+  .fit-tile:focus-visible { outline: 2px solid rgba(var(--nura-sage-rgb),0.55); outline-offset: 2px; }
 `;
 
 // BodyScan hero uses WebGL/canvas — load client-side only.
@@ -226,7 +225,7 @@ function OptionTile({ icon: Icon, label, desc, selected, onToggle }: {
         padding: '14px 14px 15px', borderRadius: 16,
         border: `1px solid ${selected || hover ? SAGE_HEX : TILE_BORDER}`,
         background: selected ? SAGE_HEX : TILE_BG,
-        boxShadow: selected ? '0 8px 24px rgba(155,176,165,0.22)' : 'none',
+        boxShadow: selected ? '0 8px 24px rgba(var(--nura-sage-rgb),0.22)' : 'none',
         color: selected ? DARK : TILE_LABEL,
         transition: 'background 160ms ease, border-color 160ms ease, box-shadow 160ms ease',
         display: 'flex', flexDirection: 'column', gap: 9,
@@ -235,7 +234,7 @@ function OptionTile({ icon: Icon, label, desc, selected, onToggle }: {
       <span style={{
         position: 'absolute', top: 11, right: 11, width: 20, height: 20, borderRadius: '50%',
         background: selected ? DARK : 'transparent',
-        border: selected ? 'none' : `1px solid rgba(${OFF},0.22)`,
+        border: selected ? 'none' : `1px solid var(--nura-ink-faint)`,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         transition: 'all 160ms ease',
       }}>
@@ -253,7 +252,7 @@ function OptionTile({ icon: Icon, label, desc, selected, onToggle }: {
         <span style={{ display: 'block', fontSize: 13.5, fontWeight: 600, lineHeight: 1.25, color: selected ? DARK : TILE_LABEL }}>
           {label}
         </span>
-        <span style={{ display: 'block', fontSize: 11.5, lineHeight: 1.35, marginTop: 3, color: selected ? 'rgba(13,13,14,0.62)' : TILE_DESC }}>
+        <span style={{ display: 'block', fontSize: 11.5, lineHeight: 1.35, marginTop: 3, color: selected ? 'var(--nura-sage-bg-on)' : TILE_DESC }}>
           {desc}
         </span>
       </span>
@@ -414,7 +413,7 @@ function FitProgressBar({ step, total }: { step: number; total: number }) {
       {Array.from({ length: total }, (_, i) => (
         <div key={i} style={{
           flex: 1, height: 3, borderRadius: 99,
-          background: i + 1 <= step ? SAGE_HEX : `rgba(${OFF},0.12)`,
+          background: i + 1 <= step ? SAGE_HEX : `rgba(var(--nura-bg-tint-rgb),0.12)`,
           transition: 'background 260ms ease',
         }} />
       ))}
@@ -436,8 +435,8 @@ function StepFooter({ step, isEdit, error, submitting, hovCta, setHovCta, onBack
       {error && (
         <div style={{
           marginBottom: 12, padding: '10px 14px', borderRadius: 10,
-          background: 'rgba(220,80,80,0.10)', border: '0.5px solid rgba(220,80,80,0.4)',
-          color: '#e08a8a', fontFamily: SANS, fontSize: 12, lineHeight: 1.5,
+          background: 'var(--nura-tint-danger)', border: '0.5px solid var(--nura-tint-danger-border)',
+          color: 'var(--nura-danger-soft)', fontFamily: SANS, fontSize: 12, lineHeight: 1.5,
         }}>
           {error}
         </div>
@@ -445,9 +444,9 @@ function StepFooter({ step, isEdit, error, submitting, hovCta, setHovCta, onBack
       <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
         <button className="fit-press" onClick={onBack} disabled={backDisabled} style={{
           width: 54, height: 54, borderRadius: 14, flexShrink: 0,
-          background: `rgba(${OFF},0.04)`, border: `1px solid rgba(${OFF},0.14)`,
+          background: `rgba(var(--nura-bg-tint-rgb),0.04)`, border: `1px solid rgba(var(--nura-bg-tint-rgb),0.14)`,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          cursor: backDisabled ? 'not-allowed' : 'pointer', color: `rgba(${OFF},0.85)`,
+          cursor: backDisabled ? 'not-allowed' : 'pointer', color: `var(--nura-text-primary)`,
           opacity: backDisabled ? 0.4 : 1, transition: 'border-color 160ms ease',
         }}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -466,7 +465,7 @@ function StepFooter({ step, isEdit, error, submitting, hovCta, setHovCta, onBack
               background: hovCta ? SAGE_HOVER : SAGE_HEX, color: DARK,
               fontFamily: SANS, fontSize: 15, fontWeight: 600,
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-              boxShadow: hovCta ? '0 12px 40px rgba(155,176,165,0.38)' : '0 10px 34px rgba(155,176,165,0.28)',
+              boxShadow: hovCta ? '0 12px 40px rgba(var(--nura-sage-rgb),0.38)' : '0 10px 34px rgba(var(--nura-sage-rgb),0.28)',
               transition: 'background 160ms ease, box-shadow 160ms ease',
             }}
           >
@@ -488,7 +487,7 @@ function StepFooter({ step, isEdit, error, submitting, hovCta, setHovCta, onBack
               background: hovCta && !submitting ? SAGE_HOVER : SAGE_HEX, color: DARK,
               fontFamily: SANS, fontSize: 15, fontWeight: 600,
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-              boxShadow: submitting ? 'none' : hovCta ? '0 12px 40px rgba(155,176,165,0.38)' : '0 10px 34px rgba(155,176,165,0.28)',
+              boxShadow: submitting ? 'none' : hovCta ? '0 12px 40px rgba(var(--nura-sage-rgb),0.38)' : '0 10px 34px rgba(var(--nura-sage-rgb),0.28)',
               transition: 'background 160ms ease, box-shadow 160ms ease', opacity: submitting ? 0.7 : 1,
             }}
           >
@@ -506,7 +505,7 @@ function StepFooter({ step, isEdit, error, submitting, hovCta, setHovCta, onBack
         <button onClick={onNext} style={{
           display: 'block', width: '100%', marginTop: 16,
           background: 'none', border: 'none', cursor: 'pointer',
-          fontFamily: MONO, fontSize: 9.5, letterSpacing: '2.5px', color: `rgba(${OFF},0.4)`,
+          fontFamily: MONO, fontSize: 9.5, letterSpacing: '2.5px', color: `var(--nura-text-tertiary)`,
           textTransform: 'uppercase', textAlign: 'center', padding: '6px 0',
         }}>
           SKIP THIS STEP

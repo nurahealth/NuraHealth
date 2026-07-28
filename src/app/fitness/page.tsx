@@ -89,13 +89,13 @@ export default function FitnessPage() {
   if (view === 'error') {
     return (
       <NuraPageShell title="Fitness" maxWidth={760}>
-        <div style={{ borderRadius: 18, padding: '24px 22px', textAlign: 'center', background: 'rgba(217,139,139,.06)', border: '1px solid rgba(217,139,139,.28)' }}>
-          <div style={{ fontSize: 15, fontWeight: 700, color: '#e0a4a4', marginBottom: 6 }}>Couldn&apos;t load Fitness</div>
-          <p style={{ fontSize: 13, color: 'rgba(235,230,216,.55)', lineHeight: 1.6, margin: '0 0 16px', wordBreak: 'break-word' }}>{errorMsg}</p>
+        <div style={{ borderRadius: 18, padding: '24px 22px', textAlign: 'center', background: 'var(--nura-tint-danger)', border: '1px solid var(--nura-tint-danger-border)' }}>
+          <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--nura-danger-soft)', marginBottom: 6 }}>Couldn&apos;t load Fitness</div>
+          <p style={{ fontSize: 13, color: 'var(--nura-text-secondary)', lineHeight: 1.6, margin: '0 0 16px', wordBreak: 'break-word' }}>{errorMsg}</p>
           <button
             type="button"
             onClick={() => { setErrorMsg(null); setView('loading'); setReloadKey((k) => k + 1); }}
-            style={{ appearance: 'none', cursor: 'pointer', border: 'none', padding: '10px 20px', borderRadius: 12, fontSize: 14, fontWeight: 700, color: '#0d0d0e', background: '#9bb0a5' }}
+            style={{ appearance: 'none', cursor: 'pointer', border: 'none', padding: '10px 20px', borderRadius: 12, fontSize: 14, fontWeight: 700, color: 'var(--nura-bg)', background: 'var(--nura-sage)' }}
           >
             Try again
           </button>

@@ -7,19 +7,18 @@ import NuraPlexus from '@/components/NuraPlexus';
 import { saveFitnessPlanSettings, type PlanSettingsData } from './actions';
 
 // ── Palette (NŪRA) ───────────────────────────────────────────────────────────
-const SAGE = '#9bb0a5';
-const SAGE_HI = '#abc0b5';
-const DARK = '#0d0d0e';
-const OFF = '235,230,216'; // off-white rgb (#ebe6d8)
+const SAGE = 'var(--nura-sage)';
+const SAGE_HI = 'var(--nura-sage-hover)';
+const DARK = 'var(--nura-bg)';
 const SANS = "var(--font-inter), system-ui, sans-serif";
 const MONO = "'JetBrains Mono', monospace";
 const SERIF = "'DM Serif Display', Georgia, serif";
 
 // Premium surface recipes — lit physical surfaces (gradient + inset highlight + drop shadow).
-const SURFACE = 'linear-gradient(180deg, rgba(235,230,216,0.055), rgba(235,230,216,0.02))';
-const SURFACE_SHADOW = 'inset 0 1px 0 rgba(235,230,216,0.07), 0 6px 20px rgba(0,0,0,0.28)';
+const SURFACE = 'linear-gradient(180deg, rgba(var(--nura-bg-tint-rgb),0.055), rgba(var(--nura-bg-tint-rgb),0.02))';
+const SURFACE_SHADOW = 'inset 0 1px 0 rgba(var(--nura-bg-tint-rgb),0.07), 0 6px 20px rgba(0,0,0,0.28)';
 const SAGE_GRAD = `linear-gradient(180deg, ${SAGE_HI}, ${SAGE})`;
-const SAGE_ON_SHADOW = '0 6px 18px rgba(155,176,165,0.38), inset 0 1px 0 rgba(255,255,255,0.4)';
+const SAGE_ON_SHADOW = '0 6px 18px rgba(var(--nura-sage-rgb),0.38), inset 0 1px 0 rgba(255,255,255,0.4)';
 
 // ── Option vocabularies ──────────────────────────────────────────────────────
 const DAYS_OPTS = ['2', '3', '4', '5', '6'];
@@ -93,7 +92,7 @@ function Segmented({ options, value, onChange }: { options: string[]; value: str
   return (
     <div style={{
       position: 'relative', display: 'flex', borderRadius: 14, padding: 4,
-      background: SURFACE, border: `1px solid rgba(${OFF},0.10)`, boxShadow: SURFACE_SHADOW,
+      background: SURFACE, border: `1px solid rgba(var(--nura-bg-tint-rgb),0.10)`, boxShadow: SURFACE_SHADOW,
     }}>
       <div style={{
         position: 'absolute', top: 4, bottom: 4,
@@ -105,7 +104,7 @@ function Segmented({ options, value, onChange }: { options: string[]; value: str
         <button key={opt} type="button" onClick={() => onChange(opt)} style={{
           flex: 1, position: 'relative', zIndex: 1, padding: '11px 4px', border: 'none',
           background: 'none', cursor: 'pointer', fontFamily: SANS, fontSize: 13.5, fontWeight: 600,
-          lineHeight: 1.2, color: value === opt ? DARK : `rgba(${OFF},0.6)`, transition: 'color 220ms',
+          lineHeight: 1.2, color: value === opt ? DARK : `var(--nura-ink-muted)`, transition: 'color 220ms',
         }}>{opt}</button>
       ))}
     </div>
@@ -118,9 +117,9 @@ function Chip({ label, selected, onToggle }: { label: string; selected: boolean;
       position: 'relative', display: 'inline-flex', alignItems: 'center', gap: 6,
       padding: selected ? '9px 14px 9px 12px' : '9px 15px', borderRadius: 12, cursor: 'pointer',
       fontFamily: SANS, fontSize: 13, fontWeight: 600, lineHeight: 1, whiteSpace: 'nowrap',
-      color: selected ? DARK : `rgba(${OFF},0.82)`,
+      color: selected ? DARK : `var(--nura-ink-strong)`,
       background: selected ? SAGE_GRAD : SURFACE,
-      border: `1px solid ${selected ? 'rgba(155,176,165,0.6)' : `rgba(${OFF},0.12)`}`,
+      border: `1px solid ${selected ? 'rgba(var(--nura-sage-rgb),0.6)' : `rgba(var(--nura-bg-tint-rgb),0.12)`}`,
       boxShadow: selected ? SAGE_ON_SHADOW : SURFACE_SHADOW,
       transition: 'background 180ms ease, color 180ms ease, border-color 180ms ease, box-shadow 180ms ease',
     }}>
@@ -135,11 +134,11 @@ function Section({ label, helper, children }: { label: string; helper?: string; 
     <section style={{ marginBottom: 26 }}>
       <div style={{
         fontSize: 11, fontFamily: MONO, letterSpacing: '1.4px', textTransform: 'uppercase',
-        color: `rgba(${OFF},0.5)`, marginBottom: 11,
+        color: `var(--nura-text-secondary)`, marginBottom: 11,
       }}>{label}</div>
       {children}
       {helper && (
-        <p style={{ fontSize: 12.5, color: `rgba(${OFF},0.5)`, fontFamily: SANS, lineHeight: 1.55, margin: '11px 2px 0' }}>
+        <p style={{ fontSize: 12.5, color: `var(--nura-text-secondary)`, fontFamily: SANS, lineHeight: 1.55, margin: '11px 2px 0' }}>
           {helper}
         </p>
       )}
@@ -242,13 +241,13 @@ export default function PlanSettings() {
 
   return (
     <div style={{
-      minHeight: '100dvh', background: DARK, color: `rgb(${OFF})`,
+      minHeight: '100dvh', background: DARK, color: 'var(--nura-text-primary)',
       fontFamily: SANS, position: 'relative', overflow: 'hidden',
     }}>
       <style>{`
         @keyframes ps-check { to { stroke-dashoffset: 0; } }
         @keyframes ps-rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
-        .ps-back:hover { color: ${SAGE} !important; border-color: rgba(155,176,165,0.4) !important; }
+        .ps-back:hover { color: ${SAGE} !important; border-color: rgba(var(--nura-sage-rgb),0.4) !important; }
         .ps-cta:active { transform: translateY(1px); }
         ::-webkit-scrollbar { width: 0; }
       `}</style>
@@ -258,7 +257,7 @@ export default function PlanSettings() {
       <div aria-hidden style={{
         position: 'absolute', top: -180, left: '50%', transform: 'translateX(-50%)',
         width: 720, height: 440, pointerEvents: 'none', zIndex: 1, filter: 'blur(18px)',
-        background: 'radial-gradient(ellipse at center, rgba(155,176,165,0.16), rgba(155,176,165,0) 70%)',
+        background: 'radial-gradient(ellipse at center, rgba(var(--nura-sage-rgb),0.16), rgba(var(--nura-sage-rgb),0) 70%)',
       }} />
 
       <main style={{
@@ -269,7 +268,7 @@ export default function PlanSettings() {
         <button type="button" className="ps-back" onClick={() => router.push('/fitness')} style={{
           display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: 22, padding: '7px 12px 7px 9px',
           borderRadius: 10, cursor: 'pointer', fontFamily: SANS, fontSize: 12.5, fontWeight: 500,
-          color: `rgba(${OFF},0.6)`, background: SURFACE, border: `1px solid rgba(${OFF},0.12)`,
+          color: `var(--nura-ink-muted)`, background: SURFACE, border: `1px solid rgba(var(--nura-bg-tint-rgb),0.12)`,
           transition: 'color 160ms ease, border-color 160ms ease',
         }}>
           <ChevronLeft /> Plan
@@ -281,16 +280,16 @@ export default function PlanSettings() {
         }}>Customize your plan</div>
         <h1 style={{
           fontFamily: SERIF, fontWeight: 400, fontSize: 38, lineHeight: 1.05, letterSpacing: '-0.5px',
-          color: `rgb(${OFF})`, margin: '0 0 12px',
+          color: 'var(--nura-text-primary)', margin: '0 0 12px',
         }}>
           Plan <em style={{ fontFamily: SERIF, fontStyle: 'italic', color: SAGE }}>settings</em>
         </h1>
-        <p style={{ fontSize: 14.5, color: `rgba(${OFF},0.58)`, fontFamily: SANS, lineHeight: 1.6, margin: '0 0 34px', maxWidth: 440 }}>
+        <p style={{ fontSize: 14.5, color: `var(--nura-ink-muted)`, fontFamily: SANS, lineHeight: 1.6, margin: '0 0 34px', maxWidth: 440 }}>
           Shape how NŪRA builds your training week. Adjust anything below, then regenerate.
         </p>
 
         {loading ? (
-          <div style={{ fontSize: 13, color: `rgba(${OFF},0.45)`, padding: '8px 2px' }}>Loading your settings…</div>
+          <div style={{ fontSize: 13, color: `var(--nura-text-tertiary)`, padding: '8px 2px' }}>Loading your settings…</div>
         ) : (
           <>
             <Section label="Training days / week">
@@ -332,15 +331,15 @@ export default function PlanSettings() {
       {!loading && (
         <footer style={{
           position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 5,
-          background: 'rgba(13,13,14,0.72)', backdropFilter: 'blur(18px)', WebkitBackdropFilter: 'blur(18px)',
-          borderTop: `1px solid rgba(${OFF},0.10)`,
+          background: 'var(--nura-scrim-panel)', backdropFilter: 'blur(18px)', WebkitBackdropFilter: 'blur(18px)',
+          borderTop: `1px solid rgba(var(--nura-bg-tint-rgb),0.10)`,
         }}>
           <div style={{
             maxWidth: 640, margin: '0 auto', padding: '13px 18px',
             paddingBottom: 'calc(13px + env(safe-area-inset-bottom))',
             display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16,
           }}>
-            <div style={{ fontSize: 12.5, color: `rgba(${OFF},0.6)`, fontFamily: SANS, lineHeight: 1.5, minWidth: 0 }}>
+            <div style={{ fontSize: 12.5, color: `var(--nura-ink-muted)`, fontFamily: SANS, lineHeight: 1.5, minWidth: 0 }}>
               <div>
                 <span style={{ fontFamily: SERIF, color: SAGE, fontSize: 15 }}>{days}</span> days
                 {' · '}{split}{' · '}{goalLabel}
@@ -350,12 +349,12 @@ export default function PlanSettings() {
                 {' · '}{equipment.length ? equipment.join(', ') : 'No equipment set'}
                 {focus.length > 0 && <> · focus: {focus.join(', ')}</>}
               </div>
-              {error && <div style={{ color: '#d98b8b', marginTop: 4 }}>{error}</div>}
+              {error && <div style={{ color: 'var(--nura-danger-soft)', marginTop: 4 }}>{error}</div>}
             </div>
             <button type="button" className="ps-cta" onClick={() => setConfirm(true)} disabled={saving} style={{
               flexShrink: 0, padding: '12px 20px', borderRadius: 13, border: 'none',
               cursor: saving ? 'default' : 'pointer', fontFamily: SANS, fontSize: 13.5, fontWeight: 700,
-              color: DARK, background: SAGE_GRAD, boxShadow: '0 8px 26px rgba(155,176,165,0.45), inset 0 1px 0 rgba(255,255,255,0.4)',
+              color: DARK, background: SAGE_GRAD, boxShadow: '0 8px 26px rgba(var(--nura-sage-rgb),0.45), inset 0 1px 0 rgba(255,255,255,0.4)',
               opacity: saving ? 0.7 : 1, transition: 'opacity 160ms ease',
             }}>
               {saving ? 'Rebuilding…' : 'Update & Regenerate Plan'}
@@ -368,24 +367,24 @@ export default function PlanSettings() {
       {confirm && (
         <div style={{
           position: 'fixed', inset: 0, zIndex: 20, display: 'flex', alignItems: 'center', justifyContent: 'center',
-          padding: 22, background: 'rgba(8,8,9,0.66)', backdropFilter: 'blur(6px)',
+          padding: 22, background: 'var(--nura-scrim-panel)', backdropFilter: 'blur(6px)',
         }} onClick={() => { if (!saving) setConfirm(false); }}>
           <div onClick={(e) => e.stopPropagation()} style={{
             width: '100%', maxWidth: 380, borderRadius: 18, padding: 22,
-            background: 'linear-gradient(180deg, #161718, #131314)',
-            border: `1px solid rgba(${OFF},0.12)`, boxShadow: '0 24px 60px rgba(0,0,0,0.55)',
+            background: 'var(--nura-modal)',
+            border: `1px solid rgba(var(--nura-bg-tint-rgb),0.12)`, boxShadow: '0 24px 60px rgba(0,0,0,0.55)',
           }}>
-            <h3 style={{ fontFamily: SERIF, fontWeight: 400, fontSize: 21, color: `rgb(${OFF})`, margin: '0 0 8px', letterSpacing: '-0.2px' }}>
+            <h3 style={{ fontFamily: SERIF, fontWeight: 400, fontSize: 21, color: 'var(--nura-text-primary)', margin: '0 0 8px', letterSpacing: '-0.2px' }}>
               Regenerate your plan?
             </h3>
-            <p style={{ fontSize: 13.5, color: `rgba(${OFF},0.62)`, fontFamily: SANS, lineHeight: 1.6, margin: '0 0 20px' }}>
+            <p style={{ fontSize: 13.5, color: `var(--nura-ink-muted)`, fontFamily: SANS, lineHeight: 1.6, margin: '0 0 20px' }}>
               Regenerate your plan with these settings? This rebuilds your weekly workouts and discards any manual edits.
             </p>
-            {error && <p style={{ fontSize: 12.5, color: '#d98b8b', fontFamily: SANS, margin: '0 0 14px' }}>{error}</p>}
+            {error && <p style={{ fontSize: 12.5, color: 'var(--nura-danger-soft)', fontFamily: SANS, margin: '0 0 14px' }}>{error}</p>}
             <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
               <button type="button" onClick={() => setConfirm(false)} disabled={saving} style={{
                 padding: '10px 16px', borderRadius: 11, cursor: 'pointer', fontFamily: SANS, fontSize: 13, fontWeight: 600,
-                color: `rgba(${OFF},0.7)`, background: SURFACE, border: `1px solid rgba(${OFF},0.14)`,
+                color: `var(--nura-ink-strong)`, background: SURFACE, border: `1px solid rgba(var(--nura-bg-tint-rgb),0.14)`,
               }}>Cancel</button>
               <button type="button" onClick={runSave} disabled={saving} style={{
                 padding: '10px 18px', borderRadius: 11, border: 'none', cursor: saving ? 'default' : 'pointer',

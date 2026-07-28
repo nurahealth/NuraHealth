@@ -10,8 +10,7 @@ import ExerciseMedia, { CLIP_BG } from './ExerciseMedia';
 import { MOVEKIT_GIF_LIKE } from '@/lib/movekit';
 
 // ── Palette (NŪRA) ───────────────────────────────────────────────────────────
-const SAGE = '#9bb0a5';
-const OFF = '235,230,216'; // off-white rgb (#ebe6d8)
+const SAGE = 'var(--nura-sage)';
 const SANS = "var(--font-inter), system-ui, sans-serif";
 const MONO = "'JetBrains Mono', monospace";
 
@@ -77,9 +76,9 @@ function ChipButton({
 }) {
   const [hov, setHov] = useState(false);
   const colors = {
-    neutral: { fg: `rgba(${OFF},0.7)`, bg: `rgba(${OFF},0.05)`, bd: `rgba(${OFF},0.14)`, hov: `rgba(${OFF},0.1)` },
-    sage: { fg: SAGE, bg: 'rgba(155,176,165,0.12)', bd: 'rgba(155,176,165,0.4)', hov: 'rgba(155,176,165,0.22)' },
-    danger: { fg: '#d98b8b', bg: 'rgba(217,139,139,0.1)', bd: 'rgba(217,139,139,0.32)', hov: 'rgba(217,139,139,0.2)' },
+    neutral: { fg: `var(--nura-ink-strong)`, bg: `rgba(var(--nura-bg-tint-rgb),0.05)`, bd: `rgba(var(--nura-bg-tint-rgb),0.14)`, hov: `rgba(var(--nura-bg-tint-rgb),0.1)` },
+    sage: { fg: SAGE, bg: 'rgba(var(--nura-sage-rgb),0.12)', bd: 'rgba(var(--nura-sage-rgb),0.4)', hov: 'rgba(var(--nura-sage-rgb),0.22)' },
+    danger: { fg: 'var(--nura-danger-soft)', bg: 'var(--nura-tint-danger)', bd: 'var(--nura-tint-danger-border)', hov: 'var(--nura-tint-danger)' },
   }[tone];
   return (
     <button
@@ -123,12 +122,12 @@ function ExerciseEditor({
 
   const inputStyle: React.CSSProperties = {
     width: '100%', padding: '8px 10px', borderRadius: 9, fontFamily: MONO, fontSize: 13,
-    color: `rgb(${OFF})`, background: `rgba(${OFF},0.04)`, border: `1px solid rgba(${OFF},0.14)`,
+    color: 'var(--nura-text-primary)', background: `rgba(var(--nura-bg-tint-rgb),0.04)`, border: `1px solid rgba(var(--nura-bg-tint-rgb),0.14)`,
     outline: 'none',
   };
   const fieldLabel: React.CSSProperties = {
     fontSize: 9.5, fontFamily: MONO, letterSpacing: '1.2px', textTransform: 'uppercase',
-    color: `rgba(${OFF},0.45)`, marginBottom: 5, display: 'block',
+    color: `var(--nura-text-tertiary)`, marginBottom: 5, display: 'block',
   };
 
   const run = async (fn: () => Promise<string | null>) => {
@@ -149,7 +148,7 @@ function ExerciseEditor({
   return (
     <div style={{
       margin: '2px 6px 8px', padding: 14, borderRadius: 12,
-      background: `rgba(${OFF},0.03)`, border: `1px solid rgba(${OFF},0.1)`,
+      background: `rgba(var(--nura-bg-tint-rgb),0.03)`, border: `1px solid rgba(var(--nura-bg-tint-rgb),0.1)`,
     }}>
       {/* sets / reps / rest */}
       <div style={{ display: 'flex', gap: 10, marginBottom: 14 }}>
@@ -170,7 +169,7 @@ function ExerciseEditor({
       {/* swap */}
       <div style={fieldLabel}>Swap for a similar exercise</div>
       {candidates.length === 0 ? (
-        <div style={{ fontSize: 12, color: `rgba(${OFF},0.4)`, fontFamily: SANS, lineHeight: 1.5, padding: '2px 0 8px' }}>
+        <div style={{ fontSize: 12, color: `var(--nura-text-tertiary)`, fontFamily: SANS, lineHeight: 1.5, padding: '2px 0 8px' }}>
           No alternatives in the catalog yet for this muscle.
         </div>
       ) : (
@@ -187,14 +186,14 @@ function ExerciseEditor({
               style={{
                 appearance: 'none', textAlign: 'left', cursor: busy ? 'default' : 'pointer',
                 padding: '8px 10px', borderRadius: 9, border: '1px solid transparent',
-                background: 'transparent', fontFamily: SANS, color: `rgb(${OFF})`,
+                background: 'transparent', fontFamily: SANS, color: 'var(--nura-text-primary)',
                 display: 'flex', flexDirection: 'column', gap: 2,
               }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = `rgba(${OFF},0.05)`; e.currentTarget.style.borderColor = 'rgba(155,176,165,0.3)'; }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = `rgba(var(--nura-bg-tint-rgb),0.05)`; e.currentTarget.style.borderColor = 'rgba(var(--nura-sage-rgb),0.3)'; }}
               onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = 'transparent'; }}
             >
               <span style={{ fontSize: 13, fontWeight: 500, lineHeight: 1.3 }}>{c.name}</span>
-              <span style={{ fontSize: 10.5, color: `rgba(${OFF},0.42)` }}>
+              <span style={{ fontSize: 10.5, color: `var(--nura-text-tertiary)` }}>
                 {muscleLabel(c)}{c.equipment ? ` — ${c.equipment}` : ''}
               </span>
             </button>
@@ -203,7 +202,7 @@ function ExerciseEditor({
       )}
 
       {err && (
-        <div style={{ fontSize: 11.5, color: '#d98b8b', fontFamily: SANS, marginTop: 8 }}>{err}</div>
+        <div style={{ fontSize: 11.5, color: 'var(--nura-danger-soft)', fontFamily: SANS, marginTop: 8 }}>{err}</div>
       )}
 
       {/* footer actions */}
@@ -242,7 +241,7 @@ function ExerciseRow({
         onMouseLeave={() => setHov(false)}
         style={{
           display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', borderRadius: 11,
-          background: open || hov ? `rgba(${OFF},0.045)` : 'transparent',
+          background: open || hov ? `rgba(var(--nura-bg-tint-rgb),0.045)` : 'transparent',
           transition: 'background 140ms ease',
         }}
       >
@@ -251,11 +250,11 @@ function ExerciseRow({
           onClick={onOpenDetail}
           style={{ appearance: 'none', textAlign: 'left', border: 'none', background: 'transparent', padding: 0, minWidth: 0, flex: 1, cursor: 'pointer', color: 'inherit', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 11 }}
         >
-          <span style={{ width: 40, height: 40, borderRadius: 9, overflow: 'hidden', flexShrink: 0, background: CLIP_BG, border: '1px solid rgba(155,176,165,0.2)' }}>
+          <span style={{ width: 40, height: 40, borderRadius: 9, overflow: 'hidden', flexShrink: 0, background: CLIP_BG, border: '1px solid rgba(var(--nura-sage-rgb),0.2)' }}>
             {we.exercise?.gif_url && <ExerciseMedia src={we.exercise.gif_url} alt={name} fit="cover" thumb />}
           </span>
           <span style={{ minWidth: 0 }}>
-            <span style={{ display: 'block', fontSize: 14, fontWeight: 500, color: `rgb(${OFF})`, lineHeight: 1.3 }}>
+            <span style={{ display: 'block', fontSize: 14, fontWeight: 500, color: 'var(--nura-text-primary)', lineHeight: 1.3 }}>
               {name}
             </span>
             <span style={{ display: 'flex', flexWrap: 'wrap', gap: '2px 8px', marginTop: 4 }}>
@@ -263,7 +262,7 @@ function ExerciseRow({
                 {prescription(we)}
               </span>
               {muscleLabel(we.exercise) && (
-                <span style={{ fontSize: 11.5, color: `rgba(${OFF},0.42)` }}>
+                <span style={{ fontSize: 11.5, color: `var(--nura-text-tertiary)` }}>
                   {muscleLabel(we.exercise)}
                 </span>
               )}
@@ -277,9 +276,9 @@ function ExerciseRow({
           style={{
             appearance: 'none', flexShrink: 0, cursor: 'pointer', display: 'flex', alignItems: 'center',
             justifyContent: 'center', width: 32, height: 32, borderRadius: 9,
-            color: open ? SAGE : `rgba(${OFF},0.5)`,
-            background: open ? 'rgba(155,176,165,0.14)' : `rgba(${OFF},0.05)`,
-            border: `0.5px solid ${open ? 'rgba(155,176,165,0.4)' : `rgba(${OFF},0.12)`}`,
+            color: open ? SAGE : `var(--nura-text-secondary)`,
+            background: open ? 'rgba(var(--nura-sage-rgb),0.14)' : `rgba(var(--nura-bg-tint-rgb),0.05)`,
+            border: `0.5px solid ${open ? 'rgba(var(--nura-sage-rgb),0.4)' : `rgba(var(--nura-bg-tint-rgb),0.12)`}`,
             transition: 'all 150ms ease',
           }}
         >
@@ -320,21 +319,21 @@ function DayCard({
     return (
       <div style={{
         borderRadius: 16, padding: '16px 18px',
-        background: `rgba(${OFF},0.018)`, border: `1px dashed rgba(${OFF},0.1)`,
+        background: `rgba(var(--nura-bg-tint-rgb),0.018)`, border: `1px dashed rgba(var(--nura-bg-tint-rgb),0.1)`,
         display: 'flex', alignItems: 'center', gap: 14,
       }}>
         <span style={{
-          width: 38, height: 38, borderRadius: 11, flexShrink: 0, color: `rgba(${OFF},0.45)`,
-          background: `rgba(${OFF},0.04)`, border: `1px solid rgba(${OFF},0.1)`,
+          width: 38, height: 38, borderRadius: 11, flexShrink: 0, color: `var(--nura-text-tertiary)`,
+          background: `rgba(var(--nura-bg-tint-rgb),0.04)`, border: `1px solid rgba(var(--nura-bg-tint-rgb),0.1)`,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>
           <RestIcon />
         </span>
         <div>
-          <div style={{ fontSize: 10, fontFamily: MONO, letterSpacing: '1.6px', color: `rgba(${OFF},0.4)`, textTransform: 'uppercase' }}>
+          <div style={{ fontSize: 10, fontFamily: MONO, letterSpacing: '1.6px', color: `var(--nura-text-tertiary)`, textTransform: 'uppercase' }}>
             Day {index + 1}
           </div>
-          <div style={{ fontSize: 15.5, fontWeight: 600, color: `rgba(${OFF},0.62)`, marginTop: 3, letterSpacing: '-0.2px' }}>
+          <div style={{ fontSize: 15.5, fontWeight: 600, color: `var(--nura-ink-muted)`, marginTop: 3, letterSpacing: '-0.2px' }}>
             Rest &amp; recover
           </div>
         </div>
@@ -345,7 +344,7 @@ function DayCard({
   return (
     <div style={{
       borderRadius: 16, overflow: 'hidden',
-      background: `rgba(${OFF},0.025)`, border: `1px solid rgba(${OFF},0.09)`,
+      background: `rgba(var(--nura-bg-tint-rgb),0.025)`, border: `1px solid rgba(var(--nura-bg-tint-rgb),0.09)`,
     }}>
       {/* header */}
       <div style={{
@@ -353,17 +352,17 @@ function DayCard({
         padding: '14px 16px 12px',
       }}>
         <div>
-          <div style={{ fontSize: 10, fontFamily: MONO, letterSpacing: '1.6px', color: `rgba(${OFF},0.42)`, textTransform: 'uppercase' }}>
+          <div style={{ fontSize: 10, fontFamily: MONO, letterSpacing: '1.6px', color: `var(--nura-text-tertiary)`, textTransform: 'uppercase' }}>
             Day {index + 1}
           </div>
-          <div style={{ fontSize: 17, fontWeight: 600, color: `rgb(${OFF})`, marginTop: 3, letterSpacing: '-0.3px' }}>
+          <div style={{ fontSize: 17, fontWeight: 600, color: 'var(--nura-text-primary)', marginTop: 3, letterSpacing: '-0.3px' }}>
             {focus}
           </div>
         </div>
         <span style={{
           fontSize: 11, fontFamily: MONO, letterSpacing: '0.5px', color: SAGE,
           padding: '5px 11px', borderRadius: 999,
-          background: 'rgba(155,176,165,0.12)', border: '1px solid rgba(155,176,165,0.28)',
+          background: 'rgba(var(--nura-sage-rgb),0.12)', border: '1px solid rgba(var(--nura-sage-rgb),0.28)',
         }}>
           {workout.exercises.length} {workout.exercises.length === 1 ? 'move' : 'moves'}
         </span>
@@ -371,7 +370,7 @@ function DayCard({
 
       {/* exercises */}
       <div style={{
-        padding: '2px 6px 10px', margin: '0 8px', borderTop: `1px solid rgba(${OFF},0.07)`,
+        padding: '2px 6px 10px', margin: '0 8px', borderTop: `1px solid rgba(var(--nura-bg-tint-rgb),0.07)`,
         display: 'flex', flexDirection: 'column', gap: 2,
       }}>
         {workout.exercises.map((we) => (
@@ -401,22 +400,22 @@ function RecommendCard({ onGenerate, generating, error }: {
   return (
     <div style={{
       borderRadius: 18, padding: '28px 24px', textAlign: 'center',
-      background: 'rgba(155,176,165,0.05)', border: '1px solid rgba(155,176,165,0.22)',
+      background: 'rgba(var(--nura-sage-rgb),0.05)', border: '1px solid rgba(var(--nura-sage-rgb),0.22)',
     }}>
       <span style={{
         display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
         width: 52, height: 52, borderRadius: 16, color: SAGE, marginBottom: 16,
-        background: 'rgba(155,176,165,0.12)', border: '1px solid rgba(155,176,165,0.3)',
+        background: 'rgba(var(--nura-sage-rgb),0.12)', border: '1px solid rgba(var(--nura-sage-rgb),0.3)',
       }}>
         <SparkIcon size={24} />
       </span>
       <div style={{ fontSize: 10.5, fontFamily: MONO, letterSpacing: '2px', color: SAGE, textTransform: 'uppercase', marginBottom: 10 }}>
         NŪRA recommends
       </div>
-      <h3 style={{ fontSize: 20, fontWeight: 600, color: `rgb(${OFF})`, margin: '0 0 8px', letterSpacing: '-0.4px' }}>
+      <h3 style={{ fontSize: 20, fontWeight: 600, color: 'var(--nura-text-primary)', margin: '0 0 8px', letterSpacing: '-0.4px' }}>
         Let&apos;s build your weekly plan
       </h3>
-      <p style={{ fontSize: 14, color: `rgba(${OFF},0.6)`, fontFamily: SANS, lineHeight: 1.6, margin: '0 auto 20px', maxWidth: 380 }}>
+      <p style={{ fontSize: 14, color: `var(--nura-ink-muted)`, fontFamily: SANS, lineHeight: 1.6, margin: '0 auto 20px', maxWidth: 380 }}>
         NŪRA will shape a training week around your goal, experience, available
         equipment and schedule. You can fine-tune every exercise afterward.
       </p>
@@ -428,14 +427,14 @@ function RecommendCard({ onGenerate, generating, error }: {
           appearance: 'none', cursor: generating ? 'default' : 'pointer',
           display: 'inline-flex', alignItems: 'center', gap: 9,
           padding: '12px 22px', borderRadius: 12, fontFamily: SANS, fontSize: 14, fontWeight: 600,
-          color: '#0d0d0e', background: generating ? `rgba(155,176,165,0.5)` : SAGE,
+          color: 'var(--nura-bg)', background: generating ? `rgba(var(--nura-sage-rgb),0.5)` : SAGE,
           border: 'none', transition: 'background 160ms ease',
         }}
       >
         {generating ? 'Building your plan…' : (<><SparkIcon size={17} /> Build my plan</>)}
       </button>
       {error && (
-        <div style={{ fontSize: 12.5, color: '#d98b8b', fontFamily: SANS, marginTop: 14 }}>{error}</div>
+        <div style={{ fontSize: 12.5, color: 'var(--nura-danger-soft)', fontFamily: SANS, marginTop: 14 }}>{error}</div>
       )}
     </div>
   );
@@ -571,10 +570,10 @@ export default function WorkoutPlan() {
     <div style={{ marginBottom: 32 }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 16 }}>
         <div>
-          <h2 style={{ fontSize: 20, fontWeight: 600, color: `rgb(${OFF})`, fontFamily: SANS, margin: '0 0 4px', letterSpacing: '-0.3px' }}>
+          <h2 style={{ fontSize: 20, fontWeight: 600, color: 'var(--nura-text-primary)', fontFamily: SANS, margin: '0 0 4px', letterSpacing: '-0.3px' }}>
             Your weekly plan
           </h2>
-          <p style={{ fontSize: 13.5, color: `rgba(${OFF},0.55)`, fontFamily: SANS, margin: 0, lineHeight: 1.6 }}>
+          <p style={{ fontSize: 13.5, color: `var(--nura-text-secondary)`, fontFamily: SANS, margin: 0, lineHeight: 1.6 }}>
             {program ? subtitle : 'A training week, shaped around you.'}
           </p>
         </div>
@@ -601,20 +600,20 @@ export default function WorkoutPlan() {
 
       {confirmRegen && (
         <div style={{
-          fontSize: 12.5, color: `rgba(${OFF},0.6)`, fontFamily: SANS, lineHeight: 1.5,
+          fontSize: 12.5, color: `var(--nura-ink-muted)`, fontFamily: SANS, lineHeight: 1.5,
           padding: '10px 14px', borderRadius: 11, marginBottom: 14,
-          background: 'rgba(217,139,139,0.07)', border: '1px solid rgba(217,139,139,0.22)',
+          background: 'var(--nura-tint-danger)', border: '1px solid var(--nura-tint-danger-border)',
         }}>
           Regenerating builds a fresh plan from your profile and discards any edits you&apos;ve made.
         </div>
       )}
 
       {error && program && (
-        <div style={{ fontSize: 12.5, color: '#d98b8b', fontFamily: SANS, marginBottom: 14 }}>{error}</div>
+        <div style={{ fontSize: 12.5, color: 'var(--nura-danger-soft)', fontFamily: SANS, marginBottom: 14 }}>{error}</div>
       )}
 
       {loading ? (
-        <div style={{ fontSize: 13, color: `rgba(${OFF},0.45)`, fontFamily: SANS, padding: '8px 2px' }}>Loading your plan…</div>
+        <div style={{ fontSize: 13, color: `var(--nura-text-tertiary)`, fontFamily: SANS, padding: '8px 2px' }}>Loading your plan…</div>
       ) : !program ? (
         <RecommendCard onGenerate={generate} generating={generating} error={error} />
       ) : (

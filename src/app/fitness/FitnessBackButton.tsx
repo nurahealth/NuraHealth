@@ -6,9 +6,9 @@
 // the tab bar and don't use this. Added in one place so every sub-screen stays
 // consistent by default.
 
-const TEXT = '#ebe6d8';
-const SURF = 'rgba(235,230,216,.045)';
-const LINE = 'rgba(235,230,216,.09)';
+const TEXT = 'var(--nura-text-primary)';
+const SURF = 'rgba(var(--nura-bg-tint-rgb),.045)';
+const LINE = 'rgba(var(--nura-bg-tint-rgb),.09)';
 
 export default function FitnessBackButton({ onClick, label = 'Back', style }: {
   onClick: () => void;

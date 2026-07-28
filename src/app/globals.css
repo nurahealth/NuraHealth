@@ -145,6 +145,17 @@
   --nura-tint-neutral: rgba(235, 230, 216, 0.04);
   --nura-tint-neutral-border: rgba(235, 230, 216, 0.09);
 
+  /* ── Page + elevated chrome ─────────────────────────────────────────────
+     Full-bleed page washes and the floating panels that sit above them
+     (bottom nav, sheets, modals, chips on cards). Dark uses near-black
+     translucency; light must not, or the panel disappears into the canvas. */
+  --nura-page-gradient: radial-gradient(120% 40% at 50% -5%, #16191780 0%, #0d0d0e 50%), #0d0d0e;
+  --nura-elevated: rgba(20, 22, 21, 0.9);      /* floating nav / toolbars */
+  --nura-scrim-panel: rgba(13, 13, 14, 0.72);  /* sticky footers over content */
+  --nura-inset-dark: rgba(13, 13, 14, 0.35);   /* chips sitting on imagery */
+  --nura-modal: linear-gradient(180deg, #161718, #131314);
+  --nura-danger-soft: #d98b8b;                 /* inline error text */
+
   /* ── Aliases (semantic names requested by the design system) ────────── */
   --nura-accent: var(--nura-sage);
   --nura-text-muted: var(--nura-text-tertiary);
@@ -280,6 +291,14 @@
   --nura-tint-danger-border: #f5d8d3;
   --nura-tint-neutral: #f7f6f3;
   --nura-tint-neutral-border: #e9e7e1;
+
+  /* Page + elevated chrome — opaque, so nothing reads as see-through on white. */
+  --nura-page-gradient: #faf9f6;
+  --nura-elevated: rgba(255, 255, 255, 0.94);
+  --nura-scrim-panel: rgba(250, 249, 246, 0.92);
+  --nura-inset-dark: #f0eeea;
+  --nura-modal: #ffffff;
+  --nura-danger-soft: #b8392f;          /*  5.7:1 */
 }
 
 @theme inline {

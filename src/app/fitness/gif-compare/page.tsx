@@ -9,11 +9,11 @@ import FitnessBackButton from '../FitnessBackButton';
 // Storage if migrated, else the WorkoutX proxy) against a local sample dropped
 // into public/gif-samples/{id}.gif. Resolves at /fitness/gif-compare.
 
-const SAGE = '#9bb0a5';
-const TEXT = '#ebe6d8';
-const MUT = 'rgba(235,230,216,.5)';
-const SURF = 'rgba(235,230,216,.045)';
-const LINE = 'rgba(235,230,216,.09)';
+const SAGE = 'var(--nura-sage)';
+const TEXT = 'var(--nura-text-primary)';
+const MUT = 'var(--nura-text-secondary)';
+const SURF = 'rgba(var(--nura-bg-tint-rgb),.045)';
+const LINE = 'rgba(var(--nura-bg-tint-rgb),.09)';
 const STORAGE_MARKER = '/storage/v1/object/public/';
 
 type Row = { id: string; name: string; gif_url: string | null };
@@ -66,7 +66,7 @@ export default function GifComparePage() {
   const onStorage = rows.filter((r) => r.gif_url?.includes(STORAGE_MARKER)).length;
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0d0d0e', color: TEXT, fontFamily: "var(--font-inter),system-ui,sans-serif", padding: '24px 18px 80px' }}>
+    <div style={{ minHeight: '100vh', background: 'var(--nura-bg)', color: TEXT, fontFamily: "var(--font-inter),system-ui,sans-serif", padding: '24px 18px 80px' }}>
       <div style={{ maxWidth: 760, margin: '0 auto' }}>
         <div style={{ marginBottom: 16 }}>
           <FitnessBackButton onClick={() => router.push('/fitness')} />

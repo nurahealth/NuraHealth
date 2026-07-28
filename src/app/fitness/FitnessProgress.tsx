@@ -24,12 +24,12 @@ import {
 } from './planData';
 
 // ── Palette (1:1 with ExerciseDetail.tsx — the fitness detail screens) ────────
-const BG = '#0d0d0e';
-const SAGE = '#9bb0a5';
-const TEXT = '#ebe6d8';
-const MUT = 'rgba(235,230,216,.5)';
-const SURF = 'rgba(235,230,216,.045)';
-const LINE = 'rgba(235,230,216,.09)';
+const BG = 'var(--nura-bg)';
+const SAGE = 'var(--nura-sage)';
+const TEXT = 'var(--nura-text-primary)';
+const MUT = 'var(--nura-text-secondary)';
+const SURF = 'rgba(var(--nura-bg-tint-rgb),.045)';
+const LINE = 'rgba(var(--nura-bg-tint-rgb),.09)';
 const FONT = '-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,sans-serif';
 const SERIF = "'DM Serif Display', Georgia, serif";
 const MONO = "'JetBrains Mono', monospace";
@@ -80,7 +80,7 @@ function WeightTrendChart({ points, unit }: { points: { date: string; value: num
   const pts: [number, number][] = data.map((d, i) => [xOf(i), yOf(d.value)]);
   const line = smooth(pts);
   const area = `${line} L ${pts[n - 1][0].toFixed(1)},${bot} L ${pts[0][0].toFixed(1)},${bot} Z`;
-  const FAINT = 'rgba(235,230,216,0.45)';
+  const FAINT = 'var(--nura-text-tertiary)';
 
   return (
     <svg viewBox="0 0 340 176" shapeRendering="geometricPrecision" style={{ display: 'block', width: '100%', height: 'auto', overflow: 'visible' }}>
@@ -93,7 +93,7 @@ function WeightTrendChart({ points, unit }: { points: { date: string; value: num
 
       {/* faint per-point vertical guides */}
       {pts.map(([x], i) => (
-        <line key={i} x1={x.toFixed(1)} y1={top} x2={x.toFixed(1)} y2={bot} stroke="rgba(235,230,216,0.06)" strokeWidth={1} />
+        <line key={i} x1={x.toFixed(1)} y1={top} x2={x.toFixed(1)} y2={bot} stroke="rgba(var(--nura-bg-tint-rgb),0.06)" strokeWidth={1} />
       ))}
 
       {/* y labels — high / low of the range, in mono */}
@@ -212,12 +212,12 @@ function LogWeightModal({ defaultUnit, onClose, onSaved }: {
               style={{ ...modalInputStyle, fontFamily: FONT, resize: 'none', lineHeight: 1.5 }} />
           </div>
 
-          {err && <div style={{ fontSize: 12.5, color: '#e0a4a4' }}>{err}</div>}
+          {err && <div style={{ fontSize: 12.5, color: 'var(--nura-danger-soft)' }}>{err}</div>}
 
           <button type="button" onClick={() => save(close)} disabled={saving} style={{
             width: '100%', marginTop: 2, background: SAGE, color: BG, border: 'none', borderRadius: 14,
             padding: 14, fontSize: 15, fontWeight: 700, cursor: saving ? 'default' : 'pointer',
-            opacity: saving ? 0.7 : 1, boxShadow: '0 8px 24px rgba(155,176,165,.28)',
+            opacity: saving ? 0.7 : 1, boxShadow: '0 8px 24px rgba(var(--nura-sage-rgb),.28)',
           }}>
             {saving ? 'Saving…' : 'Save'}
           </button>
@@ -281,12 +281,12 @@ function CenteredModal({ title, onClose, maxWidth = 420, children }: {
       <style>{`
         .nura-modal-scroll::-webkit-scrollbar { width: 6px; }
         .nura-modal-scroll::-webkit-scrollbar-track { background: transparent; }
-        .nura-modal-scroll::-webkit-scrollbar-thumb { background: rgba(155,176,165,.35); border-radius: 999px; }
-        .nura-modal-scroll::-webkit-scrollbar-thumb:hover { background: rgba(155,176,165,.55); }
+        .nura-modal-scroll::-webkit-scrollbar-thumb { background: rgba(var(--nura-sage-rgb),.35); border-radius: 999px; }
+        .nura-modal-scroll::-webkit-scrollbar-thumb:hover { background: rgba(var(--nura-sage-rgb),.55); }
       `}</style>
       <div onClick={(e) => e.stopPropagation()} style={{
         width: '100%', maxWidth, maxHeight: '86vh', display: 'flex', flexDirection: 'column', boxSizing: 'border-box',
-        background: '#161918', borderRadius: 22, overflow: 'hidden',
+        background: 'var(--nura-card)', borderRadius: 22, overflow: 'hidden',
         border: `1px solid ${LINE}`, padding: '18px 0', fontFamily: FONT,
         opacity: visible ? 1 : 0, transform: visible ? 'scale(1)' : 'scale(.96)',
         transition: 'opacity 200ms ease, transform 200ms ease',
@@ -300,7 +300,7 @@ function CenteredModal({ title, onClose, maxWidth = 420, children }: {
           <button type="button" aria-label="Close" onClick={requestClose} style={{
             appearance: 'none', cursor: 'pointer', width: 32, height: 32, borderRadius: 9, color: MUT,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            background: 'rgba(235,230,216,.05)', border: `1px solid ${LINE}`,
+            background: 'rgba(var(--nura-bg-tint-rgb),.05)', border: `1px solid ${LINE}`,
           }}>✕</button>
         </div>
         {/* scrollable body — equal L/R inset, border-box, gutter reserved both
@@ -308,7 +308,7 @@ function CenteredModal({ title, onClose, maxWidth = 420, children }: {
         <div className="nura-modal-scroll" style={{
           overflowY: 'auto', minHeight: 0, padding: `0 ${H_INSET}px`, boxSizing: 'border-box',
           scrollbarGutter: 'stable both-edges',
-          scrollbarWidth: 'thin', scrollbarColor: 'rgba(155,176,165,.35) transparent',
+          scrollbarWidth: 'thin', scrollbarColor: 'rgba(var(--nura-sage-rgb),.35) transparent',
         }}>
           {typeof children === 'function' ? children(requestClose) : children}
         </div>
@@ -340,7 +340,7 @@ function FitToggle({ value, onChange }: { value: PhotoFit; onChange: (f: PhotoFi
   return (
     <div style={{
       display: 'inline-flex', gap: 2, padding: 3, borderRadius: 10,
-      background: 'rgba(13,13,14,.6)', backdropFilter: 'blur(6px)', border: `1px solid ${LINE}`,
+      background: 'var(--nura-scrim-panel)', backdropFilter: 'blur(6px)', border: `1px solid ${LINE}`,
     }}>
       <button type="button" onClick={() => onChange('fill')} style={seg('fill', 'Fill')}>Fill</button>
       <button type="button" onClick={() => onChange('contain')} style={seg('contain', 'Fit')}>Fit</button>
@@ -394,7 +394,7 @@ function AddPhotoModal({ onClose, onSaved }: { onClose: () => void; onSaved: () 
   const pickBtn: React.CSSProperties = {
     flex: 1, appearance: 'none', cursor: 'pointer', boxSizing: 'border-box',
     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
-    color: SAGE, background: 'rgba(155,176,165,.12)', border: '1px solid rgba(155,176,165,.3)',
+    color: SAGE, background: 'rgba(var(--nura-sage-rgb),.12)', border: '1px solid rgba(var(--nura-sage-rgb),.3)',
     borderRadius: 11, padding: '11px 12px', fontSize: 13.5, fontWeight: 700, fontFamily: FONT,
   };
 
@@ -464,12 +464,12 @@ function AddPhotoModal({ onClose, onSaved }: { onClose: () => void; onSaved: () 
               style={{ ...modalInputStyle, fontFamily: FONT, resize: 'none', lineHeight: 1.5 }} />
           </div>
 
-          {err && <div style={{ fontSize: 12.5, color: '#e0a4a4' }}>{err}</div>}
+          {err && <div style={{ fontSize: 12.5, color: 'var(--nura-danger-soft)' }}>{err}</div>}
 
           <button type="button" onClick={() => save(close)} disabled={saving} style={{
             width: '100%', marginTop: 2, background: SAGE, color: BG, border: 'none', borderRadius: 14,
             padding: 14, fontSize: 15, fontWeight: 700, cursor: saving ? 'default' : 'pointer',
-            opacity: saving ? 0.7 : 1, boxShadow: '0 8px 24px rgba(155,176,165,.28)',
+            opacity: saving ? 0.7 : 1, boxShadow: '0 8px 24px rgba(var(--nura-sage-rgb),.28)',
           }}>
             {saving ? 'Uploading…' : 'Save'}
           </button>
@@ -528,8 +528,8 @@ function PhotoViewerModal({ photo, photos, onClose, onUpdate }: {
           ))}
         </div>
         <button type="button" onClick={() => setOther(null)} style={{
-          width: '100%', marginTop: 16, background: 'rgba(155,176,165,.12)', color: SAGE,
-          border: '1px solid rgba(155,176,165,.3)', borderRadius: 12, padding: 12,
+          width: '100%', marginTop: 16, background: 'rgba(var(--nura-sage-rgb),.12)', color: SAGE,
+          border: '1px solid rgba(var(--nura-sage-rgb),.3)', borderRadius: 12, padding: 12,
           fontSize: 14, fontWeight: 700, fontFamily: FONT, cursor: 'pointer',
         }}>Back</button>
       </CenteredModal>
@@ -561,7 +561,7 @@ function PhotoViewerModal({ photo, photos, onClose, onUpdate }: {
           </div>
         )}
         <button type="button" onClick={() => setMode('single')} style={{
-          width: '100%', marginTop: 16, background: 'rgba(235,230,216,.05)', color: MUT,
+          width: '100%', marginTop: 16, background: 'rgba(var(--nura-bg-tint-rgb),.05)', color: MUT,
           border: `1px solid ${LINE}`, borderRadius: 12, padding: 12,
           fontSize: 14, fontWeight: 700, fontFamily: FONT, cursor: 'pointer',
         }}>Back</button>
@@ -581,8 +581,8 @@ function PhotoViewerModal({ photo, photos, onClose, onUpdate }: {
       </div>
       {(photo.pose || photo.notes) && caption(photo)}
       <button type="button" onClick={() => setMode('pick')} style={{
-        width: '100%', marginTop: 16, background: 'rgba(155,176,165,.12)', color: SAGE,
-        border: '1px solid rgba(155,176,165,.3)', borderRadius: 12, padding: 12,
+        width: '100%', marginTop: 16, background: 'rgba(var(--nura-sage-rgb),.12)', color: SAGE,
+        border: '1px solid rgba(var(--nura-sage-rgb),.3)', borderRadius: 12, padding: 12,
         fontSize: 14, fontWeight: 700, fontFamily: FONT, cursor: 'pointer',
       }}>Compare</button>
     </CenteredModal>
@@ -595,7 +595,7 @@ function VolumeBars({ weeks }: { weeks: { key: string; date: string; value: numb
   const max = Math.max(1, ...weeks.map((w) => w.value));
   const anyVol = weeks.some((w) => w.value > 0);
   const latest = weeks[weeks.length - 1]?.value ?? 0;
-  const FAINT = 'rgba(235,230,216,0.45)';
+  const FAINT = 'var(--nura-text-tertiary)';
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}>
@@ -609,7 +609,7 @@ function VolumeBars({ weeks }: { weeks: { key: string; date: string; value: numb
           return (
             <div key={w.key} title={`${fmtDay(w.date)} · ${Math.round(w.value).toLocaleString()}`}
               style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', height: '100%' }}>
-              <div style={{ height: h, borderRadius: 4, background: w.value > 0 ? SAGE : 'rgba(235,230,216,.08)', transition: 'height .4s ease' }} />
+              <div style={{ height: h, borderRadius: 4, background: w.value > 0 ? SAGE : 'rgba(var(--nura-bg-tint-rgb),.08)', transition: 'height .4s ease' }} />
             </div>
           );
         })}
@@ -923,7 +923,7 @@ export default function FitnessProgress() {
   // ── Shared styles (1:1 with ExerciseDetail.tsx) ─────────────────────────────
   const wrap: React.CSSProperties = {
     position: 'relative', minHeight: '100dvh',
-    background: 'radial-gradient(120% 40% at 50% -5%, #16191780 0%, #0d0d0e 50%)',
+    background: 'var(--nura-page-gradient)',
     fontFamily: FONT, color: TEXT,
   };
   const tile = (label: string, value: string) => (
@@ -955,12 +955,12 @@ export default function FitnessProgress() {
           {/* hero — weekly ring */}
           <div style={{
             position: 'relative', overflow: 'hidden', borderRadius: 22, padding: 20, marginBottom: 20,
-            background: 'linear-gradient(135deg,rgba(155,176,165,.20),rgba(155,176,165,.04))',
-            border: '1px solid rgba(155,176,165,.25)',
+            background: 'linear-gradient(135deg,rgba(var(--nura-sage-rgb),.20),rgba(var(--nura-sage-rgb),.04))',
+            border: '1px solid rgba(var(--nura-sage-rgb),.25)',
             display: 'flex', alignItems: 'center', gap: 20,
           }}>
             {/* soft radial corner-glow (matches the dashboard hero) */}
-            <div style={{ position: 'absolute', right: -40, top: -40, width: 180, height: 180, borderRadius: '50%', background: 'radial-gradient(circle,rgba(155,176,165,.35),transparent 70%)', pointerEvents: 'none' }} />
+            <div style={{ position: 'absolute', right: -40, top: -40, width: 180, height: 180, borderRadius: '50%', background: 'radial-gradient(circle,rgba(var(--nura-sage-rgb),.35),transparent 70%)', pointerEvents: 'none' }} />
 
             {/* ring */}
             <div style={{ position: 'relative', width: 110, height: 110, flexShrink: 0 }}>
@@ -1017,7 +1017,7 @@ export default function FitnessProgress() {
               </div>
               <button type="button" onClick={() => setLogOpen(true)} style={{
                 appearance: 'none', cursor: 'pointer', flexShrink: 0,
-                color: SAGE, background: 'rgba(155,176,165,.12)', border: '1px solid rgba(155,176,165,.3)',
+                color: SAGE, background: 'rgba(var(--nura-sage-rgb),.12)', border: '1px solid rgba(var(--nura-sage-rgb),.3)',
                 borderRadius: 11, padding: '9px 14px', fontSize: 13, fontWeight: 700, fontFamily: FONT,
               }}>+ Log</button>
             </div>
@@ -1090,7 +1090,7 @@ export default function FitnessProgress() {
                       title={cell.key}
                       style={{
                         width: 14, height: 14, borderRadius: 3,
-                        background: cell.future ? 'transparent' : cell.done ? SAGE : 'rgba(235,230,216,.06)',
+                        background: cell.future ? 'transparent' : cell.done ? SAGE : 'rgba(var(--nura-bg-tint-rgb),.06)',
                         border: cell.future ? '1px solid transparent' : `1px solid ${cell.done ? SAGE : LINE}`,
                       }}
                     />
@@ -1108,15 +1108,15 @@ export default function FitnessProgress() {
               <div key={b.id} style={{
                 display: 'flex', flexDirection: 'column', gap: 9,
                 background: SURF, borderRadius: 14, padding: 13,
-                border: `1px solid ${b.unlocked ? 'rgba(155,176,165,.35)' : LINE}`,
+                border: `1px solid ${b.unlocked ? 'rgba(var(--nura-sage-rgb),.35)' : LINE}`,
                 opacity: b.unlocked ? 1 : 0.7,
               }}>
                 {/* icon + locked marker */}
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <div style={{
                     width: 34, height: 34, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    background: b.unlocked ? 'rgba(155,176,165,.14)' : 'rgba(235,230,216,.05)',
-                    border: `1px solid ${b.unlocked ? 'rgba(155,176,165,.3)' : LINE}`,
+                    background: b.unlocked ? 'rgba(var(--nura-sage-rgb),.14)' : 'rgba(var(--nura-bg-tint-rgb),.05)',
+                    border: `1px solid ${b.unlocked ? 'rgba(var(--nura-sage-rgb),.3)' : LINE}`,
                     color: b.unlocked ? SAGE : MUT,
                   }}>
                     <svg width="18" height="18" viewBox="0 0 24 24" stroke="currentColor" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">{b.icon}</svg>
@@ -1138,8 +1138,8 @@ export default function FitnessProgress() {
                     <span style={{ fontFamily: MONO, fontSize: 12, fontWeight: 700, color: b.unlocked ? SAGE : TEXT }}>{b.current} / {b.target}</span>
                     {b.unlocked && <span style={{ fontSize: 9, letterSpacing: '.12em', color: SAGE }}>UNLOCKED</span>}
                   </div>
-                  <div style={{ height: 5, borderRadius: 3, background: 'rgba(235,230,216,.08)', overflow: 'hidden' }}>
-                    <div style={{ height: '100%', width: `${Math.round(b.progress * 100)}%`, background: b.unlocked ? SAGE : 'rgba(155,176,165,.45)', borderRadius: 3, transition: 'width .5s ease' }} />
+                  <div style={{ height: 5, borderRadius: 3, background: 'rgba(var(--nura-bg-tint-rgb),.08)', overflow: 'hidden' }}>
+                    <div style={{ height: '100%', width: `${Math.round(b.progress * 100)}%`, background: b.unlocked ? SAGE : 'rgba(var(--nura-sage-rgb),.45)', borderRadius: 3, transition: 'width .5s ease' }} />
                   </div>
                 </div>
               </div>
@@ -1198,7 +1198,7 @@ export default function FitnessProgress() {
             recent.map((r, i) => (
               <div key={r.id} style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                padding: '14px 0', borderTop: i === 0 ? 'none' : '1px solid rgba(235,230,216,.06)',
+                padding: '14px 0', borderTop: i === 0 ? 'none' : '1px solid rgba(var(--nura-bg-tint-rgb),.06)',
               }}>
                 <div>
                   <div style={{ fontSize: 14, fontWeight: 600 }}>{r.name}</div>
@@ -1215,7 +1215,7 @@ export default function FitnessProgress() {
       {/* bottom nav — same block as the dashboard, Progress active */}
       <div style={{
         position: 'fixed', bottom: 16, left: '50%', transform: 'translateX(-50%)', width: 'calc(100% - 40px)', maxWidth: 400,
-        background: 'rgba(20,22,21,.9)', backdropFilter: 'blur(12px)', border: `1px solid ${LINE}`, borderRadius: 20,
+        background: 'var(--nura-elevated)', backdropFilter: 'blur(12px)', border: `1px solid ${LINE}`, borderRadius: 20,
         display: 'flex', justifyContent: 'space-around', padding: 12, zIndex: 40,
       }}>
         {[

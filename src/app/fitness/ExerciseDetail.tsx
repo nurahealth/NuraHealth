@@ -10,12 +10,12 @@ import FitnessBackButton from './FitnessBackButton';
 const DEMO_BUCKET = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/exercise-demos`;
 
 // ── Palette (ported verbatim from design-reference/exercise-howto.html) ───────
-const BG = '#0d0d0e';
-const SAGE = '#9bb0a5';
-const TEXT = '#ebe6d8';
-const MUT = 'rgba(235,230,216,.5)';
-const SURF = 'rgba(235,230,216,.045)';
-const LINE = 'rgba(235,230,216,.09)';
+const BG = 'var(--nura-bg)';
+const SAGE = 'var(--nura-sage)';
+const TEXT = 'var(--nura-text-primary)';
+const MUT = 'var(--nura-text-secondary)';
+const SURF = 'rgba(var(--nura-bg-tint-rgb),.045)';
+const LINE = 'rgba(var(--nura-bg-tint-rgb),.09)';
 const FONT = '-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,sans-serif';
 const MONO = "'JetBrains Mono', monospace";
 
@@ -29,6 +29,10 @@ const DEMO = {
   // Solid white panel: WorkoutX gif placeholders ship on white, so they blend
   // edge-to-edge with no inner rectangle or side bars. MoveKit clips fill via
   // cover, so the same white panel keeps both demo types looking consistent.
+  // Deliberately NOT themed: the demo panel matches the media asset, not the UI.
+  // Both clip sources ship baked onto a white studio background, so this stays
+  // white in dark mode too — theming it would put a dark frame around a white
+  // video. The caption below sits on this panel, so it is fixed to suit white.
   bg: '#ffffff',
   border: 'rgba(120,124,118,0.18)', // neutral hairline frame
 };
@@ -147,7 +151,7 @@ export default function ExerciseDetail({ exerciseId, sets, reps, rest_seconds, o
     // Radial tint layered over a SOLID base so the full-screen overlay is opaque
     // — otherwise the translucent top of the gradient lets the dashboard header
     // behind this screen bleed through and collide with our own header.
-    background: 'radial-gradient(120% 40% at 50% -5%, #16191780 0%, #0d0d0e 50%), #0d0d0e',
+    background: 'var(--nura-page-gradient)',
     fontFamily: FONT, color: TEXT,
   };
   const tile = (label: string, value: string) => (
@@ -207,7 +211,7 @@ export default function ExerciseDetail({ exerciseId, sets, reps, rest_seconds, o
             <span key={`p-${m}`} style={{ fontSize: 11, borderRadius: 999, padding: '5px 12px', background: SAGE, color: BG, fontWeight: 700 }}>{titleCase(m)}</span>
           ))}
           {secondary.map((m) => (
-            <span key={`s-${m}`} style={{ fontSize: 11, borderRadius: 999, padding: '5px 12px', border: '1px solid rgba(155,176,165,.4)', color: SAGE }}>{titleCase(m)}</span>
+            <span key={`s-${m}`} style={{ fontSize: 11, borderRadius: 999, padding: '5px 12px', border: '1px solid rgba(var(--nura-sage-rgb),.4)', color: SAGE }}>{titleCase(m)}</span>
           ))}
         </div>
 
@@ -230,7 +234,7 @@ export default function ExerciseDetail({ exerciseId, sets, reps, rest_seconds, o
             color: TEXT, background: SURF, border: `1px solid ${LINE}`, outline: 'none',
           };
           return (
-            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 0', borderTop: '1px solid rgba(235,230,216,.06)' }}>
+            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 0', borderTop: '1px solid rgba(var(--nura-bg-tint-rgb),.06)' }}>
               <div style={{ width: 46, flexShrink: 0 }}>
                 <div style={{ fontSize: 14, fontWeight: 600 }}>Set {i + 1}</div>
                 <div style={{ fontSize: 10, color: MUT, marginTop: 2 }}>{repsLabel}</div>
@@ -246,7 +250,7 @@ export default function ExerciseDetail({ exerciseId, sets, reps, rest_seconds, o
                 onClick={() => toggle(i)}
                 style={{
                   width: 30, height: 30, borderRadius: '50%', cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: '.15s',
-                  border: done[i] ? `1.5px solid ${SAGE}` : '1.5px solid rgba(235,230,216,.2)',
+                  border: done[i] ? `1.5px solid ${SAGE}` : '1.5px solid rgba(var(--nura-bg-tint-rgb),.2)',
                   background: done[i] ? SAGE : 'transparent',
                 }}
               >
@@ -258,7 +262,7 @@ export default function ExerciseDetail({ exerciseId, sets, reps, rest_seconds, o
           );
         })}
 
-        {saveErr && <div style={{ fontSize: 12.5, color: '#e0a4a4', marginTop: 14 }}>{saveErr}</div>}
+        {saveErr && <div style={{ fontSize: 12.5, color: 'var(--nura-danger-soft)', marginTop: 14 }}>{saveErr}</div>}
         {saveMsg && <div style={{ fontSize: 12.5, color: SAGE, marginTop: 14 }}>{saveMsg}</div>}
 
         {/* log sets — primary action for the set logging, centered & full-width
@@ -268,7 +272,7 @@ export default function ExerciseDetail({ exerciseId, sets, reps, rest_seconds, o
           display: 'block', width: '100%', margin: '18px 0 34px',
           background: SAGE, color: BG, border: 'none', borderRadius: 14,
           padding: 16, fontSize: 15, fontWeight: 700, cursor: saving ? 'default' : 'pointer',
-          opacity: saving ? 0.7 : 1, boxShadow: '0 8px 24px rgba(155,176,165,.28)',
+          opacity: saving ? 0.7 : 1, boxShadow: '0 8px 24px rgba(var(--nura-sage-rgb),.28)',
         }}>
           {saving ? 'Saving…' : 'Log sets'}
         </button>
@@ -280,8 +284,8 @@ export default function ExerciseDetail({ exerciseId, sets, reps, rest_seconds, o
         ) : (
           instructions.map((step, i) => (
             <div key={i} style={{ display: 'flex', gap: 13, marginBottom: i === instructions.length - 1 ? 28 : 15 }}>
-              <div style={{ width: 25, height: 25, borderRadius: '50%', background: 'rgba(155,176,165,.16)', color: SAGE, fontSize: 12, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{i + 1}</div>
-              <div style={{ fontSize: 14, lineHeight: 1.5, color: 'rgba(235,230,216,.85)' }}>{step}</div>
+              <div style={{ width: 25, height: 25, borderRadius: '50%', background: 'rgba(var(--nura-sage-rgb),.16)', color: SAGE, fontSize: 12, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{i + 1}</div>
+              <div style={{ fontSize: 14, lineHeight: 1.5, color: 'var(--nura-text-primary)' }}>{step}</div>
             </div>
           ))
         )}
@@ -291,7 +295,7 @@ export default function ExerciseDetail({ exerciseId, sets, reps, rest_seconds, o
         {FORM_TIPS.map((t) => (
           <div key={t} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', marginBottom: 10 }}>
             <div style={{ width: 6, height: 6, borderRadius: '50%', background: SAGE, marginTop: 7, flexShrink: 0 }} />
-            <div style={{ fontSize: 13.5, color: 'rgba(235,230,216,.8)', lineHeight: 1.45 }}>{t}</div>
+            <div style={{ fontSize: 13.5, color: 'var(--nura-ink-strong)', lineHeight: 1.45 }}>{t}</div>
           </div>
         ))}
 

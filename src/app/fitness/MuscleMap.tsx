@@ -8,8 +8,7 @@ import { MUSCLE_GROUPS, inGroup } from './muscleGroups';
 import { MOVEKIT_GIF_LIKE } from '@/lib/movekit';
 
 // ── Palette (NŪRA) ───────────────────────────────────────────────────────────
-const SAGE = '#9bb0a5';
-const OFF = '235,230,216'; // off-white rgb (#ebe6d8)
+const SAGE = 'var(--nura-sage)';
 const SANS = "var(--font-inter), system-ui, sans-serif";
 const MONO = "'JetBrains Mono', monospace";
 
@@ -45,7 +44,7 @@ function ExerciseThumb({ ex }: { ex: Ex }) {
   return (
     <div style={{
       width: 44, height: 44, borderRadius: 10, flexShrink: 0, overflow: 'hidden',
-      background: CLIP_BG, border: `1px solid rgba(155,176,165,0.22)`,
+      background: CLIP_BG, border: `1px solid rgba(var(--nura-sage-rgb),0.22)`,
       display: 'flex', alignItems: 'center', justifyContent: 'center',
     }}>
       {ex.gif_url ? (
@@ -71,22 +70,22 @@ function ExerciseRow({ ex, onOpen }: { ex: Ex; onOpen: () => void }) {
       style={{
         appearance: 'none', width: '100%', textAlign: 'left', cursor: 'pointer',
         display: 'flex', alignItems: 'center', gap: 12, padding: '8px 10px', borderRadius: 12,
-        background: hover ? `rgba(${OFF},0.04)` : 'transparent', border: 'none',
+        background: hover ? `rgba(var(--nura-bg-tint-rgb),0.04)` : 'transparent', border: 'none',
         transition: 'background 140ms ease', fontFamily: SANS,
       }}
     >
       <ExerciseThumb ex={ex} />
       <div style={{ minWidth: 0, flex: 1 }}>
-        <div style={{ fontSize: 13.5, fontWeight: 500, color: `rgb(${OFF})`, lineHeight: 1.3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+        <div style={{ fontSize: 13.5, fontWeight: 500, color: 'var(--nura-text-primary)', lineHeight: 1.3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
           {ex.name}
         </div>
         {sub && (
-          <div style={{ fontSize: 11, color: `rgba(${OFF},0.45)`, marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          <div style={{ fontSize: 11, color: `var(--nura-text-tertiary)`, marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {sub}
           </div>
         )}
       </div>
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={`rgba(${OFF},0.3)`} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={`var(--nura-ink-faint)`} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
         <path d="M9 6l6 6-6 6" />
       </svg>
     </button>
@@ -123,18 +122,18 @@ export default function MuscleMap() {
   return (
     <div>
       <div style={{ marginBottom: 16 }}>
-        <h2 style={{ fontSize: 20, fontWeight: 600, color: `rgb(${OFF})`, fontFamily: SANS, margin: '0 0 4px', letterSpacing: '-0.3px' }}>
+        <h2 style={{ fontSize: 20, fontWeight: 600, color: 'var(--nura-text-primary)', fontFamily: SANS, margin: '0 0 4px', letterSpacing: '-0.3px' }}>
           Train by muscle
         </h2>
-        <p style={{ fontSize: 13.5, color: `rgba(${OFF},0.55)`, fontFamily: SANS, margin: 0, lineHeight: 1.6 }}>
+        <p style={{ fontSize: 13.5, color: `var(--nura-text-secondary)`, fontFamily: SANS, margin: 0, lineHeight: 1.6 }}>
           Browse exercises by muscle group.
         </p>
       </div>
 
       {loading ? (
-        <div style={{ fontSize: 13, color: `rgba(${OFF},0.45)`, fontFamily: SANS, padding: '8px 2px' }}>Loading…</div>
+        <div style={{ fontSize: 13, color: `var(--nura-text-tertiary)`, fontFamily: SANS, padding: '8px 2px' }}>Loading…</div>
       ) : rows.length === 0 ? (
-        <div style={{ fontSize: 13.5, color: `rgba(${OFF},0.5)`, fontFamily: SANS, lineHeight: 1.6, padding: '8px 2px' }}>
+        <div style={{ fontSize: 13.5, color: `var(--nura-text-secondary)`, fontFamily: SANS, lineHeight: 1.6, padding: '8px 2px' }}>
           No exercises in the catalog yet — they’ll appear here as the library loads.
         </div>
       ) : (
@@ -144,8 +143,8 @@ export default function MuscleMap() {
             return (
               <div key={group.key} style={{
                 borderRadius: 16, overflow: 'hidden',
-                background: `rgba(${OFF},0.025)`,
-                border: `1px solid ${isOpen ? `rgba(155,176,165,0.4)` : `rgba(${OFF},0.09)`}`,
+                background: `rgba(var(--nura-bg-tint-rgb),0.025)`,
+                border: `1px solid ${isOpen ? `rgba(var(--nura-sage-rgb),0.4)` : `rgba(var(--nura-bg-tint-rgb),0.09)`}`,
                 transition: 'border-color 180ms ease',
               }}>
                 {/* Header row */}
@@ -160,13 +159,13 @@ export default function MuscleMap() {
                 >
                   <span style={{
                     width: 40, height: 40, borderRadius: 12, flexShrink: 0, color: SAGE,
-                    background: `rgba(155,176,165,0.12)`, border: `1px solid rgba(155,176,165,0.22)`,
+                    background: `rgba(var(--nura-sage-rgb),0.12)`, border: `1px solid rgba(var(--nura-sage-rgb),0.22)`,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                   }}>
                     <group.Icon />
                   </span>
                   <span style={{ flex: 1, minWidth: 0 }}>
-                    <span style={{ display: 'block', fontSize: 15.5, fontWeight: 600, color: `rgb(${OFF})`, letterSpacing: '-0.2px' }}>
+                    <span style={{ display: 'block', fontSize: 15.5, fontWeight: 600, color: 'var(--nura-text-primary)', letterSpacing: '-0.2px' }}>
                       {group.label}
                     </span>
                     <span style={{ display: 'block', fontSize: 11.5, fontFamily: MONO, letterSpacing: '0.5px', color: SAGE, marginTop: 3 }}>
@@ -183,7 +182,7 @@ export default function MuscleMap() {
                 <div style={{ display: 'grid', gridTemplateRows: isOpen ? '1fr' : '0fr', transition: 'grid-template-rows 280ms ease' }}>
                   <div style={{ minHeight: 0, overflow: 'hidden' }}>
                     <div style={{
-                      padding: '4px 8px 10px', borderTop: `1px solid rgba(${OFF},0.07)`,
+                      padding: '4px 8px 10px', borderTop: `1px solid rgba(var(--nura-bg-tint-rgb),0.07)`,
                       margin: '0 8px', display: 'flex', flexDirection: 'column', gap: 2,
                     }}>
                       {items.map((ex) => <ExerciseRow key={ex.id} ex={ex} onOpen={() => setDetailExId(ex.id)} />)}

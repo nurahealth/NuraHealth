@@ -14,12 +14,12 @@ import {
 } from './planData';
 
 // ── Palette (ported verbatim from design-reference/fitness-dashboard.html) ────
-const BG = '#0d0d0e';
-const SAGE = '#9bb0a5';
-const TEXT = '#ebe6d8';
-const MUT = 'rgba(235,230,216,.5)';
-const SURF = 'rgba(235,230,216,.045)';
-const LINE = 'rgba(235,230,216,.09)';
+const BG = 'var(--nura-bg)';
+const SAGE = 'var(--nura-sage)';
+const TEXT = 'var(--nura-text-primary)';
+const MUT = 'var(--nura-text-secondary)';
+const SURF = 'rgba(var(--nura-bg-tint-rgb),.045)';
+const LINE = 'rgba(var(--nura-bg-tint-rgb),.09)';
 const FONT = '-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,sans-serif';
 
 const WEEK_DOW = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN']; // week strip is Monday-first
@@ -102,23 +102,23 @@ function Sheet({ title, items, onPick, onClose, onRemove, busy }: {
     }}>
       <div onClick={(e) => e.stopPropagation()} style={{
         width: '100%', maxWidth: 440, maxHeight: '78vh', display: 'flex', flexDirection: 'column',
-        background: '#161918', borderTopLeftRadius: 22, borderTopRightRadius: 22,
+        background: 'var(--nura-card)', borderTopLeftRadius: 22, borderTopRightRadius: 22,
         border: `1px solid ${LINE}`, borderBottom: 'none', padding: '10px 16px 22px', fontFamily: FONT,
       }}>
-        <div style={{ width: 38, height: 4, borderRadius: 999, background: 'rgba(235,230,216,.2)', margin: '0 auto 14px' }} />
+        <div style={{ width: 38, height: 4, borderRadius: 999, background: 'rgba(var(--nura-bg-tint-rgb),.2)', margin: '0 auto 14px' }} />
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
           <span style={{ fontSize: 16, fontWeight: 700, color: TEXT }}>{title}</span>
           <button type="button" aria-label="Close" onClick={onClose} style={{
             appearance: 'none', cursor: 'pointer', width: 32, height: 32, borderRadius: 9, color: MUT,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            background: 'rgba(235,230,216,.05)', border: `1px solid ${LINE}`,
+            background: 'rgba(var(--nura-bg-tint-rgb),.05)', border: `1px solid ${LINE}`,
           }}>✕</button>
         </div>
         {onRemove && (
           <button type="button" disabled={busy} onClick={onRemove} style={{
             appearance: 'none', cursor: 'pointer', width: '100%', marginBottom: 10, padding: 12, borderRadius: 12,
-            fontSize: 13, fontWeight: 600, color: '#d98b8b', background: 'rgba(217,139,139,.1)',
-            border: '1px solid rgba(217,139,139,.28)',
+            fontSize: 13, fontWeight: 600, color: 'var(--nura-danger-soft)', background: 'var(--nura-tint-danger)',
+            border: '1px solid var(--nura-tint-danger-border)',
           }}>Remove from workout</button>
         )}
         {items.length === 0 ? (
@@ -190,7 +190,7 @@ function AddSheet({ workout, catalog, onPick, onClose, busy }: {
     }}>
       <div onClick={(e) => e.stopPropagation()} style={{
         width: '100%', maxWidth: 420, maxHeight: '80vh', display: 'flex', flexDirection: 'column',
-        background: '#161918', borderRadius: 22, overflow: 'hidden',
+        background: 'var(--nura-card)', borderRadius: 22, overflow: 'hidden',
         border: `1px solid ${LINE}`, padding: '18px 16px', fontFamily: FONT,
         opacity: visible ? 1 : 0, transform: visible ? 'scale(1)' : 'scale(.96)',
         transition: 'opacity 200ms ease, transform 200ms ease',
@@ -201,7 +201,7 @@ function AddSheet({ workout, catalog, onPick, onClose, busy }: {
           <button type="button" aria-label="Close" onClick={requestClose} style={{
             appearance: 'none', cursor: 'pointer', width: 32, height: 32, borderRadius: 9, color: MUT,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            background: 'rgba(235,230,216,.05)', border: `1px solid ${LINE}`,
+            background: 'rgba(var(--nura-bg-tint-rgb),.05)', border: `1px solid ${LINE}`,
           }}>✕</button>
         </div>
 
@@ -216,7 +216,7 @@ function AddSheet({ workout, catalog, onPick, onClose, busy }: {
               }}>
                 <span style={{ fontSize: 14.5, fontWeight: 600 }}>{group.label}</span>
                 <span style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
-                  <span style={{ fontSize: 11, fontWeight: 600, color: SAGE, padding: '3px 9px', borderRadius: 999, background: 'rgba(155,176,165,.12)', border: '1px solid rgba(155,176,165,.3)' }}>
+                  <span style={{ fontSize: 11, fontWeight: 600, color: SAGE, padding: '3px 9px', borderRadius: 999, background: 'rgba(var(--nura-sage-rgb),.12)', border: '1px solid rgba(var(--nura-sage-rgb),.3)' }}>
                     {items.length}
                   </span>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={SAGE} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6" /></svg>
@@ -244,7 +244,7 @@ function AddSheet({ workout, catalog, onPick, onClose, busy }: {
                     borderRadius: 11, border: `1px solid ${LINE}`, background: SURF, color: TEXT,
                     display: 'flex', alignItems: 'center', gap: 11,
                   }}>
-                    <span style={{ width: 40, height: 40, borderRadius: 9, overflow: 'hidden', flexShrink: 0, background: CLIP_BG, border: '1px solid rgba(155,176,165,.18)' }}>
+                    <span style={{ width: 40, height: 40, borderRadius: 9, overflow: 'hidden', flexShrink: 0, background: CLIP_BG, border: '1px solid rgba(var(--nura-sage-rgb),.18)' }}>
                       {c.gif_url && <ExerciseMedia src={c.gif_url} alt={c.name} fit="cover" thumb />}
                     </span>
                     <span style={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: 3 }}>
@@ -446,7 +446,7 @@ export default function FitnessDashboard() {
   // ── Section styles (1:1 with the reference CSS) ─────────────────────────────
   const wrap: React.CSSProperties = {
     minHeight: '100vh', display: 'flex', justifyContent: 'center', padding: 20,
-    background: 'radial-gradient(120% 40% at 50% -5%, #16191780 0%, #0d0d0e 50%)',
+    background: 'var(--nura-page-gradient)',
     fontFamily: FONT, color: TEXT,
   };
   const app: React.CSSProperties = { width: '100%', maxWidth: 440, paddingBottom: 90 };
@@ -499,11 +499,11 @@ export default function FitnessDashboard() {
               style={{
                 appearance: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center',
                 justifyContent: 'center', width: 34, height: 34, borderRadius: 11, color: SAGE,
-                background: 'rgba(155,176,165,.14)', border: '1px solid rgba(155,176,165,.3)',
+                background: 'rgba(var(--nura-sage-rgb),.14)', border: '1px solid rgba(var(--nura-sage-rgb),.3)',
                 transition: 'background 150ms ease',
               }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(155,176,165,.24)'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(155,176,165,.14)'; }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(var(--nura-sage-rgb),.24)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(var(--nura-sage-rgb),.14)'; }}
             >
               <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="12" r="3" />
@@ -511,8 +511,8 @@ export default function FitnessDashboard() {
               </svg>
             </button>
             <div style={{
-              display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(155,176,165,.14)',
-              border: '1px solid rgba(155,176,165,.3)', color: SAGE, fontSize: 11, fontWeight: 700,
+              display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(var(--nura-sage-rgb),.14)',
+              border: '1px solid rgba(var(--nura-sage-rgb),.3)', color: SAGE, fontSize: 11, fontWeight: 700,
               letterSpacing: '.08em', padding: '7px 12px', borderRadius: 999,
             }}>★ PRO</div>
           </div>
@@ -525,8 +525,8 @@ export default function FitnessDashboard() {
         </div>
 
         {loadError ? (
-          <div style={{ borderRadius: 18, padding: '24px 22px', textAlign: 'center', background: 'rgba(217,139,139,.06)', border: '1px solid rgba(217,139,139,.28)' }}>
-            <div style={{ fontSize: 15, fontWeight: 700, color: '#e0a4a4', marginBottom: 6 }}>Couldn&apos;t load your plan</div>
+          <div style={{ borderRadius: 18, padding: '24px 22px', textAlign: 'center', background: 'var(--nura-tint-danger)', border: '1px solid var(--nura-tint-danger-border)' }}>
+            <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--nura-danger-soft)', marginBottom: 6 }}>Couldn&apos;t load your plan</div>
             <p style={{ fontSize: 13, color: MUT, lineHeight: 1.6, margin: '0 0 16px', wordBreak: 'break-word' }}>{loadError}</p>
             <button type="button" onClick={() => { setLoading(true); load(); }} style={{ appearance: 'none', cursor: 'pointer', border: 'none', padding: '10px 20px', borderRadius: 12, fontSize: 14, fontWeight: 700, color: BG, background: SAGE }}>
               Try again
@@ -535,11 +535,11 @@ export default function FitnessDashboard() {
         ) : loading ? (
           <div style={{ fontSize: 13, color: MUT, padding: '8px 2px' }}>Loading your week…</div>
         ) : !program ? (
-          <div style={{ borderRadius: 18, padding: '28px 24px', textAlign: 'center', background: 'rgba(155,176,165,.05)', border: '1px solid rgba(155,176,165,.22)' }}>
-            <p style={{ fontSize: 14.5, color: 'rgba(235,230,216,.7)', lineHeight: 1.6, margin: '0 0 18px' }}>
+          <div style={{ borderRadius: 18, padding: '28px 24px', textAlign: 'center', background: 'rgba(var(--nura-sage-rgb),.05)', border: '1px solid rgba(var(--nura-sage-rgb),.22)' }}>
+            <p style={{ fontSize: 14.5, color: 'var(--nura-ink-strong)', lineHeight: 1.6, margin: '0 0 18px' }}>
               No active program yet — build your weekly plan and it&apos;ll appear here.
             </p>
-            <button type="button" onClick={generate} disabled={generating} style={{ appearance: 'none', cursor: generating ? 'default' : 'pointer', border: 'none', padding: '11px 22px', borderRadius: 12, fontSize: 14, fontWeight: 700, color: BG, background: generating ? 'rgba(155,176,165,.5)' : SAGE }}>
+            <button type="button" onClick={generate} disabled={generating} style={{ appearance: 'none', cursor: generating ? 'default' : 'pointer', border: 'none', padding: '11px 22px', borderRadius: 12, fontSize: 14, fontWeight: 700, color: BG, background: generating ? 'rgba(var(--nura-sage-rgb),.5)' : SAGE }}>
               {generating ? 'Building your plan…' : 'Build my plan'}
             </button>
           </div>
@@ -562,7 +562,7 @@ export default function FitnessDashboard() {
                         flex: 1, textAlign: 'center', padding: '11px 0 9px', borderRadius: 14, cursor: 'pointer', transition: '.16s',
                         background: isToday ? SAGE : SURF,
                         border: `1px solid ${isToday ? SAGE : isSel ? SAGE : LINE}`,
-                        boxShadow: isToday ? '0 8px 22px rgba(155,176,165,.28)' : 'none',
+                        boxShadow: isToday ? '0 8px 22px rgba(var(--nura-sage-rgb),.28)' : 'none',
                       }}
                     >
                       <div style={{ fontSize: 10, letterSpacing: '.05em', color: isToday ? BG : MUT }}>{WEEK_DOW[i]}</div>
@@ -572,7 +572,7 @@ export default function FitnessDashboard() {
                         {done ? (
                           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={isToday ? BG : SAGE} strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
                         ) : (
-                          <div style={{ width: 5, height: 5, borderRadius: '50%', background: isToday ? BG : train ? 'rgba(155,176,165,.55)' : 'transparent' }} />
+                          <div style={{ width: 5, height: 5, borderRadius: '50%', background: isToday ? BG : train ? 'rgba(var(--nura-sage-rgb),.55)' : 'transparent' }} />
                         )}
                       </div>
                     </div>
@@ -608,9 +608,9 @@ export default function FitnessDashboard() {
                         style={{
                           aspectRatio: '1', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative',
                           fontSize: 13, borderRadius: 10, cursor: 'pointer',
-                          color: isToday ? BG : train ? TEXT : 'rgba(235,230,216,.8)',
+                          color: isToday ? BG : train ? TEXT : 'var(--nura-ink-strong)',
                           fontWeight: isToday || train ? 700 : 400,
-                          background: isToday ? SAGE : train ? 'rgba(155,176,165,.16)' : 'transparent',
+                          background: isToday ? SAGE : train ? 'rgba(var(--nura-sage-rgb),.16)' : 'transparent',
                         }}
                       >
                         {date.getDate()}
@@ -620,7 +620,7 @@ export default function FitnessDashboard() {
                             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={SAGE} strokeWidth="3.6" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
                           </span>
                         ) : train && !isToday ? (
-                          <span style={{ position: 'absolute', bottom: 4, width: 4, height: 4, borderRadius: '50%', background: 'rgba(155,176,165,.55)' }} />
+                          <span style={{ position: 'absolute', bottom: 4, width: 4, height: 4, borderRadius: '50%', background: 'rgba(var(--nura-sage-rgb),.55)' }} />
                         ) : null}
                       </div>
                     );
@@ -632,10 +632,10 @@ export default function FitnessDashboard() {
             {/* TODAY HERO */}
             <div style={{
               position: 'relative', overflow: 'hidden', borderRadius: 22, padding: 20, marginBottom: 14,
-              background: training ? 'linear-gradient(135deg,rgba(155,176,165,.20),rgba(155,176,165,.04))' : SURF,
-              border: `1px solid ${training ? 'rgba(155,176,165,.25)' : LINE}`,
+              background: training ? 'linear-gradient(135deg,rgba(var(--nura-sage-rgb),.20),rgba(var(--nura-sage-rgb),.04))' : SURF,
+              border: `1px solid ${training ? 'rgba(var(--nura-sage-rgb),.25)' : LINE}`,
             }}>
-              <div style={{ position: 'absolute', right: -40, top: -40, width: 180, height: 180, borderRadius: '50%', background: 'radial-gradient(circle,rgba(155,176,165,.35),transparent 70%)', pointerEvents: 'none' }} />
+              <div style={{ position: 'absolute', right: -40, top: -40, width: 180, height: 180, borderRadius: '50%', background: 'radial-gradient(circle,rgba(var(--nura-sage-rgb),.35),transparent 70%)', pointerEvents: 'none' }} />
               <svg style={{ position: 'absolute', right: -10, bottom: -30, opacity: 0.13 }} width="150" height="150" viewBox="0 0 24 24" fill="none" stroke={SAGE} strokeWidth="1.2">
                 <path d="M6.5 6.5 17.5 17.5M3 8l3-3M16 21l3-3M8 3 5 6M21 16l-3 3" />
               </svg>
@@ -649,7 +649,7 @@ export default function FitnessDashboard() {
               {training && (
                 <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', margin: '14px 0 16px', position: 'relative' }}>
                   {muscleChips(selWorkout!.exercises).map((c) => (
-                    <span key={c} style={{ fontSize: 11, background: 'rgba(13,13,14,.35)', border: '1px solid rgba(235,230,216,.12)', color: TEXT, borderRadius: 999, padding: '5px 11px' }}>{c}</span>
+                    <span key={c} style={{ fontSize: 11, background: 'var(--nura-inset-dark)', border: '1px solid rgba(var(--nura-bg-tint-rgb),.12)', color: TEXT, borderRadius: 999, padding: '5px 11px' }}>{c}</span>
                   ))}
                 </div>
               )}
@@ -658,20 +658,20 @@ export default function FitnessDashboard() {
                   <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
                     {selectedDone ? (
                       // Already logged for this day — show a clear "done" state.
-                      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9, background: 'rgba(155,176,165,.16)', color: SAGE, border: '1px solid rgba(155,176,165,.4)', borderRadius: 13, padding: 14, fontSize: 15, fontWeight: 700 }}>
+                      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9, background: 'rgba(var(--nura-sage-rgb),.16)', color: SAGE, border: '1px solid rgba(var(--nura-sage-rgb),.4)', borderRadius: 13, padding: 14, fontSize: 15, fontWeight: 700 }}>
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={SAGE} strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
                         Completed
                       </div>
                     ) : sessionActiveHere ? (
-                      <button type="button" onClick={finishWorkout} disabled={logging} style={{ flex: 1, background: SAGE, color: BG, border: 'none', borderRadius: 13, padding: 14, fontSize: 15, fontWeight: 700, cursor: logging ? 'default' : 'pointer', opacity: logging ? 0.7 : 1, boxShadow: '0 8px 24px rgba(155,176,165,.3)' }}>
+                      <button type="button" onClick={finishWorkout} disabled={logging} style={{ flex: 1, background: SAGE, color: BG, border: 'none', borderRadius: 13, padding: 14, fontSize: 15, fontWeight: 700, cursor: logging ? 'default' : 'pointer', opacity: logging ? 0.7 : 1, boxShadow: '0 8px 24px rgba(var(--nura-sage-rgb),.3)' }}>
                         {logging ? 'Saving…' : 'Finish workout'}
                       </button>
                     ) : (
-                      <button type="button" onClick={startWorkout} style={{ flex: 1, background: SAGE, color: BG, border: 'none', borderRadius: 13, padding: 14, fontSize: 15, fontWeight: 700, cursor: 'pointer', boxShadow: '0 8px 24px rgba(155,176,165,.3)' }}>
+                      <button type="button" onClick={startWorkout} style={{ flex: 1, background: SAGE, color: BG, border: 'none', borderRadius: 13, padding: 14, fontSize: 15, fontWeight: 700, cursor: 'pointer', boxShadow: '0 8px 24px rgba(var(--nura-sage-rgb),.3)' }}>
                         Start workout
                       </button>
                     )}
-                    <button type="button" aria-label="Edit" style={{ width: 48, height: 48, borderRadius: 13, background: 'rgba(13,13,14,.4)', border: '1px solid rgba(235,230,216,.14)', color: TEXT, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                    <button type="button" aria-label="Edit" style={{ width: 48, height: 48, borderRadius: 13, background: 'var(--nura-inset-dark)', border: '1px solid rgba(var(--nura-bg-tint-rgb),.14)', color: TEXT, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
                       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z" /></svg>
                     </button>
                   </div>
@@ -679,7 +679,7 @@ export default function FitnessDashboard() {
                     <div style={{ fontSize: 11.5, color: MUT, marginTop: 9 }}>Workout in progress — tap Finish when you&apos;re done to log it.</div>
                   )}
                   {completeErr && (
-                    <div style={{ fontSize: 11.5, color: '#d98b8b', marginTop: 9 }}>{completeErr}</div>
+                    <div style={{ fontSize: 11.5, color: 'var(--nura-danger-soft)', marginTop: 9 }}>{completeErr}</div>
                   )}
                 </div>
               )}
@@ -699,7 +699,7 @@ export default function FitnessDashboard() {
                     onDragOver={(e) => e.preventDefault()}
                     style={{
                       display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0',
-                      borderTop: '1px solid rgba(235,230,216,.06)',
+                      borderTop: '1px solid rgba(var(--nura-bg-tint-rgb),.06)',
                       opacity: dragIndex === i ? 0.5 : 1,
                     }}
                   >
@@ -707,7 +707,7 @@ export default function FitnessDashboard() {
                       draggable
                       onDragStart={() => onDragStartRow(i)}
                       onDragEnd={() => onDragEndRow(selWorkout!.id)}
-                      style={{ color: 'rgba(235,230,216,.25)', cursor: 'grab', touchAction: 'none', display: 'flex' }}
+                      style={{ color: 'var(--nura-ink-faint)', cursor: 'grab', touchAction: 'none', display: 'flex' }}
                       aria-label="Drag to reorder"
                     >
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
@@ -721,7 +721,7 @@ export default function FitnessDashboard() {
                       onClick={() => we.exercise && setDetailEx({ id: we.exercise.id, sets: we.sets, reps: we.reps, rest_seconds: we.rest_seconds })}
                       style={{ appearance: 'none', textAlign: 'left', border: 'none', background: 'transparent', padding: 0, flex: 1, minWidth: 0, cursor: 'pointer', color: TEXT, fontFamily: FONT, display: 'flex', alignItems: 'center', gap: 12 }}
                     >
-                      <span style={{ width: 38, height: 38, borderRadius: 10, overflow: 'hidden', background: CLIP_BG, border: '1px solid rgba(155,176,165,.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: SAGE, fontSize: 11, flexShrink: 0 }}>
+                      <span style={{ width: 38, height: 38, borderRadius: 10, overflow: 'hidden', background: CLIP_BG, border: '1px solid rgba(var(--nura-sage-rgb),.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: SAGE, fontSize: 11, flexShrink: 0 }}>
                         {we.exercise?.gif_url ? <ExerciseMedia src={we.exercise.gif_url} alt={we.exercise.name} fit="cover" thumb /> : '▶'}
                       </span>
                       <span style={{ minWidth: 0 }}>
@@ -731,12 +731,12 @@ export default function FitnessDashboard() {
                     </button>
                     {/* Sets steppers — their own controls. */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-                      <button type="button" aria-label="Decrease sets" onClick={() => stepSets(selWorkout!.id, we.id, -1)} style={{ width: 26, height: 26, borderRadius: 8, border: `1px solid ${LINE}`, background: 'rgba(235,230,216,.05)', color: TEXT, fontSize: 15, cursor: 'pointer', lineHeight: 1 }}>−</button>
+                      <button type="button" aria-label="Decrease sets" onClick={() => stepSets(selWorkout!.id, we.id, -1)} style={{ width: 26, height: 26, borderRadius: 8, border: `1px solid ${LINE}`, background: 'rgba(var(--nura-bg-tint-rgb),.05)', color: TEXT, fontSize: 15, cursor: 'pointer', lineHeight: 1 }}>−</button>
                       <div style={{ minWidth: 42, textAlign: 'center' }}>
                         <span style={{ fontSize: 13, fontWeight: 700, display: 'block' }}>{we.sets ?? 0} × {we.reps ?? '—'}</span>
                         <span style={{ fontSize: 9, color: MUT, display: 'block', letterSpacing: '.05em' }}>SETS×REPS</span>
                       </div>
-                      <button type="button" aria-label="Increase sets" onClick={() => stepSets(selWorkout!.id, we.id, 1)} style={{ width: 26, height: 26, borderRadius: 8, border: `1px solid ${LINE}`, background: 'rgba(235,230,216,.05)', color: TEXT, fontSize: 15, cursor: 'pointer', lineHeight: 1 }}>+</button>
+                      <button type="button" aria-label="Increase sets" onClick={() => stepSets(selWorkout!.id, we.id, 1)} style={{ width: 26, height: 26, borderRadius: 8, border: `1px solid ${LINE}`, background: 'rgba(var(--nura-bg-tint-rgb),.05)', color: TEXT, fontSize: 15, cursor: 'pointer', lineHeight: 1 }}>+</button>
                     </div>
                     {/* Swap — explicit, separate from the main tap target. */}
                     <button
@@ -744,7 +744,7 @@ export default function FitnessDashboard() {
                       aria-label={`Swap ${we.exercise?.name ?? 'exercise'}`}
                       title="Swap exercise"
                       onClick={() => setPicker({ kind: 'swap', weId: we.id })}
-                      style={{ appearance: 'none', cursor: 'pointer', width: 28, height: 28, borderRadius: 8, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: SAGE, background: 'rgba(155,176,165,.1)', border: '1px solid rgba(155,176,165,.28)' }}
+                      style={{ appearance: 'none', cursor: 'pointer', width: 28, height: 28, borderRadius: 8, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: SAGE, background: 'rgba(var(--nura-sage-rgb),.1)', border: '1px solid rgba(var(--nura-sage-rgb),.28)' }}
                     >
                       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 4 3 8l4 4M3 8h14M17 20l4-4-4-4M21 16H7" /></svg>
                     </button>
@@ -754,13 +754,13 @@ export default function FitnessDashboard() {
                       aria-label={`Remove ${we.exercise?.name ?? 'exercise'}`}
                       title="Remove exercise"
                       onClick={() => doRemove(selWorkout!.id, we.id)}
-                      style={{ appearance: 'none', cursor: 'pointer', width: 28, height: 28, borderRadius: 8, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#d98b8b', background: 'rgba(217,139,139,.1)', border: '1px solid rgba(217,139,139,.28)' }}
+                      style={{ appearance: 'none', cursor: 'pointer', width: 28, height: 28, borderRadius: 8, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--nura-danger-soft)', background: 'var(--nura-tint-danger)', border: '1px solid var(--nura-tint-danger-border)' }}
                     >
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
                     </button>
                   </div>
                 ))}
-                <button type="button" onClick={() => setPicker({ kind: 'add' })} style={{ width: '100%', marginTop: 10, background: 'transparent', border: '1px dashed rgba(155,176,165,.4)', color: SAGE, borderRadius: 12, padding: 12, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+                <button type="button" onClick={() => setPicker({ kind: 'add' })} style={{ width: '100%', marginTop: 10, background: 'transparent', border: '1px dashed rgba(var(--nura-sage-rgb),.4)', color: SAGE, borderRadius: 12, padding: 12, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
                   + Add exercise
                 </button>
               </div>
@@ -772,10 +772,10 @@ export default function FitnessDashboard() {
               const pct = programProgress(p.created_at);
               return (
                 <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 14, background: SURF, border: `1px solid ${LINE}`, borderRadius: 16, padding: 14, marginBottom: 10 }}>
-                  <div style={{ width: 46, height: 46, borderRadius: 12, background: 'linear-gradient(135deg,rgba(155,176,165,.25),rgba(155,176,165,.06))', border: '1px solid rgba(155,176,165,.2)', flexShrink: 0 }} />
+                  <div style={{ width: 46, height: 46, borderRadius: 12, background: 'linear-gradient(135deg,rgba(var(--nura-sage-rgb),.25),rgba(var(--nura-sage-rgb),.06))', border: '1px solid rgba(var(--nura-sage-rgb),.2)', flexShrink: 0 }} />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 14.5, fontWeight: 700 }}>{programName(p)}</div>
-                    <div style={{ height: 6, borderRadius: 6, background: 'rgba(235,230,216,.1)', marginTop: 8, overflow: 'hidden' }}>
+                    <div style={{ height: 6, borderRadius: 6, background: 'rgba(var(--nura-bg-tint-rgb),.1)', marginTop: 8, overflow: 'hidden' }}>
                       <div style={{ display: 'block', height: '100%', background: SAGE, borderRadius: 6, width: `${pct}%` }} />
                     </div>
                   </div>
@@ -789,7 +789,7 @@ export default function FitnessDashboard() {
         {/* bottom nav */}
         <div style={{
           position: 'fixed', bottom: 16, left: '50%', transform: 'translateX(-50%)', width: 'calc(100% - 40px)', maxWidth: 400,
-          background: 'rgba(20,22,21,.9)', backdropFilter: 'blur(12px)', border: `1px solid ${LINE}`, borderRadius: 20,
+          background: 'var(--nura-elevated)', backdropFilter: 'blur(12px)', border: `1px solid ${LINE}`, borderRadius: 20,
           display: 'flex', justifyContent: 'space-around', padding: 12, zIndex: 40,
         }}>
           {[
