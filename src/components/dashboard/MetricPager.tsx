@@ -12,6 +12,7 @@ import BloodOxygenView from "@/app/dashboard/blood-oxygen/view";
 import RespiratoryRateView from "@/app/dashboard/respiratory-rate/view";
 import CardioFitnessView from "@/app/dashboard/cardio-fitness/view";
 import BloodPressureView from "@/app/dashboard/blood-pressure/view";
+import ThemeToggle from "@/components/ThemeToggle";
 
 // ── Metric order + accents ────────────────────────────────────────────────────
 // Mirrors the dashboard grid order (top-to-bottom, left-to-right), excluding the
@@ -116,6 +117,12 @@ export default function MetricPager({ initialMetric }: { initialMetric: string }
             </div>
           );
         })}
+      </div>
+
+      {/* Theme toggle — pinned opposite the dots. Sits in the same top band,
+          above each view's own back/title row. */}
+      <div style={{ position: "fixed", top: "max(env(safe-area-inset-top), 10px)", right: 16, zIndex: 50 }}>
+        <ThemeToggle size={34} />
       </div>
 
       {/* Page dots — pinned at top, active one elongated + tinted with its accent */}

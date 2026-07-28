@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import AppSidebar from "@/components/AppSidebar";
+import { GlobalThemeToggle } from "@/components/ThemeToggle";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
 
@@ -68,6 +69,9 @@ export default function RootLayout({
         <ThemeProvider>
           {children}
           <AppSidebar />
+          {/* Fallback for screens with no header of their own — see
+              lib/themeToggleHosts.ts. */}
+          <GlobalThemeToggle />
         </ThemeProvider>
       </body>
     </html>

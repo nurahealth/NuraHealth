@@ -12,6 +12,7 @@ import {
   loadCompletions, logWorkoutCompletion, localDateKey,
   type CatalogEx, type Program, type ProgramSummary, type WEx, type Workout, type WorkoutCompletion,
 } from './planData';
+import ThemeToggle from "@/components/ThemeToggle";
 
 // ── Palette (ported verbatim from design-reference/fitness-dashboard.html) ────
 const BG = 'var(--nura-bg)';
@@ -492,6 +493,7 @@ const app: React.CSSProperties = { width: '100%', maxWidth: 'var(--fit-frame, 44
             <h1 style={{ fontSize: 26, fontWeight: 700, letterSpacing: '-.01em', margin: '3px 0 0' }}>Your week</h1>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <ThemeToggle size={36} />
             {/* Plan Settings entry point — opens /fitness/settings */}
             <button
               type="button"

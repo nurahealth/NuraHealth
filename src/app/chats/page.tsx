@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSidebar } from "@/lib/sidebarStore";
 import { useIsDesktop } from "@/lib/useMediaQuery";
+import ThemeToggle from "@/components/ThemeToggle";
 
 const BG = "var(--nura-bg)";
 const TEXT = "var(--nura-text-primary)";
@@ -81,7 +82,7 @@ export default function ChatsListPage() {
           </svg>
         </button>
         <span style={{ fontFamily: SANS, fontSize: 19, fontWeight: 600, color: SAGE, letterSpacing: "0.16em" }}>NŪRA</span>
-        <div style={{ width: 40 }} />
+        <ThemeToggle size={40} />
       </header>
 
       <main style={{ flex: 1, maxWidth: 640, width: "100%", margin: "0 auto", padding: "28px 22px 60px" }}>

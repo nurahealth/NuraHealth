@@ -7,6 +7,7 @@ import type { User } from "@supabase/supabase-js";
 import { useSidebar } from "@/lib/sidebarStore";
 import { useIsDesktop } from "@/lib/useMediaQuery";
 import Avatar from "@/components/Avatar";
+import ThemeToggle from "@/components/ThemeToggle";
 
 const TEXT = "var(--nura-text-primary)";
 const BORDER = "var(--nura-border)";
@@ -85,7 +86,10 @@ export default function NuraHeader({ rightAction, title }: Props) {
         {title ?? "NŪRA"}
       </span>
 
-      {rightAction !== undefined ? rightAction : <DefaultProfile />}
+      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <ThemeToggle />
+        {rightAction !== undefined ? rightAction : <DefaultProfile />}
+      </div>
     </header>
   );
 }

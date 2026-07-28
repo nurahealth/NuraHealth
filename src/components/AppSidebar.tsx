@@ -7,6 +7,7 @@ import type { User } from "@supabase/supabase-js";
 import { useSidebar } from "@/lib/sidebarStore";
 import { useIsDesktop } from "@/lib/useMediaQuery";
 import Avatar from "@/components/Avatar";
+import ThemeToggle from "@/components/ThemeToggle";
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
 const BG = "var(--nura-bg)";
@@ -397,6 +398,8 @@ export default function AppSidebar() {
           borderTop: "0.5px solid rgba(var(--nura-bg-tint-rgb),0.06)",
           display: "flex", flexDirection: "column", gap: 1,
         }}>
+          <ThemeToggle variant="row" />
+
           <BottomRow icon={<Icons.settings />} label="Settings" onClick={() => navigate("/settings")} />
 
           <BottomRow icon={<Icons.logout />} label="Sign out" muted onClick={handleSignOut} />

@@ -7,6 +7,7 @@ import { supabase } from "@/lib/supabase";
 import { useSidebar } from "@/lib/sidebarStore";
 import { useIsDesktop } from "@/lib/useMediaQuery";
 import { useThemeStore } from "@/lib/themeStore";
+import ThemeToggle from "@/components/ThemeToggle";
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
 const BG = "var(--nura-bg)";
@@ -363,6 +364,8 @@ export default function ChatSessionPage({ params }: { params: Promise<{ sessionI
           NŪRA
         </span>
 
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <ThemeToggle />
         <button
           onClick={() => { setChatBookmarked(v => !v); showToast(chatBookmarked ? "Removed from saved" : "Saved"); }}
           aria-label="Bookmark conversation"
@@ -376,6 +379,7 @@ export default function ChatSessionPage({ params }: { params: Promise<{ sessionI
         >
           <Bookmark filled={chatBookmarked} />
         </button>
+        </div>
       </header>
 
       {/* Messages */}

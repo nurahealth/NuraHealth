@@ -8,6 +8,7 @@ import { useSidebar } from "@/lib/sidebarStore";
 import { useIsDesktop } from "@/lib/useMediaQuery";
 import { useThemeStore } from "@/lib/themeStore";
 import Avatar from "@/components/Avatar";
+import ThemeToggle from "@/components/ThemeToggle";
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
 const BG = "var(--nura-bg)";
@@ -48,18 +49,6 @@ const SeedingIcon = () => (
   </svg>
 );
 
-// Header theme-toggle glyphs (18px to match the hamburger icon, sage stroke)
-const HeaderSunIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={SAGE} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="12" cy="12" r="4"/>
-    <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
-  </svg>
-);
-const HeaderMoonIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={SAGE} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z"/>
-  </svg>
-);
 
 const CHIPS: { icon: React.ReactNode; text: string }[] = [
   { icon: <BoltIcon />,    text: "What helps with low energy in the afternoon?" },
@@ -198,8 +187,6 @@ export default function Home() {
   const router = useRouter();
   const openSidebar = useSidebar((s) => s.open);
   const isDesktop = useIsDesktop();
-  const theme = useThemeStore((s) => s.theme);
-  const toggleTheme = useThemeStore((s) => s.toggleTheme);
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -373,19 +360,7 @@ export default function Home() {
 
         {/* Right-side controls: theme toggle, then profile avatar */}
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <button
-            onClick={toggleTheme}
-            aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-            title={theme === "dark" ? "Light mode" : "Dark mode"}
-            style={{
-              width: 40, height: 40, borderRadius: 12,
-              background: SURFACE, border: `0.5px solid ${BORDER}`,
-              display: "flex", alignItems: "center", justifyContent: "center",
-              cursor: "pointer", color: SAGE,
-            }}
-          >
-            {theme === "dark" ? <HeaderSunIcon /> : <HeaderMoonIcon />}
-          </button>
+          <ThemeToggle size={40} />
 
           <button
             onClick={() => router.push("/settings")}

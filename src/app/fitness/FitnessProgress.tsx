@@ -22,6 +22,7 @@ import {
   type SetLog,
   type WorkoutCompletion,
 } from './planData';
+import ThemeToggle from "@/components/ThemeToggle";
 
 // ── Palette (1:1 with ExerciseDetail.tsx — the fitness detail screens) ────────
 const BG = 'var(--nura-bg)';
@@ -947,7 +948,8 @@ export default function FitnessProgress() {
           <div style={{ marginBottom: 22 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
               <FitnessBackButton onClick={() => router.push('/fitness')} />
-              <div style={{ fontSize: 11, letterSpacing: '.22em', color: MUT }}>FITNESS</div>
+              <div style={{ fontSize: 11, letterSpacing: '.22em', color: MUT, flex: 1 }}>FITNESS</div>
+              <ThemeToggle size={36} />
             </div>
             <h1 style={{ fontFamily: SERIF, fontSize: 32, fontWeight: 400, letterSpacing: '-.02em', margin: '4px 0 0', lineHeight: 1.1 }}>Progress</h1>
           </div>
