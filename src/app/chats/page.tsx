@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSidebar } from "@/lib/sidebarStore";
+import { useIsDesktop } from "@/lib/useMediaQuery";
 
 const BG = "var(--nura-bg)";
 const TEXT = "var(--nura-text-primary)";
@@ -32,6 +33,7 @@ function relativeTime(iso: string): string {
 export default function ChatsListPage() {
   const router = useRouter();
   const openSidebar = useSidebar((s) => s.open);
+  const isDesktop = useIsDesktop();
   const [sessions, setSessions] = useState<SessionRow[] | null>(null);
   const [error, setError] = useState("");
 
@@ -66,6 +68,8 @@ export default function ChatsListPage() {
           onClick={openSidebar}
           aria-label="Menu"
           style={{
+          // Redundant once the rail is docked at lg.
+          visibility: isDesktop ? "hidden" : "visible",
             width: 40, height: 40, borderRadius: 12,
             background: SURFACE, border: `0.5px solid ${BORDER}`,
             color: TEXT_SEC, cursor: "pointer",

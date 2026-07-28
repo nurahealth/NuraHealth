@@ -449,7 +449,9 @@ export default function FitnessDashboard() {
     background: 'var(--nura-page-gradient)',
     fontFamily: FONT, color: TEXT,
   };
-  const app: React.CSSProperties = { width: '100%', maxWidth: 440, paddingBottom: 90 };
+  // Standalone screen (own backdrop + bottom nav), so it does not go through
+// NuraPageShell. Widened at lg via a CSS var rather than a JS branch.
+const app: React.CSSProperties = { width: '100%', maxWidth: 'var(--fit-frame, 440px)', paddingBottom: 90 };
   const segBtn = (on: boolean): React.CSSProperties => ({
     flex: 1, border: 'none', background: on ? SAGE : 'transparent', color: on ? BG : MUT,
     fontSize: 13, fontWeight: 600, padding: 9, borderRadius: 9, cursor: 'pointer', transition: '.18s',
@@ -788,7 +790,11 @@ export default function FitnessDashboard() {
 
         {/* bottom nav */}
         <div style={{
-          position: 'fixed', bottom: 16, left: '50%', transform: 'translateX(-50%)', width: 'calc(100% - 40px)', maxWidth: 400,
+          position: 'fixed', bottom: 16,
+          // Centre on the content area, not the viewport: at lg the body is inset
+          // by the docked rail but a fixed element does not inherit that.
+          left: 'calc(var(--nura-content-left) + (100vw - var(--nura-content-left)) / 2)',
+          transform: 'translateX(-50%)', width: 'min(calc(100% - 40px), 400px)', maxWidth: 400,
           background: 'var(--nura-elevated)', backdropFilter: 'blur(12px)', border: `1px solid ${LINE}`, borderRadius: 20,
           display: 'flex', justifyContent: 'space-around', padding: 12, zIndex: 40,
         }}>

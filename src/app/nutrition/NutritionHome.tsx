@@ -52,6 +52,15 @@ const AMBER = "var(--nura-good)";
 const AMBER_RGB = "211,162,83";
 const SANS = "var(--font-inter), system-ui, sans-serif";
 
+// Card lists stack on phones and split into two columns once the shell widens
+// at lg, so rows don't run the full 1200 and turn into ribbons.
+const CARD_LIST_CSS = `
+  .nut-list { display: flex; flex-direction: column; gap: 11px; }
+  @media (min-width: 1024px) {
+    .nut-list { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: start; }
+  }
+`;
+
 const card: React.CSSProperties = { background: SURFACE, border: `0.5px solid ${BORDER}`, borderRadius: 14 };
 const heading: React.CSSProperties = { fontFamily: SANS, fontSize: 22, fontWeight: 600, color: TEXT, margin: "0 0 12px", letterSpacing: "-0.02em" };
 
@@ -139,6 +148,7 @@ export default function NutritionHome({
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 26 }}>
+      <style>{CARD_LIST_CSS}</style>
       {/* Header */}
       <div>
         <div style={{ fontFamily: SANS, fontSize: 11, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", color: SAGE, marginBottom: 8 }}>{dateLabel}</div>
@@ -187,7 +197,7 @@ export default function NutritionHome({
       {markers.length > 0 && (
         <section>
           <h2 style={heading}>Eat to improve your bloodwork</h2>
-          <div style={{ display: "flex", flexDirection: "column", gap: 11 }}>
+          <div className="nut-list">
             {markers.map((m) => (
               <MarkerCard key={m.slug} m={m} />
             ))}
@@ -209,7 +219,7 @@ export default function NutritionHome({
         </div>
 
         {meals.length > 0 ? (
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          <div className="nut-list">
             {meals.map((m) => (
               <Link
                 key={m.id}

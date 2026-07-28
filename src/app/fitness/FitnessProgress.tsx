@@ -941,7 +941,7 @@ export default function FitnessProgress() {
       <NuraPlexus opacity={0.3} />
 
       <div style={{ position: 'relative', zIndex: 2, display: 'flex', justifyContent: 'center', padding: 20 }}>
-        <div style={{ width: '100%', maxWidth: 440, paddingBottom: 100 }}>
+        <div style={{ width: '100%', maxWidth: 'var(--fit-frame, 440px)', paddingBottom: 100 }}>
 
           {/* header — back + eyebrow, then serif title (1:1 with ExerciseDetail) */}
           <div style={{ marginBottom: 22 }}>
@@ -1214,7 +1214,11 @@ export default function FitnessProgress() {
 
       {/* bottom nav — same block as the dashboard, Progress active */}
       <div style={{
-        position: 'fixed', bottom: 16, left: '50%', transform: 'translateX(-50%)', width: 'calc(100% - 40px)', maxWidth: 400,
+        position: 'fixed', bottom: 16,
+          // Centre on the content area, not the viewport: at lg the body is inset
+          // by the docked rail but a fixed element does not inherit that.
+          left: 'calc(var(--nura-content-left) + (100vw - var(--nura-content-left)) / 2)',
+          transform: 'translateX(-50%)', width: 'min(calc(100% - 40px), 400px)', maxWidth: 400,
         background: 'var(--nura-elevated)', backdropFilter: 'blur(12px)', border: `1px solid ${LINE}`, borderRadius: 20,
         display: 'flex', justifyContent: 'space-around', padding: 12, zIndex: 40,
       }}>

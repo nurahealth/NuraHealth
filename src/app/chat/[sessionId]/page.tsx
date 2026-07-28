@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import ReactMarkdown from "react-markdown";
 import { supabase } from "@/lib/supabase";
 import { useSidebar } from "@/lib/sidebarStore";
+import { useIsDesktop } from "@/lib/useMediaQuery";
 import { useThemeStore } from "@/lib/themeStore";
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
@@ -182,6 +183,7 @@ export default function ChatSessionPage({ params }: { params: Promise<{ sessionI
   const { sessionId } = use(params);
   const router = useRouter();
   const openSidebar = useSidebar((s) => s.open);
+  const isDesktop = useIsDesktop();
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const recRef = useRef<SpeechRecInstance | null>(null);
@@ -346,6 +348,8 @@ export default function ChatSessionPage({ params }: { params: Promise<{ sessionI
           onClick={openSidebar}
           aria-label="Menu"
           style={{
+          // Redundant once the rail is docked at lg.
+          visibility: isDesktop ? "hidden" : "visible",
             width: 38, height: 38, borderRadius: 11,
             background: SURFACE, border: `0.5px solid ${BORDER}`,
             display: "flex", alignItems: "center", justifyContent: "center",

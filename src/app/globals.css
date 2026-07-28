@@ -392,6 +392,7 @@
   --nura-sidebar-w: 280px;
   --nura-content-left: 0px;   /* left edge of the content area */
   --nura-measure-chat: 720px; /* chat column */
+  --fit-frame: 440px;         /* standalone fitness screens (own backdrop + nav) */
 }
 
 
@@ -410,6 +411,7 @@ body {
   :root {
     --nura-content-left: var(--nura-sidebar-w);
     --nura-measure-chat: 768px;
+    --fit-frame: 900px;
   }
   /* Push page content clear of the docked rail. Fixed overlays that should
      cover the whole viewport (modal scrims) keep inset:0 and are unaffected. */
