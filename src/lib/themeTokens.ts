@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useMemo, useSyncExternalStore } from "react";
 import { useThemeStore } from "@/lib/themeStore";
 
 /**
@@ -13,15 +13,16 @@ import { useThemeStore } from "@/lib/themeStore";
  * dashboard's data-viz never responded to the theme.
  *
  * Usage:
- *   const { sage, teal } = useThemeTokens({
+ *   const TOKENS = {
  *     sage: ["--nura-sage", "#9bb0a5"],
  *     teal: ["--nura-teal", "#5dccae"],
- *   });
+ *   } as const;
+ *   const { sage, teal } = useThemeTokens(TOKENS);
  *
  * Hydration contract: fallbacks MUST be the dark-theme values. The server and
  * the first client render both emit the fallback, so the markup matches; the
- * resolved values land in an effect on the first commit. Never pass a
- * light-theme value as a fallback.
+ * resolved values land immediately after hydration. Never pass a light-theme
+ * value as a fallback.
  */
 
 /** Read a CSS custom property off <html>. Returns `fallback` during SSR. */
@@ -46,37 +47,46 @@ function fallbacks<T extends TokenSpec>(spec: T): Resolved<T> {
   return out;
 }
 
+// `useSyncExternalStore` is the sanctioned way to ask "has hydration finished?".
+// React uses getServerSnapshot for BOTH the SSR pass and the hydration render,
+// then switches to getSnapshot — so this is false exactly while the markup must
+// match the server, and true from the first post-hydration render onward. This
+// replaces a setState-in-effect, which caused a cascading extra render.
+const subscribeNever = () => () => {};
+function useIsHydrated(): boolean {
+  return useSyncExternalStore(subscribeNever, () => true, () => false);
+}
+
 /**
  * Resolve a set of colour tokens to concrete values, re-resolving whenever the
- * theme changes. `spec` is read once on mount — define it as a module-level
- * constant rather than inline, so its identity is stable.
+ * theme changes. Define `spec` as a module-level constant so its identity is
+ * stable across renders.
  */
 export function useThemeTokens<T extends TokenSpec>(spec: T): Resolved<T> {
   const theme = useThemeStore((s) => s.theme);
-  const hydrated = useThemeStore((s) => s.hydrated);
+  const storeHydrated = useThemeStore((s) => s.hydrated);
+  const isHydrated = useIsHydrated();
 
-  // Start from the dark fallbacks so SSR and the first client render agree.
-  const [values, setValues] = useState<Resolved<T>>(() => fallbacks(spec));
-
-  useEffect(() => {
-    setValues(resolve(spec));
+  return useMemo(
+    () => (isHydrated ? resolve(spec) : fallbacks(spec)),
     // `spec` is intentionally omitted: callers pass a module-level constant, and
-    // re-resolving is driven by the theme, not by object identity.
+    // re-resolution is driven by the theme, not by object identity.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [theme, hydrated]);
-
-  return values;
+    [isHydrated, theme, storeHydrated],
+  );
 }
 
 /** Single-token convenience wrapper around {@link useThemeTokens}. */
 export function useThemeToken(name: string, darkFallback: string): string {
   const theme = useThemeStore((s) => s.theme);
-  const hydrated = useThemeStore((s) => s.hydrated);
-  const [value, setValue] = useState(darkFallback);
+  const storeHydrated = useThemeStore((s) => s.hydrated);
+  const isHydrated = useIsHydrated();
 
-  useEffect(() => {
-    setValue(readToken(name, darkFallback));
-  }, [name, darkFallback, theme, hydrated]);
-
-  return value;
+  return useMemo(
+    () => (isHydrated ? readToken(name, darkFallback) : darkFallback),
+    // `theme`/`storeHydrated` look unused to the linter but are load-bearing:
+    // readToken's result depends on the DOM, which the theme drives.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [isHydrated, theme, storeHydrated, name, darkFallback],
+  );
 }
