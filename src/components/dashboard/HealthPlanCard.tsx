@@ -20,10 +20,10 @@ import { hex } from "@/components/dashboard/ActiveEnergyTodayChart";
 
 const SANS = "var(--font-inter), system-ui, sans-serif";
 const SERIF = "'Fraunces', Georgia, serif";
-const TEXT = "#ebe6d8";
-const MUTED = "rgba(235,230,216,0.58)";
-const FAINT = "rgba(235,230,216,0.32)";
-const SAGE = "#9bb0a5";
+const TEXT = "var(--nura-text-primary)";
+const MUTED = "var(--nura-ink-muted)";
+const FAINT = "var(--nura-ink-faint)";
+const SAGE = "var(--nura-sage)";
 
 // hexA built on the shared hex tuple helper — "#5dccae" + alpha → rgba string.
 const hexA = (h: string, a: number) => {
@@ -111,7 +111,7 @@ export default function HealthPlanCard() {
       position: "relative", overflow: "hidden",
       background: "var(--nura-glass)", border: "1px solid var(--nura-glass-line)",
       borderRadius: 24, padding: "20px 16px 16px", marginBottom: 16,
-      boxShadow: "inset 0 1px 0 rgba(235,230,216,0.10), 0 22px 60px rgba(0,0,0,.45)",
+      boxShadow: "inset 0 1px 0 var(--nura-card-highlight), var(--nura-card-shadow)",
     }}>
       <style>{`
         .hp-step b, .hp-proj b, .hp-dd b { font-weight: 700; }
@@ -129,7 +129,7 @@ export default function HealthPlanCard() {
           </div>
           <div style={{ fontSize: 12, color: MUTED, marginTop: 4, lineHeight: 1.45 }}>{p.subtitle}</div>
         </div>
-        <div style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: "0.8px", textTransform: "uppercase", color: SAGE, border: "1px solid rgba(155,176,165,0.4)", padding: "5px 10px", borderRadius: 999, background: "rgba(155,176,165,0.07)", whiteSpace: "nowrap" }}>
+        <div style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: "0.8px", textTransform: "uppercase", color: SAGE, border: "1px solid rgba(var(--nura-sage-rgb),0.4)", padding: "5px 10px", borderRadius: 999, background: "rgba(var(--nura-sage-rgb),0.07)", whiteSpace: "nowrap" }}>
           Personalized
         </div>
       </div>
@@ -140,8 +140,8 @@ export default function HealthPlanCard() {
           <div style={{ fontSize: 9, letterSpacing: "0.8px", textTransform: "uppercase", color: FAINT, fontWeight: 600 }}>Now</div>
           <div style={{ fontSize: 22, fontWeight: 700, letterSpacing: "-0.5px", color: TEXT }}>{p.now}</div>
         </div>
-        <div style={{ flex: 1, position: "relative", height: 8, borderRadius: 999, background: "rgba(235,230,216,0.08)" }}>
-          <div style={{ position: "absolute", left: 0, top: 0, height: "100%", borderRadius: 999, width: `${sc(p.now).toFixed(1)}%`, background: "linear-gradient(90deg,#9bb0a5,#5dccae)" }} />
+        <div style={{ flex: 1, position: "relative", height: 8, borderRadius: 999, background: "var(--nura-track)" }}>
+          <div style={{ position: "absolute", left: 0, top: 0, height: "100%", borderRadius: 999, width: `${sc(p.now).toFixed(1)}%`, background: "linear-gradient(90deg,var(--nura-sage),var(--nura-teal))" }} />
           <div style={{ position: "absolute", top: -4, width: 3, height: 16, borderRadius: 2, left: `${sc(p.target).toFixed(1)}%`, background: SAGE, boxShadow: `0 0 7px ${SAGE}` }} />
         </div>
         <div style={{ textAlign: "center", flex: "none" }}>
@@ -152,7 +152,7 @@ export default function HealthPlanCard() {
       <div style={{ fontSize: 11, color: FAINT, textAlign: "center", marginTop: 7 }}>{p.targetCaption}</div>
 
       {/* Deep-dive (collapsible) — below the target caption, above the focus row */}
-      <div style={{ borderTop: "1px solid rgba(235,230,216,0.07)", marginTop: 14 }}>
+      <div style={{ borderTop: "1px solid var(--nura-hairline)", marginTop: 14 }}>
         <div onClick={() => setDeepOpen((v) => !v)} style={{ display: "flex", gap: 12, alignItems: "flex-start", padding: "13px 2px", cursor: "pointer" }}>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "1.2px", textTransform: "uppercase", color: SAGE, marginBottom: 6 }}>{DEEP.label}</div>
@@ -164,7 +164,7 @@ export default function HealthPlanCard() {
         {deepOpen && (
           <div className="hp-dd" style={{ padding: "0 2px 15px 2px" }}>
             {ddParas.map((para, i) => (
-              <p key={i} style={{ fontSize: 12.8, lineHeight: 1.55, color: "rgba(235,230,216,0.82)", marginTop: i === 0 ? 0 : 11 }} dangerouslySetInnerHTML={{ __html: para }} />
+              <p key={i} style={{ fontSize: 12.8, lineHeight: 1.55, color: "var(--nura-ink-strong)", marginTop: i === 0 ? 0 : 11 }} dangerouslySetInnerHTML={{ __html: para }} />
             ))}
           </div>
         )}
@@ -175,20 +175,20 @@ export default function HealthPlanCard() {
         <div style={{ fontSize: 10, letterSpacing: "1.2px", textTransform: "uppercase", color: SAGE, fontWeight: 700, marginBottom: 9 }}>This week&apos;s focus</div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
           {p.focus.map((f) => (
-            <span key={f} style={{ fontSize: 12, fontWeight: 600, color: TEXT, padding: "7px 12px", borderRadius: 999, background: "rgba(155,176,165,0.1)", border: "1px solid rgba(155,176,165,0.22)" }}>{f}</span>
+            <span key={f} style={{ fontSize: 12, fontWeight: 600, color: TEXT, padding: "7px 12px", borderRadius: 999, background: "rgba(var(--nura-sage-rgb),0.1)", border: "1px solid rgba(var(--nura-sage-rgb),0.22)" }}>{f}</span>
           ))}
         </div>
       </div>
 
       {/* Intro — soft sage-tinted box above the domain list */}
-      <div className="hp-dd" style={{ margin: "14px 2px 4px", padding: "13px 15px", borderRadius: 14, background: "rgba(155,176,165,0.07)", border: "1px solid rgba(155,176,165,0.18)", fontSize: 12.5, lineHeight: 1.5, color: MUTED }} dangerouslySetInnerHTML={{ __html: INTRO_HTML }} />
+      <div className="hp-dd" style={{ margin: "14px 2px 4px", padding: "13px 15px", borderRadius: 14, background: "rgba(var(--nura-sage-rgb),0.07)", border: "1px solid rgba(var(--nura-sage-rgb),0.18)", fontSize: 12.5, lineHeight: 1.5, color: MUTED }} dangerouslySetInnerHTML={{ __html: INTRO_HTML }} />
 
       {/* Domain accordions */}
       <div>
         {p.domains.map((d: HealthPlanDomain) => {
           const isOpen = open.has(d.key);
           return (
-            <div key={d.key} style={{ borderTop: "1px solid rgba(235,230,216,0.07)" }}>
+            <div key={d.key} style={{ borderTop: "1px solid var(--nura-hairline)" }}>
               <div onClick={() => toggle(d.key)} style={{ display: "flex", gap: 12, alignItems: "center", padding: "13px 2px", cursor: "pointer" }}>
                 <div style={{ flex: "none", width: 34, height: 34, borderRadius: 11, display: "flex", alignItems: "center", justifyContent: "center", background: hexA(d.color, 0.13), border: `1px solid ${hexA(d.color, 0.26)}` }}>
                   <DomainIcon name={d.icon} color={d.color} />
@@ -207,13 +207,13 @@ export default function HealthPlanCard() {
                   </div>
                   {/* WHY IT WORKS */}
                   <SectionLabel color={SAGE}>WHY IT WORKS</SectionLabel>
-                  <p style={{ fontSize: 12.8, lineHeight: 1.5, color: "rgba(235,230,216,0.82)", margin: "0 0 14px" }}>{DOMAIN_WHY[d.key]}</p>
+                  <p style={{ fontSize: 12.8, lineHeight: 1.5, color: "var(--nura-ink-strong)", margin: "0 0 14px" }}>{DOMAIN_WHY[d.key]}</p>
                   {/* YOUR PROTOCOL */}
                   <SectionLabel color={FAINT}>YOUR PROTOCOL</SectionLabel>
                   {d.steps.map((s, i) => (
                     <div key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start", padding: "6px 0" }}>
-                      <span style={{ width: 16, height: 16, borderRadius: "50%", border: "1.6px solid rgba(155,176,165,0.5)", marginTop: 1, flex: "none" }} />
-                      <span className="hp-step" style={{ fontSize: 12.8, lineHeight: 1.45, color: "rgba(235,230,216,0.82)" }} dangerouslySetInnerHTML={{ __html: s }} />
+                      <span style={{ width: 16, height: 16, borderRadius: "50%", border: "1.6px solid rgba(var(--nura-sage-rgb),0.5)", marginTop: 1, flex: "none" }} />
+                      <span className="hp-step" style={{ fontSize: 12.8, lineHeight: 1.45, color: "var(--nura-ink-strong)" }} dangerouslySetInnerHTML={{ __html: s }} />
                     </div>
                   ))}
                   {d.link && (
@@ -233,7 +233,7 @@ export default function HealthPlanCard() {
       </div>
 
       {/* Projection */}
-      <div className="hp-proj" style={{ marginTop: 6, padding: "14px 16px", borderTop: "1px solid rgba(235,230,216,0.07)", fontSize: 12.5, lineHeight: 1.5, color: MUTED }} dangerouslySetInnerHTML={{ __html: p.projection }} />
+      <div className="hp-proj" style={{ marginTop: 6, padding: "14px 16px", borderTop: "1px solid var(--nura-hairline)", fontSize: 12.5, lineHeight: 1.5, color: MUTED }} dangerouslySetInnerHTML={{ __html: p.projection }} />
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { useId, useState, type ReactElement } from "react";
 import { useRouter } from "next/navigation";
 import { getOverallHealth, type HealthPillar, type HealthTrend } from "@/lib/dashboardData";
 import { hex, lerp, light } from "@/components/dashboard/ActiveEnergyTodayChart";
+import { useThemeTokens } from "@/lib/themeTokens";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Overall Health — the dashboard's top section: a single Health Score blended
@@ -13,14 +14,27 @@ import { hex, lerp, light } from "@/components/dashboard/ActiveEnergyTodayChart"
 
 const SANS = "var(--font-inter), system-ui, sans-serif";
 const SERIF = "'Fraunces', Georgia, serif";
-const TEXT = "#ebe6d8";
-const MUTED = "rgba(235,230,216,0.58)";
-const FAINT = "rgba(235,230,216,0.32)";
-const SAGE = "#9bb0a5";
-const GOLD = "#d3a253";
+const TEXT = "var(--nura-text-primary)";
+const MUTED = "var(--nura-ink-muted)";
+const FAINT = "var(--nura-ink-faint)";
+const SAGE = "var(--nura-sage)";
+const GOLD = "var(--nura-good)";
 
-// Health-Score ring ramp: sage → teal → blue.
-const RAMP: [number, string][] = [[0, "#9bb0a5"], [0.45, "#5dccae"], [1, "#5aa0e6"]];
+// Colours this card needs as concrete values rather than var() references: the
+// ring ramp is interpolated, and SVG presentation attributes do not accept
+// var(). Fallbacks are the dark values, so SSR and first paint agree.
+// See lib/themeTokens.ts.
+const RING_TOKENS = {
+  sage:      ["--nura-sage", "#9bb0a5"],
+  teal:      ["--nura-teal", "#5dccae"],
+  blue:      ["--nura-sleep-deep", "#5aa0e6"],
+  alert:     ["--nura-alert", "#e8745a"],
+  inkRgb:    ["--nura-fg-rgb", "235,230,216"],
+  tealRgb:   ["--nura-teal-rgb", "93,204,174"],
+  scoreFrom: ["--nura-score-from", "#ffffff"],
+  scoreTo:   ["--nura-score-to", "#cfe0d6"],
+  ringHead:  ["--nura-ring-head", "#ffffff"],
+} as const;
 
 // Defined locally (reusing the shared hex/lerp/light) so colorAt is guaranteed
 // available wherever the ring renders — a missing colorAt silently blanks it.
@@ -43,7 +57,9 @@ function colorAt(t: number, stops: [number, string][]): string {
 }
 
 const tArrow = (t: HealthTrend) => (t === "up" ? "▲" : t === "down" ? "▼" : "–");
-const tCol = (t: HealthTrend) => (t === "up" ? "#5dccae" : t === "down" ? "#e8745a" : "rgba(235,230,216,0.4)");
+type RingTokens = Record<keyof typeof RING_TOKENS, string>;
+const tCol = (t: HealthTrend, tk: RingTokens) =>
+  t === "up" ? tk.teal : t === "down" ? tk.alert : `rgba(${tk.inkRgb},0.4)`;
 
 const Chevron = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={FAINT} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6" /></svg>
@@ -64,6 +80,7 @@ function PlanIcon({ name, color }: { name: string; color: string }) {
 
 // ─────────────────────────────────────────────────────────────────────────────
 export default function OverallHealthCard() {
+  const tk = useThemeTokens(RING_TOKENS);
   const router = useRouter();
   const d = getOverallHealth();
   const [selected, setSelected] = useState<string | null>(null);
@@ -77,14 +94,14 @@ export default function OverallHealthCard() {
       position: "relative", overflow: "hidden",
       background: "var(--nura-glass)", border: "1px solid var(--nura-glass-line)",
       borderRadius: 24, padding: "20px 16px 18px", marginBottom: 16,
-      boxShadow: "inset 0 1px 0 rgba(235,230,216,0.10), 0 22px 60px rgba(0,0,0,.45)",
+      boxShadow: "inset 0 1px 0 var(--nura-card-highlight), var(--nura-card-shadow)",
     }}>
       <style>{`
-        .oh-pill-head:hover .oh-nm { color: #fff; }
+        .oh-pill-head:hover .oh-nm { color: var(--nura-text-strong); }
         .oh-imp-item { transition: border-color .18s; }
       `}</style>
       {/* Soft glow core behind the ring */}
-      <div aria-hidden style={{ position: "absolute", left: "50%", top: 120, width: 300, height: 300, transform: "translate(-50%,-50%)", pointerEvents: "none", background: "radial-gradient(circle, rgba(93,204,174,0.12) 0%, rgba(93,204,174,0) 62%)" }} />
+      <div aria-hidden style={{ position: "absolute", left: "50%", top: 120, width: 300, height: 300, transform: "translate(-50%,-50%)", pointerEvents: "none", background: "radial-gradient(circle, rgba(var(--nura-teal-rgb),0.12) 0%, rgba(var(--nura-teal-rgb),0) 62%)" }} />
 
       {/* Header */}
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", padding: "0 4px", position: "relative" }}>
@@ -93,10 +110,10 @@ export default function OverallHealthCard() {
             Overall <span style={{ fontStyle: "italic", color: SAGE }}>health</span>
           </div>
           <div style={{ fontSize: 12, color: FAINT, marginTop: 3 }}>
-            A complete read on how your body&apos;s doing · <span style={{ color: "#5dccae" }}>▲ {d.weeklyTrend}</span> this week
+            A complete read on how your body&apos;s doing · <span style={{ color: "var(--nura-teal)" }}>▲ {d.weeklyTrend}</span> this week
           </div>
         </div>
-        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.8px", textTransform: "uppercase", color: "#5dccae", border: "1px solid rgba(93,204,174,0.4)", padding: "5px 11px", borderRadius: 999, background: "rgba(93,204,174,0.07)", whiteSpace: "nowrap" }}>
+        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.8px", textTransform: "uppercase", color: "var(--nura-teal)", border: "1px solid rgba(var(--nura-teal-rgb),0.4)", padding: "5px 11px", borderRadius: 999, background: "rgba(var(--nura-teal-rgb),0.07)", whiteSpace: "nowrap" }}>
           {d.status}
         </div>
       </div>
@@ -121,12 +138,12 @@ export default function OverallHealthCard() {
         {d.pillars.map((p) => {
           const open = selected === p.key;
           return (
-            <div key={p.key} style={{ borderTop: "1px solid rgba(235,230,216,0.07)" }}>
+            <div key={p.key} style={{ borderTop: "1px solid var(--nura-hairline)" }}>
               <div className="oh-pill-head" onClick={() => togglePillar(p.key)} style={{ display: "flex", alignItems: "center", gap: 11, padding: "13px 2px", cursor: "pointer" }}>
                 <span style={{ width: 9, height: 9, borderRadius: "50%", flex: "none", background: p.color }} />
                 <span className="oh-nm" style={{ fontSize: 14, fontWeight: 700, flex: 1, color: TEXT, transition: "color .15s" }}>{p.label}</span>
                 <span style={{ fontSize: 15, fontWeight: 700, color: p.color }}>
-                  {p.score}<span style={{ fontSize: 9, marginLeft: 3, color: tCol(p.trend) }}>{tArrow(p.trend)}</span>
+                  {p.score}<span style={{ fontSize: 9, marginLeft: 3, color: tCol(p.trend, tk) }}>{tArrow(p.trend)}</span>
                 </span>
                 <span style={{ display: "flex", transform: open ? "rotate(180deg)" : "none", transition: "transform .2s" }}><Chevron /></span>
               </div>
@@ -140,7 +157,7 @@ export default function OverallHealthCard() {
                   ].map((row) => (
                     <div key={row.k} style={{ marginBottom: 11 }}>
                       <div style={{ fontSize: 9.5, letterSpacing: "1px", textTransform: "uppercase", color: FAINT, fontWeight: 700, marginBottom: 3 }}>{row.k}</div>
-                      <div style={{ fontSize: 13, lineHeight: 1.5, color: "rgba(235,230,216,0.82)" }}>{row.v}</div>
+                      <div style={{ fontSize: 13, lineHeight: 1.5, color: "var(--nura-ink-strong)" }}>{row.v}</div>
                     </div>
                   ))}
                 </div>
@@ -151,22 +168,22 @@ export default function OverallHealthCard() {
       </div>
 
       {/* Stat strip */}
-      <div style={{ display: "flex", marginTop: 8, borderTop: "1px solid rgba(235,230,216,0.08)", borderBottom: "1px solid rgba(235,230,216,0.08)" }}>
+      <div style={{ display: "flex", marginTop: 8, borderTop: "1px solid var(--nura-hairline-strong)", borderBottom: "1px solid var(--nura-hairline-strong)" }}>
         {[
           { k: "Health age", v: String(d.healthAge.value), x: d.healthAge.note, mut: false },
           { k: "Percentile", v: d.percentile.value, x: d.percentile.note, mut: true },
           { k: "Best pillar", v: d.bestPillar.label, x: d.bestPillar.note, mut: false },
         ].map((s, i) => (
-          <div key={s.k} style={{ flex: 1, textAlign: "center", padding: "12px 6px", borderLeft: i > 0 ? "1px solid rgba(235,230,216,0.07)" : undefined }}>
+          <div key={s.k} style={{ flex: 1, textAlign: "center", padding: "12px 6px", borderLeft: i > 0 ? "1px solid var(--nura-hairline)" : undefined }}>
             <div style={{ fontSize: 9, letterSpacing: "0.8px", textTransform: "uppercase", color: FAINT, fontWeight: 600 }}>{s.k}</div>
             <div style={{ fontSize: 18, fontWeight: 700, marginTop: 4, letterSpacing: "-0.4px", color: TEXT }}>{s.v}</div>
-            <div style={{ fontSize: 10, color: s.mut ? FAINT : "#5dccae", fontWeight: 600, marginTop: 2 }}>{s.x}</div>
+            <div style={{ fontSize: 10, color: s.mut ? FAINT : "var(--nura-teal)", fontWeight: 600, marginTop: 2 }}>{s.x}</div>
           </div>
         ))}
       </div>
 
       {/* What to improve */}
-      <div style={{ marginTop: 14, padding: 15, borderRadius: 16, border: "1px solid rgba(211,162,83,0.22)", background: "linear-gradient(135deg, rgba(211,162,83,0.08), rgba(232,116,90,0.03))" }}>
+      <div style={{ marginTop: 14, padding: 15, borderRadius: 16, border: "1px solid rgba(var(--nura-good-rgb),0.22)", background: "linear-gradient(135deg, rgba(var(--nura-good-rgb),0.08), rgba(var(--nura-alert-rgb),0.03))" }}>
         <div style={{ fontSize: 10.5, letterSpacing: "1.4px", textTransform: "uppercase", color: GOLD, fontWeight: 700 }}>What to improve</div>
         <div style={{ fontSize: 11.5, color: FAINT, marginTop: 3 }}>Personalized from your readings — tap any to go deeper</div>
 
@@ -174,7 +191,7 @@ export default function OverallHealthCard() {
           {d.plan.map((item) => {
             const open = openPlan === item.title;
             return (
-              <div key={item.title} className="oh-imp-item" style={{ borderTop: "1px solid rgba(235,230,216,0.07)", marginTop: 11, paddingTop: 11 }}>
+              <div key={item.title} className="oh-imp-item" style={{ borderTop: "1px solid var(--nura-hairline)", marginTop: 11, paddingTop: 11 }}>
                 <div onClick={() => togglePlan(item.title)} style={{ display: "flex", alignItems: "center", gap: 11, cursor: "pointer" }}>
                   <span style={{ width: 28, height: 28, borderRadius: 9, flex: "none", display: "flex", alignItems: "center", justifyContent: "center", background: `${item.color}1f`, border: `1px solid ${item.color}55` }}>
                     <PlanIcon name={item.icon} color={item.color} />
@@ -186,7 +203,7 @@ export default function OverallHealthCard() {
                   <span style={{ display: "flex", flex: "none", transform: open ? "rotate(180deg)" : "none", transition: "transform .2s" }}><Chevron /></span>
                 </div>
                 {open && (
-                  <div style={{ fontSize: 13, lineHeight: 1.5, color: "rgba(235,230,216,0.82)", margin: "10px 0 4px 39px" }}>
+                  <div style={{ fontSize: 13, lineHeight: 1.5, color: "var(--nura-ink-strong)", margin: "10px 0 4px 39px" }}>
                     {item.body}
                     {item.link && (
                       <div style={{ marginTop: 9 }}>
@@ -216,6 +233,9 @@ export default function OverallHealthCard() {
 // spokes (notch · connector · glowing dot · value + trend · label). Selecting a
 // pillar dims the ring + other pillars and shows that pillar's score in the center.
 function HealthRing({ d, selected, onSelect }: { d: ReturnType<typeof getOverallHealth>; selected: string | null; onSelect: (k: string) => void }) {
+  const tk = useThemeTokens(RING_TOKENS);
+  // Health-Score ring ramp: sage → teal → blue, resolved from the theme.
+  const RAMP: [number, string][] = [[0, tk.sage], [0.45, tk.teal], [1, tk.blue]];
   const rawId = useId();
   const uid = `oh-${rawId.replace(/[^a-zA-Z0-9]/g, "")}`;
   const cx = 195, cy = 184;
@@ -226,15 +246,15 @@ function HealthRing({ d, selected, onSelect }: { d: ReturnType<typeof getOverall
   // Depth rings.
   const depth: ReactElement[] = [
     <circle key="core" cx={cx} cy={cy} r={118} fill={`url(#${uid}-core)`} />,
-    <circle key="r100" cx={cx} cy={cy} r={100} fill="none" stroke="rgba(235,230,216,0.045)" />,
-    <circle key="r110" cx={cx} cy={cy} r={110} fill="none" stroke="rgba(235,230,216,0.03)" />,
+    <circle key="r100" cx={cx} cy={cy} r={100} fill="none" stroke={`rgba(${tk.inkRgb},0.045)`} />,
+    <circle key="r110" cx={cx} cy={cy} r={110} fill="none" stroke={`rgba(${tk.inkRgb},0.03)`} />,
   ];
 
   // Rotating dotted outer ring.
   const odots: ReactElement[] = [];
   for (let i = 0; i < 72; i++) {
     const a = (i / 72) * 2 * Math.PI;
-    odots.push(<circle key={i} cx={(cx + 114 * Math.cos(a)).toFixed(1)} cy={(cy + 114 * Math.sin(a)).toFixed(1)} r={i % 6 === 0 ? 1.1 : 0.7} fill="rgba(235,230,216,0.16)" />);
+    odots.push(<circle key={i} cx={(cx + 114 * Math.cos(a)).toFixed(1)} cy={(cy + 114 * Math.sin(a)).toFixed(1)} r={i % 6 === 0 ? 1.1 : 0.7} fill={`rgba(${tk.inkRgb},0.16)`} />);
   }
 
   // Energy filaments.
@@ -244,7 +264,7 @@ function HealthRing({ d, selected, onSelect }: { d: ReturnType<typeof getOverall
     const frac = i / N, a = frac * 2 * Math.PI - Math.PI / 2;
     const seed = (Math.sin(i * 0.5) * 0.5 + 0.5) * 0.55 + (Math.sin(i * 1.7 + 1) * 0.5 + 0.5) * 0.45;
     const inner = 66, outer = inner + 4 + seed * 12, bright = frac <= frac0;
-    const col = bright ? colorAt(frac / frac0, RAMP) : "rgba(235,230,216,0.10)";
+    const col = bright ? colorAt(frac / frac0, RAMP) : `rgba(${tk.inkRgb},0.10)`;
     const op = bright ? 0.32 + seed * 0.55 : 0.5;
     const x1 = cx + inner * Math.cos(a), y1 = cy + inner * Math.sin(a);
     const x2 = cx + outer * Math.cos(a), y2 = cy + outer * Math.sin(a);
@@ -263,15 +283,15 @@ function HealthRing({ d, selected, onSelect }: { d: ReturnType<typeof getOverall
     <svg viewBox="0 0 390 372" style={{ width: "100%", height: "auto", display: "block" }}>
       <defs>
         <radialGradient id={`${uid}-core`} cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="rgba(93,204,174,0.22)" />
-          <stop offset="60%" stopColor="rgba(93,204,174,0.06)" />
-          <stop offset="100%" stopColor="rgba(93,204,174,0)" />
+          <stop offset="0%" stopColor={`rgba(${tk.tealRgb},0.22)`} />
+          <stop offset="60%" stopColor={`rgba(${tk.tealRgb},0.06)`} />
+          <stop offset="100%" stopColor={`rgba(${tk.tealRgb},0)`} />
         </radialGradient>
         <linearGradient id={`${uid}-parc`} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#9bb0a5" /><stop offset="55%" stopColor="#5dccae" /><stop offset="100%" stopColor="#5aa0e6" />
+          <stop offset="0%" stopColor={tk.sage} /><stop offset="55%" stopColor={tk.teal} /><stop offset="100%" stopColor={tk.blue} />
         </linearGradient>
         <linearGradient id={`${uid}-num`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#ffffff" /><stop offset="100%" stopColor="#cfe0d6" />
+          <stop offset="0%" stopColor={tk.scoreFrom} /><stop offset="100%" stopColor={tk.scoreTo} />
         </linearGradient>
       </defs>
 
@@ -284,12 +304,12 @@ function HealthRing({ d, selected, onSelect }: { d: ReturnType<typeof getOverall
       </g>
 
       {/* Energy filaments */}
-      <g style={{ filter: "drop-shadow(0 0 5px rgba(93,204,174,0.28))" }}>{filaments}</g>
+      <g style={{ filter: `drop-shadow(0 0 5px rgba(${tk.tealRgb},0.28))` }}>{filaments}</g>
 
       {/* Progress arc + pulsing head */}
-      <circle cx={cx} cy={cy} r={pr} fill="none" stroke="rgba(235,230,216,0.06)" strokeWidth={3} />
-      <circle cx={cx} cy={cy} r={pr} fill="none" stroke={`url(#${uid}-parc)`} strokeWidth={3.2} strokeLinecap="round" strokeDasharray={`${vis.toFixed(1)} ${circ.toFixed(1)}`} transform={`rotate(-90 ${cx} ${cy})`} style={{ filter: "drop-shadow(0 0 5px rgba(93,204,174,0.55))" }} opacity={sel ? 0.5 : 1} />
-      <circle cx={hx.toFixed(1)} cy={hy.toFixed(1)} r={3.4} fill="#fff" style={{ filter: "drop-shadow(0 0 7px #5dccae)" }}>
+      <circle cx={cx} cy={cy} r={pr} fill="none" stroke={`rgba(${tk.inkRgb},0.06)`} strokeWidth={3} />
+      <circle cx={cx} cy={cy} r={pr} fill="none" stroke={`url(#${uid}-parc)`} strokeWidth={3.2} strokeLinecap="round" strokeDasharray={`${vis.toFixed(1)} ${circ.toFixed(1)}`} transform={`rotate(-90 ${cx} ${cy})`} style={{ filter: `drop-shadow(0 0 5px rgba(${tk.tealRgb},0.55))` }} opacity={sel ? 0.5 : 1} />
+      <circle cx={hx.toFixed(1)} cy={hy.toFixed(1)} r={3.4} fill={tk.ringHead} style={{ filter: `drop-shadow(0 0 7px ${tk.teal})` }}>
         <animate attributeName="opacity" values="1;0.45;1" dur="2.6s" repeatCount="indefinite" />
       </circle>
 
@@ -297,12 +317,12 @@ function HealthRing({ d, selected, onSelect }: { d: ReturnType<typeof getOverall
       {selPillar ? (
         <>
           <text x={cx} y={cy - 2} textAnchor="middle" fontFamily={SANS} fontSize={32} fontWeight={700} fill={selPillar.color}>{selPillar.score}</text>
-          <text x={cx} y={cy + 18} textAnchor="middle" fontFamily={SANS} fontSize={9} fontWeight={700} letterSpacing="1.4" fill="rgba(235,230,216,0.5)">{selPillar.label.toUpperCase()}</text>
+          <text x={cx} y={cy + 18} textAnchor="middle" fontFamily={SANS} fontSize={9} fontWeight={700} letterSpacing="1.4" fill={`rgba(${tk.inkRgb},0.5)`}>{selPillar.label.toUpperCase()}</text>
         </>
       ) : (
         <>
-          <text x={cx} y={cy + 5} textAnchor="middle" fontFamily={SANS} fontSize={54} fontWeight={700} fill={`url(#${uid}-num)`} style={{ filter: "drop-shadow(0 0 20px rgba(93,204,174,0.4))" }}>{d.score}</text>
-          <text x={cx} y={cy + 27} textAnchor="middle" fontFamily={SANS} fontSize={9} fontWeight={700} letterSpacing="1.8" fill="rgba(235,230,216,0.45)">HEALTH SCORE</text>
+          <text x={cx} y={cy + 5} textAnchor="middle" fontFamily={SANS} fontSize={54} fontWeight={700} fill={`url(#${uid}-num)`} style={{ filter: `drop-shadow(0 0 20px rgba(${tk.tealRgb},0.4))` }}>{d.score}</text>
+          <text x={cx} y={cy + 27} textAnchor="middle" fontFamily={SANS} fontSize={9} fontWeight={700} letterSpacing="1.8" fill={`rgba(${tk.inkRgb},0.45)`}>HEALTH SCORE</text>
         </>
       )}
 
@@ -321,9 +341,9 @@ function HealthRing({ d, selected, onSelect }: { d: ReturnType<typeof getOverall
             <line x1={(cx + 92 * ca).toFixed(1)} y1={(cy + 92 * sa).toFixed(1)} x2={(cx + 110 * ca).toFixed(1)} y2={(cy + 110 * sa).toFixed(1)} stroke={p.color} strokeWidth={1.3} opacity={Number((0.45 * o).toFixed(2))} />
             <circle cx={(cx + 92 * ca).toFixed(1)} cy={(cy + 92 * sa).toFixed(1)} r={big ? 3.4 : 2.4} fill={p.color} opacity={o} style={{ filter: `drop-shadow(0 0 ${big ? 7 : 4}px ${p.color})` }} />
             <text x={lx.toFixed(1)} y={vy.toFixed(1)} textAnchor={anchor} fontFamily={SANS} fontSize={17.5} fontWeight={700} fill={p.color} opacity={o}>
-              {p.score}<tspan fontSize="9" dx="3" dy="-5" fill={tCol(p.trend)}>{tArrow(p.trend)}</tspan>
+              {p.score}<tspan fontSize="9" dx="3" dy="-5" fill={tCol(p.trend, tk)}>{tArrow(p.trend)}</tspan>
             </text>
-            <text x={lx.toFixed(1)} y={(vy + 11).toFixed(1)} textAnchor={anchor} fontFamily={SANS} fontSize={8.5} fontWeight={600} letterSpacing="0.6" fill="rgba(235,230,216,0.5)" opacity={o}>{p.label.toUpperCase()}</text>
+            <text x={lx.toFixed(1)} y={(vy + 11).toFixed(1)} textAnchor={anchor} fontFamily={SANS} fontSize={8.5} fontWeight={600} letterSpacing="0.6" fill={`rgba(${tk.inkRgb},0.5)`} opacity={o}>{p.label.toUpperCase()}</text>
           </g>
         );
       })}

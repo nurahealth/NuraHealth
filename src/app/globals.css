@@ -62,6 +62,13 @@
   --nura-accent-soft: rgba(155, 176, 165, 0.10);       /* tinted accent chip fill */
   --nura-accent-soft-border: rgba(155, 176, 165, 0.22);
 
+  /* Emphasis above text-primary (hover states) + data-viz focal points that
+     were hardcoded to pure white and would vanish on a light card. */
+  --nura-text-strong: #ffffff;
+  --nura-score-from: #ffffff;           /* Health Score numeral, gradient top */
+  --nura-score-to: #cfe0d6;             /* Health Score numeral, gradient foot */
+  --nura-ring-head: #ffffff;            /* pulsing head of a progress arc */
+
   /* ── Status ─────────────────────────────────────────────────────────── */
   --nura-optimal: #5fbf8c;              /* emerald — Optimal */
   --nura-optimal-rgb: 95, 191, 140;
@@ -163,6 +170,10 @@
   --nura-sage-rgb: 79, 111, 92;
   --nura-accent-soft: rgba(79, 111, 92, 0.09);
   --nura-accent-soft-border: rgba(79, 111, 92, 0.20);
+  --nura-text-strong: #000000;
+  --nura-score-from: #1a1a1a;
+  --nura-score-to: #4f6f5c;
+  --nura-ring-head: #2e2c28;
 
   /* ── Status ─────────────────────────────────────────────────────────── */
   --nura-optimal: #2f7d57;              /*  5.0:1 */

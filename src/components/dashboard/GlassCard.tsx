@@ -38,7 +38,7 @@ export default function GlassCard({
         border: "1px solid var(--nura-glass-line)",
         borderRadius: 22,
         padding: 18,
-        boxShadow: "inset 0 1px 0 rgba(235,230,216,0.10), 0 18px 50px rgba(0,0,0,0.35)",
+        boxShadow: "inset 0 1px 0 var(--nura-card-highlight), var(--nura-card-shadow-soft)",
         ...style,
       }}
     >
