@@ -68,13 +68,13 @@ function Switch({ on }: { on: boolean }) {
     <span style={{
       width: 42, height: 24, borderRadius: 999, flex: "none", position: "relative",
       transition: "background .18s",
-      background: on ? SAGE : "rgba(var(--nura-fg-rgb),0.14)",
+      background: on ? SAGE : "rgba(var(--nura-fg-rgb),0.18)",
       border: on ? "none" : "1px solid rgba(var(--nura-fg-rgb),0.12)",
     }}>
       <span style={{
         position: "absolute", top: 2, left: on ? 20 : 2,
-        width: 20, height: 20, borderRadius: "50%", background: "var(--nura-marker)",
-        transition: "left .18s", boxShadow: "0 1px 3px rgba(0,0,0,0.45)",
+        width: 20, height: 20, borderRadius: "50%", background: "var(--nura-knob)",
+        transition: "left .18s", boxShadow: "var(--nura-knob-shadow)",
       }} />
     </span>
   );
