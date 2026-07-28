@@ -9,11 +9,11 @@ import { type ReactNode } from "react";
 // (VO₂ max) detail page.
 
 const SANS = "var(--font-inter), system-ui, sans-serif";
-const SURFACE = "rgba(235,230,216,0.04)";
-const CREAM = "#ebe6d8";
-const MUTED = "rgba(235,230,216,0.62)";
-const FAINT = "rgba(235,230,216,0.45)";
-const HAIR = "rgba(235,230,216,0.1)";
+const SURFACE = "rgba(var(--nura-bg-tint-rgb),0.04)";
+const CREAM = "var(--nura-text-primary)";
+const MUTED = "rgba(var(--nura-bg-tint-rgb),0.62)";
+const FAINT = "rgba(var(--nura-bg-tint-rgb),0.45)";
+const HAIR = "rgba(var(--nura-bg-tint-rgb),0.1)";
 
 export interface MetricEducationItem {
   /** Short uppercase row label, rendered in the accent color. */

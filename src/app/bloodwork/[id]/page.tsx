@@ -908,7 +908,7 @@ export default function BloodworkDetailPage({ params }: { params: Promise<{ id: 
       {shareToast && (
         <div style={{
           position: "fixed", bottom: 30, left: "50%", transform: "translateX(-50%)",
-          background: "rgba(20,20,21,0.95)", border: `0.5px solid rgba(var(--nura-sage-rgb),0.3)`,
+          background: "rgba(var(--nura-bg-elevated-rgb),0.95)", border: `0.5px solid rgba(var(--nura-sage-rgb),0.3)`,
           color: TEXT, padding: "8px 14px", borderRadius: 20, fontSize: 12, zIndex: 80,
         }}>
           {shareToast}

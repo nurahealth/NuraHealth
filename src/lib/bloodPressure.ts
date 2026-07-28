@@ -5,10 +5,10 @@
 export type BPCategory = "Normal" | "Elevated" | "Stage 1" | "Stage 2";
 
 export const BP_COLOR: Record<BPCategory, string> = {
-  Normal: "#6ea862",
-  Elevated: "#d9c45e",
-  "Stage 1": "#d99a55",
-  "Stage 2": "#c75f5f",
+  Normal: "var(--nura-bp-normal)",
+  Elevated: "var(--nura-bp-elevated)",
+  "Stage 1": "var(--nura-bp-stage1)",
+  "Stage 2": "var(--nura-bp-stage2)",
 };
 
 const SEVERITY: Record<BPCategory, number> = { Normal: 0, Elevated: 1, "Stage 1": 2, "Stage 2": 3 };
@@ -50,5 +50,5 @@ export const systolicPct = (sys: number): number => Math.max(0, Math.min(100, ((
 export const diastolicPct = (dia: number): number => Math.max(0, Math.min(100, ((dia - 50) / 60) * 100));
 
 // The gradient stops for each meter track (shared by card + detail).
-export const SYS_GRADIENT = "linear-gradient(90deg, #6ea862 0%, #6ea862 33%, #d9c45e 46%, #d99a55 62%, #cf7a6a 82%, #c75f5f 100%)";
-export const DIA_GRADIENT = "linear-gradient(90deg, #6ea862 0%, #6ea862 50%, #d9c45e 61%, #d99a55 74%, #cf7a6a 88%, #c75f5f 100%)";
+export const SYS_GRADIENT = "linear-gradient(90deg, var(--nura-bp-normal) 0%, var(--nura-bp-normal) 33%, var(--nura-bp-elevated) 46%, var(--nura-bp-stage1) 62%, var(--nura-bp-stage1-hi) 82%, var(--nura-bp-stage2) 100%)";
+export const DIA_GRADIENT = "linear-gradient(90deg, var(--nura-bp-normal) 0%, var(--nura-bp-normal) 50%, var(--nura-bp-elevated) 61%, var(--nura-bp-stage1) 74%, var(--nura-bp-stage1-hi) 88%, var(--nura-bp-stage2) 100%)";

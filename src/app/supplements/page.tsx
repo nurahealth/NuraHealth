@@ -1831,8 +1831,8 @@ function ScheduleEmpty({
 }
 
 // ── Streak card ───────────────────────────────────────────────────────────────
-const SAGE_BRIGHT = "#7a9a82";
-const SAGE_TEXT = "#9bb8a3";
+const SAGE_BRIGHT = "var(--nura-sage)";
+const SAGE_TEXT = "var(--nura-sage)";
 
 function StreakCard({ stats }: { stats: Stats | null }) {
   if (!stats) {
@@ -1840,15 +1840,15 @@ function StreakCard({ stats }: { stats: Stats | null }) {
       <div style={{
         position: "relative", overflow: "hidden",
         borderRadius: 18,
-        background: "linear-gradient(135deg, rgba(122, 154, 130, 0.18) 0%, rgba(122, 154, 130, 0.08) 100%)",
-        border: "1px solid rgba(122, 154, 130, 0.25)",
+        background: "linear-gradient(135deg, rgba(var(--nura-sage-rgb),0.18) 0%, rgba(var(--nura-sage-rgb),0.08) 100%)",
+        border: "1px solid rgba(var(--nura-sage-rgb),0.25)",
         padding: "18px 20px", marginBottom: 12,
         height: 78, boxSizing: "border-box",
       }}>
         <style>{`@keyframes nura-streak-sk { 0%{transform:translateX(-100%);} 100%{transform:translateX(200%);} }`}</style>
         <div style={{
           position: "absolute", inset: 0,
-          background: "linear-gradient(90deg, transparent, rgba(122, 154, 130, 0.12), transparent)",
+          background: "linear-gradient(90deg, transparent, rgba(var(--nura-sage-rgb),0.12), transparent)",
           animation: "nura-streak-sk 1.6s ease infinite",
         }} />
       </div>
@@ -1869,15 +1869,15 @@ function StreakCard({ stats }: { stats: Stats | null }) {
     <div style={{
       position: "relative", overflow: "hidden",
       borderRadius: 18,
-      background: "linear-gradient(135deg, rgba(122, 154, 130, 0.18) 0%, rgba(122, 154, 130, 0.08) 100%)",
-      border: "1px solid rgba(122, 154, 130, 0.25)",
+      background: "linear-gradient(135deg, rgba(var(--nura-sage-rgb),0.18) 0%, rgba(var(--nura-sage-rgb),0.08) 100%)",
+      border: "1px solid rgba(var(--nura-sage-rgb),0.25)",
       padding: "18px 20px", marginBottom: 12,
       display: "flex", alignItems: "center", gap: 16,
     }}>
       <div aria-hidden style={{
         position: "absolute", top: -40, right: -40,
         width: 140, height: 140,
-        background: "radial-gradient(circle, rgba(122, 154, 130, 0.32) 0%, rgba(122, 154, 130, 0) 70%)",
+        background: "radial-gradient(circle, rgba(var(--nura-sage-rgb),0.32) 0%, rgba(var(--nura-sage-rgb),0) 70%)",
         pointerEvents: "none",
       }} />
       <div aria-hidden style={{
@@ -2542,7 +2542,7 @@ function Switch({
 }
 
 // ── Add-flow shared primitives ───────────────────────────────────────────────
-const SAGE_BORDER_TINT = "rgba(122, 154, 130, 0.3)";
+const SAGE_BORDER_TINT = "rgba(var(--nura-sage-rgb),0.3)";
 const SAGE_BG_TINT = "rgba(var(--nura-sage-rgb), 0.12)";
 
 function FlowModal({
@@ -2713,7 +2713,7 @@ function ChoiceCard({
             <span style={{
               display: "inline-flex", alignItems: "center",
               padding: "1px 7px", borderRadius: 9999,
-              background: featured ? "rgba(255,255,255,0.22)" : SAGE_BG_TINT,
+              background: featured ? "rgba(var(--nura-bg-tint-rgb),0.22)" : SAGE_BG_TINT,
               border: featured ? "none" : `0.5px solid rgba(var(--nura-sage-rgb), 0.32)`,
               fontFamily: SANS, fontSize: 9, fontWeight: 600,
               letterSpacing: "0.08em", textTransform: "uppercase",
@@ -2726,7 +2726,7 @@ function ChoiceCard({
         <span style={{
           display: "block", marginTop: 2,
           fontFamily: SANS, fontSize: 12,
-          color: featured ? "rgba(255,255,255,0.85)" : TEXT_TER,
+          color: featured ? "var(--nura-ink-strong)" : TEXT_TER,
           lineHeight: 1.35,
         }}>
           {subtitle}
@@ -3288,7 +3288,7 @@ function BarcodeMatchScreen({
         <div style={{
           padding: "16px 16px 14px",
           borderRadius: 14,
-          background: "linear-gradient(180deg, rgba(122,154,130,0.1) 0%, transparent 100%)",
+          background: "linear-gradient(180deg, rgba(var(--nura-sage-rgb),0.1) 0%, transparent 100%)",
           border: `0.5px solid ${BORDER}`,
           marginBottom: 14,
         }}>
@@ -3671,7 +3671,7 @@ function LiveBarcodeScreen({
           aspectRatio: "3 / 4",
           borderRadius: 16,
           overflow: "hidden",
-          background: "#000",
+          background: "var(--nura-bg)",
           border: `0.5px solid ${BORDER}`,
           marginBottom: 14,
         }}>
@@ -3683,7 +3683,7 @@ function LiveBarcodeScreen({
             style={{
               width: "100%", height: "100%",
               objectFit: "cover", display: "block",
-              background: "#000",
+              background: "var(--nura-bg)",
             }}
           />
           {/* Viewfinder overlay (transparent so the video shows through) */}
@@ -3702,8 +3702,8 @@ function LiveBarcodeScreen({
               left: "14%", right: "14%",
               height: 2,
               borderRadius: 9999,
-              background: `linear-gradient(90deg, rgba(122,154,130,0) 0%, ${SAGE_BRIGHT} 50%, rgba(122,154,130,0) 100%)`,
-              boxShadow: `0 0 14px ${SAGE_BRIGHT}, 0 0 28px rgba(122,154,130,0.6)`,
+              background: `linear-gradient(90deg, rgba(var(--nura-sage-rgb),0) 0%, ${SAGE_BRIGHT} 50%, rgba(var(--nura-sage-rgb),0) 100%)`,
+              boxShadow: `0 0 14px ${SAGE_BRIGHT}, 0 0 28px rgba(var(--nura-sage-rgb),0.6)`,
               animation: "nura-scanline 1.8s ease-in-out infinite",
             }} />
           </div>

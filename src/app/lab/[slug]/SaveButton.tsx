@@ -49,8 +49,8 @@ export default function SaveButton({ productId, userId, initialSaved }: {
       aria-pressed={saved}
       style={{
         width: 34, height: 34, display: "flex", alignItems: "center", justifyContent: "center",
-        background: "rgba(13,13,14,0.72)", backdropFilter: "blur(4px)",
-        border: `0.5px solid ${saved ? SAGE : "rgba(255,255,255,0.18)"}`,
+        background: "rgba(var(--nura-bg-rgb),0.72)", backdropFilter: "blur(4px)",
+        border: `0.5px solid ${saved ? SAGE : "rgba(var(--nura-bg-tint-rgb),0.18)"}`,
         borderRadius: 10, cursor: busy ? "default" : "pointer",
         color: saved ? SAGE : TEXT, padding: 0,
         transition: "border-color 180ms, color 180ms",

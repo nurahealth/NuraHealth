@@ -136,7 +136,7 @@ export default async function FoodDetailPage({
             <SaveButton />
           </div>
           <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <Leaf size={30} color="rgba(235,230,216,0.22)" strokeWidth={1.5} />
+            <Leaf size={30} color="rgba(var(--nura-bg-tint-rgb),0.22)" strokeWidth={1.5} />
           </div>
           <div style={{ minHeight: 180 }} />
         </div>

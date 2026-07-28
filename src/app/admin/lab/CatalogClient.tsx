@@ -20,7 +20,7 @@ const SAGE_RGB = "var(--nura-sage-rgb)";
 const FG_RGB = "var(--nura-fg-rgb)";
 const SANS = "var(--font-inter), system-ui, sans-serif";
 const SERIF = "'DM Serif Display', Georgia, serif";
-const DANGER = "#FF4C5C";
+const DANGER = "var(--nura-danger)";
 
 // ── Types ───────────────────────────────────────────────────────────────────
 export interface CatalogCategory {
@@ -415,7 +415,7 @@ function DocumentsManager({ token, productId }: { token: string; productId: stri
                 )}
 
                 {editError && (
-                  <div style={{ padding: "8px 11px", background: "rgba(255,76,92,0.08)", border: `0.5px solid rgba(255,76,92,0.4)`, borderRadius: 9, fontFamily: SANS, fontSize: 12, color: DANGER }}>{editError}</div>
+                  <div style={{ padding: "8px 11px", background: "rgba(var(--nura-record-rgb),0.08)", border: `0.5px solid rgba(var(--nura-record-rgb),0.4)`, borderRadius: 9, fontFamily: SANS, fontSize: 12, color: DANGER }}>{editError}</div>
                 )}
                 <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
                   <button type="button" onClick={cancelEdit} disabled={editBusy} style={{ padding: "8px 14px", background: "transparent", border: `0.5px solid ${BORDER}`, borderRadius: 9, fontFamily: SANS, fontSize: 11, fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", color: TEXT_SEC, cursor: editBusy ? "default" : "pointer" }}>Cancel</button>
@@ -461,7 +461,7 @@ function DocumentsManager({ token, productId }: { token: string; productId: stri
           ))
         )}
         {listError && (
-          <div style={{ padding: "8px 11px", background: "rgba(255,76,92,0.08)", border: `0.5px solid rgba(255,76,92,0.4)`, borderRadius: 9, fontFamily: SANS, fontSize: 12.5, color: DANGER }}>
+          <div style={{ padding: "8px 11px", background: "rgba(var(--nura-record-rgb),0.08)", border: `0.5px solid rgba(var(--nura-record-rgb),0.4)`, borderRadius: 9, fontFamily: SANS, fontSize: 12.5, color: DANGER }}>
             {listError}
           </div>
         )}
@@ -548,7 +548,7 @@ function DocumentsManager({ token, productId }: { token: string; productId: stri
         )}
 
         {addError && (
-          <div style={{ padding: "9px 11px", background: "rgba(255,76,92,0.08)", border: `0.5px solid rgba(255,76,92,0.4)`, borderRadius: 9, fontFamily: SANS, fontSize: 12.5, fontWeight: 500, color: DANGER }}>
+          <div style={{ padding: "9px 11px", background: "rgba(var(--nura-record-rgb),0.08)", border: `0.5px solid rgba(var(--nura-record-rgb),0.4)`, borderRadius: 9, fontFamily: SANS, fontSize: 12.5, fontWeight: 500, color: DANGER }}>
             {addError}
           </div>
         )}
@@ -800,7 +800,7 @@ function MeasurementsManager({ token, productId }: { token: string; productId: s
                         <input value={editRisk} onChange={(e) => setEditRisk(e.target.value)} inputMode="numeric" placeholder="0" style={{ ...inputStyle, padding: "8px 11px" }} />
                       </div>
                     </div>
-                    {editError && <div style={{ padding: "8px 11px", background: "rgba(255,76,92,0.08)", border: `0.5px solid rgba(255,76,92,0.4)`, borderRadius: 9, fontFamily: SANS, fontSize: 12, color: DANGER }}>{editError}</div>}
+                    {editError && <div style={{ padding: "8px 11px", background: "rgba(var(--nura-record-rgb),0.08)", border: `0.5px solid rgba(var(--nura-record-rgb),0.4)`, borderRadius: 9, fontFamily: SANS, fontSize: 12, color: DANGER }}>{editError}</div>}
                     <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
                       <button type="button" onClick={cancelEdit} disabled={editBusy} style={{ padding: "8px 14px", background: "transparent", border: `0.5px solid ${BORDER}`, borderRadius: 9, fontFamily: SANS, fontSize: 11, fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", color: TEXT_SEC, cursor: editBusy ? "default" : "pointer" }}>Cancel</button>
                       <button type="button" onClick={() => saveEdit(m)} disabled={editBusy} style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", background: `rgba(${SAGE_RGB},0.14)`, border: `0.5px solid rgba(${SAGE_RGB},0.4)`, borderRadius: 9, fontFamily: SANS, fontSize: 11, fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", color: SAGE, cursor: editBusy ? "default" : "pointer" }}>
@@ -815,7 +815,7 @@ function MeasurementsManager({ token, productId }: { token: string; productId: s
                       <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 2, flexWrap: "wrap" }}>
                         <span style={{ fontFamily: SANS, fontSize: 11.5, color: TEXT_SEC }}>{valueLabel(m)}</span>
                         {(m.risk_count ?? 0) > 0 && (
-                          <span style={{ fontFamily: SANS, fontSize: 9, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: DANGER, background: "rgba(255,76,92,0.1)", border: `0.5px solid rgba(255,76,92,0.35)`, borderRadius: 6, padding: "1px 6px" }}>
+                          <span style={{ fontFamily: SANS, fontSize: 9, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: DANGER, background: "rgba(var(--nura-record-rgb),0.1)", border: `0.5px solid rgba(var(--nura-record-rgb),0.35)`, borderRadius: 6, padding: "1px 6px" }}>
                             {m.risk_count} {m.risk_count === 1 ? "risk" : "risks"}
                           </span>
                         )}
@@ -834,7 +834,7 @@ function MeasurementsManager({ token, productId }: { token: string; productId: s
           ))
         )}
         {listError && (
-          <div style={{ padding: "8px 11px", background: "rgba(255,76,92,0.08)", border: `0.5px solid rgba(255,76,92,0.4)`, borderRadius: 9, fontFamily: SANS, fontSize: 12.5, color: DANGER }}>{listError}</div>
+          <div style={{ padding: "8px 11px", background: "rgba(var(--nura-record-rgb),0.08)", border: `0.5px solid rgba(var(--nura-record-rgb),0.4)`, borderRadius: 9, fontFamily: SANS, fontSize: 12.5, color: DANGER }}>{listError}</div>
         )}
       </div>
 
@@ -904,7 +904,7 @@ function MeasurementsManager({ token, productId }: { token: string; productId: s
           <input value={riskCount} onChange={(e) => setRiskCount(e.target.value)} inputMode="numeric" placeholder="Risk count" style={{ ...inputStyle, flex: 1, minWidth: 90 }} />
         </div>
 
-        {addError && <div style={{ padding: "9px 11px", background: "rgba(255,76,92,0.08)", border: `0.5px solid rgba(255,76,92,0.4)`, borderRadius: 9, fontFamily: SANS, fontSize: 12.5, fontWeight: 500, color: DANGER }}>{addError}</div>}
+        {addError && <div style={{ padding: "9px 11px", background: "rgba(var(--nura-record-rgb),0.08)", border: `0.5px solid rgba(var(--nura-record-rgb),0.4)`, borderRadius: 9, fontFamily: SANS, fontSize: 12.5, fontWeight: 500, color: DANGER }}>{addError}</div>}
 
         <button type="button" onClick={addMeasurement} disabled={adding} style={{ alignSelf: "flex-start", display: "flex", alignItems: "center", gap: 6, padding: "9px 14px", background: `rgba(${SAGE_RGB},0.14)`, border: `0.5px solid rgba(${SAGE_RGB},0.4)`, borderRadius: 10, fontFamily: SANS, fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: SAGE, cursor: adding ? "default" : "pointer" }}>
           {adding ? <><Loader2 size={13} style={{ animation: "spin 0.8s linear infinite" }} /> Adding…</> : <><Plus size={13} /> Add measurement</>}
@@ -1091,7 +1091,7 @@ function ProductModal({ token, editing, categoryOptions, onClose, onSuccess }: {
 
         <div style={{ padding: "16px 20px 0", display: "flex", flexDirection: "column", gap: 14 }}>
           {errorMsg && (
-            <div style={{ padding: "10px 12px", background: "rgba(255,76,92,0.08)", border: `0.5px solid rgba(255,76,92,0.4)`, borderRadius: 10 }}>
+            <div style={{ padding: "10px 12px", background: "rgba(var(--nura-record-rgb),0.08)", border: `0.5px solid rgba(var(--nura-record-rgb),0.4)`, borderRadius: 10 }}>
               <Eyebrow color={DANGER} size={10}>{errorMsg}</Eyebrow>
             </div>
           )}
@@ -1203,7 +1203,7 @@ function ProductModal({ token, editing, categoryOptions, onClose, onSuccess }: {
               }}>
                 <span style={{
                   position: "absolute", top: 2, left: labTested ? 18 : 2, width: 18, height: 18, borderRadius: "50%",
-                  background: "#fff", transition: "left 180ms",
+                  background: "var(--nura-text-strong)", transition: "left 180ms",
                 }} />
               </span>
               <span style={{ fontFamily: SANS, fontSize: 13, fontWeight: 600, color: labTested ? SAGE : TEXT_SEC }}>
@@ -1279,7 +1279,7 @@ function ProductModal({ token, editing, categoryOptions, onClose, onSuccess }: {
                 )}
                 {uploadingImage && (
                   <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.55)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <Loader2 size={20} color="#fff" style={{ animation: "spin 0.8s linear infinite" }} />
+                    <Loader2 size={20} color="var(--nura-text-strong)" style={{ animation: "spin 0.8s linear infinite" }} />
                   </div>
                 )}
               </div>
@@ -1425,7 +1425,7 @@ function ConfirmDeleteModal({ name, busy, errorMsg, onCancel, onConfirm }: {
           Delete <span style={{ color: TEXT, fontWeight: 500 }}>&ldquo;{name}&rdquo;</span>? This cannot be undone.
         </div>
         {errorMsg && (
-          <div style={{ marginBottom: 14, padding: "9px 12px", background: "rgba(255,76,92,0.08)", border: `0.5px solid rgba(255,76,92,0.4)`, borderRadius: 10 }}>
+          <div style={{ marginBottom: 14, padding: "9px 12px", background: "rgba(var(--nura-record-rgb),0.08)", border: `0.5px solid rgba(var(--nura-record-rgb),0.4)`, borderRadius: 10 }}>
             <Eyebrow color={DANGER} size={10}>{errorMsg}</Eyebrow>
           </div>
         )}
@@ -1433,7 +1433,7 @@ function ConfirmDeleteModal({ name, busy, errorMsg, onCancel, onConfirm }: {
           <button onClick={onCancel} disabled={busy} style={{ flex: 1, padding: 12, background: "transparent", border: `0.5px solid ${BORDER}`, borderRadius: 12, fontFamily: SANS, fontSize: 12, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", color: busy ? TEXT_TER : TEXT, cursor: busy ? "not-allowed" : "pointer" }}>
             Cancel
           </button>
-          <button onClick={onConfirm} disabled={busy} style={{ flex: 1, padding: 12, background: busy ? "rgba(255,76,92,0.30)" : DANGER, border: "none", borderRadius: 12, fontFamily: SANS, fontSize: 12, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", color: "#fff", cursor: busy ? "not-allowed" : "pointer" }}>
+          <button onClick={onConfirm} disabled={busy} style={{ flex: 1, padding: 12, background: busy ? "rgba(var(--nura-record-rgb),0.30)" : DANGER, border: "none", borderRadius: 12, fontFamily: SANS, fontSize: 12, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--nura-text-strong)", cursor: busy ? "not-allowed" : "pointer" }}>
             {busy ? "Deleting…" : "Delete"}
           </button>
         </div>
@@ -1545,7 +1545,7 @@ export default function CatalogClient({ initialProducts, categories }: {
 
       <NuraPlexus opacity={0.35} />
 
-      <div style={{ position: "sticky", top: 0, zIndex: 100, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 20px", height: 56, background: "linear-gradient(180deg, rgba(13,13,14,0.92), rgba(13,13,14,0.75))", backdropFilter: "blur(20px)", borderBottom: `0.5px solid ${BORDER}` }}>
+      <div style={{ position: "sticky", top: 0, zIndex: 100, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 20px", height: 56, background: "linear-gradient(180deg, rgba(var(--nura-bg-rgb),0.92), rgba(var(--nura-bg-rgb),0.75))", backdropFilter: "blur(20px)", borderBottom: `0.5px solid ${BORDER}` }}>
         <button onClick={() => setSidebarOpen(true)} style={{ width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", background: "none", border: "none", cursor: "pointer", color: TEXT_SEC, borderRadius: 8, padding: 0 }}>
           <Shield size={18} color="var(--nura-sage)" />
         </button>
@@ -1588,7 +1588,7 @@ export default function CatalogClient({ initialProducts, categories }: {
         </button>
 
         {deleteError && !confirmDelete && (
-          <div style={{ marginBottom: 12, padding: "10px 12px", background: "rgba(255,76,92,0.08)", border: `0.5px solid rgba(255,76,92,0.4)`, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+          <div style={{ marginBottom: 12, padding: "10px 12px", background: "rgba(var(--nura-record-rgb),0.08)", border: `0.5px solid rgba(var(--nura-record-rgb),0.4)`, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
             <Eyebrow color={DANGER} size={10}>{deleteError}</Eyebrow>
             <button onClick={() => setDeleteError("")} style={{ background: "none", border: "none", cursor: "pointer", color: TEXT_SEC, padding: 0, display: "flex" }}><X size={12} /></button>
           </div>

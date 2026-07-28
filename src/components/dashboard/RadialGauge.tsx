@@ -112,7 +112,7 @@ export default function RadialGauge({
             <stop offset="1" stopColor={gradientTo} />
           </linearGradient>
         </defs>
-        <circle cx={c} cy={c} r={r} fill="none" stroke="rgba(235,230,216,0.08)" strokeWidth={stroke} strokeDasharray={`${arcLen} ${circ}`} />
+        <circle cx={c} cy={c} r={r} fill="none" stroke="rgba(var(--nura-bg-tint-rgb),0.08)" strokeWidth={stroke} strokeDasharray={`${arcLen} ${circ}`} />
         <circle
           cx={c} cy={c} r={r} fill="none"
           stroke={`url(#${gid})`} strokeWidth={stroke} strokeLinecap="round"

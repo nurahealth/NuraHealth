@@ -115,16 +115,20 @@ function buildAppearance(theme: Theme): StripeElementsOptions["appearance"] {
   // authoritative; the ternaries are an SSR/no-document fallback only.
   const css = typeof document !== "undefined" ? getComputedStyle(document.documentElement) : null;
   const cssVar = (name: string, fallback: string) => css?.getPropertyValue(name).trim() || fallback;
-  const sage = cssVar("--nura-sage", isLight ? "#7d9385" : "#9bb0a5");
-  const surface = isLight ? "#ecead8" : "#111214";
-  const text = cssVar("--nura-text-primary", isLight ? "#1a1f1a" : "#f0ebde");
+  // Fallbacks are the DARK values (the SSR default). colorBackground must be an
+  // opaque token — --nura-surface is a low-alpha wash in dark and would render
+  // the Stripe field almost transparent, so use --nura-card.
+  const sage = cssVar("--nura-sage", "#9bb0a5");
+  const surface = cssVar("--nura-card", "#161718");
+  const text = cssVar("--nura-text-primary", "#ebe6d8");
+  const danger = cssVar("--nura-danger", "#d4574d");
   return {
     theme: isLight ? "stripe" : "night",
     variables: {
       colorPrimary: sage,
       colorBackground: surface,
       colorText: text,
-      colorDanger: "#e76f51",
+      colorDanger: danger,
       fontFamily: SANS,
       borderRadius: "12px",
     },

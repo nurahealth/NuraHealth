@@ -5,7 +5,7 @@ import { Eye, X } from "lucide-react";
 
 // Slim, dismissible "DRAFT PREVIEW" banner shown only on admin draft previews so
 // it's always obvious the recipe is unpublished. Amber accent (design system).
-const AMBER = "#d3a253";
+const AMBER = "var(--nura-good)";
 const AMBER_RGB = "211,162,83";
 const SANS = "var(--font-inter), system-ui, sans-serif";
 

@@ -509,7 +509,7 @@ function UploadModal({ userId, token, onClose, onSuccess }: {
                       <img src={url} alt={photos[i]?.name ?? ""} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
                       <button
                         onClick={(e) => { e.stopPropagation(); removePhoto(i); }}
-                        style={{ position: "absolute", top: 2, right: 2, width: 16, height: 16, borderRadius: "50%", background: "rgba(0,0,0,0.65)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: 0, color: "#fff" }}
+                        style={{ position: "absolute", top: 2, right: 2, width: 16, height: 16, borderRadius: "50%", background: "rgba(0,0,0,0.65)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: 0, color: "var(--nura-text-strong)" }}
                       >
                         <X size={9} />
                       </button>
@@ -725,7 +725,7 @@ function ConfirmDeleteModal({ sourceTitle, busy, errorMsg, onCancel, onConfirm }
               background: busy ? "rgba(var(--nura-danger-rgb),0.30)" : DANGER,
               border: "none", borderRadius: 12,
               fontFamily: SANS, fontSize: 12, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase",
-              color: "#fff", cursor: busy ? "not-allowed" : "pointer",
+              color: "var(--nura-text-strong)", cursor: busy ? "not-allowed" : "pointer",
               transition: "background 180ms",
             }}
           >
@@ -968,7 +968,7 @@ export default function AdminKnowledgePage() {
 
       <NuraPlexus opacity={0.35} />
 
-      <div style={{ position: "sticky", top: 0, zIndex: 100, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 20px", height: 56, background: "linear-gradient(180deg, rgba(13,13,14,0.92), rgba(13,13,14,0.75))", backdropFilter: "blur(20px)", borderBottom: `0.5px solid ${BORDER}` }}>
+      <div style={{ position: "sticky", top: 0, zIndex: 100, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 20px", height: 56, background: "linear-gradient(180deg, rgba(var(--nura-bg-rgb),0.92), rgba(var(--nura-bg-rgb),0.75))", backdropFilter: "blur(20px)", borderBottom: `0.5px solid ${BORDER}` }}>
         <button onClick={() => setSidebarOpen(true)} style={{ width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", background: "none", border: "none", cursor: "pointer", color: TEXT_SEC, borderRadius: 8, padding: 0 }}>
           <Shield size={18} color="var(--nura-sage)" />
         </button>

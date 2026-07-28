@@ -20,16 +20,16 @@ import BloodPressureView from "@/app/dashboard/blood-pressure/view";
 type MetricMeta = { id: string; accent: string; View: React.ComponentType };
 
 const METRICS: MetricMeta[] = [
-  { id: "sleep", accent: "#5aa0e6", View: SleepView },
-  { id: "hrv", accent: "#4fc4d6", View: HrvView },
-  { id: "resting-hr", accent: "#3fc488", View: RestingHrView },
-  { id: "steps", accent: "#e3a263", View: StepsView },
-  { id: "active-energy", accent: "#e07a3c", View: ActiveEnergyView },
+  { id: "sleep", accent: "var(--nura-sleep-deep)", View: SleepView },
+  { id: "hrv", accent: "var(--nura-aqua)", View: HrvView },
+  { id: "resting-hr", accent: "var(--nura-optimal)", View: RestingHrView },
+  { id: "steps", accent: "var(--nura-orange)", View: StepsView },
+  { id: "active-energy", accent: "var(--nura-ember)", View: ActiveEnergyView },
   { id: "heart-rate", accent: "var(--nura-alert)", View: HeartRateView },
-  { id: "blood-oxygen", accent: "#c9d6e3", View: BloodOxygenView },
-  { id: "respiratory-rate", accent: "#b9a0e6", View: RespiratoryRateView },
-  { id: "cardio-fitness", accent: "#e3b765", View: CardioFitnessView },
-  { id: "blood-pressure", accent: "#cf8fa0", View: BloodPressureView },
+  { id: "blood-oxygen", accent: "var(--nura-ice-hi)", View: BloodOxygenView },
+  { id: "respiratory-rate", accent: "var(--nura-violet)", View: RespiratoryRateView },
+  { id: "cardio-fitness", accent: "var(--nura-gold-ring)", View: CardioFitnessView },
+  { id: "blood-pressure", accent: "var(--nura-rose)", View: BloodPressureView },
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -127,9 +127,9 @@ export default function MetricPager({ initialMetric }: { initialMetric: string }
           left: "50%", transform: "translateX(-50%)", zIndex: 50,
           display: "flex", alignItems: "center", gap: 6,
           padding: "6px 10px", borderRadius: 999,
-          background: "rgba(13,13,14,0.32)",
+          background: "rgba(var(--nura-bg-rgb),0.32)",
           backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
-          border: "0.5px solid rgba(235,230,216,0.08)",
+          border: "0.5px solid rgba(var(--nura-bg-tint-rgb),0.08)",
         }}
       >
         {METRICS.map((m, i) => {
@@ -151,7 +151,7 @@ export default function MetricPager({ initialMetric }: { initialMetric: string }
                 style={{
                   display: "block", height: 6, borderRadius: 999,
                   width: on ? 18 : 6,
-                  background: on ? m.accent : "rgba(235,230,216,0.3)",
+                  background: on ? m.accent : "rgba(var(--nura-bg-tint-rgb),0.3)",
                   boxShadow: on ? `0 0 8px ${m.accent}` : "none",
                 }}
               />

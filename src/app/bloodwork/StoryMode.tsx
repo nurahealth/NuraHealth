@@ -72,9 +72,9 @@ function statusChipColors(status: string): { bg: string; border: string; color: 
   }
   if (s === "low") {
     return {
-      bg: `rgba(91,126,184,0.14)`,
-      border: `rgba(91,126,184,0.42)`,
-      color: "#7da6d4",
+      bg: `rgba(var(--nura-sleep-deep-rgb),0.14)`,
+      border: `rgba(var(--nura-sleep-deep-rgb),0.42)`,
+      color: "var(--nura-sleep-deep)",
     };
   }
   if (s === "watch") {

@@ -309,8 +309,8 @@ export function amberGradient(key: string | null | undefined): string {
   const a2 = 0.08 + ((h >> 8) % 6) / 100;
   return (
     `linear-gradient(${angle}deg, ` +
-    `rgba(211,162,83,${a1}) 0%, ` +
-    `rgba(211,162,83,${a2}) 58%, ` +
+    `rgba(var(--nura-good-rgb),${a1}) 0%, ` +
+    `rgba(var(--nura-good-rgb),${a2}) 58%, ` +
     `rgba(var(--nura-bg-tint-rgb),0.02) 100%)`
   );
 }

@@ -31,16 +31,19 @@ function buildAppearance(theme: Theme): StripeElementsOptions["appearance"] {
   // authoritative; the ternaries are an SSR/no-document fallback only.
   const css = typeof document !== "undefined" ? getComputedStyle(document.documentElement) : null;
   const cssVar = (name: string, fallback: string) => css?.getPropertyValue(name).trim() || fallback;
-  const sage = cssVar("--nura-sage", isLight ? "#7d9385" : "#9bb0a5");
+  // Every value resolves from globals.css; fallbacks are the DARK values (the
+  // SSR default). Stripe needs opaque field backgrounds, so the surfaces come
+  // from --nura-card / --nura-surface-elevated rather than the alpha washes.
+  const sage = cssVar("--nura-sage", "#9bb0a5");
   const sageRgb = cssVar("--nura-sage-rgb", "155,176,165");
-  const bg = cssVar("--nura-bg", isLight ? "#f4f1e6" : "#0d0d0e");
-  const surface = cssVar("--nura-surface", "#111214");
+  const bg = cssVar("--nura-bg", "#0d0d0e");
+  const surface = cssVar("--nura-card", "#161718");
   const surfaceElevated = cssVar("--nura-surface-elevated", "#1a1a1c");
-  const text = cssVar("--nura-text-primary", isLight ? "#1a1f1a" : "#f0ebde");
-  const textSec = isLight ? "rgba(26,31,26,0.62)" : "rgba(235,230,216,0.55)";
-  const textTer = isLight ? "rgba(26,31,26,0.42)" : "rgba(235,230,216,0.40)";
-  const border = isLight ? "rgba(125,147,133,0.22)" : "rgba(235,230,216,0.09)";
-  const placeholder = isLight ? "rgba(26,31,26,0.36)" : "rgba(235,230,216,0.28)";
+  const text = cssVar("--nura-text-primary", "#ebe6d8");
+  const textSec = cssVar("--nura-text-secondary", "rgba(235,230,216,0.55)");
+  const textTer = cssVar("--nura-text-tertiary", "rgba(235,230,216,0.40)");
+  const border = cssVar("--nura-border", "rgba(235,230,216,0.09)");
+  const placeholder = cssVar("--nura-ink-faint", "rgba(235,230,216,0.32)");
 
   return {
     theme: isLight ? "stripe" : "night",
@@ -48,7 +51,7 @@ function buildAppearance(theme: Theme): StripeElementsOptions["appearance"] {
       colorPrimary: sage,
       colorBackground: surface,
       colorText: text,
-      colorDanger: "#ff4c5c",
+      colorDanger: "var(--nura-record)",
       colorTextSecondary: textSec,
       colorTextPlaceholder: placeholder,
       fontFamily: SANS,
@@ -68,7 +71,7 @@ function buildAppearance(theme: Theme): StripeElementsOptions["appearance"] {
         outline: "none",
       },
       ".Input--invalid": {
-        border: "1.5px solid rgba(255,76,92,0.6)",
+        border: "1.5px solid rgba(var(--nura-record-rgb),0.6)",
         boxShadow: "none",
       },
       ".Label": {
@@ -99,7 +102,7 @@ function buildAppearance(theme: Theme): StripeElementsOptions["appearance"] {
         boxShadow: "none",
       },
       ".Error": {
-        color: "#ff4c5c",
+        color: "var(--nura-record)",
         fontSize: "12px",
       },
       ".Block": {
@@ -204,7 +207,7 @@ function PaymentForm({ subscriptionId, mode }: { subscriptionId: string; mode: "
       {!ready && <Skeleton />}
 
       {error && (
-        <div style={{ marginTop: 14, padding: "11px 14px", background: "rgba(255,76,92,0.08)", border: "1px solid rgba(255,76,92,0.28)", borderRadius: 10, fontSize: 13, color: "#ff4c5c", lineHeight: 1.5 }}>
+        <div style={{ marginTop: 14, padding: "11px 14px", background: "rgba(var(--nura-record-rgb),0.08)", border: "1px solid rgba(var(--nura-record-rgb),0.28)", borderRadius: 10, fontSize: 13, color: "var(--nura-record)", lineHeight: 1.5 }}>
           {error}
         </div>
       )}
@@ -225,7 +228,7 @@ function PaymentForm({ subscriptionId, mode }: { subscriptionId: string; mode: "
       >
         {processing ? (
           <>
-            <div style={{ width: 14, height: 14, borderRadius: "50%", border: `2px solid rgba(13,13,14,0.3)`, borderTopColor: SAGE_ON, animation: "spin 0.8s linear infinite" }} />
+            <div style={{ width: 14, height: 14, borderRadius: "50%", border: `2px solid rgba(var(--nura-bg-rgb),0.3)`, borderTopColor: SAGE_ON, animation: "spin 0.8s linear infinite" }} />
             {ctaProcessingLabel}
           </>
         ) : (
@@ -356,7 +359,7 @@ function CheckoutContent() {
           </div>
 
           {error && (
-            <div style={{ padding: "12px 14px", background: "rgba(255,76,92,0.08)", border: "1px solid rgba(255,76,92,0.28)", borderRadius: 12, marginBottom: 16, fontSize: 13, color: "#ff4c5c" }}>
+            <div style={{ padding: "12px 14px", background: "rgba(var(--nura-record-rgb),0.08)", border: "1px solid rgba(var(--nura-record-rgb),0.28)", borderRadius: 12, marginBottom: 16, fontSize: 13, color: "var(--nura-record)" }}>
               {error}
             </div>
           )}

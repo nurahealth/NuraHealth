@@ -15,8 +15,8 @@ export default function WeeklyBarStrip({
   days,
   max,
   height = 118,
-  barGradient = "linear-gradient(180deg, rgba(93,204,174,0.30), rgba(47,158,131,0.10))",
-  selectedGradient = "linear-gradient(180deg,#ffffff,#dfeee8)",
+  barGradient = "linear-gradient(180deg, rgba(var(--nura-teal-rgb),0.30), rgba(var(--nura-teal-mid-rgb),0.10))",
+  selectedGradient = "linear-gradient(180deg,var(--nura-marker),var(--nura-score-to))",
   accent = "var(--nura-teal)",
   style,
 }: {
@@ -44,13 +44,13 @@ export default function WeeklyBarStrip({
               height: `${Math.max(4, Math.round((d.value / top) * 100))}%`,
               borderRadius: 8,
               background: d.selected ? selectedGradient : barGradient,
-              boxShadow: d.selected ? "0 0 22px rgba(255,255,255,0.30)" : "none",
+              boxShadow: d.selected ? "0 0 22px rgba(var(--nura-fg-rgb),0.30)" : "none",
             }}
           >
             <span style={{
               position: "absolute", top: -16, left: 0, right: 0, textAlign: "center",
               fontFamily: SANS, fontSize: 10, fontWeight: 600,
-              color: d.selected ? "#fff" : "var(--nura-text-secondary)",
+              color: d.selected ? "var(--nura-text-strong)" : "var(--nura-text-secondary)",
             }}>
               {d.value}
             </span>

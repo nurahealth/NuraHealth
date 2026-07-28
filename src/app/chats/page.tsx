@@ -89,7 +89,7 @@ export default function ChatsListPage() {
         </p>
 
         {error && (
-          <div style={{ padding: "10px 14px", background: "rgba(255,76,92,0.08)", border: "1px solid rgba(255,76,92,0.25)", borderRadius: 10, color: "#ff8a96", fontSize: 13, marginBottom: 16 }}>
+          <div style={{ padding: "10px 14px", background: "rgba(var(--nura-record-rgb),0.08)", border: "1px solid rgba(var(--nura-record-rgb),0.25)", borderRadius: 10, color: "var(--nura-danger)", fontSize: 13, marginBottom: 16 }}>
             {error}
           </div>
         )}

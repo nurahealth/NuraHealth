@@ -103,7 +103,7 @@ export function RecipeCard({ r, from, fromLabel }: { r: Recipe; from?: string; f
           <span style={{
             position: "absolute", top: 8, left: 8, display: "inline-flex", alignItems: "center", gap: 4,
             fontFamily: SANS, fontSize: 9, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase",
-            color: SAGE, background: "rgba(13,13,14,0.55)", backdropFilter: "blur(4px)",
+            color: SAGE, background: "rgba(var(--nura-bg-rgb),0.55)", backdropFilter: "blur(4px)",
             border: `0.5px solid rgba(${SAGE_RGB},0.4)`, borderRadius: 7, padding: "3px 7px",
           }}>
             <Leaf size={10} /> Organic
@@ -114,7 +114,7 @@ export function RecipeCard({ r, from, fromLabel }: { r: Recipe; from?: string; f
           <span style={{
             position: "absolute", bottom: 8, left: 8,
             fontFamily: SANS, fontSize: 8.5, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase",
-            color: TEXT_TER, background: "rgba(13,13,14,0.55)", backdropFilter: "blur(4px)",
+            color: TEXT_TER, background: "rgba(var(--nura-bg-rgb),0.55)", backdropFilter: "blur(4px)",
             border: `0.5px solid ${BORDER}`, borderRadius: 6, padding: "2px 6px",
           }}>
             Draft
@@ -292,17 +292,17 @@ export default function RecipesBrowseClient({
           {featured.image_url && (
             <RecipeImg src={featured.image_url} alt={featured.title} focalX={featured.focal_x} focalY={featured.focal_y} priority />
           )}
-          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, transparent 30%, rgba(13,13,14,0.82) 100%)" }} />
+          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, transparent 30%, rgba(var(--nura-bg-rgb),0.82) 100%)" }} />
           <div style={{ position: "relative", height: "100%", display: "flex", flexDirection: "column", justifyContent: "flex-end", padding: 18, gap: 6 }}>
             <span style={{ fontFamily: SANS, fontSize: 9.5, fontWeight: 600, letterSpacing: "0.14em", textTransform: "uppercase", color: SAGE }}>
               Recipe of the day
             </span>
-            <h2 style={{ fontFamily: SANS, fontSize: "clamp(22px, 4vw, 28px)", fontWeight: 600, color: "#f0ebde", margin: 0, letterSpacing: "-0.02em", lineHeight: 1.15 }}>
+            <h2 style={{ fontFamily: SANS, fontSize: "clamp(22px, 4vw, 28px)", fontWeight: 600, color: "var(--nura-text-primary)", margin: 0, letterSpacing: "-0.02em", lineHeight: 1.15 }}>
               {featured.title}
             </h2>
             {featured.description && (
               <p style={{
-                fontFamily: SANS, fontSize: 13, color: "rgba(235,230,216,0.78)", margin: 0, lineHeight: 1.5, maxWidth: 520,
+                fontFamily: SANS, fontSize: 13, color: "rgba(var(--nura-bg-tint-rgb),0.78)", margin: 0, lineHeight: 1.5, maxWidth: 520,
                 display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden",
               }}>
                 {featured.description}
@@ -310,7 +310,7 @@ export default function RecipesBrowseClient({
             )}
             <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 4 }}>
               {featured.total_minutes !== null && (
-                <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontFamily: SANS, fontSize: 12, color: "rgba(235,230,216,0.78)" }}>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontFamily: SANS, fontSize: 12, color: "rgba(var(--nura-bg-tint-rgb),0.78)" }}>
                   <Clock size={13} /> {featured.total_minutes} min
                 </span>
               )}

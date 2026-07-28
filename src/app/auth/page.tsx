@@ -76,7 +76,7 @@ function ConsentCheckbox({
         transition: "background 160ms, border-color 160ms",
       }}>
         {checked && (
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--nura-text-strong)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
             <path d="M5 13l4 4L19 7"/>
           </svg>
         )}
@@ -399,18 +399,18 @@ function AuthContent() {
           disabled={anyLoading}
           aria-label="Sign in with Apple"
           className="auth-cta"
-          onMouseEnter={(e) => { if (!anyLoading) e.currentTarget.style.background = "#f5f5f7"; }}
-          onMouseLeave={(e) => { if (!anyLoading) e.currentTarget.style.background = "#ffffff"; }}
+          onMouseEnter={(e) => { if (!anyLoading) e.currentTarget.style.background = "var(--nura-surface-elevated)"; }}
+          onMouseLeave={(e) => { if (!anyLoading) e.currentTarget.style.background = "var(--nura-text-strong)"; }}
           style={{
             width: "100%", height: 48, borderRadius: 11, marginTop: 8,
-            background: "#ffffff", border: "0.5px solid #ffffff",
-            color: "#000000", fontFamily: SANS, fontSize: 14, fontWeight: 500,
+            background: "var(--nura-btn-invert-bg)", border: "0.5px solid var(--nura-btn-invert-bg)",
+            color: "var(--nura-btn-invert-fg)", fontFamily: SANS, fontSize: 14, fontWeight: 500,
             cursor: anyLoading ? "not-allowed" : "pointer", opacity: appleLoading ? 0.8 : 1,
             display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
             transition: "background 180ms, opacity 180ms, transform 80ms",
           }}
         >
-          {appleLoading ? <Spinner size={17} color="#000000" /> : <AppleLogo />}
+          {appleLoading ? <Spinner size={17} color="var(--nura-btn-invert-fg)" /> : <AppleLogo />}
           {appleLoading ? "Connecting…" : "Sign in with Apple"}
         </button>
 

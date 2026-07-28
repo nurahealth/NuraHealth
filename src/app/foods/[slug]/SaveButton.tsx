@@ -20,8 +20,8 @@ export default function SaveButton() {
       title="Saving foods isn't wired up yet"
       style={{
         width: 38, height: 38, display: "flex", alignItems: "center", justifyContent: "center",
-        background: "rgba(13,13,14,0.55)", backdropFilter: "blur(4px)",
-        border: `0.5px solid ${saved ? SAGE : "rgba(255,255,255,0.18)"}`,
+        background: "rgba(var(--nura-bg-rgb),0.55)", backdropFilter: "blur(4px)",
+        border: `0.5px solid ${saved ? SAGE : "rgba(var(--nura-bg-tint-rgb),0.18)"}`,
         borderRadius: 11, cursor: "pointer",
         color: saved ? SAGE : TEXT, padding: 0,
         transition: "border-color 180ms, color 180ms",

@@ -7,8 +7,8 @@ export default function manifest(): MetadataRoute.Manifest {
     description: "Track your supplements, bloodwork, and how you feel.",
     start_url: "/",
     display: "standalone",
-    background_color: "#0a0b0a",
-    theme_color: "#0a0b0a",
+    background_color: "#0d0d0e",
+    theme_color: "#0d0d0e",
     icons: [
       { src: "/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
       { src: "/icon-192.png", sizes: "192x192", type: "image/png", purpose: "maskable" },

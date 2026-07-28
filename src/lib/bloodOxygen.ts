@@ -5,8 +5,8 @@
 export type SpO2Status = "Normal" | "Low" | "Concerning";
 
 /** Fixed identity cyan + the softer cyan used for eyebrow / range values. */
-export const CYAN = "#4fc4d6";
-export const CYAN_SOFT = "#6cc0c0";
+export const CYAN = "var(--nura-aqua)";
+export const CYAN_SOFT = "var(--nura-teal)";
 
 /** SpO2 band: ≥95 Normal · 90–94 Low · <90 Concerning. */
 export function spo2Status(pct: number): SpO2Status {

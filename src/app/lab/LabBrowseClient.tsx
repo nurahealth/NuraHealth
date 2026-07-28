@@ -64,7 +64,7 @@ export function ProductCard({ p }: { p: LabProduct }) {
           </div>
         )}
         {p.score !== null && (
-          <div style={{ position: "absolute", top: 8, right: 8, background: "rgba(13,13,14,0.72)", borderRadius: "50%", backdropFilter: "blur(4px)" }}>
+          <div style={{ position: "absolute", top: 8, right: 8, background: "rgba(var(--nura-bg-rgb),0.72)", borderRadius: "50%", backdropFilter: "blur(4px)" }}>
             <ScoreRing score={p.score} />
           </div>
         )}

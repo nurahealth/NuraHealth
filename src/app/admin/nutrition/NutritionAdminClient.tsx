@@ -24,7 +24,7 @@ const SAGE_RGB = "var(--nura-sage-rgb)";
 const FG_RGB = "var(--nura-fg-rgb)";
 const SANS = "var(--font-inter), system-ui, sans-serif";
 const SERIF = "'DM Serif Display', Georgia, serif";
-const DANGER = "#FF4C5C";
+const DANGER = "var(--nura-danger)";
 
 const RECIPE_CATEGORIES = ["breakfast", "lunch", "dinner", "baking", "snack", "drink"];
 const INGREDIENT_CATEGORIES = ["root-spice", "greens", "legumes", "good-fats", "ferments", "protein", "fruit", "grains", "staple"];
@@ -305,7 +305,7 @@ function Toggle({ on, onToggle, onLabel, offLabel }: { on: boolean; onToggle: ()
   return (
     <button type="button" onClick={onToggle} style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "10px 12px", background: on ? `rgba(${SAGE_RGB},0.14)` : "transparent", border: `0.5px solid ${on ? `rgba(${SAGE_RGB},0.4)` : BORDER}`, borderRadius: 10, cursor: "pointer", transition: "background 180ms, border-color 180ms" }}>
       <span style={{ width: 38, height: 22, borderRadius: 999, flexShrink: 0, position: "relative", background: on ? SAGE : `rgba(${FG_RGB},0.18)`, transition: "background 180ms" }}>
-        <span style={{ position: "absolute", top: 2, left: on ? 18 : 2, width: 18, height: 18, borderRadius: "50%", background: "#fff", transition: "left 180ms" }} />
+        <span style={{ position: "absolute", top: 2, left: on ? 18 : 2, width: 18, height: 18, borderRadius: "50%", background: "var(--nura-text-strong)", transition: "left 180ms" }} />
       </span>
       <span style={{ fontFamily: SANS, fontSize: 13, fontWeight: 600, color: on ? SAGE : TEXT_SEC }}>{on ? onLabel : offLabel}</span>
     </button>
@@ -641,9 +641,9 @@ function ScanPanel({ ingredients, onCreateIngredient, onAdd, onClose }: {
                 <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                   {r.ingredient_id
                     ? <span style={{ display: "inline-flex", alignItems: "center", gap: 5, flexShrink: 0, fontFamily: SANS, fontSize: 11, fontWeight: 600, color: SAGE }}><Check size={12} /> {r.matched ? "Matched" : "Selected"}</span>
-                    : <span style={{ flexShrink: 0, fontFamily: SANS, fontSize: 11, fontWeight: 600, color: "#d3a253" }}>No match</span>}
+                    : <span style={{ flexShrink: 0, fontFamily: SANS, fontSize: 11, fontWeight: 600, color: "var(--nura-good)" }}>No match</span>}
                   {r.createdDraft && (
-                    <span style={{ flexShrink: 0, fontFamily: SANS, fontSize: 9.5, fontWeight: 600, letterSpacing: "0.03em", color: "#d3a253", background: "rgba(211,162,83,0.12)", border: "0.5px solid rgba(211,162,83,0.3)", borderRadius: 6, padding: "2px 7px" }}>draft · needs deep-dive</span>
+                    <span style={{ flexShrink: 0, fontFamily: SANS, fontSize: 9.5, fontWeight: 600, letterSpacing: "0.03em", color: "var(--nura-good)", background: "rgba(var(--nura-good-rgb),0.12)", border: "0.5px solid rgba(var(--nura-good-rgb),0.3)", borderRadius: 6, padding: "2px 7px" }}>draft · needs deep-dive</span>
                   )}
                   {!r.ingredient_id && (
                     <button type="button" onClick={() => createOne(i)} disabled={bulkBusy} style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 5, padding: "5px 10px", background: SAGE, border: "none", borderRadius: 8, color: SAGE_ON, fontFamily: SANS, fontSize: 11, fontWeight: 600, cursor: bulkBusy ? "default" : "pointer", opacity: bulkBusy ? 0.7 : 1 }}><Plus size={12} /> Create &amp; match</button>
@@ -800,14 +800,14 @@ function ModalShell({ title, busy, onClose, error, warn, children, onSave, extra
           <button onClick={onClose} disabled={busy} style={{ width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center", background: SURFACE, border: `0.5px solid ${BORDER}`, borderRadius: 8, cursor: "pointer", color: TEXT_SEC, padding: 0 }}><X size={13} /></button>
         </div>
         <div style={{ padding: "16px 20px 0", display: "flex", flexDirection: "column", gap: 14 }}>
-          {error && <div style={{ padding: "10px 12px", background: "rgba(255,76,92,0.08)", border: `0.5px solid rgba(255,76,92,0.4)`, borderRadius: 10 }}><Eyebrow color={DANGER} size={10}>{error}</Eyebrow></div>}
+          {error && <div style={{ padding: "10px 12px", background: "rgba(var(--nura-record-rgb),0.08)", border: `0.5px solid rgba(var(--nura-record-rgb),0.4)`, borderRadius: 10 }}><Eyebrow color={DANGER} size={10}>{error}</Eyebrow></div>}
           {children}
         </div>
         <div style={{ position: "sticky", bottom: 0, background: BG, padding: "16px 20px 24px", marginTop: 16, borderTop: `0.5px solid ${BORDER}` }}>
           {/* Error repeated at the action so a failed save is impossible to miss,
               even when the top of the long form is scrolled out of view. */}
-          {error && <div style={{ marginBottom: 12, padding: "10px 12px", background: "rgba(255,76,92,0.08)", border: `0.5px solid rgba(255,76,92,0.4)`, borderRadius: 10 }}><Eyebrow color={DANGER} size={10}>{error}</Eyebrow></div>}
-          {warn && <div style={{ marginBottom: 12, padding: "10px 12px", background: "rgba(211,162,83,0.10)", border: "0.5px solid rgba(211,162,83,0.4)", borderRadius: 10, fontFamily: SANS, fontSize: 12, color: "#d3a253", lineHeight: 1.5 }}>{warn}</div>}
+          {error && <div style={{ marginBottom: 12, padding: "10px 12px", background: "rgba(var(--nura-record-rgb),0.08)", border: `0.5px solid rgba(var(--nura-record-rgb),0.4)`, borderRadius: 10 }}><Eyebrow color={DANGER} size={10}>{error}</Eyebrow></div>}
+          {warn && <div style={{ marginBottom: 12, padding: "10px 12px", background: "rgba(var(--nura-good-rgb),0.10)", border: "0.5px solid rgba(var(--nura-good-rgb),0.4)", borderRadius: 10, fontFamily: SANS, fontSize: 12, color: "var(--nura-good)", lineHeight: 1.5 }}>{warn}</div>}
           <div style={{ display: "flex", gap: 10 }}>
             {extraAction}
             <button onClick={onSave} disabled={busy} className="nura-primary-btn" style={{ flex: 1, padding: "13px 16px", background: SAGE, border: "none", borderRadius: 14, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, fontFamily: SANS, fontSize: 12, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", color: SAGE_ON, cursor: busy ? "default" : "pointer", opacity: busy ? 0.7 : 1, transition: "background 200ms, transform 100ms" }}>
@@ -1208,10 +1208,10 @@ function ConfirmDelete({ name, busy, error, onCancel, onConfirm }: { name: strin
       <div onClick={(e) => e.stopPropagation()} style={{ width: "100%", maxWidth: 380, background: BG, borderRadius: 20, border: `0.5px solid ${BORDER_STRONG}`, padding: 24 }}>
         <h2 style={{ fontFamily: SERIF, fontSize: 22, fontWeight: 500, color: TEXT, margin: "0 0 8px" }}>Delete “{name}”?</h2>
         <p style={{ fontFamily: SANS, fontSize: 13.5, color: TEXT_SEC, lineHeight: 1.6, margin: "0 0 18px" }}>This permanently removes it from the public pages. This cannot be undone.</p>
-        {error && <div style={{ marginBottom: 14, padding: "10px 12px", background: "rgba(255,76,92,0.08)", border: `0.5px solid rgba(255,76,92,0.4)`, borderRadius: 10 }}><Eyebrow color={DANGER} size={10}>{error}</Eyebrow></div>}
+        {error && <div style={{ marginBottom: 14, padding: "10px 12px", background: "rgba(var(--nura-record-rgb),0.08)", border: `0.5px solid rgba(var(--nura-record-rgb),0.4)`, borderRadius: 10 }}><Eyebrow color={DANGER} size={10}>{error}</Eyebrow></div>}
         <div style={{ display: "flex", gap: 10 }}>
           <button onClick={onCancel} disabled={busy} style={{ flex: 1, padding: "12px", background: "transparent", border: `0.5px solid ${BORDER}`, borderRadius: 12, fontFamily: SANS, fontSize: 12, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: TEXT_SEC, cursor: "pointer" }}>Cancel</button>
-          <button onClick={onConfirm} disabled={busy} style={{ flex: 1, padding: "12px", background: DANGER, border: "none", borderRadius: 12, fontFamily: SANS, fontSize: 12, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "#fff", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+          <button onClick={onConfirm} disabled={busy} style={{ flex: 1, padding: "12px", background: DANGER, border: "none", borderRadius: 12, fontFamily: SANS, fontSize: 12, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--nura-text-strong)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
             {busy ? <Loader2 size={14} style={{ animation: "spin 1s linear infinite" }} /> : null} Delete
           </button>
         </div>
@@ -1310,7 +1310,7 @@ export default function NutritionAdminClient({ initialRecipes, initialIngredient
 
       <NuraPlexus opacity={0.35} />
 
-      <div style={{ position: "sticky", top: 0, zIndex: 100, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 20px", height: 56, background: "linear-gradient(180deg, rgba(13,13,14,0.92), rgba(13,13,14,0.75))", backdropFilter: "blur(20px)", borderBottom: `0.5px solid ${BORDER}` }}>
+      <div style={{ position: "sticky", top: 0, zIndex: 100, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 20px", height: 56, background: "linear-gradient(180deg, rgba(var(--nura-bg-rgb),0.92), rgba(var(--nura-bg-rgb),0.75))", backdropFilter: "blur(20px)", borderBottom: `0.5px solid ${BORDER}` }}>
         <button onClick={() => setSidebarOpen(true)} style={{ width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", background: "none", border: "none", cursor: "pointer", color: TEXT_SEC, borderRadius: 8, padding: 0 }}>
           <Shield size={18} color="var(--nura-sage)" />
         </button>
@@ -1363,7 +1363,7 @@ export default function NutritionAdminClient({ initialRecipes, initialIngredient
         </button>
 
         {deleteError && !confirm && (
-          <div style={{ marginBottom: 12, padding: "10px 12px", background: "rgba(255,76,92,0.08)", border: `0.5px solid rgba(255,76,92,0.4)`, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+          <div style={{ marginBottom: 12, padding: "10px 12px", background: "rgba(var(--nura-record-rgb),0.08)", border: `0.5px solid rgba(var(--nura-record-rgb),0.4)`, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
             <Eyebrow color={DANGER} size={10}>{deleteError}</Eyebrow>
             <button onClick={() => setDeleteError("")} style={{ background: "none", border: "none", cursor: "pointer", color: TEXT_SEC, padding: 0, display: "flex" }}><X size={12} /></button>
           </div>
