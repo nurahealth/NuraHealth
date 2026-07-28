@@ -85,17 +85,21 @@
   --nura-teal: #5dccae;                 /* sleep / recovery */
   --nura-teal-rgb: 93, 204, 174;
   --nura-teal-mid: #2f9e83;             /* mid teal — gradients / light-sleep */
+  --nura-teal-mid-rgb: 47, 158, 131;
   --nura-teal-deep: #15564a;            /* deep teal — deep-sleep */
   --nura-sleep-deep: #5aa0e6;           /* blue — deep-sleep depth bars */
   --nura-sleep-deep-rgb: 90, 160, 230;
   --nura-amber: #e0a23e;                /* movement amber accent */
   --nura-amber-rgb: 224, 162, 62;
   --nura-amber-2: #c47f24;              /* deeper amber — gradients */
+  --nura-amber-2-rgb: 196, 127, 36;
   --nura-amber-deep: #7a4e12;
   --nura-rose: #f0a890;                 /* heart / resting-HR */
   --nura-rose-rgb: 240, 168, 144;
   --nura-heart: #e8615c;                /* heart-rate ring */
   --nura-heart-rgb: 232, 97, 92;
+  --nura-heart-hi: #f2998f;
+  --nura-heart-hi-rgb: 242, 153, 143;
   --nura-violet: #b9a0e6;               /* respiratory rate */
   --nura-violet-rgb: 185, 160, 230;
   --nura-mauve: #a98fc4;                /* respiratory card accent */
@@ -114,8 +118,10 @@
   --nura-gold-ring-lo: #c99a34;
   --nura-gold-ring-hi: #f7dd90;
   --nura-aqua-hi: #7fdce8;
+  --nura-aqua-hi-rgb: 127, 220, 232;
   --nura-ice-hi: #dbe6ef;
   --nura-ember-hi: #f0a05a;
+  --nura-ember-hi-rgb: 240, 160, 90;
   --nura-ember-lo: #c85e28;
   --nura-orange-hi: #f3c795;
   --nura-orange-mid: #f0bc84;
@@ -154,6 +160,26 @@
   --nura-scrim-panel: rgba(13, 13, 14, 0.72);  /* sticky footers over content */
   --nura-inset-dark: rgba(13, 13, 14, 0.35);   /* chips sitting on imagery */
   --nura-modal: linear-gradient(180deg, #161718, #131314);
+
+  /* ── Metric detail page washes ──────────────────────────────────────────
+     Each metric detail screen paints a deep, hue-tinted radial behind its
+     content. Dark keeps the exact hand-tuned near-black stops; light uses a
+     soft tint of the same hue over the warm canvas, so the screen still reads
+     as "the sleep one" without a dark blob on white. */
+  --nura-wash-sleep: radial-gradient(130% 80% at 50% -8%, #0c1f2e 0%, #08131c 34%, var(--nura-bg) 72%);
+  --nura-wash-rhr: radial-gradient(130% 80% at 50% -8%, #0c2a20 0%, #08160f 34%, var(--nura-bg) 72%);
+  --nura-wash-hrv: radial-gradient(130% 80% at 50% -8%, #0c2e33 0%, #07181b 34%, var(--nura-bg) 72%);
+  --nura-wash-temp: radial-gradient(130% 80% at 50% -8%, #0f2420 0%, #0a1512 34%, var(--nura-bg) 72%);
+  --nura-wash-movement: radial-gradient(130% 80% at 50% -8%, #2b1d08 0%, #150f06 34%, var(--nura-bg) 72%);
+  --nura-wash-heart: radial-gradient(130% 80% at 50% -8%, #2e1410 0%, #160a08 34%, var(--nura-bg) 72%);
+  --nura-wash-energy: radial-gradient(130% 80% at 50% -8%, #2e1608 0%, #150a05 34%, var(--nura-bg) 72%);
+  --nura-wash-steps: radial-gradient(130% 80% at 50% -8%, #2e2008 0%, #161005 34%, var(--nura-bg) 72%);
+  --nura-wash-spo2: radial-gradient(120% 72% at 50% -12%, rgba(174,191,207,0.16), transparent 55%), var(--nura-bg);
+  --nura-wash-resp: radial-gradient(120% 72% at 50% -12%, rgba(185,160,230,0.16), transparent 55%), var(--nura-bg);
+  --nura-wash-vo2: radial-gradient(120% 72% at 50% -12%, rgba(232,194,102,0.16), transparent 55%), var(--nura-bg);
+  --nura-wash-bp: var(--nura-bg);
+  /* Decorative aurora overlay — full strength in dark, dialled back in light. */
+  --nura-aurora-opacity: 1;
   --nura-danger-soft: #d98b8b;                 /* inline error text */
   --nura-record: #ff4c5c;                      /* live mic / recording state */
   --nura-record-rgb: 255, 76, 92;
@@ -240,17 +266,21 @@
   --nura-teal: #157a60;                 /*  5.3:1 */
   --nura-teal-rgb: 21, 122, 96;
   --nura-teal-mid: #1f6a56;
+  --nura-teal-mid-rgb: 31, 106, 86;
   --nura-teal-deep: #0f4438;
   --nura-sleep-deep: #1f6aa8;           /*  5.7:1 */
   --nura-sleep-deep-rgb: 31, 106, 168;
   --nura-amber: #8c610b;                /*  5.5:1 */
   --nura-amber-rgb: 140, 97, 11;
   --nura-amber-2: #7a5409;
+  --nura-amber-2-rgb: 122, 84, 9;
   --nura-amber-deep: #5c3f06;
   --nura-rose: #a8503a;                 /*  5.4:1 */
   --nura-rose-rgb: 168, 80, 58;
   --nura-heart: #b83a37;                /*  5.7:1 */
   --nura-heart-rgb: 184, 58, 55;
+  --nura-heart-hi: #8f2b28;
+  --nura-heart-hi-rgb: 143, 43, 40;
   --nura-violet: #6a4fa8;               /*  6.4:1 */
   --nura-violet-rgb: 106, 79, 168;
   --nura-mauve: #6a4fa8;
@@ -270,8 +300,10 @@
   --nura-gold-ring-lo: #6f4f0c;
   --nura-gold-ring-hi: #b0810f;
   --nura-aqua-hi: #1293a8;
+  --nura-aqua-hi-rgb: 18, 147, 168;
   --nura-ice-hi: #63819a;
   --nura-ember-hi: #c46524;
+  --nura-ember-hi-rgb: 196, 101, 36;
   --nura-ember-lo: #7d3d10;
   --nura-orange-hi: #c07a1a;
   --nura-orange-mid: #ad6c16;
@@ -301,6 +333,21 @@
   --nura-scrim-panel: rgba(250, 249, 246, 0.92);
   --nura-inset-dark: #f0eeea;
   --nura-modal: #ffffff;
+
+  /* Metric detail washes — soft hue over the warm canvas, never a dark blob. */
+  --nura-wash-sleep: radial-gradient(130% 80% at 50% -8%, #e8eff6 0%, #f3f5f8 34%, var(--nura-bg) 72%);
+  --nura-wash-rhr: radial-gradient(130% 80% at 50% -8%, #e6f2ec 0%, #f2f7f4 34%, var(--nura-bg) 72%);
+  --nura-wash-hrv: radial-gradient(130% 80% at 50% -8%, #e4f1f4 0%, #f1f7f8 34%, var(--nura-bg) 72%);
+  --nura-wash-temp: radial-gradient(130% 80% at 50% -8%, #e6f1ee 0%, #f2f7f5 34%, var(--nura-bg) 72%);
+  --nura-wash-movement: radial-gradient(130% 80% at 50% -8%, #f7efdd 0%, #fbf6ec 34%, var(--nura-bg) 72%);
+  --nura-wash-heart: radial-gradient(130% 80% at 50% -8%, #f9ebe7 0%, #fcf4f2 34%, var(--nura-bg) 72%);
+  --nura-wash-energy: radial-gradient(130% 80% at 50% -8%, #fbeee2 0%, #fdf6ef 34%, var(--nura-bg) 72%);
+  --nura-wash-steps: radial-gradient(130% 80% at 50% -8%, #faf0dc 0%, #fdf7ec 34%, var(--nura-bg) 72%);
+  --nura-wash-spo2: radial-gradient(120% 72% at 50% -12%, rgba(74,100,120,0.09), transparent 55%), var(--nura-bg);
+  --nura-wash-resp: radial-gradient(120% 72% at 50% -12%, rgba(106,79,168,0.08), transparent 55%), var(--nura-bg);
+  --nura-wash-vo2: radial-gradient(120% 72% at 50% -12%, rgba(138,100,16,0.08), transparent 55%), var(--nura-bg);
+  --nura-wash-bp: var(--nura-bg);
+  --nura-aurora-opacity: 0.3;
   --nura-danger-soft: #b8392f;          /*  5.7:1 */
   --nura-record: #c62828;               /*  5.6:1 — #ff4c5c is only 3.3:1 on white */
   --nura-record-rgb: 198, 40, 40;

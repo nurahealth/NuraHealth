@@ -19,20 +19,20 @@ const FAINT = "var(--nura-text-tertiary)";
 const INK = "235,230,216"; // warm off-white (matches --nura-fg-rgb in dark)
 const SANS = "var(--font-inter), system-ui, sans-serif";
 
-const TEAL = "#5dccae";
+const TEAL = "var(--nura-teal)";
 const TEAL_RGB = "93,204,174";
-const WARM = "#e0a23e";       // amber deviation line
+const WARM = "var(--nura-amber)";       // amber deviation line
 const WARM_RGB = "224,162,62";
-const CORAL = "#e8745a";
+const CORAL = "var(--nura-alert)";
 
 // Cool teal aurora at the top of the page.
 const TEAL_AURORA =
-  "radial-gradient(80% 55% at 50% -6%, rgba(93,204,174,0.26), transparent 60%)," +
-  "radial-gradient(60% 50% at 86% 6%, rgba(90,160,230,0.14), transparent 60%)," +
-  "radial-gradient(70% 40% at 8% 14%, rgba(93,204,174,0.10), transparent 60%)";
+  "radial-gradient(80% 55% at 50% -6%, rgba(var(--nura-teal-rgb),0.26), transparent 60%)," +
+  "radial-gradient(60% 50% at 86% 6%, rgba(var(--nura-sleep-deep-rgb),0.14), transparent 60%)," +
+  "radial-gradient(70% 40% at 8% 14%, rgba(var(--nura-teal-rgb),0.10), transparent 60%)";
 
 // Zone bar: cool (blue) → normal (teal) → warm (gold) → elevated (coral).
-const ZONE_GRADIENT = "linear-gradient(90deg, #5aa0e6 0%, #5dccae 38%, #d3a253 72%, #e8745a 100%)";
+const ZONE_GRADIENT = "linear-gradient(90deg, var(--nura-sleep-deep) 0%, var(--nura-teal) 38%, var(--nura-good) 72%, var(--nura-alert) 100%)";
 
 // ── Chart color helper — colorAt(t, stops) over an arbitrary ramp ─────────────
 // Defined locally (reusing the shared hex/lerp) so it's guaranteed available
@@ -90,13 +90,13 @@ export default function BodyTempDetailPage() {
   // Status-led headline — the hero word carries the state (no separate pill).
   const within = d.tonight >= d.normalRange[0] && d.tonight <= d.normalRange[1];
   const statusWord = within ? "Normal" : d.tonight > d.normalRange[1] ? "Elevated" : "Cool";
-  const statusColor = within ? TEAL : d.tonight > d.normalRange[1] ? "#d3a253" : "#5aa0e6";
+  const statusColor = within ? TEAL : d.tonight > d.normalRange[1] ? "var(--nura-good)" : "var(--nura-sleep-deep)";
 
   return (
     <div style={{
       position: "relative", minHeight: "100dvh", overflow: "hidden",
       color: TEXT, fontFamily: SANS,
-      background: "radial-gradient(130% 80% at 50% -8%, #0f2420 0%, #0a1512 34%, var(--nura-bg) 72%)",
+      background: "var(--nura-wash-temp)",
     }}>
       <style>{`
         .bt-reveal { opacity: 0; transform: translateY(18px); animation: bt-rise .7s cubic-bezier(.2,.7,.2,1) forwards; }
@@ -162,7 +162,7 @@ export default function BodyTempDetailPage() {
           {/* Zone bar — marker by deviation ratio (does NOT move on unit toggle) */}
           <div style={{ width: "100%", marginTop: 20 }}>
             <div style={{ position: "relative", height: 8, borderRadius: 999, background: ZONE_GRADIENT }}>
-              <div style={{ position: "absolute", top: -5, left: `${zonePos.toFixed(1)}%`, transform: "translateX(-50%)", width: 3, height: 18, borderRadius: 2, background: "#ebe6d8", boxShadow: "0 0 8px rgba(235,230,216,0.6)" }} />
+              <div style={{ position: "absolute", top: -5, left: `${zonePos.toFixed(1)}%`, transform: "translateX(-50%)", width: 3, height: 18, borderRadius: 2, background: "var(--nura-text-primary)", boxShadow: "0 0 8px rgba(var(--nura-bg-tint-rgb),0.6)" }} />
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8, fontSize: 10, color: FAINT }}>
               <span>Cool</span><span>Normal</span><span>Elevated</span>
@@ -262,7 +262,7 @@ export default function BodyTempDetailPage() {
         </GlassCard>
 
         {/* NŪRA insight */}
-        <div className="bt-reveal" style={{ animationDelay: ".42s", marginTop: 16, padding: "18px 20px", borderRadius: 18, border: `1px solid rgba(${TEAL_RGB},0.2)`, background: `linear-gradient(135deg, rgba(${TEAL_RGB},0.09), rgba(90,160,230,0.03))` }}>
+        <div className="bt-reveal" style={{ animationDelay: ".42s", marginTop: 16, padding: "18px 20px", borderRadius: 18, border: `1px solid rgba(${TEAL_RGB},0.2)`, background: `linear-gradient(135deg, rgba(${TEAL_RGB},0.09), rgba(var(--nura-sleep-deep-rgb),0.03))` }}>
           <div style={{ fontSize: 11, letterSpacing: "1.4px", textTransform: "uppercase", color: TEAL, fontWeight: 600 }}>NŪRA insight</div>
           <p style={{ fontSize: 14.5, lineHeight: 1.55, marginTop: 8, color: `rgba(${INK},0.85)` }}>
             This isn&apos;t your actual body temperature — it&apos;s how far last night drifted from your own personal baseline. NŪRA reads your skin temperature overnight, when it&apos;s most stable, and compares it to the normal you&apos;ve built up over the past few weeks. <b style={{ color: TEXT, fontWeight: 700 }}>Normal</b> means you&apos;re sitting right where you usually do, and small swings of a few tenths of a degree from night to night are completely expected. The signal worth watching is a <i>sustained</i> rise of about <b style={{ color: TEXT, fontWeight: 700 }}>{fmtDeltaUnit(d.spike, unit)}</b> over several nights — that can show up a day or two before you feel ill, track the second half of a menstrual cycle, or simply follow alcohol, a late meal, or a warm room.
@@ -335,7 +335,7 @@ function TrendChart({
 
       {/* Area + amber line */}
       <path d={area} fill={`url(#${uid}-area)`} />
-      <path d={line} fill="none" stroke={WARM} strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" style={{ filter: `drop-shadow(0 0 5px rgba(${WARM_RGB},0.5))` }} />
+      <path d={line} fill="none" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" style={{ stroke: WARM, filter: `drop-shadow(0 0 5px rgba(${WARM_RGB},0.5))` }} />
 
       {/* High (coral, label above) or low (teal, label below) flag */}
       <circle cx={flagX.toFixed(1)} cy={flagY.toFixed(1)} r={2.6} fill={mark === "high" ? CORAL : TEAL} style={{ filter: `drop-shadow(0 0 5px ${mark === "high" ? CORAL : TEAL})` }} />
@@ -347,8 +347,8 @@ function TrendChart({
       </text>
 
       {/* Today — amber dot inside a halo ring */}
-      <circle cx={todayX.toFixed(1)} cy={todayY.toFixed(1)} r={6.5} fill="none" stroke={WARM} strokeOpacity={0.35} strokeWidth={1.5} />
-      <circle cx={todayX.toFixed(1)} cy={todayY.toFixed(1)} r={3} fill={WARM} style={{ filter: `drop-shadow(0 0 6px ${WARM})` }} />
+      <circle cx={todayX.toFixed(1)} cy={todayY.toFixed(1)} r={6.5} fill="none" strokeOpacity={0.35} strokeWidth={1.5}  style={{ stroke: WARM }}/>
+      <circle cx={todayX.toFixed(1)} cy={todayY.toFixed(1)} r={3} style={{ fill: WARM, filter: `drop-shadow(0 0 6px ${WARM})` }} />
     </svg>
   );
 }
@@ -371,7 +371,7 @@ function WeeklyChart({ weeklyAvg, unit }: { weeklyAvg: number[]; unit: Temperatu
   const xOf = (i: number) => pad + (n > 1 ? i * ((W - 2 * pad) / (n - 1)) : 0);
   const yOf = (v: number) => baseY - (Math.max(-scaleMax, Math.min(scaleMax, v)) / scaleMax) * amp;
   // Diverging ramp around baseline: blue → teal → sage → gold → coral.
-  const ramp: [number, string][] = [[0, "#5aa0e6"], [0.25, "#5dccae"], [0.5, "#9bb0a5"], [0.75, "#d3a253"], [1, "#e8745a"]];
+  const ramp: [number, string][] = [[0, "var(--nura-sleep-deep)"], [0.25, "var(--nura-teal)"], [0.5, "var(--nura-sage)"], [0.75, "var(--nura-good)"], [1, "var(--nura-alert)"]];
   const norm = (v: number) => (v + scaleMax) / (2 * scaleMax);
 
   return (
@@ -392,7 +392,7 @@ function WeeklyChart({ weeklyAvg, unit }: { weeklyAvg: number[]; unit: Temperatu
             <line x1={x.toFixed(1)} x2={x.toFixed(1)} y1={baseY} y2={y.toFixed(1)} stroke={fill} strokeOpacity={0.55} strokeWidth={2} strokeLinecap="round" />
             {last && <circle cx={x.toFixed(1)} cy={y.toFixed(1)} r={9} fill="none" stroke={fill} strokeOpacity={0.3} strokeWidth={1.5} />}
             <circle cx={x.toFixed(1)} cy={y.toFixed(1)} r={last ? 5.5 : 4} fill={fill} style={{ filter: `drop-shadow(0 0 ${last ? 8 : 5}px ${fill})` }} />
-            <text x={x.toFixed(1)} y={valY.toFixed(1)} textAnchor="middle" fontFamily={SANS} fontSize={12} fontWeight={700} fill={last ? fill : "#ebe6d8"}>{fmtDeltaDeg(v, unit)}</text>
+            <text x={x.toFixed(1)} y={valY.toFixed(1)} textAnchor="middle" fontFamily={SANS} fontSize={12} fontWeight={700} fill={last ? fill : "var(--nura-text-primary)"}>{fmtDeltaDeg(v, unit)}</text>
             <text x={x.toFixed(1)} y={158} textAnchor="middle" fontFamily={SANS} fontSize={10.5} fill={`rgba(${INK},0.32)`}>{labels[i]}</text>
           </g>
         );

@@ -20,9 +20,9 @@ const bStyle: React.CSSProperties = { color: TEXT, fontWeight: 600 };
 
 // Warm gold ambient so this reads as the movement / steps page.
 const GOLD_AURORA =
-  "radial-gradient(80% 60% at 50% -6%, rgba(224,162,62,0.30), transparent 60%)," +
-  "radial-gradient(60% 50% at 86% 6%, rgba(211,162,83,0.16), transparent 60%)," +
-  "radial-gradient(70% 40% at 8% 14%, rgba(224,162,62,0.12), transparent 60%)";
+  "radial-gradient(80% 60% at 50% -6%, rgba(var(--nura-amber-rgb),0.30), transparent 60%)," +
+  "radial-gradient(60% 50% at 86% 6%, rgba(var(--nura-good-rgb),0.16), transparent 60%)," +
+  "radial-gradient(70% 40% at 8% 14%, rgba(var(--nura-amber-rgb),0.12), transparent 60%)";
 
 // ── Icons ───────────────────────────────────────────────────────────────────
 const Chevron = () => (
@@ -74,7 +74,7 @@ export default function StepsDetailPage() {
     <div style={{
       position: "relative", minHeight: "100dvh", overflow: "hidden",
       color: TEXT, fontFamily: SANS,
-      background: "radial-gradient(130% 80% at 50% -8%, #2e2008 0%, #161005 34%, var(--nura-bg) 72%)",
+      background: "var(--nura-wash-steps)",
     }}>
       <style>{`
         .st-reveal { opacity: 0; transform: translateY(18px); animation: st-rise .7s cubic-bezier(.2,.7,.2,1) forwards; }
@@ -117,8 +117,8 @@ export default function StepsDetailPage() {
             format={(n) => n.toLocaleString("en-US")}
             valueFontSize={44}
             labelGap={10}
-            gradientFrom="#e3a263"
-            gradientTo="#f0bc84"
+            gradientFrom="var(--nura-orange)"
+            gradientTo="var(--nura-orange-mid)"
             glowRgb="227,162,99"
           />
           <span style={{
@@ -152,7 +152,7 @@ export default function StepsDetailPage() {
           {/* Data strip — divided from the chart's x-axis row; wraps if needed */}
           <div style={{
             display: "flex", flexWrap: "wrap", alignItems: "center",
-            marginTop: 14, paddingTop: 14, borderTop: "1px solid rgba(235,230,216,0.07)",
+            marginTop: 14, paddingTop: 14, borderTop: "1px solid rgba(var(--nura-bg-tint-rgb),0.07)",
             fontSize: 12.5, lineHeight: 1.5,
           }}>
             {[
@@ -162,10 +162,10 @@ export default function StepsDetailPage() {
               { num: (d.goal - d.steps).toLocaleString("en-US"), words: " to go", gold: true },
             ].map((it, i) => (
               <span key={i} style={{ display: "inline-flex", alignItems: "center" }}>
-                {i > 0 && <span style={{ width: 3, height: 3, borderRadius: "50%", background: "rgba(235,230,216,0.3)", margin: "0 9px", flexShrink: 0 }} />}
+                {i > 0 && <span style={{ width: 3, height: 3, borderRadius: "50%", background: "var(--nura-ink-faint)", margin: "0 9px", flexShrink: 0 }} />}
                 <span>
-                  <b style={{ fontWeight: 700, color: it.gold ? "#d3a253" : "#ebe6d8" }}>{it.num}</b>
-                  <span style={{ color: it.gold ? "#d3a253" : "rgba(235,230,216,0.55)" }}>{it.words}</span>
+                  <b style={{ fontWeight: 700, color: it.gold ? "var(--nura-good)" : "var(--nura-text-primary)" }}>{it.num}</b>
+                  <span style={{ color: it.gold ? "var(--nura-good)" : "var(--nura-text-secondary)" }}>{it.words}</span>
                 </span>
               </span>
             ))}
@@ -195,7 +195,7 @@ export default function StepsDetailPage() {
 
         {/* NŪRA insight */}
         <GlassCard className="st-reveal" style={{ animationDelay: ".42s", marginTop: 16, borderRadius: 20, padding: 17, position: "relative", overflow: "hidden" }}>
-          <div aria-hidden style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 3, background: "linear-gradient(180deg,#f0bc84,#e3a263)", boxShadow: "0 0 16px rgba(227,162,99,0.5)" }} />
+          <div aria-hidden style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 3, background: "linear-gradient(180deg,var(--nura-orange-mid),var(--nura-orange))", boxShadow: "0 0 16px rgba(var(--nura-orange-rgb),0.5)" }} />
           <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "2.5px", color: GOLD, textTransform: "uppercase" }}>NŪRA</div>
           <p style={{ fontSize: 13.5, lineHeight: 1.6, marginTop: 9 }}>{d.insight}</p>
         </GlassCard>
@@ -227,12 +227,12 @@ function StepsWeekChart({ d }: { d: StepsDetail }) {
     <svg width="100%" height={H} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" style={{ display: "block", overflow: "visible", marginTop: 6 }}>
       <defs>
         <linearGradient id="swk-orange" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#f3c795" />
-          <stop offset="1" stopColor="#e3a263" />
+          <stop offset="0" stopColor="var(--nura-orange-hi)" />
+          <stop offset="1" stopColor="var(--nura-orange)" />
         </linearGradient>
         <linearGradient id="swk-grey" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#615c53" />
-          <stop offset="1" stopColor="#403c36" />
+          <stop offset="0" style={{ stopColor: "var(--nura-bar-dim-top)" }} />
+          <stop offset="1" style={{ stopColor: "var(--nura-bar-dim-bot)" }} />
         </linearGradient>
         <filter id="swk-glow" x="-40%" y="-40%" width="180%" height="180%">
           <feGaussianBlur stdDeviation="2" result="b" />
@@ -288,10 +288,10 @@ function StepsWeekChart({ d }: { d: StepsDetail }) {
 
 // One warm orange identity across the page (no teal/green). GOLD_HEX is the
 // muted "behind / down" indicator; positive/lead accents use ORANGE.
-const ORANGE = "#e3a263";        // base
-const ORANGE_LIGHT = "#f0bc84";  // light
-const ORANGE_RGB = "227,162,99"; // #e3a263
-const GOLD_HEX = "#d3a253";
+const ORANGE = "var(--nura-orange)";        // base
+const ORANGE_LIGHT = "var(--nura-orange-mid)";  // light
+const ORANGE_RGB = "var(--nura-orange-rgb)"; // #e3a263
+const GOLD_HEX = "var(--nura-good)";
 
 // ── Card 1 · Pace vs your usual ───────────────────────────────────────────────
 // How today's cumulative steps are tracking against a typical day: a lead line
@@ -329,19 +329,19 @@ function StepsPaceCard({ d }: { d: StepsDetail }) {
       </div>
 
       {/* Key — today (solid) vs usual (dashed) */}
-      <div style={{ display: "flex", gap: 16, marginTop: 12, paddingTop: 12, borderTop: "1px solid rgba(235,230,216,0.07)", fontSize: 12, color: MUTED }}>
+      <div style={{ display: "flex", gap: 16, marginTop: 12, paddingTop: 12, borderTop: "1px solid rgba(var(--nura-bg-tint-rgb),0.07)", fontSize: 12, color: MUTED }}>
         <span style={{ display: "flex", alignItems: "center", gap: 7 }}>
           <span style={{ width: 16, height: 0, borderTop: `2px solid ${ORANGE}`, borderRadius: 2 }} />
           <span><b style={{ color: TEXT, fontWeight: 700 }}>Today</b> · {todaySteps.toLocaleString("en-US")}</span>
         </span>
         <span style={{ display: "flex", alignItems: "center", gap: 7 }}>
-          <span style={{ width: 16, height: 0, borderTop: "2px dashed rgba(235,230,216,0.5)", borderRadius: 2 }} />
+          <span style={{ width: 16, height: 0, borderTop: "2px dashed rgba(var(--nura-bg-tint-rgb),0.5)", borderRadius: 2 }} />
           <span><b style={{ color: TEXT, fontWeight: 700 }}>Usual</b> · {usualSteps.toLocaleString("en-US")}</span>
         </span>
       </div>
 
       {/* Week over week */}
-      <div style={{ display: "flex", alignItems: "center", gap: 7, marginTop: 13, paddingTop: 13, borderTop: "1px solid rgba(235,230,216,0.07)", fontSize: 13, color: MUTED }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 7, marginTop: 13, paddingTop: 13, borderTop: "1px solid rgba(var(--nura-bg-tint-rgb),0.07)", fontSize: 13, color: MUTED }}>
         <span style={{ color: up ? ORANGE : GOLD_HEX, fontWeight: 700 }}>{up ? "▲" : "▼"} {Math.abs(pct)}%</span>
         <span>this week ({d.thisWeekStepTotal.toLocaleString("en-US")}) vs last week ({d.lastWeekStepTotal.toLocaleString("en-US")})</span>
       </div>
@@ -370,10 +370,10 @@ function StepsPaceChart({ d }: { d: StepsDetail }) {
 
   return (
     <svg width="100%" height={150} viewBox={`0 0 ${W} 150`} preserveAspectRatio="none" style={{ display: "block" }}>
-      <path d={gap} fill="rgba(227,162,99,0.12)" />
-      <path d={smooth(up)} fill="none" stroke="rgba(235,230,216,0.5)" strokeWidth={1.6} strokeDasharray="4 5" strokeLinecap="round" />
-      <path d={smooth(tp)} fill="none" stroke={ORANGE} strokeWidth={2.2} strokeLinecap="round" style={{ filter: "drop-shadow(0 0 4px rgba(227,162,99,0.5))" }} />
-      <circle cx={tp[n - 1][0].toFixed(1)} cy={tp[n - 1][1].toFixed(1)} r={3.2} fill={ORANGE} style={{ filter: `drop-shadow(0 0 6px ${ORANGE})` }} />
+      <path d={gap} fill="rgba(var(--nura-orange-rgb),0.12)" />
+      <path d={smooth(up)} fill="none" stroke="var(--nura-text-secondary)" strokeWidth={1.6} strokeDasharray="4 5" strokeLinecap="round" />
+      <path d={smooth(tp)} fill="none" strokeWidth={2.2} strokeLinecap="round" style={{ stroke: ORANGE, filter: "drop-shadow(0 0 4px rgba(var(--nura-orange-rgb),0.5))" }} />
+      <circle cx={tp[n - 1][0].toFixed(1)} cy={tp[n - 1][1].toFixed(1)} r={3.2} style={{ fill: ORANGE, filter: `drop-shadow(0 0 6px ${ORANGE})` }} />
     </svg>
   );
 }
@@ -402,7 +402,7 @@ function StepsMovementCard({ d }: { d: StepsDetail }) {
             key={i}
             style={{
               flex: 1, height: 30, borderRadius: 4,
-              background: s === "a" ? `linear-gradient(180deg, ${ORANGE_LIGHT}, ${ORANGE})` : "rgba(235,230,216,0.07)",
+              background: s === "a" ? `linear-gradient(180deg, ${ORANGE_LIGHT}, ${ORANGE})` : "rgba(var(--nura-bg-tint-rgb),0.07)",
               boxShadow: s === "a" ? `0 0 8px rgba(${ORANGE_RGB},0.35)` : undefined,
             }}
           />
@@ -415,7 +415,7 @@ function StepsMovementCard({ d }: { d: StepsDetail }) {
       {/* Duration tiles */}
       <div style={{ display: "flex", gap: 10, marginTop: 16 }}>
         {stats.map((t) => (
-          <div key={t.k} style={{ flex: 1, background: "rgba(235,230,216,0.03)", border: "1px solid var(--nura-glass-line)", borderRadius: 14, padding: 12 }}>
+          <div key={t.k} style={{ flex: 1, background: "rgba(var(--nura-bg-tint-rgb),0.03)", border: "1px solid var(--nura-glass-line)", borderRadius: 14, padding: 12 }}>
             <div style={{ fontSize: 10, letterSpacing: "0.7px", textTransform: "uppercase", color: FAINT, fontWeight: 600 }}>{t.k}</div>
             <div style={{ fontSize: 18, fontWeight: 700, marginTop: 5, letterSpacing: "-0.4px" }}><Duration value={t.v} /></div>
           </div>
@@ -423,7 +423,7 @@ function StepsMovementCard({ d }: { d: StepsDetail }) {
       </div>
 
       {/* Mini-insight */}
-      <div style={{ display: "flex", gap: 9, alignItems: "flex-start", marginTop: 14, paddingTop: 13, borderTop: "1px solid rgba(235,230,216,0.07)", fontSize: 12.5, lineHeight: 1.45, color: MUTED }}>
+      <div style={{ display: "flex", gap: 9, alignItems: "flex-start", marginTop: 14, paddingTop: 13, borderTop: "1px solid rgba(var(--nura-bg-tint-rgb),0.07)", fontSize: 12.5, lineHeight: 1.45, color: MUTED }}>
         <span style={{ width: 6, height: 6, borderRadius: "50%", background: ORANGE, marginTop: 5, flex: "none", boxShadow: `0 0 7px ${ORANGE}` }} />
         <span>
           You moved during <b style={{ color: TEXT, fontWeight: 700 }}>{activeHours} of {wakingHours}</b> waking hours. Your longest unbroken sit was{" "}

@@ -18,27 +18,27 @@ const INK = "235,230,216"; // warm off-white (matches --nura-fg-rgb in dark)
 
 // Stage palette — shared by the hypnogram, the legend and the HR/HRV shading so
 // every night chart speaks the same color language.
-const DEEP = "#5aa0e6";
-const REM = "#5dccae";
-const LIGHT = "#9bb0a5";
-const AWAKE = "#d3a253";
+const DEEP = "var(--nura-sleep-deep)";
+const REM = "var(--nura-teal)";
+const LIGHT = "var(--nura-sage)";
+const AWAKE = "var(--nura-good)";
 const DEEP_RGB = "90,160,230";
 const REM_RGB = "93,204,174";
 
 // Overnight-chart identities — each matches its own metric tab (not sleep-blue):
 // Heart rate → red, HRV → aqua-teal. Lighter shades feed the fill/glow.
-const HR_RED = "#e8615c";
-const HR_RED_RGB = "232,97,92"; // #e8615c — pill tint
-const HR_RED_GLOW = "242,153,143"; // #f2998f — lighter shade for the glow
-const HRV_AQUA = "#4fc4d6";
-const HRV_AQUA_RGB = "79,196,214"; // #4fc4d6 — pill tint
-const HRV_AQUA_GLOW = "127,220,232"; // #7fdce8 — lighter shade for the glow
+const HR_RED = "var(--nura-heart)";
+const HR_RED_RGB = "var(--nura-heart-rgb)"; // #e8615c — pill tint
+const HR_RED_GLOW = "var(--nura-heart-hi-rgb)"; // #f2998f — lighter shade for the glow
+const HRV_AQUA = "var(--nura-aqua)";
+const HRV_AQUA_RGB = "var(--nura-aqua-rgb)"; // #4fc4d6 — pill tint
+const HRV_AQUA_GLOW = "var(--nura-aqua-hi-rgb)"; // #7fdce8 — lighter shade for the glow
 
 // Cool blue→teal aurora pinned to the top, matching the reference.
 const SLEEP_AURORA =
-  "radial-gradient(80% 50% at 50% -4%, rgba(90,160,230,0.30), transparent 62%)," +
-  "radial-gradient(60% 46% at 86% 4%, rgba(93,204,174,0.16), transparent 60%)," +
-  "radial-gradient(70% 40% at 10% 14%, rgba(90,160,230,0.12), transparent 60%)";
+  "radial-gradient(80% 50% at 50% -4%, rgba(var(--nura-sleep-deep-rgb),0.30), transparent 62%)," +
+  "radial-gradient(60% 46% at 86% 4%, rgba(var(--nura-teal-rgb),0.16), transparent 60%)," +
+  "radial-gradient(70% 40% at 10% 14%, rgba(var(--nura-sleep-deep-rgb),0.12), transparent 60%)";
 
 // Stage code → display + hypnogram bar height (fraction of plot) + color.
 const STAGE_META: Record<"D" | "R" | "L" | "A", { short: string; label: string; color: string; h: number }> = {
@@ -93,7 +93,7 @@ function ChartSubhead({ caption, avg, color, rgb }: { caption: string; avg: stri
 const BADGE: Record<MetricStatus, { color: string; rgb: string; label: string }> = {
   optimal: { color: REM, rgb: REM_RGB, label: "Optimal" },
   good: { color: AWAKE, rgb: "211,162,83", label: "Good" },
-  alert: { color: "#e8745a", rgb: "232,116,90", label: "Alert" },
+  alert: { color: "var(--nura-alert)", rgb: "232,116,90", label: "Alert" },
 };
 function Badge({ status, label }: { status: MetricStatus; label?: string }) {
   const b = BADGE[status];
@@ -141,14 +141,14 @@ export default function SleepDetailPage() {
     <div style={{
       position: "relative", minHeight: "100dvh", overflow: "hidden",
       color: TEXT, fontFamily: SANS,
-      background: "radial-gradient(130% 80% at 50% -8%, #0c1f2e 0%, #08131c 34%, var(--nura-bg) 72%)",
+      background: "var(--nura-wash-sleep)",
     }}>
       <style>{`
         .s-reveal { opacity: 0; transform: translateY(18px); animation: s-rise .7s cubic-bezier(.2,.7,.2,1) forwards; }
         @keyframes s-rise { to { opacity: 1; transform: none; } }
         .s-back:hover { color: var(--nura-text-primary) !important; }
         .s-tap { cursor: pointer; transition: transform .18s ease, border-color .18s ease; }
-        .s-tap:hover { transform: translateY(-1px); border-color: rgba(235,230,216,0.18); }
+        .s-tap:hover { transform: translateY(-1px); border-color: rgba(var(--nura-bg-tint-rgb),0.18); }
         * { font-variant-numeric: tabular-nums; }
       `}</style>
 
@@ -198,7 +198,7 @@ export default function SleepDetailPage() {
         {/* 3 · Headline tiles — 2×2 with status badges */}
         <div className="s-reveal" style={{ animationDelay: ".12s", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 18 }}>
           {d.subMetrics.map((sm) => (
-            <div key={sm.label} style={{ background: "var(--nura-glass)", border: "1px solid var(--nura-glass-line)", borderRadius: 16, padding: "14px 13px", boxShadow: "inset 0 1px 0 rgba(235,230,216,0.08)" }}>
+            <div key={sm.label} style={{ background: "var(--nura-glass)", border: "1px solid var(--nura-glass-line)", borderRadius: 16, padding: "14px 13px", boxShadow: "inset 0 1px 0 rgba(var(--nura-bg-tint-rgb),0.08)" }}>
               <div style={{ fontSize: 10, letterSpacing: "0.9px", textTransform: "uppercase", color: FAINT, fontWeight: 600 }}>{sm.label}</div>
               <div style={{ fontSize: 20, fontWeight: 700, margin: "6px 0 10px", letterSpacing: "-0.5px" }}>
                 {sm.value}<small style={{ fontSize: 12, fontWeight: 600, color: MUTED, letterSpacing: 0 }}>{sm.unit}</small>
@@ -287,8 +287,9 @@ export default function SleepDetailPage() {
 
           <NightLineChart
             data={HR} floor={40} ceil={72} ticks={[44, 52, 60, 68]} unit="bpm"
-            stroke={HR_RED} glowRgb={HR_RED_GLOW} avg={52}
+            glowRgb={HR_RED_GLOW} avg={52}
             seq={SEQ} markers={hrMarkers}
+            stroke={HR_RED}
           />
           <Axis labels={d.night.axisLabels} />
 
@@ -314,8 +315,9 @@ export default function SleepDetailPage() {
 
           <NightLineChart
             data={HRV} floor={30} ceil={100} ticks={[40, 55, 70, 85]} unit="ms"
-            stroke={HRV_AQUA} glowRgb={HRV_AQUA_GLOW} avg={63}
+            glowRgb={HRV_AQUA_GLOW} avg={63}
             seq={SEQ} markers={hrvMarkers}
+            stroke={HRV_AQUA}
           />
           <Axis labels={d.night.axisLabels} />
 
@@ -328,7 +330,7 @@ export default function SleepDetailPage() {
         {/* 8 · Vitals tiles */}
         <div className="s-reveal" style={{ animationDelay: ".5s", display: "flex", gap: 10, marginTop: 16 }}>
           {d.vitals.map((v) => (
-            <div key={v.label} style={{ flex: 1, background: "var(--nura-glass)", border: "1px solid var(--nura-glass-line)", borderRadius: 16, padding: "13px 12px", boxShadow: "inset 0 1px 0 rgba(235,230,216,0.08)" }}>
+            <div key={v.label} style={{ flex: 1, background: "var(--nura-glass)", border: "1px solid var(--nura-glass-line)", borderRadius: 16, padding: "13px 12px", boxShadow: "inset 0 1px 0 rgba(var(--nura-bg-tint-rgb),0.08)" }}>
               <div style={{ fontSize: 10, letterSpacing: "0.8px", textTransform: "uppercase", color: FAINT, fontWeight: 600 }}>{v.label}</div>
               <div style={{ fontSize: 17, fontWeight: 700, marginTop: 5, letterSpacing: "-0.4px" }}>
                 {v.value}<small style={{ fontSize: 11, fontWeight: 600, color: MUTED, letterSpacing: 0 }}>{v.unit}</small>
@@ -517,16 +519,16 @@ function NightLineChart({
       {/* Neutral grey stage shading behind the line */}
       {deepWins.map(([s, l], i) => {
         const { x, w } = winX(s, l);
-        return <rect key={`d${i}`} x={x.toFixed(1)} y={plotT} width={w.toFixed(1)} height={plotH} fill={BAND_DEEP} rx="3" />;
+        return <rect key={`d${i}`} x={x.toFixed(1)} y={plotT} width={w.toFixed(1)} height={plotH} rx="3"  style={{ fill: BAND_DEEP }}/>;
       })}
       {longestRem[1] > 0 && (() => { const { x, w } = winX(longestRem[0], longestRem[1]); return (
-        <rect x={x.toFixed(1)} y={plotT} width={w.toFixed(1)} height={plotH} fill={BAND_REM} rx="3" />
+        <rect x={x.toFixed(1)} y={plotT} width={w.toFixed(1)} height={plotH} rx="3"  style={{ fill: BAND_REM }}/>
       ); })()}
       {longestDeep[1] > 0 && (
-        <text x={(plotL + longestDeep[0] * slot + (longestDeep[1] * slot) / 2).toFixed(1)} y={10} textAnchor="middle" fontFamily={SANS} fontSize={7.5} fontWeight={600} letterSpacing="0.6px" fill={BAND_LABEL}>DEEP SLEEP</text>
+        <text x={(plotL + longestDeep[0] * slot + (longestDeep[1] * slot) / 2).toFixed(1)} y={10} textAnchor="middle" fontFamily={SANS} fontSize={7.5} fontWeight={600} letterSpacing="0.6px" style={{ fill: BAND_LABEL }}>DEEP SLEEP</text>
       )}
       {longestRem[1] > 0 && (
-        <text x={(plotL + longestRem[0] * slot + (longestRem[1] * slot) / 2).toFixed(1)} y={10} textAnchor="middle" fontFamily={SANS} fontSize={7.5} fontWeight={600} letterSpacing="0.6px" fill={BAND_LABEL}>REM</text>
+        <text x={(plotL + longestRem[0] * slot + (longestRem[1] * slot) / 2).toFixed(1)} y={10} textAnchor="middle" fontFamily={SANS} fontSize={7.5} fontWeight={600} letterSpacing="0.6px" style={{ fill: BAND_LABEL }}>REM</text>
       )}
 
       {/* Evenly-spaced gridlines + a clean aligned y-axis column in the left gutter */}

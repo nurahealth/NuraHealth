@@ -13,8 +13,8 @@ import MetricEducation, { type MetricEducationItem } from "@/components/dashboar
 const TEXT = "var(--nura-text-primary)";
 const MUTED = "var(--nura-text-secondary)";
 const FAINT = "var(--nura-text-tertiary)";
-const EMBER = "#e07a3c";
-const EMBER_LIGHT = "#f0a05a";
+const EMBER = "var(--nura-ember)";
+const EMBER_LIGHT = "var(--nura-ember-hi)";
 const INK = "235,230,216"; // warm off-white (matches --nura-fg-rgb in dark)
 const EMBER_RGB = "224,122,60";
 const SANS = "var(--font-inter), system-ui, sans-serif";
@@ -22,9 +22,9 @@ const bStyle: React.CSSProperties = { color: TEXT, fontWeight: 600 };
 
 // Dark-ember ambient so this reads as the energy / activity page (no teal/green).
 const EMBER_AURORA =
-  "radial-gradient(80% 60% at 50% -6%, rgba(224,122,60,0.26), transparent 60%)," +
-  "radial-gradient(60% 50% at 86% 6%, rgba(240,160,90,0.16), transparent 60%)," +
-  "radial-gradient(70% 40% at 8% 14%, rgba(224,122,60,0.12), transparent 60%)";
+  "radial-gradient(80% 60% at 50% -6%, rgba(var(--nura-ember-rgb),0.26), transparent 60%)," +
+  "radial-gradient(60% 50% at 86% 6%, rgba(var(--nura-ember-hi-rgb),0.16), transparent 60%)," +
+  "radial-gradient(70% 40% at 8% 14%, rgba(var(--nura-ember-rgb),0.12), transparent 60%)";
 
 // ── Icons ───────────────────────────────────────────────────────────────────
 const Chevron = () => (
@@ -81,7 +81,7 @@ export default function ActiveEnergyDetailPage() {
     <div style={{
       position: "relative", minHeight: "100dvh", overflow: "hidden",
       color: TEXT, fontFamily: SANS,
-      background: "radial-gradient(130% 80% at 50% -8%, #2e1608 0%, #150a05 34%, var(--nura-bg) 72%)",
+      background: "var(--nura-wash-energy)",
     }}>
       <style>{`
         .ae-reveal { opacity: 0; transform: translateY(18px); animation: ae-rise .7s cubic-bezier(.2,.7,.2,1) forwards; }
@@ -169,8 +169,8 @@ export default function ActiveEnergyDetailPage() {
               <span key={i} style={{ display: "inline-flex", alignItems: "center" }}>
                 {i > 0 && <span style={{ width: 3, height: 3, borderRadius: "50%", background: `rgba(${INK},0.3)`, margin: "0 9px", flexShrink: 0 }} />}
                 <span>
-                  <b style={{ fontWeight: 700, color: it.warm ? "#e07a3c" : "#ebe6d8" }}>{it.num}</b>
-                  <span style={{ color: it.warm ? "#e07a3c" : `rgba(${INK},0.55)` }}>{it.words}</span>
+                  <b style={{ fontWeight: 700, color: it.warm ? "var(--nura-ember)" : "var(--nura-text-primary)" }}>{it.num}</b>
+                  <span style={{ color: it.warm ? "var(--nura-ember)" : `rgba(${INK},0.55)` }}>{it.words}</span>
                 </span>
               </span>
             ))}
@@ -269,7 +269,7 @@ function ActiveWeekChart({ d }: { d: ActiveEnergyDetail }) {
               x={x.toFixed(1)} y={y.toFixed(1)} width={barW.toFixed(1)} height={Math.max(h, 2).toFixed(1)}
               rx={Math.min(barW / 2, Math.max(h, 2) / 2).toFixed(1)} fill={`url(#${uid}-${i})`} opacity={hit ? 1 : 0.5}
             />
-            <text x={(x + barW / 2).toFixed(1)} y={(y - 7).toFixed(1)} textAnchor="middle" fontSize={10} fontWeight={700} fill={hit ? "#ebe6d8" : `rgba(${INK},0.5)`} style={{ fontFamily: SANS }}>
+            <text x={(x + barW / 2).toFixed(1)} y={(y - 7).toFixed(1)} textAnchor="middle" fontSize={10} fontWeight={700} fill={hit ? "var(--nura-text-primary)" : `rgba(${INK},0.5)`} style={{ fontFamily: SANS }}>
               {day.value}{hit ? " ✓" : ""}
             </text>
             <text x={(x + barW / 2).toFixed(1)} y={(bot + 17).toFixed(1)} textAnchor="middle" fontSize={11} fontWeight={day.isToday ? 700 : 500} fill={day.isToday ? TEXT : FAINT} style={{ fontFamily: SANS }}>

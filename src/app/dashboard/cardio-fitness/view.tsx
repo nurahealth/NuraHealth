@@ -8,20 +8,20 @@ import MetricEducation, { type MetricEducationItem } from "@/components/dashboar
 
 // ── Tokens ────────────────────────────────────────────────────────────────────
 // Gold-only identity — every accent on this page is GOLD; no coral/orange tones.
-const BG = "#0d0d0e";
-const SURFACE = "rgba(235,230,216,0.04)";
-const CREAM = "#ebe6d8";
-const MUTED = "rgba(235,230,216,0.62)";
-const FAINT = "rgba(235,230,216,0.45)";
-const HAIR = "rgba(235,230,216,0.1)";
+const BG = "var(--nura-bg)";
+const SURFACE = "var(--nura-surface)";
+const CREAM = "var(--nura-text-primary)";
+const MUTED = "var(--nura-ink-muted)";
+const FAINT = "var(--nura-text-tertiary)";
+const HAIR = "var(--nura-hairline-strong)";
 const SANS = "var(--font-inter), system-ui, sans-serif";
 
-const GOLD = "#e3b765";
-const GOLD_RGB = "232,194,102"; // #e8c266 — rich champagne gold for glows
+const GOLD = "var(--nura-gold-ring)";
+const GOLD_RGB = "var(--nura-gold-ring-rgb)"; // #e8c266 — rich champagne gold for glows
 // Hero ring gradient — rich gold ramp (deep amber → bright champagne).
-const RING_LO = "#c99a34";
-const RING_MID = "#e8c266";
-const RING_HI = "#f7dd90";
+const RING_LO = "var(--nura-gold-ring-lo)";
+const RING_MID = "var(--nura-gold-ring)";
+const RING_HI = "var(--nura-gold-ring-hi)";
 
 // Built-in example state — rendered as-is so the view never blanks during
 // development with no real data wired in. These are the canonical sample values.
@@ -51,7 +51,7 @@ export default function CardioFitnessDetailPage() {
   const d = { ...DATA, vo2: getCardioFitnessDetail().vo2 };
 
   return (
-    <div style={{ minHeight: "100dvh", background: `radial-gradient(120% 72% at 50% -12%, rgba(232,194,102,0.16), transparent 55%), ${BG}`, color: CREAM, fontFamily: SANS, WebkitFontSmoothing: "antialiased" }}>
+    <div style={{ minHeight: "100dvh", background: "var(--nura-wash-vo2)", color: CREAM, fontFamily: SANS, WebkitFontSmoothing: "antialiased" }}>
       <style>{`
         * { font-variant-numeric: tabular-nums; }
         .cf-reveal { opacity: 0; transform: translateY(16px); animation: cf-rise .6s cubic-bezier(.2,.7,.2,1) forwards; }
@@ -144,7 +144,7 @@ function Legend() {
         <i style={{ width: 16, height: 2.2, borderRadius: 2, background: GOLD }} />monthly VO₂ max
       </span>
       <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 11, color: FAINT }}>
-        <svg width="16" height="2" style={{ overflow: "visible" }}><line x1="0" y1="1" x2="16" y2="1" stroke={GOLD} strokeWidth="2" strokeDasharray="3 3" /></svg>
+        <svg width="16" height="2" style={{ overflow: "visible" }}><line x1="0" y1="1" x2="16" y2="1" strokeWidth="2" strokeDasharray="3 3"  style={{ stroke: GOLD }}/></svg>
         above average (≥41)
       </span>
     </div>
@@ -212,13 +212,13 @@ function ArcGauge({ value, lo, hi, unit }: { value: number; lo: number; hi: numb
       >
         <defs>
           <linearGradient id={gid} x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stopColor={RING_LO} />
-            <stop offset="0.5" stopColor={RING_MID} />
-            <stop offset="1" stopColor={RING_HI} />
+            <stop offset="0"  style={{ stopColor: RING_LO }}/>
+            <stop offset="0.5"  style={{ stopColor: RING_MID }}/>
+            <stop offset="1"  style={{ stopColor: RING_HI }}/>
           </linearGradient>
         </defs>
         {/* faint warm-gold track */}
-        <circle cx={c} cy={c} r={r} fill="none" stroke="rgba(227,183,101,0.15)" strokeWidth={stroke} strokeLinecap="round" strokeDasharray={`${arcLen} ${circ}`} />
+        <circle cx={c} cy={c} r={r} fill="none" stroke="rgba(var(--nura-gold-ring-rgb),0.15)" strokeWidth={stroke} strokeLinecap="round" strokeDasharray={`${arcLen} ${circ}`} />
         {/* glow layer — a blurred copy of the fill behind it */}
         <circle
           cx={c} cy={c} r={r} fill="none"
@@ -269,7 +269,7 @@ function TrendChart({ months, values, avg }: { months: string[]; values: number[
 
       {/* Faint per-month vertical guides */}
       {pts.map(([x], i) => (
-        <line key={i} x1={x.toFixed(1)} y1={top} x2={x.toFixed(1)} y2={bot} stroke="rgba(235,230,216,0.06)" strokeWidth={1} />
+        <line key={i} x1={x.toFixed(1)} y1={top} x2={x.toFixed(1)} y2={bot} stroke="rgba(var(--nura-bg-tint-rgb),0.06)" strokeWidth={1} />
       ))}
 
       {/* Dashed gold reference line at the 6-month average */}
@@ -277,12 +277,12 @@ function TrendChart({ months, values, avg }: { months: string[]; values: number[
 
       {/* y labels */}
       {[44, 41, 38].map((v) => (
-        <text key={v} x={32} y={(yOf(v) + 3).toFixed(1)} textAnchor="end" fontSize={10} fill={FAINT}>{v}</text>
+        <text key={v} x={32} y={(yOf(v) + 3).toFixed(1)} textAnchor="end" fontSize={10} style={{ fill: FAINT }}>{v}</text>
       ))}
 
       {/* Gradient fill flush beneath the line, then the smooth line */}
       <path d={area} fill={`url(#${uid}-fill)`} />
-      <path d={line} fill="none" stroke={GOLD} strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" />
+      <path d={line} fill="none" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round"  style={{ stroke: GOLD }}/>
 
       {/* Points + value labels (latest bold with a halo dot) */}
       {pts.map(([x, y], i) => {
@@ -292,16 +292,16 @@ function TrendChart({ months, values, avg }: { months: string[]; values: number[
             {last ? (
               <>
                 <circle cx={x.toFixed(1)} cy={y.toFixed(1)} r={9} fill={hexA(GOLD, 0.16)} />
-                <circle cx={x.toFixed(1)} cy={y.toFixed(1)} r={4.5} fill={GOLD} stroke={BG} strokeWidth={1.8} />
-                <text x={x.toFixed(1)} y={(y - 12).toFixed(1)} textAnchor="middle" fontSize={11} fontWeight={700} fill={GOLD}>{values[i]}</text>
+                <circle cx={x.toFixed(1)} cy={y.toFixed(1)} r={4.5} strokeWidth={1.8}  style={{ fill: GOLD, stroke: BG }}/>
+                <text x={x.toFixed(1)} y={(y - 12).toFixed(1)} textAnchor="middle" fontSize={11} fontWeight={700} style={{ fill: GOLD }}>{values[i]}</text>
               </>
             ) : (
               <>
-                <circle cx={x.toFixed(1)} cy={y.toFixed(1)} r={2.6} fill={GOLD} />
+                <circle cx={x.toFixed(1)} cy={y.toFixed(1)} r={2.6}  style={{ fill: GOLD }}/>
                 <text x={x.toFixed(1)} y={(y - 9).toFixed(1)} textAnchor="middle" fontSize={9.5} fill={hexA(GOLD, 0.8)}>{values[i]}</text>
               </>
             )}
-            <text x={x.toFixed(1)} y={172} textAnchor="middle" fontSize={10} fill={FAINT}>{months[i]}</text>
+            <text x={x.toFixed(1)} y={172} textAnchor="middle" fontSize={10} style={{ fill: FAINT }}>{months[i]}</text>
           </g>
         );
       })}

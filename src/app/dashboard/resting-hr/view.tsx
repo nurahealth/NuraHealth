@@ -17,22 +17,22 @@ const SANS = "var(--font-inter), system-ui, sans-serif";
 const bStyle: React.CSSProperties = { color: TEXT, fontWeight: 600 };
 
 // Rose accents — resting HR reads as a warm, calm cardiovascular page.
-const ROSE = "#f0a890";
+const ROSE = "var(--nura-rose)";
 const ROSE_RGB = "240,168,144";
 // Teal carries the "better / typical / improving" meaning (low resting HR is good).
-const TEAL = "#5dccae";
+const TEAL = "var(--nura-teal)";
 const TEAL_RGB = "93,204,174";
 
 // Subtle dark-emerald ambient at the top of the page (fades to near-black).
 const EMERALD_AURORA =
-  "radial-gradient(80% 60% at 50% -6%, rgba(63,196,136,0.20), transparent 60%)," +
-  "radial-gradient(60% 50% at 86% 6%, rgba(63,196,136,0.10), transparent 60%)," +
-  "radial-gradient(70% 40% at 8% 14%, rgba(63,196,136,0.10), transparent 60%)";
+  "radial-gradient(80% 60% at 50% -6%, rgba(var(--nura-optimal-rgb),0.20), transparent 60%)," +
+  "radial-gradient(60% 50% at 86% 6%, rgba(var(--nura-optimal-rgb),0.10), transparent 60%)," +
+  "radial-gradient(70% 40% at 8% 14%, rgba(var(--nura-optimal-rgb),0.10), transparent 60%)";
 
 // ── Chart color helper (teal → sage → rose ramp, by value) ────────────────────
 // Defined locally and reusing the shared hex/lerp so it's guaranteed available
 // wherever these charts render — a missing colorAt silently blanks a chart.
-const WEEK_RAMP = ["#5dccae", "#9bb0a5", "#f0a890"]; // teal (best/lowest) → sage → rose
+const WEEK_RAMP = ["var(--nura-teal)", "var(--nura-sage)", "var(--nura-rose)"]; // teal (best/lowest) → sage → rose
 function colorAt(t: number): string {
   const u = Math.max(0, Math.min(1, t));
   const [a, b, c] = WEEK_RAMP.map(hex);
@@ -59,8 +59,8 @@ const InfoIcon = () => (
 // reading strength: clamp((90 − bpm) / 52, 0, 1) — 52 bpm ≈ 73% ("excellent").
 // No ECG/heartbeat — resting HR is an overnight summary, not a live metric.
 // All motion is disabled under prefers-reduced-motion (ring filled, number final).
-const RING_FROM = "#3fc488";
-const RING_TO = "#74e0aa";
+const RING_FROM = "var(--nura-optimal)";
+const RING_TO = "var(--nura-optimal-hi)";
 const RING_GLOW = "63,196,136"; // RGB triplet for the emerald glow
 const COUNT_FROM = 38; // count-up start
 const FILL_MS = 1400;
@@ -120,8 +120,8 @@ function RestingHrRing({ bpm }: { bpm: number }) {
       >
         <defs>
           <linearGradient id={gid} x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stopColor={RING_FROM} />
-            <stop offset="1" stopColor={RING_TO} />
+            <stop offset="0"  style={{ stopColor: RING_FROM }}/>
+            <stop offset="1"  style={{ stopColor: RING_TO }}/>
           </linearGradient>
         </defs>
         {/* faint full 270° track */}
@@ -207,7 +207,7 @@ export default function RestingHrDetailPage() {
     <div style={{
       position: "relative", minHeight: "100dvh", overflow: "hidden",
       color: TEXT, fontFamily: SANS,
-      background: "radial-gradient(130% 80% at 50% -8%, #0c2a20 0%, #08160f 34%, var(--nura-bg) 72%)",
+      background: "var(--nura-wash-rhr)",
     }}>
       <style>{`
         .rhr-reveal { opacity: 0; transform: translateY(18px); animation: rhr-rise .7s cubic-bezier(.2,.7,.2,1) forwards; }
@@ -276,7 +276,7 @@ export default function RestingHrDetailPage() {
               <div style={{ fontSize: 15, fontWeight: 600 }}>Trend</div>
               <div style={{ fontSize: 12.5, color: MUTED, margin: "3px 0 0" }}>{active.subtitle}</div>
             </div>
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12.5, fontWeight: 700, color: trendDown ? RING_FROM : "#d3a253", whiteSpace: "nowrap" }}>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12.5, fontWeight: 700, color: trendDown ? RING_FROM : "var(--nura-good)", whiteSpace: "nowrap" }}>
               {trendDown ? "▼" : "▲"} {Math.abs(trendDelta)} bpm
             </span>
           </div>
@@ -423,15 +423,15 @@ function TrendChart({
 
       {/* Area fill + rose line */}
       <path d={area} fill={`url(#${uid}-area)`} />
-      <path d={line} fill="none" stroke={RING_FROM} strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" style={{ filter: `drop-shadow(0 0 4px rgba(${RING_GLOW},0.55))` }} />
+      <path d={line} fill="none" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" style={{ stroke: RING_FROM, filter: `drop-shadow(0 0 4px rgba(${RING_GLOW},0.55))` }} />
 
       {/* Lowest point — teal dot + label */}
-      <circle cx={lowX.toFixed(1)} cy={lowY.toFixed(1)} r={3.4} fill={TEAL} style={{ filter: `drop-shadow(0 0 6px rgba(${TEAL_RGB},0.9))` }} />
-      <text x={lowX.toFixed(1)} y={(lowY + 15).toFixed(1)} textAnchor="middle" fontSize={9.5} fontWeight={700} fill={TEAL} style={{ fontFamily: SANS }}>{lowV} low</text>
+      <circle cx={lowX.toFixed(1)} cy={lowY.toFixed(1)} r={3.4} style={{ fill: TEAL, filter: `drop-shadow(0 0 6px rgba(${TEAL_RGB},0.9))` }} />
+      <text x={lowX.toFixed(1)} y={(lowY + 15).toFixed(1)} textAnchor="middle" fontSize={9.5} fontWeight={700} style={{ fill: TEAL, fontFamily: SANS }}>{lowV} low</text>
 
       {/* Today — teal dot inside a faint halo ring */}
       <circle cx={todayX.toFixed(1)} cy={todayY.toFixed(1)} r={8} fill="none" stroke={`rgba(${RING_GLOW},0.35)`} strokeWidth={1.5} />
-      <circle cx={todayX.toFixed(1)} cy={todayY.toFixed(1)} r={3.6} fill={RING_TO} style={{ filter: `drop-shadow(0 0 6px rgba(${RING_GLOW},0.95))` }} />
+      <circle cx={todayX.toFixed(1)} cy={todayY.toFixed(1)} r={3.6} style={{ fill: RING_TO, filter: `drop-shadow(0 0 6px rgba(${RING_GLOW},0.95))` }} />
 
       {/* X-axis labels (in-SVG so they align with the gutter) */}
       {xLabels.map((lab, i) => {
@@ -486,7 +486,7 @@ function WeeklyAvgChart({ d }: { d: RestingHrDetail }) {
 
       {/* Soft fill + glowing rose line */}
       <path d={area} fill={`url(#${uid}-area)`} />
-      <path d={line} fill="none" stroke={ROSE} strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" style={{ filter: `drop-shadow(0 0 5px rgba(${ROSE_RGB},0.55))` }} />
+      <path d={line} fill="none" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" style={{ stroke: ROSE, filter: `drop-shadow(0 0 5px rgba(${ROSE_RGB},0.55))` }} />
 
       {/* Per-point dots, value above, week label below */}
       {vals.map((v, i) => {
@@ -497,7 +497,7 @@ function WeeklyAvgChart({ d }: { d: RestingHrDetail }) {
           <g key={i}>
             {best && <circle cx={x.toFixed(1)} cy={y.toFixed(1)} r={8} fill="none" stroke={`rgba(${TEAL_RGB},0.4)`} strokeWidth={1.5} />}
             <circle cx={x.toFixed(1)} cy={y.toFixed(1)} r={4} fill={fill} style={{ filter: `drop-shadow(0 0 5px ${best ? `rgba(${TEAL_RGB},0.9)` : `rgba(${ROSE_RGB},0.55)`})` }} />
-            <text x={x.toFixed(1)} y={(y - 13).toFixed(1)} textAnchor="middle" fontSize={11} fontWeight={700} fill={best ? TEAL : "#ebe6d8"} style={{ fontFamily: SANS }}>{v}</text>
+            <text x={x.toFixed(1)} y={(y - 13).toFixed(1)} textAnchor="middle" fontSize={11} fontWeight={700} fill={best ? TEAL : "var(--nura-text-primary)"} style={{ fontFamily: SANS }}>{v}</text>
             <text x={x.toFixed(1)} y={(bot + 20).toFixed(1)} textAnchor="middle" fontSize={11} fontWeight={best ? 700 : 500} fill={best ? TEXT : FAINT} style={{ fontFamily: SANS }}>{labels[i]}</text>
           </g>
         );

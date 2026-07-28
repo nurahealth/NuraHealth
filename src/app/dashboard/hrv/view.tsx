@@ -16,16 +16,16 @@ const SANS = "var(--font-inter), system-ui, sans-serif";
 const bStyle: React.CSSProperties = { color: TEXT, fontWeight: 600 };
 
 // Aqua-teal identity for the whole page (ring, pill, chart, accents).
-const AQUA = "#4fc4d6";
-const AQUA_LIGHT = "#7fdce8";
-const AQUA_RGB = "79,196,214"; // #4fc4d6
-const AQUA_LIGHT_RGB = "127,220,232"; // #7fdce8
+const AQUA = "var(--nura-aqua)";
+const AQUA_LIGHT = "var(--nura-aqua-hi)";
+const AQUA_RGB = "var(--nura-aqua-rgb)"; // #4fc4d6
+const AQUA_LIGHT_RGB = "var(--nura-aqua-hi-rgb)"; // #7fdce8
 
 // Subtle dark-aqua ambient at the top of the page (fades to near-black).
 const AQUA_AURORA =
-  "radial-gradient(80% 60% at 50% -6%, rgba(79,196,214,0.20), transparent 60%)," +
-  "radial-gradient(60% 50% at 86% 6%, rgba(79,196,214,0.10), transparent 60%)," +
-  "radial-gradient(70% 40% at 8% 14%, rgba(79,196,214,0.10), transparent 60%)";
+  "radial-gradient(80% 60% at 50% -6%, rgba(var(--nura-aqua-rgb),0.20), transparent 60%)," +
+  "radial-gradient(60% 50% at 86% 6%, rgba(var(--nura-aqua-rgb),0.10), transparent 60%)," +
+  "radial-gradient(70% 40% at 8% 14%, rgba(var(--nura-aqua-rgb),0.10), transparent 60%)";
 
 // Status level → color token. Strong/solid ride the aqua theme; watch stays gold
 // as a distinct "keep an eye on it" signal.
@@ -111,8 +111,8 @@ function HrvRing({ hrv }: { hrv: number }) {
       >
         <defs>
           <linearGradient id={gid} x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stopColor={RING_FROM} />
-            <stop offset="1" stopColor={RING_TO} />
+            <stop offset="0"  style={{ stopColor: RING_FROM }}/>
+            <stop offset="1"  style={{ stopColor: RING_TO }}/>
           </linearGradient>
         </defs>
         {/* faint full 270° track */}
@@ -194,7 +194,7 @@ export default function RecoveryDetailPage() {
     <div style={{
       position: "relative", minHeight: "100dvh", overflow: "hidden",
       color: TEXT, fontFamily: SANS,
-      background: "radial-gradient(130% 80% at 50% -8%, #0c2e33 0%, #07181b 34%, var(--nura-bg) 72%)",
+      background: "var(--nura-wash-hrv)",
     }}>
       <style>{`
         .r-reveal { opacity: 0; transform: translateY(18px); animation: r-rise .7s cubic-bezier(.2,.7,.2,1) forwards; }
@@ -329,7 +329,7 @@ function HrvZoneChart({ hrv }: { hrv: HrvTrendChart }) {
         x={L} y={yOf(zone[1]).toFixed(1)} width={plotW} height={(yOf(zone[0]) - yOf(zone[1])).toFixed(1)}
         rx={7} fill={`rgba(${AQUA_RGB},0.12)`}
       />
-      <text x={R - 5} y={(yOf(zone[1]) + 14).toFixed(1)} textAnchor="end" fontSize={10} fontWeight={600} fill={AQUA} style={{ fontFamily: SANS }}>
+      <text x={R - 5} y={(yOf(zone[1]) + 14).toFixed(1)} textAnchor="end" fontSize={10} fontWeight={600} style={{ fill: AQUA, fontFamily: SANS }}>
         Optimal zone
       </text>
 
@@ -346,7 +346,7 @@ function HrvZoneChart({ hrv }: { hrv: HrvTrendChart }) {
       <text x={L + 2} y={(yOf(average) - 4).toFixed(1)} fontSize={9} fill={`rgba(${INK},0.45)`} style={{ fontFamily: SANS }}>avg {average}</text>
 
       {/* Daily line + dots (aqua) */}
-      <polyline points={poly} fill="none" stroke={AQUA} strokeWidth={2.6} strokeLinecap="round" strokeLinejoin="round" style={{ filter: `drop-shadow(0 0 4px rgba(${AQUA_RGB},0.55))` }} />
+      <polyline points={poly} fill="none" strokeWidth={2.6} strokeLinecap="round" strokeLinejoin="round" style={{ stroke: AQUA, filter: `drop-shadow(0 0 4px rgba(${AQUA_RGB},0.55))` }} />
       {pts.map((p, i) => (
         <circle
           key={i} cx={p.x.toFixed(1)} cy={p.y.toFixed(1)} r={i === last ? 4.4 : 3.4} fill={i === last ? AQUA_LIGHT : AQUA}

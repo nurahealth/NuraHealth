@@ -19,9 +19,9 @@ const bStyle: React.CSSProperties = { color: TEXT, fontWeight: 600 };
 
 // Warm coral/amber ambient so this reads as the cardiovascular page.
 const CORAL_AURORA =
-  "radial-gradient(80% 60% at 50% -6%, rgba(232,116,90,0.30), transparent 60%)," +
-  "radial-gradient(60% 50% at 86% 6%, rgba(224,162,62,0.16), transparent 60%)," +
-  "radial-gradient(70% 40% at 8% 14%, rgba(232,116,90,0.12), transparent 60%)";
+  "radial-gradient(80% 60% at 50% -6%, rgba(var(--nura-alert-rgb),0.30), transparent 60%)," +
+  "radial-gradient(60% 50% at 86% 6%, rgba(var(--nura-amber-rgb),0.16), transparent 60%)," +
+  "radial-gradient(70% 40% at 8% 14%, rgba(var(--nura-alert-rgb),0.12), transparent 60%)";
 
 // ── Icons ───────────────────────────────────────────────────────────────────
 const Chevron = () => (
@@ -37,8 +37,8 @@ const InfoIcon = () => (
 // live number (double-beat pulse), a tracing ECG line, and a blinking Live row.
 // bpm is mapped onto a 40–110 range. Every animation is disabled under
 // prefers-reduced-motion — the ring then renders already filled.
-const RING_FROM = "#e8615c";
-const RING_TO = "#f2998f";
+const RING_FROM = "var(--nura-heart)";
+const RING_TO = "var(--nura-heart-hi)";
 const RING_GLOW = "232,97,92"; // RGB triplet for the red glow
 
 const ECG_PATH = "M0 15 H40 l5 -1 l4 3 l5 -13 l5 22 l5 -11 l5 0 H124";
@@ -105,8 +105,8 @@ function HeartRateRing({ bpm, liveLabel }: { bpm: number; liveLabel: string }) {
       >
         <defs>
           <linearGradient id={gid} x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stopColor={RING_FROM} />
-            <stop offset="1" stopColor={RING_TO} />
+            <stop offset="0"  style={{ stopColor: RING_FROM }}/>
+            <stop offset="1"  style={{ stopColor: RING_TO }}/>
           </linearGradient>
         </defs>
         {/* faint full 270° track */}
@@ -138,9 +138,9 @@ function HeartRateRing({ bpm, liveLabel }: { bpm: number; liveLabel: string }) {
           <path d={ECG_PATH} stroke={`rgba(${RING_GLOW},0.22)`} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
           <path
             className="hrr-trace" d={ECG_PATH}
-            stroke={RING_TO} strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round"
+            strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round"
             pathLength={100} strokeDasharray="16 100" strokeDashoffset={116}
-            style={{ filter: `drop-shadow(0 0 4px ${RING_TO})` }}
+            style={{ stroke: RING_TO, filter: `drop-shadow(0 0 4px ${RING_TO})` }}
           />
         </svg>
 
@@ -189,7 +189,7 @@ export default function HeartRateDetailPage() {
     <div style={{
       position: "relative", minHeight: "100dvh", overflow: "hidden",
       color: TEXT, fontFamily: SANS,
-      background: "radial-gradient(130% 80% at 50% -8%, #2e1410 0%, #160a08 34%, var(--nura-bg) 72%)",
+      background: "var(--nura-wash-heart)",
     }}>
       <style>{`
         .hr-reveal { opacity: 0; transform: translateY(18px); animation: hr-rise .7s cubic-bezier(.2,.7,.2,1) forwards; }

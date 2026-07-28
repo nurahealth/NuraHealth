@@ -9,14 +9,14 @@ import {
 } from "@/lib/bloodPressure";
 
 // ── Tokens ────────────────────────────────────────────────────────────────────
-const BG = "#0d0d0e";
-const SURFACE = "rgba(235,230,216,0.04)";
-const CREAM = "#ebe6d8";
-const MUTED = "rgba(235,230,216,0.62)";
-const FAINT = "rgba(235,230,216,0.45)";
-const HAIR = "rgba(235,230,216,0.1)";
-const SYS_LINE = "#cf8fa0";
-const DIA_LINE = "#8fa6cf";
+const BG = "var(--nura-bg)";
+const SURFACE = "var(--nura-surface)";
+const CREAM = "var(--nura-text-primary)";
+const MUTED = "var(--nura-ink-muted)";
+const FAINT = "var(--nura-text-tertiary)";
+const HAIR = "var(--nura-hairline-strong)";
+const SYS_LINE = "var(--nura-sys-line)";
+const DIA_LINE = "var(--nura-dia-line)";
 const SANS = "var(--font-inter), system-ui, sans-serif";
 
 // Built-in example state — rendered whenever real data is missing so the view
@@ -199,7 +199,7 @@ function RangeMeter({ name, value, tag, gradient, pct, ticks, nums }: {
         <div style={{ position: "absolute", bottom: 16, left: `${pct.toFixed(1)}%`, transform: "translateX(-50%)", fontSize: 11, fontWeight: 600, color: CREAM, whiteSpace: "nowrap" }}>{value}</div>
         <div style={{ position: "absolute", inset: 0, borderRadius: 999, background: gradient }} />
         {ticks.map((t) => (
-          <div key={t} style={{ position: "absolute", top: -1, left: `${t}%`, transform: "translateX(-50%)", width: 2, height: 11, borderRadius: 1, background: "rgba(13,13,14,0.55)" }} />
+          <div key={t} style={{ position: "absolute", top: -1, left: `${t}%`, transform: "translateX(-50%)", width: 2, height: 11, borderRadius: 1, background: "rgba(var(--nura-bg-rgb),0.55)" }} />
         ))}
         <div style={{ position: "absolute", top: "50%", left: `${pct.toFixed(1)}%`, transform: "translate(-50%,-50%)", width: 5, height: 19, borderRadius: 3, background: CREAM, boxShadow: `0 0 0 3px ${BG}` }} />
       </div>
@@ -285,8 +285,8 @@ function ReadingsChart({ readings }: { readings: { label: string; sys: number; d
       {/* Y gridlines + reference numbers in their own far-left column */}
       {[140, 120, 100, 80].map((v) => (
         <g key={v}>
-          <line x1={X0} y1={yOf(v)} x2={X1} y2={yOf(v)} stroke="rgba(235,230,216,0.06)" strokeWidth={1} />
-          <text x={26} y={(yOf(v) + 3).toFixed(1)} textAnchor="end" fontSize={10} fill={FAINT}>{v}</text>
+          <line x1={X0} y1={yOf(v)} x2={X1} y2={yOf(v)} stroke="rgba(var(--nura-bg-tint-rgb),0.06)" strokeWidth={1} />
+          <text x={26} y={(yOf(v) + 3).toFixed(1)} textAnchor="end" fontSize={10} style={{ fill: FAINT }}>{v}</text>
         </g>
       ))}
 
@@ -300,8 +300,8 @@ function ReadingsChart({ readings }: { readings: { label: string; sys: number; d
       <path d={areaUnder(sysLine, sysPts)} fill="url(#bpSysFill)" />
 
       {/* Smooth trend lines */}
-      <path d={diaLine} fill="none" stroke={DIA_LINE} strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" />
-      <path d={sysLine} fill="none" stroke={SYS_LINE} strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" />
+      <path d={diaLine} fill="none" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round"  style={{ stroke: DIA_LINE }}/>
+      <path d={sysLine} fill="none" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round"  style={{ stroke: SYS_LINE }}/>
 
       {readings.map((p, i) => {
         const last = i === n - 1;
@@ -312,21 +312,21 @@ function ReadingsChart({ readings }: { readings: { label: string; sys: number; d
             {last ? (
               <>
                 <circle cx={sx.toFixed(1)} cy={sy.toFixed(1)} r={9} fill={hexA(SYS_LINE, 0.18)} />
-                <circle cx={sx.toFixed(1)} cy={sy.toFixed(1)} r={4.5} fill={SYS_LINE} stroke={BG} strokeWidth={1.8} />
+                <circle cx={sx.toFixed(1)} cy={sy.toFixed(1)} r={4.5} strokeWidth={1.8}  style={{ fill: SYS_LINE, stroke: BG }}/>
                 <circle cx={dx.toFixed(1)} cy={dy.toFixed(1)} r={9} fill={hexA(DIA_LINE, 0.18)} />
-                <circle cx={dx.toFixed(1)} cy={dy.toFixed(1)} r={4.5} fill={DIA_LINE} stroke={BG} strokeWidth={1.8} />
-                <text x={sx.toFixed(1)} y={(sy - 12).toFixed(1)} textAnchor="middle" fontSize={12} fontWeight={700} fill={SYS_LINE}>{p.sys}</text>
-                <text x={dx.toFixed(1)} y={(dy + 19).toFixed(1)} textAnchor="middle" fontSize={12} fontWeight={700} fill={DIA_LINE}>{p.dia}</text>
+                <circle cx={dx.toFixed(1)} cy={dy.toFixed(1)} r={4.5} strokeWidth={1.8}  style={{ fill: DIA_LINE, stroke: BG }}/>
+                <text x={sx.toFixed(1)} y={(sy - 12).toFixed(1)} textAnchor="middle" fontSize={12} fontWeight={700} style={{ fill: SYS_LINE }}>{p.sys}</text>
+                <text x={dx.toFixed(1)} y={(dy + 19).toFixed(1)} textAnchor="middle" fontSize={12} fontWeight={700} style={{ fill: DIA_LINE }}>{p.dia}</text>
               </>
             ) : (
               <>
-                <circle cx={sx.toFixed(1)} cy={sy.toFixed(1)} r={2.3} fill={SYS_LINE} />
-                <circle cx={dx.toFixed(1)} cy={dy.toFixed(1)} r={2.3} fill={DIA_LINE} />
+                <circle cx={sx.toFixed(1)} cy={sy.toFixed(1)} r={2.3}  style={{ fill: SYS_LINE }}/>
+                <circle cx={dx.toFixed(1)} cy={dy.toFixed(1)} r={2.3}  style={{ fill: DIA_LINE }}/>
                 <text x={sx.toFixed(1)} y={(sy - 10).toFixed(1)} textAnchor="middle" fontSize={9.5} fill={hexA(SYS_LINE, 0.7)}>{p.sys}</text>
                 <text x={dx.toFixed(1)} y={(dy + 16).toFixed(1)} textAnchor="middle" fontSize={9.5} fill={hexA(DIA_LINE, 0.7)}>{p.dia}</text>
               </>
             )}
-            <text x={xOf(i).toFixed(1)} y={180} textAnchor="middle" fontSize={10} fill={FAINT}>{dayLabel(i)}</text>
+            <text x={xOf(i).toFixed(1)} y={180} textAnchor="middle" fontSize={10} style={{ fill: FAINT }}>{dayLabel(i)}</text>
           </g>
         );
       })}

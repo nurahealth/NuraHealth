@@ -6,15 +6,15 @@ import { getRespiratoryDetail, SOURCE_LABEL, type RespiratoryDetail } from "@/li
 import MetricEducation, { type MetricEducationItem } from "@/components/dashboard/MetricEducation";
 
 // ── Tokens (one violet identity) ──────────────────────────────────────────────
-const BG = "#0d0d0e";
-const SURFACE = "rgba(235,230,216,0.04)";
-const CREAM = "#ebe6d8";
-const VIOLET = "#b9a0e6";       // the single violet identity (ring, line, pill, accents)
-const VIOLET_LIGHT = "#d3c2f0"; // ring gradient light end
+const BG = "var(--nura-bg)";
+const SURFACE = "var(--nura-surface)";
+const CREAM = "var(--nura-text-primary)";
+const VIOLET = "var(--nura-violet)";       // the single violet identity (ring, line, pill, accents)
+const VIOLET_LIGHT = "var(--nura-violet-hi)"; // ring gradient light end
 const VIOLET_RGB = "185,160,230";
-const MUTED = "rgba(235,230,216,0.62)";
-const FAINT = "rgba(235,230,216,0.45)";
-const HAIR = "rgba(235,230,216,0.1)";
+const MUTED = "var(--nura-ink-muted)";
+const FAINT = "var(--nura-text-tertiary)";
+const HAIR = "var(--nura-hairline-strong)";
 const SANS = "var(--font-inter), system-ui, sans-serif";
 
 // Built-in example state — rendered whenever real data is missing so the view
@@ -98,7 +98,7 @@ export default function RespiratoryRateDetailPage() {
   const band = `${bLo.toFixed(1)}–${bHi.toFixed(1)}`;
 
   return (
-    <div style={{ minHeight: "100dvh", background: `radial-gradient(120% 72% at 50% -12%, rgba(185,160,230,0.16), transparent 55%), ${BG}`, color: CREAM, fontFamily: SANS, WebkitFontSmoothing: "antialiased" }}>
+    <div style={{ minHeight: "100dvh", background: "var(--nura-wash-resp)", color: CREAM, fontFamily: SANS, WebkitFontSmoothing: "antialiased" }}>
       <style>{`
         * { font-variant-numeric: tabular-nums; }
         .rr-reveal { opacity: 0; transform: translateY(16px); animation: rr-rise .6s cubic-bezier(.2,.7,.2,1) forwards; }
@@ -131,7 +131,7 @@ export default function RespiratoryRateDetailPage() {
           <div style={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.18em", color: VIOLET, marginBottom: 2 }}>{status.word}</div>
           <Gauge value={value} />
           <div style={{ fontSize: 13.5, color: MUTED, textAlign: "center", margin: "2px 0 12px" }}>{status.summary}</div>
-          <div style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "7px 14px", borderRadius: 30, background: "rgba(185,160,230,0.1)", border: "0.5px solid rgba(185,160,230,0.38)", fontSize: 12.5, fontWeight: 500, color: CREAM }}>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "7px 14px", borderRadius: 30, background: "rgba(var(--nura-violet-rgb),0.1)", border: "0.5px solid rgba(var(--nura-violet-rgb),0.38)", fontSize: 12.5, fontWeight: 500, color: CREAM }}>
             <span style={{ width: 6, height: 6, borderRadius: "50%", background: VIOLET, boxShadow: `0 0 8px rgba(${VIOLET_RGB},0.9)` }} />
             {status.pill}
           </div>
@@ -167,7 +167,7 @@ export default function RespiratoryRateDetailPage() {
         </section>
 
         {/* 6 — UNDERSTANDING (shared MetricEducation) */}
-        <MetricEducation accent="#b9a0e6" title="Understanding your respiratory rate" items={RR_EDU_ITEMS} />
+        <MetricEducation accent="var(--nura-violet)" title="Understanding your respiratory rate" items={RR_EDU_ITEMS} />
 
       </div>
     </div>
@@ -210,7 +210,7 @@ function Legend({ first }: { first: string }) {
         <i style={{ width: 16, height: 2.5, borderRadius: 2, background: VIOLET }} />{first}
       </span>
       <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 11, color: FAINT }}>
-        <i style={{ width: 14, height: 10, borderRadius: 2, background: "rgba(185,160,230,0.22)" }} />baseline range
+        <i style={{ width: 14, height: 10, borderRadius: 2, background: "rgba(var(--nura-violet-rgb),0.22)" }} />baseline range
       </span>
     </div>
   );
@@ -285,8 +285,8 @@ function Gauge({ value }: { value: number }) {
       >
         <defs>
           <linearGradient id={gid} x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stopColor={VIOLET} />
-            <stop offset="1" stopColor={VIOLET_LIGHT} />
+            <stop offset="0"  style={{ stopColor: VIOLET }}/>
+            <stop offset="1"  style={{ stopColor: VIOLET_LIGHT }}/>
           </linearGradient>
         </defs>
         {/* faint full 270° track */}
@@ -330,25 +330,25 @@ function NightChart({ readings, avg, baseline }: { readings: number[]; avg: numb
     <svg viewBox="0 0 340 168" style={{ display: "block", width: "100%", height: "auto", overflow: "visible", marginTop: 6 }}>
       <defs>
         <linearGradient id={`${uid}-area`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="rgba(185,160,230,0.30)" />
-          <stop offset="100%" stopColor="rgba(185,160,230,0)" />
+          <stop offset="0%" stopColor="rgba(var(--nura-violet-rgb),0.30)" />
+          <stop offset="100%" stopColor="rgba(var(--nura-violet-rgb),0)" />
         </linearGradient>
       </defs>
       {[16, 15, 14, 13].map((v) => (
         <g key={v}>
-          <line x1={X0} y1={yOf(v)} x2={X1} y2={yOf(v)} stroke="rgba(235,230,216,0.06)" strokeWidth={1} />
-          <text x={26} y={(yOf(v) + 3).toFixed(1)} textAnchor="end" fontSize={10} fill={FAINT}>{v}</text>
+          <line x1={X0} y1={yOf(v)} x2={X1} y2={yOf(v)} stroke="rgba(var(--nura-bg-tint-rgb),0.06)" strokeWidth={1} />
+          <text x={26} y={(yOf(v) + 3).toFixed(1)} textAnchor="end" fontSize={10} style={{ fill: FAINT }}>{v}</text>
         </g>
       ))}
-      <rect x={34} y={bandY.toFixed(1)} width={296} height={bandH.toFixed(1)} fill="rgba(185,160,230,0.12)" />
-      <text x={326} y={58} textAnchor="end" fontSize={10} fill="rgba(185,160,230,0.75)">baseline {bLo.toFixed(1)}–{bHi.toFixed(1)}</text>
-      <line x1={X0} y1={yOf(avg).toFixed(1)} x2={X1} y2={yOf(avg).toFixed(1)} stroke="rgba(185,160,230,0.3)" strokeWidth={1.5} strokeDasharray="3 4" />
+      <rect x={34} y={bandY.toFixed(1)} width={296} height={bandH.toFixed(1)} fill="rgba(var(--nura-violet-rgb),0.12)" />
+      <text x={326} y={58} textAnchor="end" fontSize={10} fill="rgba(var(--nura-violet-rgb),0.75)">baseline {bLo.toFixed(1)}–{bHi.toFixed(1)}</text>
+      <line x1={X0} y1={yOf(avg).toFixed(1)} x2={X1} y2={yOf(avg).toFixed(1)} stroke="rgba(var(--nura-violet-rgb),0.3)" strokeWidth={1.5} strokeDasharray="3 4" />
       <path d={area} fill={`url(#${uid}-area)`} />
-      <path d={line} fill="none" stroke={VIOLET} strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
-      <circle cx={last[0].toFixed(1)} cy={last[1].toFixed(1)} r={4} fill={CREAM} stroke={BG} strokeWidth={2} />
-      <line x1={X0} y1={140} x2={X1} y2={140} stroke="rgba(235,230,216,0.1)" strokeWidth={1} />
+      <path d={line} fill="none" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round"  style={{ stroke: VIOLET }}/>
+      <circle cx={last[0].toFixed(1)} cy={last[1].toFixed(1)} r={4} strokeWidth={2}  style={{ fill: CREAM, stroke: BG }}/>
+      <line x1={X0} y1={140} x2={X1} y2={140} stroke="var(--nura-hairline-strong)" strokeWidth={1} />
       {ticks.map(([t, x, a]) => (
-        <text key={t} x={x} y={158} textAnchor={a} fontSize={10} fill={FAINT}>{t}</text>
+        <text key={t} x={x} y={158} textAnchor={a} fontSize={10} style={{ fill: FAINT }}>{t}</text>
       ))}
     </svg>
   );
@@ -368,14 +368,14 @@ function WeekChart({ nights, baseline }: { nights: { label: string; avg: number 
     <svg viewBox="0 0 340 175" style={{ display: "block", width: "100%", height: "auto", overflow: "visible", marginTop: 6 }}>
       {[15, 14, 13].map((v) => (
         <g key={v}>
-          <line x1={X0} y1={yOf(v)} x2={X1} y2={yOf(v)} stroke="rgba(235,230,216,0.06)" strokeWidth={1} />
-          <text x={26} y={(yOf(v) + 3).toFixed(1)} textAnchor="end" fontSize={10} fill={FAINT}>{v}</text>
+          <line x1={X0} y1={yOf(v)} x2={X1} y2={yOf(v)} stroke="rgba(var(--nura-bg-tint-rgb),0.06)" strokeWidth={1} />
+          <text x={26} y={(yOf(v) + 3).toFixed(1)} textAnchor="end" fontSize={10} style={{ fill: FAINT }}>{v}</text>
         </g>
       ))}
-      <rect x={34} y={bandY.toFixed(1)} width={280} height={bandH.toFixed(1)} fill="rgba(185,160,230,0.12)" />
-      <text x={310} y={39} textAnchor="end" fontSize={10} fill="rgba(185,160,230,0.75)">baseline {bLo.toFixed(1)}–{bHi.toFixed(1)}</text>
-      <polyline points={pts.map((p) => `${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(" ")} fill="none" stroke="rgba(185,160,230,0.55)" strokeWidth={2} />
-      <line x1={X0} y1={146} x2={X1} y2={146} stroke="rgba(235,230,216,0.1)" strokeWidth={1} />
+      <rect x={34} y={bandY.toFixed(1)} width={280} height={bandH.toFixed(1)} fill="rgba(var(--nura-violet-rgb),0.12)" />
+      <text x={310} y={39} textAnchor="end" fontSize={10} fill="rgba(var(--nura-violet-rgb),0.75)">baseline {bLo.toFixed(1)}–{bHi.toFixed(1)}</text>
+      <polyline points={pts.map((p) => `${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(" ")} fill="none" stroke="rgba(var(--nura-violet-rgb),0.55)" strokeWidth={2} />
+      <line x1={X0} y1={146} x2={X1} y2={146} stroke="var(--nura-hairline-strong)" strokeWidth={1} />
       {nights.map((p, i) => {
         const [x, y] = pts[i];
         const isLast = i === n - 1;
@@ -383,16 +383,16 @@ function WeekChart({ nights, baseline }: { nights: { label: string; avg: number 
           <g key={i}>
             {isLast ? (
               <>
-                <circle cx={x.toFixed(1)} cy={y.toFixed(1)} r={5} fill={CREAM} stroke={BG} strokeWidth={2.5} />
-                <text x={x.toFixed(1)} y={(y - 11).toFixed(1)} textAnchor="middle" fontSize={11} fontWeight={600} fill={CREAM}>{p.avg.toFixed(1)}</text>
+                <circle cx={x.toFixed(1)} cy={y.toFixed(1)} r={5} strokeWidth={2.5}  style={{ fill: CREAM, stroke: BG }}/>
+                <text x={x.toFixed(1)} y={(y - 11).toFixed(1)} textAnchor="middle" fontSize={11} fontWeight={600} style={{ fill: CREAM }}>{p.avg.toFixed(1)}</text>
               </>
             ) : (
               <>
-                <circle cx={x.toFixed(1)} cy={y.toFixed(1)} r={3.5} fill={VIOLET} />
-                <text x={x.toFixed(1)} y={(y - 9).toFixed(1)} textAnchor="middle" fontSize={11} fill="rgba(235,230,216,0.7)">{p.avg.toFixed(1)}</text>
+                <circle cx={x.toFixed(1)} cy={y.toFixed(1)} r={3.5}  style={{ fill: VIOLET }}/>
+                <text x={x.toFixed(1)} y={(y - 9).toFixed(1)} textAnchor="middle" fontSize={11} fill="var(--nura-ink-strong)">{p.avg.toFixed(1)}</text>
               </>
             )}
-            <text x={x.toFixed(1)} y={162} textAnchor="middle" fontSize={10} fill={FAINT}>{p.label}</text>
+            <text x={x.toFixed(1)} y={162} textAnchor="middle" fontSize={10} style={{ fill: FAINT }}>{p.label}</text>
           </g>
         );
       })}

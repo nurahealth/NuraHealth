@@ -17,9 +17,9 @@ const SAGE = "var(--nura-sage)";
 const SANS = "var(--font-inter), system-ui, sans-serif";
 
 const AMBER_AURORA =
-  "radial-gradient(80% 60% at 50% -6%, rgba(224,162,62,0.30), transparent 60%)," +
-  "radial-gradient(60% 50% at 86% 6%, rgba(211,162,83,0.16), transparent 60%)," +
-  "radial-gradient(70% 40% at 8% 14%, rgba(196,127,36,0.12), transparent 60%)";
+  "radial-gradient(80% 60% at 50% -6%, rgba(var(--nura-amber-rgb),0.30), transparent 60%)," +
+  "radial-gradient(60% 50% at 86% 6%, rgba(var(--nura-good-rgb),0.16), transparent 60%)," +
+  "radial-gradient(70% 40% at 8% 14%, rgba(var(--nura-amber-2-rgb),0.12), transparent 60%)";
 
 // ── Icons ───────────────────────────────────────────────────────────────────
 const Chevron = () => (
@@ -45,7 +45,7 @@ export default function MovementDetailPage() {
     <div style={{
       position: "relative", minHeight: "100dvh", overflow: "hidden",
       color: TEXT, fontFamily: SANS,
-      background: "radial-gradient(130% 80% at 50% -8%, #2b1d08 0%, #150f06 34%, var(--nura-bg) 72%)",
+      background: "var(--nura-wash-movement)",
     }}>
       <style>{`
         .m-reveal { opacity: 0; transform: translateY(18px); animation: m-rise .7s cubic-bezier(.2,.7,.2,1) forwards; }
@@ -90,8 +90,8 @@ export default function MovementDetailPage() {
             <span style={{
               display: "inline-flex", alignItems: "center", gap: 6, marginTop: 9,
               padding: "5px 11px", borderRadius: 9, fontSize: 12, fontWeight: 600, color: AMBER,
-              background: "rgba(224,162,62,0.12)", border: "1px solid rgba(224,162,62,0.20)",
-              boxShadow: "0 0 16px rgba(224,162,62,0.10)",
+              background: "rgba(var(--nura-amber-rgb),0.12)", border: "1px solid rgba(var(--nura-amber-rgb),0.20)",
+              boxShadow: "0 0 16px rgba(var(--nura-amber-rgb),0.10)",
             }}>
               <BoltIcon />{d.badge}
             </span>
@@ -103,8 +103,8 @@ export default function MovementDetailPage() {
           <WeeklyBarStrip
             days={d.week}
             max={d.weekMax}
-            barGradient="linear-gradient(180deg, rgba(224,162,62,0.32), rgba(196,127,36,0.10))"
-            selectedGradient="linear-gradient(180deg,#ffffff,#f0e6d4)"
+            barGradient="linear-gradient(180deg, rgba(var(--nura-amber-rgb),0.32), rgba(var(--nura-amber-2-rgb),0.10))"
+            selectedGradient="linear-gradient(180deg,var(--nura-marker),var(--nura-orange-hi))"
             accent="var(--nura-amber)"
           />
         </div>
@@ -115,7 +115,7 @@ export default function MovementDetailPage() {
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 4 }}>
             {d.subMetrics.map((sm) => (
-              <div key={sm.label} style={{ background: "rgba(235,230,216,0.035)", border: "1px solid rgba(235,230,216,0.06)", borderRadius: 15, padding: 14 }}>
+              <div key={sm.label} style={{ background: "rgba(var(--nura-bg-tint-rgb),0.035)", border: "1px solid rgba(var(--nura-bg-tint-rgb),0.06)", borderRadius: 15, padding: 14 }}>
                 <div style={{ fontSize: 22, fontWeight: 700, letterSpacing: "-0.5px" }}>
                   {sm.value}{sm.unit && <small style={{ fontSize: 13, fontWeight: 600, color: MUTED }}>{sm.unit}</small>}
                 </div>
@@ -127,13 +127,13 @@ export default function MovementDetailPage() {
 
           <div style={{ marginTop: 6 }}>
             {d.contributors.map((c) => (
-              <div key={c.name} style={{ padding: "13px 0", borderTop: "1px solid rgba(235,230,216,0.06)" }}>
+              <div key={c.name} style={{ padding: "13px 0", borderTop: "1px solid rgba(var(--nura-bg-tint-rgb),0.06)" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <span style={{ fontSize: 14.5, fontWeight: 500 }}>{c.name}</span>
                   <StatusPill status={c.status} label={c.statusLabel} />
                 </div>
-                <div style={{ height: 5, background: "rgba(235,230,216,0.10)", borderRadius: 3, marginTop: 10, overflow: "hidden" }}>
-                  <div style={{ height: "100%", width: `${c.pct}%`, borderRadius: 3, background: "linear-gradient(90deg,var(--nura-amber-2),var(--nura-amber))", boxShadow: "0 0 10px rgba(224,162,62,0.4)" }} />
+                <div style={{ height: 5, background: "rgba(var(--nura-bg-tint-rgb),0.10)", borderRadius: 3, marginTop: 10, overflow: "hidden" }}>
+                  <div style={{ height: "100%", width: `${c.pct}%`, borderRadius: 3, background: "linear-gradient(90deg,var(--nura-amber-2),var(--nura-amber))", boxShadow: "0 0 10px rgba(var(--nura-amber-rgb),0.4)" }} />
                 </div>
               </div>
             ))}
@@ -148,7 +148,7 @@ export default function MovementDetailPage() {
               key={chart.label}
               style={i === 0
                 ? { marginTop: 6 }
-                : { marginTop: 20, paddingTop: 18, borderTop: "1px solid rgba(235,230,216,0.06)" }}
+                : { marginTop: 20, paddingTop: 18, borderTop: "1px solid rgba(var(--nura-bg-tint-rgb),0.06)" }}
             >
               <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
                 <div>
@@ -171,7 +171,7 @@ export default function MovementDetailPage() {
 
         {/* NŪRA insight */}
         <GlassCard className="m-reveal" style={{ animationDelay: ".45s", marginTop: 16, borderRadius: 20, padding: 17, position: "relative", overflow: "hidden" }}>
-          <div aria-hidden style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 3, background: "linear-gradient(180deg,var(--nura-sage),var(--nura-amber))", boxShadow: "0 0 16px rgba(155,176,165,0.5)" }} />
+          <div aria-hidden style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 3, background: "linear-gradient(180deg,var(--nura-sage),var(--nura-amber))", boxShadow: "0 0 16px rgba(var(--nura-sage-rgb),0.5)" }} />
           <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "2.5px", color: SAGE, textTransform: "uppercase" }}>NŪRA</div>
           <p style={{ fontSize: 13.5, lineHeight: 1.6, marginTop: 9 }}>{d.insight}</p>
         </GlassCard>
@@ -187,7 +187,7 @@ function IntradayBars({ series }: { series: IntradayChart["series"] }) {
   const bw = W / n;
   const max = Math.max(...series, 1);
   return (
-    <svg width="100%" height={90} viewBox={`0 0 ${W} 90`} preserveAspectRatio="none" style={{ marginTop: 12, filter: "drop-shadow(0 0 7px rgba(224,162,62,0.30))" }}>
+    <svg width="100%" height={90} viewBox={`0 0 ${W} 90`} preserveAspectRatio="none" style={{ marginTop: 12, filter: "drop-shadow(0 0 7px rgba(var(--nura-amber-rgb),0.30))" }}>
       {series.map((v, i) => {
         const h = Math.max(2, (v / max) * maxH);
         return <rect key={i} x={(i * bw).toFixed(1)} y={(maxH + 4 - h).toFixed(1)} width={(bw - 1.1).toFixed(1)} height={h.toFixed(1)} rx="1.2" fill="var(--nura-amber)" />;

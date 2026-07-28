@@ -7,18 +7,18 @@ import { spo2Status, type SpO2Status } from "@/lib/bloodOxygen";
 import BloodOxygenTrends from "@/components/BloodOxygenTrends";
 
 // ── Tokens ────────────────────────────────────────────────────────────────────
-const BG = "#0d0d0e";
-const SURFACE = "rgba(235,230,216,0.04)";
-const CREAM = "#ebe6d8";
-const MUTED = "rgba(235,230,216,0.62)";
-const FAINT = "rgba(235,230,216,0.45)";
-const HAIR = "rgba(235,230,216,0.1)";
+const BG = "var(--nura-bg)";
+const SURFACE = "var(--nura-surface)";
+const CREAM = "var(--nura-text-primary)";
+const MUTED = "var(--nura-ink-muted)";
+const FAINT = "var(--nura-text-tertiary)";
+const HAIR = "var(--nura-hairline-strong)";
 const SANS = "var(--font-inter), system-ui, sans-serif";
 
 // Ice / platinum identity — a cool-blue-leaning silver, kept crisp (not washed
 // out) on the near-black background via a soft glow.
-const ICE = "#aebfcf";
-const ICE_LIGHT = "#dbe6ef";
+const ICE = "var(--nura-ice)";
+const ICE_LIGHT = "var(--nura-ice-hi)";
 const ICE_RGB = "174,191,207";
 
 // Built-in example state — rendered whenever real data is missing so the view
@@ -77,7 +77,7 @@ export default function BloodOxygenDetailPage() {
   };
 
   return (
-    <div style={{ minHeight: "100dvh", background: `radial-gradient(120% 72% at 50% -12%, rgba(${ICE_RGB},0.16), transparent 55%), ${BG}`, color: CREAM, fontFamily: SANS, WebkitFontSmoothing: "antialiased" }}>
+    <div style={{ minHeight: "100dvh", background: "var(--nura-wash-spo2)", color: CREAM, fontFamily: SANS, WebkitFontSmoothing: "antialiased" }}>
       <style>{`
         * { font-variant-numeric: tabular-nums; }
         .ox-reveal { opacity: 0; transform: translateY(16px); animation: ox-rise .6s cubic-bezier(.2,.7,.2,1) forwards; }
@@ -229,8 +229,8 @@ function RingGauge({ spo2 }: { spo2: number }) {
       >
         <defs>
           <linearGradient id={gid} x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stopColor={ICE} />
-            <stop offset="1" stopColor={ICE_LIGHT} />
+            <stop offset="0"  style={{ stopColor: ICE }}/>
+            <stop offset="1"  style={{ stopColor: ICE_LIGHT }}/>
           </linearGradient>
         </defs>
         {/* faint full 270° track */}

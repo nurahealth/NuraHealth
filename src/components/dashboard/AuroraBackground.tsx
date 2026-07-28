@@ -14,9 +14,9 @@ const GRAIN =
 // Default teal/sage aurora (used by the Sleep page). Other metrics can pass a
 // different `gradient` (e.g. amber for Movement).
 const TEAL_AURORA =
-  "radial-gradient(80% 60% at 50% -6%, rgba(45,158,131,0.34), transparent 60%)," +
-  "radial-gradient(60% 50% at 88% 6%, rgba(155,176,165,0.16), transparent 60%)," +
-  "radial-gradient(70% 40% at 8% 14%, rgba(93,204,174,0.12), transparent 60%)";
+  "radial-gradient(80% 60% at 50% -6%, rgba(var(--nura-teal-mid-rgb),0.34), transparent 60%)," +
+  "radial-gradient(60% 50% at 88% 6%, rgba(var(--nura-sage-rgb),0.16), transparent 60%)," +
+  "radial-gradient(70% 40% at 8% 14%, rgba(var(--nura-teal-rgb),0.12), transparent 60%)";
 
 export default function AuroraBackground({ gradient = TEAL_AURORA }: { gradient?: string }) {
   return (
@@ -27,6 +27,9 @@ export default function AuroraBackground({ gradient = TEAL_AURORA }: { gradient?
           position: "absolute", inset: "0 0 auto 0", height: 520,
           pointerEvents: "none", zIndex: 0,
           background: gradient,
+          // Full strength in dark; dialled back in light so the hue reads as a
+          // hint rather than a colour cast over white.
+          opacity: "var(--nura-aurora-opacity)",
         }}
       />
       <div
