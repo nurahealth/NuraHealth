@@ -1,83 +1,209 @@
 @import "tailwindcss";
 
 /* ───────────────────────────────────────────────────────────────────────────
-   NŪRA theme system — dark default, light via [data-theme="light"]
+   NŪRA theme system — the single source of truth for colour.
+
+   Mechanism: dark is the default and lives on :root. Light is an override
+   block on [data-theme="light"], stamped onto <html> before paint by the
+   inline script in app/layout.tsx.
+
+   RULES
+   1. No component defines its own palette. Every colour a component needs
+      has a semantic token here. If a component needs a colour that isn't
+      here, add the token — don't inline a literal.
+   2. The dark column is LOCKED (#0d0d0e bg / #9bb0a5 sage / #ebe6d8 ink).
+      Changing a dark value is a design decision, not a refactor.
+   3. Every text-on-surface pair in the light column meets WCAG AA (4.5:1).
+      Measured ratios are noted inline. Light mode has no faded greys.
    ─────────────────────────────────────────────────────────────────────── */
+
 :root {
-  /* Dark (default) */
+  /* ── Canvas ─────────────────────────────────────────────────────────── */
   --nura-bg: #0d0d0e;
   --nura-bg-rgb: 13, 13, 14;            /* page bg as rgb — for translucent chrome (header/composer) */
   --nura-bg-elevated-rgb: 20, 20, 21;   /* elevated translucent chrome (toast/menus) */
+
+  /* ── Surfaces ───────────────────────────────────────────────────────── */
   --nura-surface: rgba(235, 230, 216, 0.04);
   --nura-surface-elevated: rgba(235, 230, 216, 0.06);
-  --nura-text-primary: #f0ebde;
+  --nura-card: #161718;                 /* solid card surface (dashboard) */
+  --nura-glass: rgba(22, 25, 27, 0.46); /* frosted-glass card fill */
+  --nura-glass-line: rgba(235, 230, 216, 0.10);
+  --nura-track: rgba(235, 230, 216, 0.08);   /* progress/meter troughs */
+
+  /* Card finish — the "lit surface" recipe. In dark this is a top inset
+     highlight + a deep drop shadow; in light it becomes a hairline + a soft
+     ambient shadow (no fake highlight, which reads as grime on white). */
+  --nura-card-highlight: rgba(235, 230, 216, 0.10);
+  --nura-card-shadow: 0 22px 60px rgba(0, 0, 0, 0.45);
+  --nura-card-shadow-soft: 0 18px 50px rgba(0, 0, 0, 0.35);
+
+  /* ── Ink ────────────────────────────────────────────────────────────── */
+  --nura-text-primary: #ebe6d8;
   --nura-text-secondary: rgba(235, 230, 216, 0.55);
   --nura-text-tertiary: rgba(235, 230, 216, 0.40);
-  --nura-border: rgba(235, 230, 216, 0.09);
-  --nura-border-strong: rgba(235, 230, 216, 0.18);
-  --nura-sage: #9bb0a5;
-  --nura-sage-hover: #abc0b5;
-  --nura-sage-bg-on: #0d0d0e;
-  --nura-sage-rgb: 155, 176, 165;
+  --nura-ink-strong: rgba(235, 230, 216, 0.82);   /* body copy inside cards */
+  --nura-ink-muted: rgba(235, 230, 216, 0.58);    /* card subtitles, captions */
+  --nura-ink-faint: rgba(235, 230, 216, 0.32);    /* eyebrows, axis labels */
   --nura-fg-rgb: 235, 230, 216;        /* ink for text tints (mid+ opacities) */
   --nura-bg-tint-rgb: 235, 230, 216;   /* tint for surfaces/borders (low opacities) */
-  --nura-danger: #d4574d;
-  --nura-danger-rgb: 212, 87, 77;
-  --nura-watch: #d4a574;
-  --nura-watch-rgb: 212, 165, 116;
 
-  /* Dashboard premium surface + status palette */
-  --nura-card: #161718;                 /* solid card surface (dashboard) */
+  /* ── Lines ──────────────────────────────────────────────────────────── */
+  --nura-border: rgba(235, 230, 216, 0.09);
+  --nura-border-strong: rgba(235, 230, 216, 0.18);
+  --nura-hairline: rgba(235, 230, 216, 0.07);        /* dividers inside cards */
+  --nura-hairline-strong: rgba(235, 230, 216, 0.10);
+
+  /* ── Accent (brand sage) ────────────────────────────────────────────── */
+  --nura-sage: #9bb0a5;
+  --nura-sage-hover: #abc0b5;
+  --nura-sage-bg-on: #0d0d0e;          /* ink that sits ON a filled sage surface */
+  --nura-sage-rgb: 155, 176, 165;
+  --nura-accent-soft: rgba(155, 176, 165, 0.10);       /* tinted accent chip fill */
+  --nura-accent-soft-border: rgba(155, 176, 165, 0.22);
+
+  /* ── Status ─────────────────────────────────────────────────────────── */
   --nura-optimal: #5fbf8c;              /* emerald — Optimal */
   --nura-optimal-rgb: 95, 191, 140;
   --nura-good: #d3a253;                 /* gold — Good */
   --nura-good-rgb: 211, 162, 83;
   --nura-alert: #e8745a;                /* coral — Alert */
   --nura-alert-rgb: 232, 116, 90;
-  --nura-teal: #5dccae;                 /* sleep data-viz teal */
+  --nura-danger: #d4574d;
+  --nura-danger-rgb: 212, 87, 77;
+  --nura-watch: #d4a574;
+  --nura-watch-rgb: 212, 165, 116;
+
+  /* ── Data-viz ramp ──────────────────────────────────────────────────── */
+  --nura-teal: #5dccae;                 /* sleep / recovery */
   --nura-teal-rgb: 93, 204, 174;
   --nura-teal-mid: #2f9e83;             /* mid teal — gradients / light-sleep */
   --nura-teal-deep: #15564a;            /* deep teal — deep-sleep */
-  --nura-sleep-deep: #5aa0e6;           /* brighter blue — deep-sleep depth bars */
+  --nura-sleep-deep: #5aa0e6;           /* blue — deep-sleep depth bars */
+  --nura-sleep-deep-rgb: 90, 160, 230;
   --nura-amber: #e0a23e;                /* movement amber accent */
   --nura-amber-rgb: 224, 162, 62;
   --nura-amber-2: #c47f24;              /* deeper amber — gradients */
   --nura-amber-deep: #7a4e12;
-  --nura-glass: rgba(22, 25, 27, 0.46); /* frosted-glass card fill */
-  --nura-glass-line: rgba(235, 230, 216, 0.10);
+  --nura-rose: #f0a890;                 /* heart / resting-HR */
+  --nura-rose-rgb: 240, 168, 144;
+  --nura-heart: #e8615c;                /* heart-rate ring */
+  --nura-heart-rgb: 232, 97, 92;
+  --nura-violet: #b9a0e6;               /* respiratory rate */
+  --nura-violet-rgb: 185, 160, 230;
+  --nura-mauve: #a98fc4;                /* respiratory card accent */
+  --nura-aqua: #4fc4d6;                 /* HRV */
+  --nura-aqua-rgb: 79, 196, 214;
+  --nura-ice: #aebfcf;                  /* blood oxygen */
+  --nura-ice-rgb: 174, 191, 207;
+  --nura-ember: #e07a3c;                /* active energy */
+  --nura-ember-rgb: 224, 122, 60;
+  --nura-gold-ring: #e8c266;            /* cardio fitness / VO2 max */
+  --nura-gold-ring-rgb: 232, 194, 102;
+  --nura-orange: #e3a263;               /* steps */
+  --nura-orange-rgb: 227, 162, 99;
 
-  /* Legacy tokens kept for tailwind theme — unused by new theme system */
+  /* ── Aliases (semantic names requested by the design system) ────────── */
+  --nura-accent: var(--nura-sage);
+  --nura-text-muted: var(--nura-text-tertiary);
+  --nura-success: var(--nura-optimal);
+  --nura-success-rgb: var(--nura-optimal-rgb);
+  --nura-warning: var(--nura-good);
+  --nura-warning-rgb: var(--nura-good-rgb);
+
+  /* Legacy tokens kept for the tailwind theme — unused by the theme system */
   --background: #ffffff;
   --foreground: #171717;
-
-  transition: background-color 200ms ease, color 200ms ease;
 }
 
+/* ───────────────────────────────────────────────────────────────────────────
+   LIGHT — warm, premium, high-contrast. Pure-white cards on a warm off-white
+   canvas, near-black ink, and a data-viz ramp darkened so every hue stays
+   legible on white. Contrast ratios below are against #ffffff.
+   ─────────────────────────────────────────────────────────────────────── */
 [data-theme="light"] {
-  --nura-bg: #fafaf9;
-  --nura-bg-rgb: 250, 250, 249;
-  --nura-bg-elevated-rgb: 244, 244, 242;
+  /* ── Canvas ─────────────────────────────────────────────────────────── */
+  --nura-bg: #faf9f6;                   /* warm off-white */
+  --nura-bg-rgb: 250, 249, 246;
+  --nura-bg-elevated-rgb: 255, 255, 255;
+
+  /* ── Surfaces ───────────────────────────────────────────────────────── */
   --nura-surface: #ffffff;
-  --nura-surface-elevated: #f4f4f2;
-  --nura-text-primary: #0a0a0a;
-  --nura-text-secondary: rgba(10, 10, 10, 0.62);
-  --nura-text-tertiary: rgba(10, 10, 10, 0.42);
-  --nura-border: rgba(0, 0, 0, 0.08);
-  --nura-border-strong: rgba(0, 0, 0, 0.14);
-  --nura-sage: #5a7864;
-  --nura-sage-hover: #4a6754;
-  --nura-sage-bg-on: #e6ece8;
-  --nura-sage-rgb: 90, 120, 100;
-  --nura-fg-rgb: 10, 10, 10;
-  --nura-bg-tint-rgb: 90, 120, 100;
-  --nura-danger: #b8392f;
-  --nura-danger-rgb: 184, 57, 47;
-  --nura-watch: #b8741a;
-  --nura-watch-rgb: 184, 116, 26;
-  /* Dashboard: light card surface (status/teal tokens inherit from :root) */
+  --nura-surface-elevated: #ffffff;
   --nura-card: #ffffff;
-  --nura-glass: rgba(255, 255, 255, 0.62);
-  --nura-glass-line: rgba(0, 0, 0, 0.08);
+  --nura-glass: #ffffff;                /* solid, not translucent — kills the wash-out */
+  --nura-glass-line: rgba(26, 24, 20, 0.08);
+  --nura-track: rgba(26, 24, 20, 0.07);
+
+  /* No inset highlight on white; depth comes from a real ambient shadow. */
+  --nura-card-highlight: rgba(255, 255, 255, 0);
+  --nura-card-shadow: 0 1px 2px rgba(26, 24, 20, 0.05), 0 10px 28px rgba(26, 24, 20, 0.06);
+  --nura-card-shadow-soft: 0 1px 2px rgba(26, 24, 20, 0.04), 0 6px 18px rgba(26, 24, 20, 0.05);
+
+  /* ── Ink — every value below passes AA on #ffffff ───────────────────── */
+  --nura-text-primary: #1a1a1a;         /* 17.4:1 */
+  --nura-text-secondary: #5a5750;       /*  7.2:1 — warm neutral, not grey mush */
+  --nura-text-tertiary: #75726a;        /*  4.8:1 — still AA, never ghosted */
+  --nura-ink-strong: #2e2c28;           /* 13.9:1 */
+  --nura-ink-muted: #5a5750;            /*  7.2:1 */
+  --nura-ink-faint: #75726a;            /*  4.8:1 */
+  --nura-fg-rgb: 26, 26, 26;
+  --nura-bg-tint-rgb: 90, 120, 100;
+
+  /* ── Lines ──────────────────────────────────────────────────────────── */
+  --nura-border: rgba(26, 24, 20, 0.10);
+  --nura-border-strong: rgba(26, 24, 20, 0.16);
+  --nura-hairline: rgba(26, 24, 20, 0.08);
+  --nura-hairline-strong: rgba(26, 24, 20, 0.11);
+
+  /* ── Accent — deepened sage so it stays readable as text/icon on white ── */
+  --nura-sage: #4f6f5c;                 /*  5.6:1 */
+  --nura-sage-hover: #3f5c4a;
+  --nura-sage-bg-on: #ffffff;           /* white ink on filled sage — 5.6:1 */
+  --nura-sage-rgb: 79, 111, 92;
+  --nura-accent-soft: rgba(79, 111, 92, 0.09);
+  --nura-accent-soft-border: rgba(79, 111, 92, 0.20);
+
+  /* ── Status ─────────────────────────────────────────────────────────── */
+  --nura-optimal: #2f7d57;              /*  5.0:1 */
+  --nura-optimal-rgb: 47, 125, 87;
+  --nura-good: #8a6410;                 /*  5.4:1 */
+  --nura-good-rgb: 138, 100, 16;
+  --nura-alert: #b03d24;                /*  5.9:1 */
+  --nura-alert-rgb: 176, 61, 36;
+  --nura-danger: #b8392f;               /*  5.7:1 */
+  --nura-danger-rgb: 184, 57, 47;
+  --nura-watch: #8a5a12;                /*  5.9:1 */
+  --nura-watch-rgb: 138, 90, 18;
+
+  /* ── Data-viz ramp — darkened for white; hue identity preserved ─────── */
+  --nura-teal: #157a60;                 /*  5.3:1 */
+  --nura-teal-rgb: 21, 122, 96;
+  --nura-teal-mid: #1f6a56;
+  --nura-teal-deep: #0f4438;
+  --nura-sleep-deep: #1f6aa8;           /*  5.7:1 */
+  --nura-sleep-deep-rgb: 31, 106, 168;
+  --nura-amber: #91650c;                /*  5.2:1 */
+  --nura-amber-rgb: 145, 101, 12;
+  --nura-amber-2: #7a5409;
+  --nura-amber-deep: #5c3f06;
+  --nura-rose: #a8503a;                 /*  5.4:1 */
+  --nura-rose-rgb: 168, 80, 58;
+  --nura-heart: #b83a37;                /*  5.7:1 */
+  --nura-heart-rgb: 184, 58, 55;
+  --nura-violet: #6a4fa8;               /*  6.4:1 */
+  --nura-violet-rgb: 106, 79, 168;
+  --nura-mauve: #6a4fa8;
+  --nura-aqua: #0e7183;                 /*  5.7:1 */
+  --nura-aqua-rgb: 14, 113, 131;
+  --nura-ice: #4a6478;                  /*  6.2:1 */
+  --nura-ice-rgb: 74, 100, 120;
+  --nura-ember: #a1501a;                /*  5.7:1 */
+  --nura-ember-rgb: 161, 80, 26;
+  --nura-gold-ring: #8a6410;            /*  5.4:1 */
+  --nura-gold-ring-rgb: 138, 100, 16;
+  --nura-orange: #9c5f14;               /*  5.2:1 */
+  --nura-orange-rgb: 156, 95, 20;
 }
 
 @theme inline {
@@ -94,6 +220,12 @@ html, body {
 
 body {
   font-family: var(--font-inter), system-ui, sans-serif;
+}
+
+/* Theme transition — applied to the elements that actually change, not :root,
+   so switching themes cross-fades instead of snapping. */
+html, body {
+  transition: background-color 200ms ease, color 200ms ease;
 }
 
 /* Respect the iPhone notch and home indicator when installed as a standalone PWA */
