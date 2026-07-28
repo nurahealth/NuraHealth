@@ -3,6 +3,7 @@
 import { type ReactElement } from "react";
 import { SOURCE_LABEL, type DashboardMetric } from "@/lib/dashboardData";
 import { hex } from "@/components/dashboard/ActiveEnergyTodayChart";
+import { useAccents, type AccentToken } from "@/lib/accents";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Customize dashboard — bottom sheet listing every AVAILABLE metric (Layer 1)
@@ -12,10 +13,10 @@ import { hex } from "@/components/dashboard/ActiveEnergyTodayChart";
 
 const SANS = "var(--font-inter), system-ui, sans-serif";
 const SERIF = "'Fraunces', Georgia, serif";
-const TEXT = "#ebe6d8";
-const MUTED = "rgba(235,230,216,0.58)";
-const FAINT = "rgba(235,230,216,0.32)";
-const SAGE = "#9bb0a5";
+const TEXT = "var(--nura-text-primary)";
+const MUTED = "var(--nura-ink-muted)";
+const FAINT = "var(--nura-ink-faint)";
+const SAGE = "var(--nura-sage)";
 
 // hexA on the shared hex tuple helper — "#5dccae" + alpha → rgba string.
 const hexA = (h: string, a: number) => {
@@ -24,22 +25,22 @@ const hexA = (h: string, a: number) => {
 };
 
 // Per-metric color + icon (mirrors each card/detail page's established accent).
-const META: Record<string, { color: string; icon: string }> = {
-  sleep: { color: "#5aa0e6", icon: "moon" },
-  hrv: { color: "#5dccae", icon: "wave" },
-  "resting-hr": { color: "#5dccae", icon: "heart" },
-  "heart-rate": { color: "#e8745a", icon: "heart" },
-  steps: { color: "#d3a253", icon: "steps" },
-  "active-energy": { color: "#e0a23e", icon: "flame" },
-  "body-temperature": { color: "#5dccae", icon: "temp" },
-  exercise: { color: "#5dccae", icon: "dumbbell" },
-  distance: { color: "#5aa0e6", icon: "route" },
-  "blood-oxygen": { color: "#5dccae", icon: "drop" },
-  "respiratory-rate": { color: "#a98fc4", icon: "lungs" },
-  "cardio-fitness": { color: "#d3a253", icon: "activity" },
-  "blood-pressure": { color: "#c47d8e", icon: "gauge" },
+const META: Record<string, { color: AccentToken; icon: string }> = {
+  sleep: { color: "--nura-sleep-deep", icon: "moon" },
+  hrv: { color: "--nura-teal", icon: "wave" },
+  "resting-hr": { color: "--nura-teal", icon: "heart" },
+  "heart-rate": { color: "--nura-alert", icon: "heart" },
+  steps: { color: "--nura-good", icon: "steps" },
+  "active-energy": { color: "--nura-amber", icon: "flame" },
+  "body-temperature": { color: "--nura-teal", icon: "temp" },
+  exercise: { color: "--nura-teal", icon: "dumbbell" },
+  distance: { color: "--nura-sleep-deep", icon: "route" },
+  "blood-oxygen": { color: "--nura-teal", icon: "drop" },
+  "respiratory-rate": { color: "--nura-mauve", icon: "lungs" },
+  "cardio-fitness": { color: "--nura-good", icon: "activity" },
+  "blood-pressure": { color: "--nura-rose", icon: "gauge" },
 };
-const FALLBACK = { color: SAGE, icon: "dot" };
+const FALLBACK = { color: "--nura-sage" as AccentToken, icon: "dot" };
 
 function MetricIcon({ name, color }: { name: string; color: string }) {
   const c = { width: 17, height: 17, viewBox: "0 0 24 24", fill: "none", stroke: color, strokeWidth: 1.7, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
@@ -88,6 +89,9 @@ export default function CustomizeSheet({
   hidden: Set<string>;
   onToggle: (id: string) => void;
 }) {
+  // Must precede the `open` early-return — hooks cannot be called conditionally.
+  const acc = useAccents();
+
   if (!open) return null;
 
   const shown = available.filter((m) => !hidden.has(m.id)).length;
@@ -157,8 +161,8 @@ export default function CustomizeSheet({
                   opacity: on ? 1 : 0.45, transition: "opacity .18s",
                 }}
               >
-                <div style={{ flex: "none", width: 34, height: 34, borderRadius: 11, display: "flex", alignItems: "center", justifyContent: "center", background: hexA(meta.color, 0.13), border: `1px solid ${hexA(meta.color, 0.26)}` }}>
-                  <MetricIcon name={meta.icon} color={meta.color} />
+                <div style={{ flex: "none", width: 34, height: 34, borderRadius: 11, display: "flex", alignItems: "center", justifyContent: "center", background: hexA(acc[meta.color], 0.13), border: `1px solid ${hexA(acc[meta.color], 0.26)}` }}>
+                  <MetricIcon name={meta.icon} color={acc[meta.color]} />
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 14, fontWeight: 700 }}>{m.name}</div>
@@ -175,7 +179,7 @@ export default function CustomizeSheet({
           onClick={onClose}
           style={{
             width: "100%", marginTop: 16, padding: "13px 0", borderRadius: 14, border: "none", cursor: "pointer",
-            background: SAGE, color: "#13201b", fontFamily: SANS, fontSize: 14.5, fontWeight: 700, letterSpacing: "0.2px",
+            background: SAGE, color: "var(--nura-sage-bg-on)", fontFamily: SANS, fontSize: 14.5, fontWeight: 700, letterSpacing: "0.2px",
           }}
         >
           Done

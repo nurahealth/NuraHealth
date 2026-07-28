@@ -1,5 +1,7 @@
 import type { ReactElement } from "react";
 import type { SleepDepthChartData } from "@/lib/dashboardData";
+import { useThemeTokens } from "@/lib/themeTokens";
+import { useAccents } from "@/lib/accents";
 
 // Sleep card's bespoke overnight chart (mirrors design-reference/
 // nura-sleep-card-modern.html). Only the Sleep metric card renders this; every
@@ -18,15 +20,16 @@ import type { SleepDepthChartData } from "@/lib/dashboardData";
 const SANS = "var(--font-inter), system-ui, sans-serif";
 const INK = "var(--nura-fg-rgb)"; // warm off-white in dark mode
 
-// Stage palette (literal hexes so the per-bar gradients can lighten them).
-const STAGE_HEX = {
-  deep: "#5aa0e6",  // blue
-  rem: "#5dccae",   // teal
-  light: "#9bb0a5", // sage
-  awake: "#d3a253", // gold
+// Stage palette. The per-bar gradients lighten these, so they must resolve to
+// concrete hex — see lib/themeTokens.ts.
+const STAGE_TOKENS = {
+  deep:  ["--nura-sleep-deep", "#5aa0e6"],
+  rem:   ["--nura-teal", "#5dccae"],
+  light: ["--nura-sage", "#9bb0a5"],
+  awake: ["--nura-good", "#d3a253"],
 } as const;
 
-type Stage = keyof typeof STAGE_HEX;
+type Stage = keyof typeof STAGE_TOKENS;
 
 // Depth → stage band. Mirrors the reference thresholds.
 function bandStage(d: number): Stage {
@@ -45,6 +48,8 @@ function light([r, g, b]: [number, number, number], amt: number): [number, numbe
 }
 
 export default function SleepDepthChart({ data }: { data: SleepDepthChartData }) {
+  const STAGE_HEX = useThemeTokens(STAGE_TOKENS);
+  const acc = useAccents();
   const { depth, stages, axisLabels } = data;
 
   // Geometry mirrors the reference SVG (viewBox 0 0 356 124).
@@ -104,7 +109,7 @@ export default function SleepDepthChart({ data }: { data: SleepDepthChartData })
         {stages.map((s) => (
           <div key={s.label} style={{ flex: 1, display: "flex", flexDirection: "column", gap: 4 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 6, fontFamily: SANS, fontSize: 10.5, color: `rgba(${INK},0.55)`, letterSpacing: "0.3px" }}>
-              <i style={{ width: 8, height: 8, borderRadius: 2, background: s.color, flexShrink: 0 }} />
+              <i style={{ width: 8, height: 8, borderRadius: 2, background: s.color.startsWith("--") ? acc[s.color as keyof typeof acc] : s.color, flexShrink: 0 }} />
               {s.label}
             </div>
             <div style={{ fontFamily: SANS, fontSize: 14, fontWeight: 600, color: `rgb(${INK})` }}>{s.duration}</div>

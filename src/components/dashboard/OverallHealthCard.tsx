@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { getOverallHealth, type HealthPillar, type HealthTrend } from "@/lib/dashboardData";
 import { hex, lerp, light } from "@/components/dashboard/ActiveEnergyTodayChart";
 import { useThemeTokens } from "@/lib/themeTokens";
+import { useAccents } from "@/lib/accents";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Overall Health — the dashboard's top section: a single Health Score blended
@@ -81,6 +82,7 @@ function PlanIcon({ name, color }: { name: string; color: string }) {
 // ─────────────────────────────────────────────────────────────────────────────
 export default function OverallHealthCard() {
   const tk = useThemeTokens(RING_TOKENS);
+  const acc = useAccents();
   const router = useRouter();
   const d = getOverallHealth();
   const [selected, setSelected] = useState<string | null>(null);
@@ -140,9 +142,9 @@ export default function OverallHealthCard() {
           return (
             <div key={p.key} style={{ borderTop: "1px solid var(--nura-hairline)" }}>
               <div className="oh-pill-head" onClick={() => togglePillar(p.key)} style={{ display: "flex", alignItems: "center", gap: 11, padding: "13px 2px", cursor: "pointer" }}>
-                <span style={{ width: 9, height: 9, borderRadius: "50%", flex: "none", background: p.color }} />
+                <span style={{ width: 9, height: 9, borderRadius: "50%", flex: "none", background: acc[p.color] }} />
                 <span className="oh-nm" style={{ fontSize: 14, fontWeight: 700, flex: 1, color: TEXT, transition: "color .15s" }}>{p.label}</span>
-                <span style={{ fontSize: 15, fontWeight: 700, color: p.color }}>
+                <span style={{ fontSize: 15, fontWeight: 700, color: acc[p.color] }}>
                   {p.score}<span style={{ fontSize: 9, marginLeft: 3, color: tCol(p.trend, tk) }}>{tArrow(p.trend)}</span>
                 </span>
                 <span style={{ display: "flex", transform: open ? "rotate(180deg)" : "none", transition: "transform .2s" }}><Chevron /></span>
@@ -193,8 +195,8 @@ export default function OverallHealthCard() {
             return (
               <div key={item.title} className="oh-imp-item" style={{ borderTop: "1px solid var(--nura-hairline)", marginTop: 11, paddingTop: 11 }}>
                 <div onClick={() => togglePlan(item.title)} style={{ display: "flex", alignItems: "center", gap: 11, cursor: "pointer" }}>
-                  <span style={{ width: 28, height: 28, borderRadius: 9, flex: "none", display: "flex", alignItems: "center", justifyContent: "center", background: `${item.color}1f`, border: `1px solid ${item.color}55` }}>
-                    <PlanIcon name={item.icon} color={item.color} />
+                  <span style={{ width: 28, height: 28, borderRadius: 9, flex: "none", display: "flex", alignItems: "center", justifyContent: "center", background: `${acc[item.color]}1f`, border: `1px solid ${acc[item.color]}55` }}>
+                    <PlanIcon name={item.icon} color={acc[item.color]} />
                   </span>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 13.5, fontWeight: 700, color: TEXT }}>{item.title}</div>
@@ -209,7 +211,7 @@ export default function OverallHealthCard() {
                       <div style={{ marginTop: 9 }}>
                         <button
                           onClick={() => router.push(item.link!)}
-                          style={{ background: "none", border: "none", padding: 0, cursor: "pointer", fontFamily: SANS, fontSize: 13, fontWeight: 700, color: item.color }}
+                          style={{ background: "none", border: "none", padding: 0, cursor: "pointer", fontFamily: SANS, fontSize: 13, fontWeight: 700, color: acc[item.color] }}
                         >
                           {item.linkLabel ?? "Learn more →"}
                         </button>
@@ -234,6 +236,7 @@ export default function OverallHealthCard() {
 // pillar dims the ring + other pillars and shows that pillar's score in the center.
 function HealthRing({ d, selected, onSelect }: { d: ReturnType<typeof getOverallHealth>; selected: string | null; onSelect: (k: string) => void }) {
   const tk = useThemeTokens(RING_TOKENS);
+  const acc = useAccents();
   // Health-Score ring ramp: sage → teal → blue, resolved from the theme.
   const RAMP: [number, string][] = [[0, tk.sage], [0.45, tk.teal], [1, tk.blue]];
   const rawId = useId();
@@ -316,7 +319,7 @@ function HealthRing({ d, selected, onSelect }: { d: ReturnType<typeof getOverall
       {/* Center number */}
       {selPillar ? (
         <>
-          <text x={cx} y={cy - 2} textAnchor="middle" fontFamily={SANS} fontSize={32} fontWeight={700} fill={selPillar.color}>{selPillar.score}</text>
+          <text x={cx} y={cy - 2} textAnchor="middle" fontFamily={SANS} fontSize={32} fontWeight={700} fill={acc[selPillar.color]}>{selPillar.score}</text>
           <text x={cx} y={cy + 18} textAnchor="middle" fontFamily={SANS} fontSize={9} fontWeight={700} letterSpacing="1.4" fill={`rgba(${tk.inkRgb},0.5)`}>{selPillar.label.toUpperCase()}</text>
         </>
       ) : (
@@ -337,10 +340,10 @@ function HealthRing({ d, selected, onSelect }: { d: ReturnType<typeof getOverall
         const vy = sa < -0.2 ? ly - 3 : ly;
         return (
           <g key={p.key} style={{ cursor: "pointer" }} onClick={() => onSelect(p.key)}>
-            <line x1={(cx + 64 * ca).toFixed(1)} y1={(cy + 64 * sa).toFixed(1)} x2={(cx + (big ? 86 : 82) * ca).toFixed(1)} y2={(cy + (big ? 86 : 82) * sa).toFixed(1)} stroke={p.color} strokeWidth={big ? 3 : 2.2} strokeLinecap="round" opacity={Number((0.85 * o).toFixed(2))} />
-            <line x1={(cx + 92 * ca).toFixed(1)} y1={(cy + 92 * sa).toFixed(1)} x2={(cx + 110 * ca).toFixed(1)} y2={(cy + 110 * sa).toFixed(1)} stroke={p.color} strokeWidth={1.3} opacity={Number((0.45 * o).toFixed(2))} />
-            <circle cx={(cx + 92 * ca).toFixed(1)} cy={(cy + 92 * sa).toFixed(1)} r={big ? 3.4 : 2.4} fill={p.color} opacity={o} style={{ filter: `drop-shadow(0 0 ${big ? 7 : 4}px ${p.color})` }} />
-            <text x={lx.toFixed(1)} y={vy.toFixed(1)} textAnchor={anchor} fontFamily={SANS} fontSize={17.5} fontWeight={700} fill={p.color} opacity={o}>
+            <line x1={(cx + 64 * ca).toFixed(1)} y1={(cy + 64 * sa).toFixed(1)} x2={(cx + (big ? 86 : 82) * ca).toFixed(1)} y2={(cy + (big ? 86 : 82) * sa).toFixed(1)} stroke={acc[p.color]} strokeWidth={big ? 3 : 2.2} strokeLinecap="round" opacity={Number((0.85 * o).toFixed(2))} />
+            <line x1={(cx + 92 * ca).toFixed(1)} y1={(cy + 92 * sa).toFixed(1)} x2={(cx + 110 * ca).toFixed(1)} y2={(cy + 110 * sa).toFixed(1)} stroke={acc[p.color]} strokeWidth={1.3} opacity={Number((0.45 * o).toFixed(2))} />
+            <circle cx={(cx + 92 * ca).toFixed(1)} cy={(cy + 92 * sa).toFixed(1)} r={big ? 3.4 : 2.4} fill={acc[p.color]} opacity={o} style={{ filter: `drop-shadow(0 0 ${big ? 7 : 4}px ${acc[p.color]})` }} />
+            <text x={lx.toFixed(1)} y={vy.toFixed(1)} textAnchor={anchor} fontFamily={SANS} fontSize={17.5} fontWeight={700} fill={acc[p.color]} opacity={o}>
               {p.score}<tspan fontSize="9" dx="3" dy="-5" fill={tCol(p.trend, tk)}>{tArrow(p.trend)}</tspan>
             </text>
             <text x={lx.toFixed(1)} y={(vy + 11).toFixed(1)} textAnchor={anchor} fontFamily={SANS} fontSize={8.5} fontWeight={600} letterSpacing="0.6" fill={`rgba(${tk.inkRgb},0.5)`} opacity={o}>{p.label.toUpperCase()}</text>

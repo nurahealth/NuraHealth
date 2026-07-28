@@ -4,6 +4,7 @@ import { useState, type ReactElement } from "react";
 import { useRouter } from "next/navigation";
 import { getHealthPlan, getOverallHealth, type HealthPlanDomain } from "@/lib/dashboardData";
 import { hex } from "@/components/dashboard/ActiveEnergyTodayChart";
+import { useAccents } from "@/lib/accents";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Health Plan — the dashboard's "Your health plan" section: a personalized
@@ -87,6 +88,7 @@ const SectionLabel = ({ children, color }: { children: string; color: string }) 
 
 // ─────────────────────────────────────────────────────────────────────────────
 export default function HealthPlanCard() {
+  const acc = useAccents();
   const router = useRouter();
   const p = getHealthPlan();
   const oh = getOverallHealth();
@@ -190,8 +192,8 @@ export default function HealthPlanCard() {
           return (
             <div key={d.key} style={{ borderTop: "1px solid var(--nura-hairline)" }}>
               <div onClick={() => toggle(d.key)} style={{ display: "flex", gap: 12, alignItems: "center", padding: "13px 2px", cursor: "pointer" }}>
-                <div style={{ flex: "none", width: 34, height: 34, borderRadius: 11, display: "flex", alignItems: "center", justifyContent: "center", background: hexA(d.color, 0.13), border: `1px solid ${hexA(d.color, 0.26)}` }}>
-                  <DomainIcon name={d.icon} color={d.color} />
+                <div style={{ flex: "none", width: 34, height: 34, borderRadius: 11, display: "flex", alignItems: "center", justifyContent: "center", background: hexA(acc[d.color], 0.13), border: `1px solid ${hexA(acc[d.color], 0.26)}` }}>
+                  <DomainIcon name={d.icon} color={acc[d.color]} />
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 14, fontWeight: 700, color: TEXT }}>{d.title}</div>

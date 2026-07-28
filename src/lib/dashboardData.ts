@@ -8,6 +8,8 @@
 // Dashboard UI having to change — the UI only ever reads these typed shapes.
 // ─────────────────────────────────────────────────────────────────────────────
 
+import type { AccentToken } from "@/lib/accents";
+
 export type MetricStatus = "optimal" | "good" | "alert";
 
 export type SourceId = "oura" | "apple-watch" | "apple-health";
@@ -220,7 +222,7 @@ const DASHBOARD_DATA: DashboardData = {
           { label: "Deep", duration: "1h 22m", color: "var(--nura-sleep-deep)" },
           { label: "REM", duration: "1h 48m", color: "var(--nura-teal)" },
           { label: "Light", duration: "4h 02m", color: "var(--nura-sage)" },
-          { label: "Awake", duration: "0h 20m", color: "#d3a253" },
+          { label: "Awake", duration: "0h 20m", color: "--nura-good" },
         ],
         axisLabels: ["11p", "1a", "3a", "5a", "7a"],
       },
@@ -474,7 +476,9 @@ export interface SleepStageDetail {
   label: string;
   /** Tag background color. */
   color: string;
-  /** Tag text color (hand-picked for contrast on `color`). */
+  /** Tag text color. NOTE: currently unconsumed by any component — left as
+   *  literal hex rather than tokenised, to avoid inventing tokens for dead
+   *  data. Tokenise if a component ever renders it. */
   textColor: string;
   duration: string;
   pct: number;
@@ -570,10 +574,10 @@ const SLEEP_DETAIL: SleepDetail = {
   ],
   timeInBed: "8h 20m",
   stages: [
-    { label: "Awake", color: "rgba(235,230,216,0.4)", textColor: "#0d0d0e", duration: "0h 58m", pct: 12 },
-    { label: "REM sleep", color: "#5dccae", textColor: "#06372c", duration: "2h 18m", pct: 28 },
-    { label: "Light sleep", color: "#9bb0a5", textColor: "#16241e", duration: "3h 46m", pct: 46 },
-    { label: "Deep sleep", color: "#5aa0e6", textColor: "#082742", duration: "1h 04m", pct: 13 },
+    { label: "Awake", color: "rgba(var(--nura-fg-rgb),0.4)", textColor: "#0d0d0e", duration: "0h 58m", pct: 12 },
+    { label: "REM sleep", color: "--nura-teal", textColor: "#06372c", duration: "2h 18m", pct: 28 },
+    { label: "Light sleep", color: "--nura-sage", textColor: "#16241e", duration: "3h 46m", pct: 46 },
+    { label: "Deep sleep", color: "--nura-sleep-deep", textColor: "#082742", duration: "1h 04m", pct: 13 },
   ],
   hypnogram: {
     // 0 deep · 1 light · 2 REM · 3 awake
@@ -581,7 +585,7 @@ const SLEEP_DETAIL: SleepDetail = {
       1, 1, 2, 1, 0, 0, 1, 1, 2, 3, 1, 1, 0, 0, 0, 1, 2, 2, 1, 1, 0, 1, 1, 2,
       2, 3, 1, 1, 1, 2, 2, 2, 1, 3, 1, 2, 2, 2, 3, 1, 1, 2, 2, 3, 3,
     ],
-    levelColors: ["#5aa0e6", "#9bb0a5", "#5dccae", "rgba(235,230,216,0.4)"],
+    levelColors: ["--nura-sleep-deep", "--nura-sage", "--nura-teal", "rgba(var(--nura-fg-rgb),0.4)"],
     axisLabels: ["11:48 PM", "2 AM", "4 AM", "6 AM", "8:08 AM"],
   },
   cycles: {
@@ -1281,8 +1285,8 @@ export interface HealthPillar {
   label: string;
   score: number;
   trend: HealthTrend;
-  /** Pillar accent color (hex). */
-  color: string;
+  /** Pillar accent — a --nura-* token name; resolve via useAccents(). */
+  color: AccentToken;
   /** Angle (deg) of the pillar's spoke on the ring. */
   ang: number;
   /** One-line summary — also the "What it measures" field. */
@@ -1296,7 +1300,8 @@ export interface HealthPillar {
 export interface HealthPlanItem {
   /** Icon key — maps to an inline SVG chip in the card. */
   icon: string;
-  color: string;
+  /** Accent — a --nura-* token name; resolve via useAccents(). */
+  color: AccentToken;
   title: string;
   /** Always-visible one-line summary. */
   summary: string;
@@ -1324,27 +1329,27 @@ const OVERALL_HEALTH: OverallHealth = {
   weeklyTrend: 3,
   status: "Thriving",
   pillars: [
-    { key: "recovery", label: "Recovery", score: 88, trend: "up", color: "#5dccae", ang: -90,
+    { key: "recovery", label: "Recovery", score: 88, trend: "up", color: "--nura-teal", ang: -90,
       measures: "How well your nervous system has bounced back.",
       builtFrom: "Overnight HRV, resting & sleeping heart rate.",
       reading: "Strong — your body is well-prepared for stress and training today." },
-    { key: "heart", label: "Heart", score: 82, trend: "up", color: "#f0a890", ang: -30,
+    { key: "heart", label: "Heart", score: 82, trend: "up", color: "--nura-rose", ang: -30,
       measures: "Your cardiovascular health and efficiency.",
       builtFrom: "Resting & active heart rate, HRV, heart-rate recovery.",
       reading: "Solid — your heart is working efficiently. Keep regular aerobic work in your week." },
-    { key: "metabolic", label: "Metabolic", score: 79, trend: "flat", color: "#e0a23e", ang: 30,
+    { key: "metabolic", label: "Metabolic", score: 79, trend: "flat", color: "--nura-amber", ang: 30,
       measures: "How your body manages energy and temperature.",
       builtFrom: "Body-temperature deviation, respiratory rate, recovery balance.",
       reading: "Good, with a little room. Steady night-to-night — no red flags." },
-    { key: "activity", label: "Activity", score: 74, trend: "down", color: "#d3a253", ang: 90,
+    { key: "activity", label: "Activity", score: 74, trend: "down", color: "--nura-good", ang: 90,
       measures: "Your daily movement and exercise load.",
       builtFrom: "Steps, active energy, workouts, sedentary time.",
       reading: "Your lowest pillar. More daily movement here lifts every other score." },
-    { key: "sleep", label: "Sleep", score: 86, trend: "up", color: "#5aa0e6", ang: 150,
+    { key: "sleep", label: "Sleep", score: 86, trend: "up", color: "--nura-sleep-deep", ang: 150,
       measures: "The quantity and quality of your sleep.",
       builtFrom: "Total sleep, deep & REM time, efficiency, timing.",
       reading: "Strong — restorative sleep is doing much of the heavy lifting in your recovery." },
-    { key: "resilience", label: "Resilience", score: 84, trend: "up", color: "#9bb0a5", ang: 210,
+    { key: "resilience", label: "Resilience", score: 84, trend: "up", color: "--nura-sage", ang: 210,
       measures: "Your capacity to handle stress over time.",
       builtFrom: "HRV trend, sleep consistency, recovery patterns.",
       reading: "Robust — you're adapting well to your current load." },
@@ -1353,19 +1358,19 @@ const OVERALL_HEALTH: OverallHealth = {
   percentile: { value: "Top 18%", note: "for your age" },
   bestPillar: { label: "Recovery", note: "88 · strong" },
   plan: [
-    { icon: "move", color: "#d3a253", title: "Move more",
+    { icon: "move", color: "--nura-good", title: "Move more",
       summary: "Activity is your one lagging pillar at 74.",
       body: "Activity is your one lagging pillar at 74. A daily 20-minute walk and landing closer to 9k steps would lift your score faster than anything else." },
-    { icon: "moon", color: "#5aa0e6", title: "Lock a consistent bedtime",
+    { icon: "moon", color: "--nura-sleep-deep", title: "Lock a consistent bedtime",
       summary: "Your sleep timing drifts late.",
       body: "Your sleep timing drifts late. A consistent bedtime — even on weekends — would push Recovery and Resilience higher still." },
-    { icon: "fork", color: "#5dccae", title: "Eating habits",
+    { icon: "fork", color: "--nura-teal", title: "Eating habits",
       summary: "Anchor protein and fiber earlier in the day.",
       body: "Front-loading protein and fiber earlier in the day steadies energy and supports your Metabolic pillar. Aim for a protein-forward breakfast and keep dinners lighter and earlier." },
-    { icon: "sugar", color: "#e0a23e", title: "Ease off added sugar",
+    { icon: "sugar", color: "--nura-amber", title: "Ease off added sugar",
       summary: "Trim the evening sweets and sugary drinks.",
       body: "Added sugar late in the day nudges your overnight temperature and heart rate up, which can blunt recovery. Cutting back on evening sweets and sugary drinks is an easy win for Metabolic and Recovery." },
-    { icon: "pill", color: "#f0a890", title: "Supplements",
+    { icon: "pill", color: "--nura-rose", title: "Supplements",
       summary: "A couple of targeted basics could help.",
       body: "Based on your readings, magnesium for sleep depth and omega-3s for cardiovascular support are worth a look. Nothing here is essential — they're small levers on pillars you're already doing well on.",
       link: "/lab", linkLabel: "View options in your Lab →" },
@@ -1389,7 +1394,8 @@ export interface HealthPlanDomain {
   key: string;
   /** Icon key — leaf | pill | drop | activity | moon | wind. */
   icon: string;
-  color: string;
+  /** Accent — a --nura-* token name; resolve via useAccents(). */
+  color: AccentToken;
   title: string;
   summary: string;
   /** Which pillars this domain lifts, e.g. "Metabolic · Heart". */
@@ -1425,37 +1431,37 @@ const HEALTH_PLAN: HealthPlan = {
   targetCaption: "Your 4-week target if you stay consistent",
   focus: ["Post-meal walks", "Earlier, lighter dinners", "Magnesium nightly"],
   domains: [
-    { key: "nutrition", icon: "leaf", color: "#5dccae", title: "Nutrition", summary: "Anti-inflammatory, protein-forward eating.", lifts: "Metabolic · Heart", steps: [
+    { key: "nutrition", icon: "leaf", color: "--nura-teal", title: "Nutrition", summary: "Anti-inflammatory, protein-forward eating.", lifts: "Metabolic · Heart", steps: [
       "Build each meal around a <b>palm of protein</b> and two fists of vegetables.",
       "Add omega-3 rich foods — wild salmon, sardines, walnuts, flax — about 3× a week.",
       "Finish eating <b>~3 hours before bed</b> and keep dinners on the lighter side.",
       "Cut added sugar and refined carbs, especially in the evening.",
     ] },
-    { key: "supplements", icon: "pill", color: "#9bb0a5", title: "Supplements", summary: "A simple, targeted daily stack.", lifts: "Recovery · Sleep", link: "/lab", linkLabel: "View options in your Lab", steps: [
+    { key: "supplements", icon: "pill", color: "--nura-sage", title: "Supplements", summary: "A simple, targeted daily stack.", lifts: "Recovery · Sleep", link: "/lab", linkLabel: "View options in your Lab", steps: [
       "<b>Magnesium glycinate</b> in the evening — supports deep sleep and calm.",
       "<b>Omega-3 (EPA/DHA)</b> with a meal — supports heart and recovery.",
       "<b>Vitamin D3 + K2</b> — test your levels first, then dose to target.",
       "<b>Ashwagandha (KSM-66)</b> in the evening if stress runs high.",
     ] },
-    { key: "essential-oils", icon: "drop", color: "#a98fc4", title: "Essential oils", summary: "Aromatherapy for calm and recovery.", lifts: "Sleep · Resilience", link: "/lab", linkLabel: "View options in your Lab", steps: [
+    { key: "essential-oils", icon: "drop", color: "--nura-mauve", title: "Essential oils", summary: "Aromatherapy for calm and recovery.", lifts: "Sleep · Resilience", link: "/lab", linkLabel: "View options in your Lab", steps: [
       "Diffuse <b>lavender</b> in the bedroom ~30 min before sleep.",
       "Use <b>frankincense or cedarwood</b> during your evening wind-down.",
       "<b>Peppermint</b> in the morning for alertness and focus.",
       "<b>Eucalyptus</b> in the shower to support easy breathing.",
     ] },
-    { key: "movement", icon: "activity", color: "#d3a253", title: "Movement", summary: "Build a daily activity base.", lifts: "Activity · Heart", steps: [
+    { key: "movement", icon: "activity", color: "--nura-good", title: "Movement", summary: "Build a daily activity base.", lifts: "Activity · Heart", steps: [
       "Walk <b>10–15 min after meals</b> — steadies blood sugar and adds steps.",
       "2–3 easy <b>zone-2 cardio</b> sessions a week (conversational pace, 30–40 min).",
       "One <b>strength session</b> for muscle and metabolic health.",
       "Break up long sitting — stand or move every hour.",
     ] },
-    { key: "sleep", icon: "moon", color: "#5aa0e6", title: "Sleep", summary: "Protect a consistent, restorative night.", lifts: "Recovery · Resilience", steps: [
+    { key: "sleep", icon: "moon", color: "--nura-sleep-deep", title: "Sleep", summary: "Protect a consistent, restorative night.", lifts: "Recovery · Resilience", steps: [
       "Fixed <b>lights-out near 10:45pm</b>, even on weekends.",
       "Dim screens and lights <b>30–60 min before bed</b>.",
       "Keep the room cool (~65°F) and fully dark.",
       "Get <b>morning sunlight</b> within an hour of waking to anchor your rhythm.",
     ] },
-    { key: "stress", icon: "wind", color: "#f0a890", title: "Stress & mind", summary: "Downregulate every day.", lifts: "Resilience · Recovery", steps: [
+    { key: "stress", icon: "wind", color: "--nura-rose", title: "Stress & mind", summary: "Downregulate every day.", lifts: "Resilience · Recovery", steps: [
       "<b>5 minutes of slow breathing</b> (longer exhales) once a day.",
       "Get outside daylight — especially morning sun.",
       "Protect one evening wind-down block with no work.",
