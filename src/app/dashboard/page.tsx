@@ -96,16 +96,24 @@ export default function DashboardPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router]);
 
-  if (authLoading) return <NuraPageShell maxWidth={480}><div /></NuraPageShell>;
+  if (authLoading) return <NuraPageShell maxWidth={480} desktopMaxWidth={1200}><div /></NuraPageShell>;
 
   const now = new Date();
   const dateLabel = now.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
 
   return (
-    <NuraPageShell maxWidth={480}>
+    <NuraPageShell maxWidth={480} desktopMaxWidth={1200}>
       <style>{`
+        /* The two narrative cards: stacked on phones, side by side once there
+           is room. Without this they stretch to the full 1200 and the reading
+           measure inside them blows out. */
+        .dash-hero { display: grid; grid-template-columns: 1fr; gap: 16px; align-items: start; }
+        @media (min-width: 1024px) { .dash-hero { grid-template-columns: 1fr 1fr; gap: 18px; } }
         .dash-grid { display: grid; grid-template-columns: 1fr; gap: 14px; }
         @media (min-width: 640px) { .dash-grid { grid-template-columns: 1fr 1fr; gap: 16px; } }
+        /* Metric cards are small and self-contained, so they take a third
+           column once the rail is docked and the shell widens to 1200. */
+        @media (min-width: 1024px) { .dash-grid { grid-template-columns: repeat(3, 1fr); gap: 18px; } }
         .dash-card { transition: border-color 180ms, transform 180ms; }
         .dash-card:hover { border-color: rgba(var(--nura-sage-rgb),0.35) !important; transform: translateY(-2px); }
         .dash-cta:hover { color: var(--nura-sage-hover) !important; }
@@ -130,11 +138,12 @@ export default function DashboardPage() {
         {data.sources.map((s) => <SourcePill key={s.id} source={s} />)}
       </div>
 
-      {/* 3 — Health Plan (sits directly above Overall Health) */}
-      <HealthPlanCard />
-
-      {/* 4 — Overall Health (replaces the old Readiness hero) */}
-      <OverallHealthCard />
+      {/* 3+4 — Health Plan and Overall Health. One column on phones (Plan
+          first, as before); two columns from lg. */}
+      <div className="dash-hero">
+        <HealthPlanCard />
+        <OverallHealthCard />
+      </div>
 
       {/* 5 — Metric grid (only cards that have data AND aren't hidden) */}
       <div className="dash-grid" style={{ marginTop: 16 }}>

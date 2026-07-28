@@ -59,7 +59,7 @@ export const GLOBAL_CSS = `
     40%, 80%  { transform: translateX(5px) translateY(-2px) scale(1.02); }
   }
   * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
-  html, body { margin: 0; padding: 0; }
+  
   ::-webkit-scrollbar { width: 0; }
   input::placeholder { color: rgba(var(--nura-fg-rgb),0.3) !important; }
   textarea::placeholder { color: rgba(var(--nura-fg-rgb),0.3) !important; }

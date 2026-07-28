@@ -27,7 +27,7 @@ export default function MetricDetailPage({ params }: { params: Promise<{ metric:
   const m = getMetric(metric);
 
   return (
-    <NuraPageShell maxWidth={860}>
+    <NuraPageShell maxWidth={860} desktopMaxWidth={760}>
       <button
         onClick={() => router.push("/dashboard")}
         style={{

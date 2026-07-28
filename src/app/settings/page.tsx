@@ -110,7 +110,7 @@ export default function SettingsPage() {
   };
 
   if (authLoading) {
-    return <NuraPageShell maxWidth={680}><div /></NuraPageShell>;
+    return <NuraPageShell maxWidth={680} desktopMaxWidth={900}><div /></NuraPageShell>;
   }
 
   const displayName = profileName || user?.user_metadata?.name || user?.email?.split("@")[0] || "Friend";
@@ -144,7 +144,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <NuraPageShell maxWidth={680}>
+    <NuraPageShell maxWidth={680} desktopMaxWidth={900}>
       {/* HERO */}
       <div style={{ marginBottom: 24 }}>
         <h1 style={{

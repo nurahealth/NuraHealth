@@ -186,7 +186,7 @@ export default async function GroceryPage() {
   }
 
   return (
-    <NuraPageShell maxWidth={760}>
+    <NuraPageShell maxWidth={760} desktopMaxWidth={900}>
       <GroceryClient items={items} planItems={planItems} tableReady={tableReady} userId={user.id} />
     </NuraPageShell>
   );

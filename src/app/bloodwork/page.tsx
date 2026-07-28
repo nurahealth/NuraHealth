@@ -236,7 +236,7 @@ function BloodworkPageInner() {
   if (authLoading) return <NuraPageShell><div /></NuraPageShell>;
 
   return (
-    <NuraPageShell maxWidth={680}>
+    <NuraPageShell maxWidth={680} desktopMaxWidth={900}>
       <style>{`
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
       `}</style>

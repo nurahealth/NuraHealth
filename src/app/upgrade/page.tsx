@@ -78,7 +78,7 @@ export default function UpgradePage() {
     <div style={{ minHeight: "100dvh", background: BG, fontFamily: SANS, display: "flex", flexDirection: "column", alignItems: "center", padding: "56px 20px 80px" }}>
       <style>{`
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        html, body { margin: 0; padding: 0; }
+        
         @keyframes pulse-ring {
           0%, 100% { box-shadow: 0 0 0 0 rgba(var(--nura-sage-rgb),0.25); }
           50%       { box-shadow: 0 0 0 8px rgba(var(--nura-sage-rgb),0); }

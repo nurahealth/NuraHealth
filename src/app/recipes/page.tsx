@@ -80,7 +80,7 @@ export default async function RecipesPage() {
   }));
 
   return (
-    <NuraPageShell maxWidth={1040}>
+    <NuraPageShell maxWidth={1040} desktopMaxWidth={1200}>
       <RecipesBrowseClient recipes={recipes} savedIds={savedIds} userId={user.id} />
     </NuraPageShell>
   );

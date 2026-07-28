@@ -83,12 +83,12 @@ export default function FitnessPage() {
   }, []);
 
   if (view === 'loading') {
-    return <NuraPageShell title="Fitness" maxWidth={760}><div /></NuraPageShell>;
+    return <NuraPageShell title="Fitness" maxWidth={760} desktopMaxWidth={1200}><div /></NuraPageShell>;
   }
 
   if (view === 'error') {
     return (
-      <NuraPageShell title="Fitness" maxWidth={760}>
+      <NuraPageShell title="Fitness" maxWidth={760} desktopMaxWidth={1200}>
         <div style={{ borderRadius: 18, padding: '24px 22px', textAlign: 'center', background: 'var(--nura-tint-danger)', border: '1px solid var(--nura-tint-danger-border)' }}>
           <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--nura-danger-soft)', marginBottom: 6 }}>Couldn&apos;t load Fitness</div>
           <p style={{ fontSize: 13, color: 'var(--nura-text-secondary)', lineHeight: 1.6, margin: '0 0 16px', wordBreak: 'break-word' }}>{errorMsg}</p>
@@ -115,7 +115,7 @@ export default function FitnessPage() {
   }
 
   if (!profile) {
-    return <NuraPageShell title="Fitness" maxWidth={760}><div /></NuraPageShell>;
+    return <NuraPageShell title="Fitness" maxWidth={760} desktopMaxWidth={1200}><div /></NuraPageShell>;
   }
 
   // The Fitness tab renders the dashboard (1:1 port of the design reference),

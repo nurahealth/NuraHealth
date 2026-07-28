@@ -630,7 +630,7 @@ function SupplementsPageInner() {
   );
 
   if (authLoading) {
-    return <NuraPageShell maxWidth={720}><div /></NuraPageShell>;
+    return <NuraPageShell maxWidth={720} desktopMaxWidth={1200}><div /></NuraPageShell>;
   }
 
   const sortedAll = [...supplements].sort((a, b) => a.name.localeCompare(b.name));
@@ -646,7 +646,7 @@ function SupplementsPageInner() {
   const isScheduleInteractive = selectedDay === todayDayId;
 
   return (
-    <NuraPageShell maxWidth={720}>
+    <NuraPageShell maxWidth={720} desktopMaxWidth={1200}>
       <style>{`
         @keyframes nura-fade-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes nura-modal-in { from { opacity: 0; } to { opacity: 1; } }

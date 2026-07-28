@@ -228,7 +228,7 @@ export default async function LabProductPage({ params }: { params: Promise<{ slu
   const card: React.CSSProperties = { background: SURFACE, border: `0.5px solid ${BORDER}`, borderRadius: 14 };
 
   return (
-    <NuraPageShell maxWidth={860}>
+    <NuraPageShell maxWidth={860} desktopMaxWidth={760}>
       <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
 
         {/* ── Header card ─────────────────────────────────────────────────── */}

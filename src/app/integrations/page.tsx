@@ -98,7 +98,7 @@ export default function IntegrationsPage() {
   const [modalDevice, setModalDevice] = useState<Provider | null>(null);
 
   return (
-    <NuraPageShell maxWidth={920}>
+    <NuraPageShell maxWidth={920} desktopMaxWidth={900}>
       <style>{`
         @keyframes ig-fade-in { from { opacity: 0; } to { opacity: 1; } }
         @keyframes ig-pop-in {

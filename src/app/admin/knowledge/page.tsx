@@ -957,7 +957,7 @@ export default function AdminKnowledgePage() {
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         @keyframes drop-pulse { 0%, 100% { box-shadow: 0 0 0 4px rgba(var(--nura-sage-rgb),0.15); } 50% { box-shadow: 0 0 0 6px rgba(var(--nura-sage-rgb),0.30); } }
         * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
-        html, body { margin: 0; padding: 0; background: var(--nura-bg); }
+        html, body { background: var(--nura-bg); }
         ::-webkit-scrollbar { width: 0; }
         .source-card { transition: background 200ms, border-color 200ms, transform 200ms; }
         .source-card:hover { background: var(--nura-surface-elevated); border-color: rgba(var(--nura-sage-rgb),0.35); transform: translateY(-1px); }

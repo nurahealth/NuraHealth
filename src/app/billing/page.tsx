@@ -201,7 +201,7 @@ export default function BillingPage() {
   };
 
   if (!authChecked) {
-    return <NuraPageShell maxWidth={680}><div /></NuraPageShell>;
+    return <NuraPageShell maxWidth={680} desktopMaxWidth={900}><div /></NuraPageShell>;
   }
 
   const isCanceling = !!subscription?.cancel_at_period_end;
@@ -214,7 +214,7 @@ export default function BillingPage() {
   const showTrialBanner = isTrialing && trialDays !== null && trialDays <= 3;
 
   return (
-    <NuraPageShell maxWidth={680}>
+    <NuraPageShell maxWidth={680} desktopMaxWidth={900}>
       {/* HERO */}
       <div style={{ marginBottom: 24 }}>
         <h1 style={{

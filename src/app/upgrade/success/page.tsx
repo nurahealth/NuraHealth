@@ -83,7 +83,7 @@ function SuccessContent() {
     <div style={{ minHeight: "100dvh", background: BG, fontFamily: SANS, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "40px 20px", textAlign: "center" }}>
       <style>{`
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        html, body { margin: 0; padding: 0; }
+        
         @keyframes bounce-in {
           0%   { transform: scale(0); }
           70%  { transform: scale(1.12); }

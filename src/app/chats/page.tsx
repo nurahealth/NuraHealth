@@ -53,7 +53,7 @@ export default function ChatsListPage() {
     <div style={{ minHeight: "100dvh", background: BG, fontFamily: SANS, display: "flex", flexDirection: "column" }}>
       <style>{`
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        html, body { margin: 0; padding: 0; background: ${BG}; }
+        html, body { background: ${BG}; }
       `}</style>
 
       <header style={{

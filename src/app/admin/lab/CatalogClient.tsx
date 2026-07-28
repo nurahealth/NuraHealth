@@ -1532,7 +1532,7 @@ export default function CatalogClient({ initialProducts, categories }: {
       <style>{`
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
-        html, body { margin: 0; padding: 0; background: var(--nura-bg); }
+        html, body { background: var(--nura-bg); }
         ::-webkit-scrollbar { width: 0; }
         .lab-row { transition: background 200ms, border-color 200ms, transform 200ms; }
         .lab-row:hover { background: var(--nura-surface-elevated); border-color: rgba(var(--nura-sage-rgb),0.35); transform: translateY(-1px); }

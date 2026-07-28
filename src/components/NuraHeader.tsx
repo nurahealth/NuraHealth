@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import type { User } from "@supabase/supabase-js";
 import { useSidebar } from "@/lib/sidebarStore";
+import { useIsDesktop } from "@/lib/useMediaQuery";
 import Avatar from "@/components/Avatar";
 
 const TEXT = "var(--nura-text-primary)";
@@ -46,6 +47,7 @@ function DefaultProfile() {
 
 export default function NuraHeader({ rightAction, title }: Props) {
   const openSidebar = useSidebar((s) => s.open);
+  const isDesktop = useIsDesktop();
 
   return (
     <header style={{
@@ -58,6 +60,10 @@ export default function NuraHeader({ rightAction, title }: Props) {
         onClick={openSidebar}
         aria-label="Menu"
         style={{
+          // The rail is always on screen at lg, so the trigger is redundant.
+          // Kept in the layout (visibility, not display) so the header's
+          // space-between rhythm is identical at every width.
+          visibility: isDesktop ? "hidden" : "visible",
           width: 38, height: 38, borderRadius: 11,
           background: SURFACE, border: `0.5px solid ${BORDER}`,
           display: "flex", alignItems: "center", justifyContent: "center",

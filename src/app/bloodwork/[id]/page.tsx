@@ -654,11 +654,11 @@ export default function BloodworkDetailPage({ params }: { params: Promise<{ id: 
   );
 
   if (authLoading || loading) {
-    return <NuraPageShell rightAction={ShareButton}><div style={{ padding: "60px 0", textAlign: "center", color: TEXT_TER, fontSize: 13 }}>Loading…</div></NuraPageShell>;
+    return <NuraPageShell rightAction={ShareButton} maxWidth={720} desktopMaxWidth={760}><div style={{ padding: "60px 0", textAlign: "center", color: TEXT_TER, fontSize: 13 }}>Loading…</div></NuraPageShell>;
   }
   if (error || !panel) {
     return (
-      <NuraPageShell rightAction={ShareButton}>
+      <NuraPageShell rightAction={ShareButton} maxWidth={720} desktopMaxWidth={760}>
         <div style={{ padding: "60px 0", textAlign: "center" }}>
           <p style={{ color: RED, fontSize: 14, marginBottom: 16 }}>{error ?? "Panel not found"}</p>
           <button onClick={() => router.push("/bloodwork")} style={{ background: "none", border: "none", color: SAGE, fontSize: 13, cursor: "pointer" }}>
@@ -675,7 +675,7 @@ export default function BloodworkDetailPage({ params }: { params: Promise<{ id: 
   const isFirstPanel = trendPoints.length <= 1;
 
   return (
-    <NuraPageShell rightAction={ShareButton} maxWidth={720}>
+    <NuraPageShell rightAction={ShareButton} maxWidth={720} desktopMaxWidth={760}>
       {/* Back link */}
       <div style={{ marginTop: 16, marginBottom: 24 }}>
         <Link

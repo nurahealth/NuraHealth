@@ -296,7 +296,7 @@ export default function Home() {
     <div style={{ minHeight: "100dvh", background: BG, position: "relative", overflow: "hidden", fontFamily: SANS, display: "flex", flexDirection: "column" }}>
       <style>{`
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        html, body { margin: 0; padding: 0; background: ${BG}; }
+        html, body { background: ${BG}; }
         @keyframes mic-pulse {
           0%, 100% { box-shadow: 0 0 0 0 rgba(var(--nura-record-rgb),0.4); }
           50%      { box-shadow: 0 0 0 6px rgba(var(--nura-record-rgb),0); }

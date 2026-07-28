@@ -145,7 +145,7 @@ export default async function RecipeDetailPage({
   const heading: React.CSSProperties = { fontFamily: SANS, fontSize: 22, fontWeight: 600, color: TEXT, margin: "0 0 12px", letterSpacing: "-0.02em" };
 
   return (
-    <NuraPageShell maxWidth={860}>
+    <NuraPageShell maxWidth={860} desktopMaxWidth={760}>
       <div style={{ display: "flex", flexDirection: "column", gap: 26 }}>
 
         {draftPreview && <DraftPreviewBanner />}

@@ -69,7 +69,7 @@ export default function FitnessHome({ profile, onEdit }: {
   );
 
   return (
-    <NuraPageShell title="Fitness" maxWidth={940} rightAction={calendarLink}>
+    <NuraPageShell title="Fitness" maxWidth={940} desktopMaxWidth={1200} rightAction={calendarLink}>
       {/* Heading */}
       <div style={{ marginBottom: 22 }}>
         <h1 style={{ fontSize: 26, fontWeight: 600, color: TEXT, fontFamily: SANS, margin: '0 0 6px', letterSpacing: '-0.5px' }}>

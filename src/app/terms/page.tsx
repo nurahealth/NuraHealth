@@ -205,7 +205,7 @@ const SECTIONS: Section[] = [
 
 export default function TermsPage() {
   return (
-    <NuraPageShell maxWidth={760}>
+    <NuraPageShell maxWidth={760} desktopMaxWidth={760}>
       <h1
         style={{
           fontFamily: SANS,

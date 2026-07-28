@@ -319,7 +319,7 @@ export default function ChatSessionPage({ params }: { params: Promise<{ sessionI
     <div style={{ minHeight: "100dvh", height: "100dvh", background: BG, fontFamily: SANS, display: "flex", flexDirection: "column", position: "relative" }}>
       <style>{`
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        html, body { margin: 0; padding: 0; background: ${BG}; }
+        html, body { background: ${BG}; }
         ::-webkit-scrollbar { width: 0; }
         @keyframes msg-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes typing-dot { 0%, 80%, 100% { opacity: 0.25; transform: translateY(0); } 40% { opacity: 1; transform: translateY(-3px); } }
@@ -376,12 +376,12 @@ export default function ChatSessionPage({ params }: { params: Promise<{ sessionI
 
       {/* Messages */}
       <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", padding: 18, position: "relative", zIndex: 2 }}>
-        <div style={{ maxWidth: 720, margin: "0 auto", display: "flex", flexDirection: "column", gap: 14 }}>
+        <div style={{ maxWidth: "var(--nura-measure-chat)", margin: "0 auto", display: "flex", flexDirection: "column", gap: 14 }}>
           {messages.map((m, idx) => {
             if (m.role === "user") {
               return (
                 <div key={m.id} style={{
-                  alignSelf: "flex-end", maxWidth: "78%",
+                  alignSelf: "flex-end", maxWidth: "min(78%, 46ch)",
                   padding: "10px 14px", borderRadius: "14px 14px 4px 14px",
                   background: SAGE, color: SAGE_ON, fontSize: 13.5, lineHeight: 1.5,
                   wordBreak: "break-word",
@@ -393,7 +393,7 @@ export default function ChatSessionPage({ params }: { params: Promise<{ sessionI
             }
             return (
               <div key={m.id} style={{
-                alignSelf: "flex-start", maxWidth: "88%",
+                alignSelf: "flex-start", maxWidth: "min(88%, 68ch)",
                 display: "flex", flexDirection: "column", gap: 6,
                 animation: "msg-in 240ms ease both",
               }}>
@@ -446,7 +446,7 @@ export default function ChatSessionPage({ params }: { params: Promise<{ sessionI
           })}
 
           {sending && (
-            <div style={{ alignSelf: "flex-start", maxWidth: "88%", display: "flex", flexDirection: "column", gap: 6, animation: "msg-in 240ms ease both" }}>
+            <div style={{ alignSelf: "flex-start", maxWidth: "min(88%, 68ch)", display: "flex", flexDirection: "column", gap: 6, animation: "msg-in 240ms ease both" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <div style={{ width: 18, height: 18, borderRadius: "50%", background: 'var(--nura-tint-accent-strong)', border: '0.5px solid var(--nura-tint-accent-border)', display: "flex", alignItems: "center", justifyContent: "center" }}>
                   <div style={{ width: 6, height: 6, borderRadius: "50%", background: SAGE }} />
@@ -473,7 +473,7 @@ export default function ChatSessionPage({ params }: { params: Promise<{ sessionI
             <div style={{
               alignSelf: "flex-start", padding: "10px 14px", borderRadius: 12,
               background: "var(--nura-tint-danger)", border: "1px solid var(--nura-tint-danger-border)",
-              color: "var(--nura-danger)", fontSize: 13, maxWidth: "88%",
+              color: "var(--nura-danger)", fontSize: 13, maxWidth: "min(88%, 68ch)",
             }}>
               {error}
             </div>
@@ -500,7 +500,7 @@ export default function ChatSessionPage({ params }: { params: Promise<{ sessionI
         background: "rgba(var(--nura-bg-rgb),0.9)", backdropFilter: "blur(10px)",
         borderTop: `0.5px solid ${BORDER}`,
       }}>
-        <div style={{ maxWidth: 720, margin: "0 auto" }}>
+        <div style={{ maxWidth: "var(--nura-measure-chat)", margin: "0 auto" }}>
           <div style={{
             display: "flex", alignItems: "center", gap: 2,
             background: focused ? "var(--nura-surface-elevated)" : SURFACE,

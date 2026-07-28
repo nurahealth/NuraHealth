@@ -228,7 +228,7 @@ function AuthContent() {
     }}>
       <style>{`
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        html, body { margin: 0; padding: 0; background: ${BG}; }
+        html, body { background: ${BG}; }
         @keyframes auth-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         .auth-cta:active { transform: scale(0.98); }
         input::placeholder { color: rgba(var(--nura-fg-rgb),0.35) !important; }

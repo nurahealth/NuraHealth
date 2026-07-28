@@ -204,7 +204,7 @@ export default async function WeekPlanPage() {
   });
 
   return (
-    <NuraPageShell maxWidth={860}>
+    <NuraPageShell maxWidth={860} desktopMaxWidth={1200}>
       <WeekPlanClient
         days={days}
         totalPlanned={totalPlanned}

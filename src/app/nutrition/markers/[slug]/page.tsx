@@ -211,7 +211,7 @@ export default async function MarkerDetailPage({
   const bandWidth = geo ? Math.max(2, Math.abs(geo.bandEndPct - geo.bandStartPct)) : 0;
 
   return (
-    <NuraPageShell maxWidth={760}>
+    <NuraPageShell maxWidth={760} desktopMaxWidth={760}>
       <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
         {/* Back */}
         <Link href={back.href} style={{ display: "inline-flex", alignItems: "center", gap: 6, fontFamily: SANS, fontSize: 13, fontWeight: 600, color: TEXT_SEC, textDecoration: "none", alignSelf: "flex-start", maxWidth: "100%" }}>

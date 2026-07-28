@@ -61,7 +61,10 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body style={{ margin: 0, padding: 0, minHeight: "100vh" }}>
+      {/* No inline padding: the docked-sidebar offset is a stylesheet rule
+          (body { padding-left } at lg in globals.css) and an inline `padding: 0`
+          would outrank it. Margin/padding reset lives in globals.css instead. */}
+      <body style={{ minHeight: "100vh" }}>
         <ThemeProvider>
           {children}
           <AppSidebar />

@@ -122,7 +122,7 @@ export default async function FoodDetailPage({
   );
 
   return (
-    <NuraPageShell maxWidth={860}>
+    <NuraPageShell maxWidth={860} desktopMaxWidth={760}>
       <div style={{ display: "flex", flexDirection: "column", gap: 26 }}>
 
         {/* Back — context-aware: foods grid, or the recipe we arrived from */}

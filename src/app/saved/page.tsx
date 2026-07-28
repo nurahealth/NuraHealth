@@ -134,7 +134,7 @@ export default function SavedPage() {
   const isEmpty = !showProducts && !showItems;
 
   return (
-    <NuraPageShell maxWidth={680}>
+    <NuraPageShell maxWidth={680} desktopMaxWidth={1200}>
       {/* HERO */}
       <div style={{ marginBottom: 22 }}>
         <h1 style={{

@@ -377,7 +377,27 @@
   --font-mono: var(--font-geist-mono);
 }
 
+/* ───────────────────────────────────────────────────────────────────────────
+   LAYOUT — one breakpoint, lg = 1024px.
+
+   Below lg the app is exactly the mobile experience it has always been:
+   --nura-content-left is 0 and the sidebar is an overlay drawer.
+   At lg and up the sidebar docks and every full-bleed fixed bar shifts right
+   by --nura-content-left so it starts where the content does, instead of
+   running underneath the rail.
+
+   Keep the 1024px value in step with LG in lib/useMediaQuery.ts.
+   ─────────────────────────────────────────────────────────────────────── */
+:root {
+  --nura-sidebar-w: 280px;
+  --nura-content-left: 0px;   /* left edge of the content area */
+  --nura-measure-chat: 720px; /* chat column */
+}
+
+
 html, body {
+  margin: 0;
+  padding: 0;
   background: var(--nura-bg);
   color: var(--nura-text-primary);
 }
@@ -385,6 +405,19 @@ html, body {
 body {
   font-family: var(--font-inter), system-ui, sans-serif;
 }
+
+@media (min-width: 1024px) {
+  :root {
+    --nura-content-left: var(--nura-sidebar-w);
+    --nura-measure-chat: 768px;
+  }
+  /* Push page content clear of the docked rail. Fixed overlays that should
+     cover the whole viewport (modal scrims) keep inset:0 and are unaffected. */
+  body {
+    padding-left: var(--nura-sidebar-w);
+  }
+}
+
 
 /* Theme transition — applied to the elements that actually change, not :root,
    so switching themes cross-fades instead of snapping. */

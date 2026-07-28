@@ -5,6 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import type { User } from "@supabase/supabase-js";
 import { useSidebar } from "@/lib/sidebarStore";
+import { useIsDesktop } from "@/lib/useMediaQuery";
 import Avatar from "@/components/Avatar";
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
@@ -143,8 +144,13 @@ function RecentChatRow({ id, title, updated_at, onClick }: { id: string; title: 
 export default function AppSidebar() {
   const router = useRouter();
   const pathname = usePathname();
-  const isOpen = useSidebar((s) => s.isOpen);
-  const close = useSidebar((s) => s.close);
+  const isOpenRaw = useSidebar((s) => s.isOpen);
+  const closeRaw = useSidebar((s) => s.close);
+  // At lg the rail is permanent furniture: always shown, never dismissed, and
+  // navigating must not try to "close" it. Below lg nothing changes.
+  const isDesktop = useIsDesktop();
+  const isOpen = isDesktop || isOpenRaw;
+  const close = useCallback(() => { if (!isDesktop) closeRaw(); }, [isDesktop, closeRaw]);
   const [profile, setProfile] = useState<{ name: string; email: string; status: string | null }>({ name: "", email: "", status: null });
   const [user, setUser] = useState<User | null>(null);
   const [chats, setChats] = useState<ChatSessionRow[]>([]);
@@ -186,12 +192,14 @@ export default function AppSidebar() {
     return () => { cancelled = true; };
   }, [isOpen]);
 
-  // Lock body scroll while open
+  // Lock body scroll only while the DRAWER is open. A docked rail must never
+  // lock the page behind it.
   useEffect(() => {
     if (typeof document === "undefined") return;
-    document.body.style.overflow = isOpen ? "hidden" : "";
+    const lock = isOpen && !isDesktop;
+    document.body.style.overflow = lock ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
-  }, [isOpen]);
+  }, [isOpen, isDesktop]);
 
   const navigate = useCallback((href: string) => {
     close();
@@ -208,27 +216,29 @@ export default function AppSidebar() {
 
   return (
     <>
-      {/* Backdrop */}
-      <div
-        onClick={close}
-        style={{
-          position: "fixed", inset: 0, zIndex: 40,
-          background: "rgba(0,0,0,0.55)",
-          opacity: isOpen ? 1 : 0,
-          pointerEvents: isOpen ? "auto" : "none",
-          transition: "opacity 250ms ease",
-        }}
-      />
+      {/* Backdrop — drawer only; a docked rail has nothing to dim. */}
+      {!isDesktop && (
+        <div
+          onClick={close}
+          style={{
+            position: "fixed", inset: 0, zIndex: 40,
+            background: "rgba(0,0,0,0.55)",
+            opacity: isOpen ? 1 : 0,
+            pointerEvents: isOpen ? "auto" : "none",
+            transition: "opacity 250ms ease",
+          }}
+        />
+      )}
 
       {/* Panel */}
       <aside
         aria-hidden={!isOpen}
         style={{
           position: "fixed", top: 0, left: 0, bottom: 0, zIndex: 50,
-          width: "min(295px, 85vw)",
+          width: isDesktop ? "var(--nura-sidebar-w)" : "min(295px, 85vw)",
           background: BG, borderRight: `0.5px solid rgba(var(--nura-bg-tint-rgb),0.08)`,
           transform: isOpen ? "translateX(0)" : "translateX(-100%)",
-          transition: "transform 350ms cubic-bezier(0.32,0.72,0.34,1.01)",
+          transition: isDesktop ? "none" : "transform 350ms cubic-bezier(0.32,0.72,0.34,1.01)",
           overflowY: "auto", overflowX: "hidden",
           display: "flex", flexDirection: "column",
           fontFamily: SANS,
@@ -241,7 +251,7 @@ export default function AppSidebar() {
 
         {/* TOP: close + profile + new chat */}
         <div style={{ padding: "max(env(safe-area-inset-top), 22px) 22px 0" }}>
-          <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 14 }}>
+          <div style={{ display: isDesktop ? "none" : "flex", justifyContent: "flex-end", marginBottom: 14 }}>
             <button
               onClick={close}
               aria-label="Close menu"
