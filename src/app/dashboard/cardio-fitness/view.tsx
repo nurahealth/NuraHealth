@@ -87,7 +87,7 @@ export default function CardioFitnessDetailPage() {
             Your cardio fitness is <b style={{ color: CREAM, fontWeight: 600 }}>above average</b> for your age and sex — one of the strongest single markers of heart and lung health.
           </div>
           <span style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "7px 14px", borderRadius: 30, fontSize: 12.5, fontWeight: 600, color: CREAM, background: hexA(GOLD, 0.1), border: `0.5px solid ${hexA(GOLD, 0.4)}` }}>
-            <span style={{ width: 6, height: 6, borderRadius: "50%", background: GOLD, boxShadow: `0 0 8px rgba(${GOLD_RGB},0.9)` }} />
+            <span className="nura-glow" style={{ width: 6, height: 6, borderRadius: "50%", background: GOLD, boxShadow: `0 0 8px rgba(${GOLD_RGB},0.9)` }} />
             Above average
           </span>
         </div>

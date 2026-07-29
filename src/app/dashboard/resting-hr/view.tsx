@@ -252,7 +252,7 @@ export default function RestingHrDetailPage() {
             padding: "6px 15px", borderRadius: 999, fontSize: 12, fontWeight: 600, letterSpacing: "0.5px",
             color: RING_FROM, border: `1px solid rgba(${RING_GLOW},0.4)`,
           }}>
-            <span style={{ width: 6, height: 6, borderRadius: "50%", background: RING_FROM, boxShadow: `0 0 8px rgba(${RING_GLOW},0.9)` }} />
+            <span className="nura-glow" style={{ width: 6, height: 6, borderRadius: "50%", background: RING_FROM, boxShadow: `0 0 8px rgba(${RING_GLOW},0.9)` }} />
             {d.status} · {belowBaseline} below your baseline
           </span>
         </div>
@@ -308,7 +308,7 @@ export default function RestingHrDetailPage() {
           {/* Legend (below the chart, not inside it) */}
           <div style={{ display: "flex", flexWrap: "wrap", gap: 16, marginTop: 12, fontSize: 11.5, color: MUTED }}>
             <span style={{ display: "flex", alignItems: "center", gap: 7 }}>
-              <span style={{ width: 16, height: 0, borderTop: `2.4px solid ${RING_FROM}`, borderRadius: 2, boxShadow: `0 0 5px rgba(${RING_GLOW},0.6)` }} />
+              <span className="nura-glow" style={{ width: 16, height: 0, borderTop: `2.4px solid ${RING_FROM}`, borderRadius: 2, boxShadow: `0 0 5px rgba(${RING_GLOW},0.6)` }} />
               Resting HR
             </span>
             {active.showBand && (
@@ -327,7 +327,7 @@ export default function RestingHrDetailPage() {
 
           {/* Insight caption */}
           <div style={{ display: "flex", gap: 9, alignItems: "flex-start", marginTop: 14, paddingTop: 13, borderTop: `1px solid rgba(${INK},0.07)`, fontSize: 12.5, lineHeight: 1.45, color: MUTED }}>
-            <span style={{ width: 6, height: 6, borderRadius: "50%", background: ROSE, marginTop: 5, flex: "none", boxShadow: `0 0 7px ${ROSE}` }} />
+            <span className="nura-glow" style={{ width: 6, height: 6, borderRadius: "50%", background: ROSE, marginTop: 5, flex: "none", boxShadow: `0 0 7px ${ROSE}` }} />
             <span>
               Your resting HR has drifted <b style={{ color: TEXT, fontWeight: 700 }}>{d.monthTrendDelta} bpm below baseline</b> over the month — a downward trend is a positive sign of improving cardiovascular fitness and recovery, not something to correct.
             </span>
@@ -344,7 +344,7 @@ export default function RestingHrDetailPage() {
 
         {/* NŪRA insight */}
         <GlassCard className="rhr-reveal" style={{ animationDelay: ".42s", marginTop: 16, borderRadius: 20, padding: 17, position: "relative", overflow: "hidden" }}>
-          <div aria-hidden style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 3, background: `linear-gradient(180deg, ${ROSE}, var(--nura-teal))`, boxShadow: `0 0 16px rgba(${ROSE_RGB},0.5)` }} />
+          <div className="nura-glow" aria-hidden style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 3, background: `linear-gradient(180deg, ${ROSE}, var(--nura-teal))`, boxShadow: `0 0 16px rgba(${ROSE_RGB},0.5)` }} />
           <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "2.5px", color: ROSE, textTransform: "uppercase" }}>NŪRA</div>
           <p style={{ fontSize: 13.5, lineHeight: 1.6, marginTop: 9 }}>{d.insight}</p>
         </GlassCard>

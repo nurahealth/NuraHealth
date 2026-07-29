@@ -162,7 +162,7 @@ export default function BodyTempDetailPage() {
           {/* Zone bar — marker by deviation ratio (does NOT move on unit toggle) */}
           <div style={{ width: "100%", marginTop: 20 }}>
             <div style={{ position: "relative", height: 8, borderRadius: 999, background: ZONE_GRADIENT }}>
-              <div style={{ position: "absolute", top: -5, left: `${zonePos.toFixed(1)}%`, transform: "translateX(-50%)", width: 3, height: 18, borderRadius: 2, background: "var(--nura-text-primary)", boxShadow: "0 0 8px rgba(var(--nura-bg-tint-rgb),0.6)" }} />
+              <div className="nura-glow" style={{ position: "absolute", top: -5, left: `${zonePos.toFixed(1)}%`, transform: "translateX(-50%)", width: 3, height: 18, borderRadius: 2, background: "var(--nura-text-primary)", boxShadow: "0 0 8px rgba(var(--nura-bg-tint-rgb),0.6)" }} />
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8, fontSize: 10, color: FAINT }}>
               <span>Cool</span><span>Normal</span><span>Elevated</span>
@@ -247,7 +247,7 @@ export default function BodyTempDetailPage() {
 
           {/* Mini-insight */}
           <div style={{ display: "flex", gap: 9, alignItems: "flex-start", marginTop: 13, paddingTop: 13, borderTop: `1px solid rgba(${INK},0.07)`, fontSize: 12.5, lineHeight: 1.45, color: MUTED }}>
-            <span style={{ width: 6, height: 6, borderRadius: "50%", background: WARM, marginTop: 5, flex: "none", boxShadow: `0 0 7px ${WARM}` }} />
+            <span className="nura-glow" style={{ width: 6, height: 6, borderRadius: "50%", background: WARM, marginTop: 5, flex: "none", boxShadow: `0 0 7px ${WARM}` }} />
             <span>
               Your skin temperature is running <b style={{ color: TEXT, fontWeight: 700 }}>{fmtMagUnit(d.tonight, unit)}</b> below baseline — comfortably within normal night-to-night variation. The single spike to <b style={{ color: TEXT, fontWeight: 700 }}>{fmtDeltaUnit(d.spike, unit)}</b> mid-month lined up with a poor night&apos;s sleep. Sustained rises usually mean something&apos;s up.
             </span>

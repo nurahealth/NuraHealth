@@ -111,7 +111,7 @@ export default function BloodOxygenDetailPage() {
         <div className="ox-reveal" style={{ display: "flex", flexDirection: "column", alignItems: "center", marginTop: -4 }}>
           <div style={{ fontSize: 13.5, color: MUTED, textAlign: "center", marginBottom: 12 }}>{SUMMARY[status]}</div>
           <span style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "7px 14px", borderRadius: 30, fontSize: 12.5, fontWeight: 600, color: CREAM, background: `rgba(${ICE_RGB},0.1)`, border: `0.5px solid rgba(${ICE_RGB},0.4)` }}>
-            <span style={{ width: 6, height: 6, borderRadius: "50%", background: ICE_LIGHT, boxShadow: `0 0 8px rgba(${ICE_RGB},0.9)` }} />
+            <span className="nura-glow" style={{ width: 6, height: 6, borderRadius: "50%", background: ICE_LIGHT, boxShadow: `0 0 8px rgba(${ICE_RGB},0.9)` }} />
             {status} blood oxygen
           </span>
         </div>

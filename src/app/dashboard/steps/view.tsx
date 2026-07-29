@@ -126,7 +126,7 @@ export default function StepsDetailPage() {
             padding: "6px 15px", borderRadius: 999, fontSize: 12, fontWeight: 600, letterSpacing: "0.5px",
             color: GOLD, border: "1px solid rgba(var(--nura-amber-rgb),0.4)",
           }}>
-            <span style={{ width: 6, height: 6, borderRadius: "50%", background: GOLD, boxShadow: "0 0 8px var(--nura-amber)" }} />
+            <span className="nura-glow" style={{ width: 6, height: 6, borderRadius: "50%", background: GOLD, boxShadow: "0 0 8px var(--nura-amber)" }} />
             {d.pill}
           </span>
         </div>
@@ -195,7 +195,7 @@ export default function StepsDetailPage() {
 
         {/* NŪRA insight */}
         <GlassCard className="st-reveal" style={{ animationDelay: ".42s", marginTop: 16, borderRadius: 20, padding: 17, position: "relative", overflow: "hidden" }}>
-          <div aria-hidden style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 3, background: "linear-gradient(180deg,var(--nura-orange-mid),var(--nura-orange))", boxShadow: "0 0 16px rgba(var(--nura-orange-rgb),0.5)" }} />
+          <div className="nura-glow" aria-hidden style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 3, background: "linear-gradient(180deg,var(--nura-orange-mid),var(--nura-orange))", boxShadow: "0 0 16px rgba(var(--nura-orange-rgb),0.5)" }} />
           <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "2.5px", color: GOLD, textTransform: "uppercase" }}>NŪRA</div>
           <p style={{ fontSize: 13.5, lineHeight: 1.6, marginTop: 9 }}>{d.insight}</p>
         </GlassCard>
@@ -424,7 +424,7 @@ function StepsMovementCard({ d }: { d: StepsDetail }) {
 
       {/* Mini-insight */}
       <div style={{ display: "flex", gap: 9, alignItems: "flex-start", marginTop: 14, paddingTop: 13, borderTop: "1px solid rgba(var(--nura-bg-tint-rgb),0.07)", fontSize: 12.5, lineHeight: 1.45, color: MUTED }}>
-        <span style={{ width: 6, height: 6, borderRadius: "50%", background: ORANGE, marginTop: 5, flex: "none", boxShadow: `0 0 7px ${ORANGE}` }} />
+        <span className="nura-glow" style={{ width: 6, height: 6, borderRadius: "50%", background: ORANGE, marginTop: 5, flex: "none", boxShadow: `0 0 7px ${ORANGE}` }} />
         <span>
           You moved during <b style={{ color: TEXT, fontWeight: 700 }}>{activeHours} of {wakingHours}</b> waking hours. Your longest unbroken sit was{" "}
           <b style={{ color: TEXT, fontWeight: 700 }}>{d.longestSit}</b> around {d.longestSitWhen} — a 5-minute walk in that window would break it up and is where most easy wins hide.

@@ -190,7 +190,7 @@ export default function SleepDetailPage() {
             padding: "7px 15px", borderRadius: 999, fontSize: 12, fontWeight: 600, letterSpacing: "0.3px",
             color: REM, border: `1px solid rgba(${REM_RGB},0.4)`, background: `rgba(${REM_RGB},0.06)`,
           }}>
-            <span style={{ width: 6, height: 6, borderRadius: "50%", background: REM, boxShadow: `0 0 8px ${REM}` }} />
+            <span className="nura-glow" style={{ width: 6, height: 6, borderRadius: "50%", background: REM, boxShadow: `0 0 8px ${REM}` }} />
             {d.heroPill}
           </span>
         </div>
@@ -219,7 +219,7 @@ export default function SleepDetailPage() {
                 <Badge status={c.status} label={c.statusLabel} />
               </div>
               <div style={{ height: 5, background: `rgba(${INK},0.10)`, borderRadius: 3, marginTop: 10, overflow: "hidden" }}>
-                <div style={{ height: "100%", width: `${c.pct}%`, borderRadius: 3, background: `linear-gradient(90deg, ${LIGHT}, ${REM})`, boxShadow: `0 0 10px rgba(${REM_RGB},0.4)` }} />
+                <div className="nura-glow" style={{ height: "100%", width: `${c.pct}%`, borderRadius: 3, background: `linear-gradient(90deg, ${LIGHT}, ${REM})`, boxShadow: `0 0 10px rgba(${REM_RGB},0.4)` }} />
               </div>
             </div>
           ))}
@@ -395,7 +395,7 @@ function Axis({ labels }: { labels: string[] }) {
 function Caption({ color, children }: { color: string; children: ReactNode }) {
   return (
     <div style={{ display: "flex", gap: 9, marginTop: 14, paddingTop: 14, borderTop: `1px solid rgba(${INK},0.07)`, fontSize: 12.5, lineHeight: 1.5, color: MUTED }}>
-      <span style={{ width: 7, height: 7, borderRadius: "50%", background: color, boxShadow: `0 0 8px ${color}`, flexShrink: 0, marginTop: 5 }} />
+      <span className="nura-glow" style={{ width: 7, height: 7, borderRadius: "50%", background: color, boxShadow: `0 0 8px ${color}`, flexShrink: 0, marginTop: 5 }} />
       <span>{children}</span>
     </div>
   );

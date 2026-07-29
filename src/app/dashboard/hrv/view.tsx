@@ -235,7 +235,7 @@ export default function RecoveryDetailPage() {
             padding: "6px 15px", borderRadius: 999, fontSize: 12, fontWeight: 600, letterSpacing: "0.5px",
             color: RING_FROM, border: `1px solid rgba(${RING_GLOW},0.4)`,
           }}>
-            <span style={{ width: 6, height: 6, borderRadius: "50%", background: RING_FROM, boxShadow: `0 0 8px rgba(${RING_GLOW},0.9)` }} />
+            <span className="nura-glow" style={{ width: 6, height: 6, borderRadius: "50%", background: RING_FROM, boxShadow: `0 0 8px rgba(${RING_GLOW},0.9)` }} />
             {pillText}
           </span>
         </div>
@@ -294,7 +294,7 @@ export default function RecoveryDetailPage() {
 
         {/* NŪRA insight */}
         <GlassCard className="r-reveal" style={{ animationDelay: ".44s", marginTop: 16, borderRadius: 20, padding: 17, position: "relative", overflow: "hidden" }}>
-          <div aria-hidden style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 3, background: `linear-gradient(180deg, ${RING_FROM}, ${RING_TO})`, boxShadow: `0 0 16px rgba(${RING_GLOW},0.5)` }} />
+          <div className="nura-glow" aria-hidden style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 3, background: `linear-gradient(180deg, ${RING_FROM}, ${RING_TO})`, boxShadow: `0 0 16px rgba(${RING_GLOW},0.5)` }} />
           <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "2.5px", color: AQUA, textTransform: "uppercase" }}>NŪRA</div>
           <p style={{ fontSize: 13.5, lineHeight: 1.6, marginTop: 9 }}>{d.insight}</p>
         </GlassCard>

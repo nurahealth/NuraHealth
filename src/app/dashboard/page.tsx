@@ -349,7 +349,7 @@ function MetricCard({ metric, onClick }: { metric: DashboardMetric; onClick: () 
       {/* Footer — Body Temp uses a centered "7-day {avg} · within range" line */}
       {isBodyTemp && bt ? (
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 7, marginTop: "auto", fontFamily: SANS, fontSize: 11.5, color: TEXT_SEC }}>
-          <span style={{ width: 5, height: 5, borderRadius: "50%", background: "var(--nura-teal)", boxShadow: "0 0 6px var(--nura-teal)" }} />
+          <span className="nura-glow" style={{ width: 5, height: 5, borderRadius: "50%", background: "var(--nura-teal)", boxShadow: "0 0 6px var(--nura-teal)" }} />
           <span>
             {deviationDirection(bt.avg7) === "at"
               ? <>7-day avg <b style={{ color: TEXT, fontWeight: 700 }}>right at baseline</b> · within range</>

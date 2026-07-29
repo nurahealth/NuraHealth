@@ -3697,7 +3697,7 @@ function LiveBarcodeScreen({
             <ViewfinderCorner pos="tr" />
             <ViewfinderCorner pos="bl" />
             <ViewfinderCorner pos="br" />
-            <div style={{
+            <div className="nura-glow" style={{
               position: "absolute",
               left: "14%", right: "14%",
               height: 2,

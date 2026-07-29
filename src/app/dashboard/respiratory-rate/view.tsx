@@ -132,7 +132,7 @@ export default function RespiratoryRateDetailPage() {
           <Gauge value={value} />
           <div style={{ fontSize: 13.5, color: MUTED, textAlign: "center", margin: "2px 0 12px" }}>{status.summary}</div>
           <div style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "7px 14px", borderRadius: 30, background: "rgba(var(--nura-violet-rgb),0.1)", border: "0.5px solid rgba(var(--nura-violet-rgb),0.38)", fontSize: 12.5, fontWeight: 500, color: CREAM }}>
-            <span style={{ width: 6, height: 6, borderRadius: "50%", background: VIOLET, boxShadow: `0 0 8px rgba(${VIOLET_RGB},0.9)` }} />
+            <span className="nura-glow" style={{ width: 6, height: 6, borderRadius: "50%", background: VIOLET, boxShadow: `0 0 8px rgba(${VIOLET_RGB},0.9)` }} />
             {status.pill}
           </div>
         </div>

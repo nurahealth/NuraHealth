@@ -131,7 +131,7 @@ export default function ActiveEnergyDetailPage() {
             padding: "6px 15px", borderRadius: 999, fontSize: 12, fontWeight: 600, letterSpacing: "0.5px",
             color: EMBER, border: `1px solid rgba(${EMBER_RGB},0.4)`,
           }}>
-            <span style={{ width: 6, height: 6, borderRadius: "50%", background: EMBER, boxShadow: `0 0 8px ${EMBER}` }} />
+            <span className="nura-glow" style={{ width: 6, height: 6, borderRadius: "50%", background: EMBER, boxShadow: `0 0 8px ${EMBER}` }} />
             {percent}% to goal · {percent >= 100 ? "goal reached" : "on track"}
           </span>
         </div>
@@ -204,7 +204,7 @@ export default function ActiveEnergyDetailPage() {
 
         {/* NŪRA insight */}
         <GlassCard className="ae-reveal" style={{ animationDelay: ".42s", marginTop: 16, borderRadius: 20, padding: 17, position: "relative", overflow: "hidden" }}>
-          <div aria-hidden style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 3, background: `linear-gradient(180deg, ${EMBER_LIGHT}, ${EMBER})`, boxShadow: `0 0 16px rgba(${EMBER_RGB},0.5)` }} />
+          <div className="nura-glow" aria-hidden style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 3, background: `linear-gradient(180deg, ${EMBER_LIGHT}, ${EMBER})`, boxShadow: `0 0 16px rgba(${EMBER_RGB},0.5)` }} />
           <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "2.5px", color: EMBER, textTransform: "uppercase" }}>NŪRA</div>
           <p style={{ fontSize: 13.5, lineHeight: 1.6, marginTop: 9 }}>{d.insight}</p>
         </GlassCard>

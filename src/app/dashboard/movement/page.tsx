@@ -87,7 +87,7 @@ export default function MovementDetailPage() {
               {SOURCE_LABEL[d.source]}
             </div>
             <h1 style={{ fontSize: 25, fontWeight: 600, letterSpacing: "-0.4px", margin: "5px 0 2px" }}>{d.title}</h1>
-            <span style={{
+            <span className="nura-glow" style={{
               display: "inline-flex", alignItems: "center", gap: 6, marginTop: 9,
               padding: "5px 11px", borderRadius: 9, fontSize: 12, fontWeight: 600, color: AMBER,
               background: "rgba(var(--nura-amber-rgb),0.12)", border: "1px solid rgba(var(--nura-amber-rgb),0.20)",
@@ -133,7 +133,7 @@ export default function MovementDetailPage() {
                   <StatusPill status={c.status} label={c.statusLabel} />
                 </div>
                 <div style={{ height: 5, background: "rgba(var(--nura-bg-tint-rgb),0.10)", borderRadius: 3, marginTop: 10, overflow: "hidden" }}>
-                  <div style={{ height: "100%", width: `${c.pct}%`, borderRadius: 3, background: "linear-gradient(90deg,var(--nura-amber-2),var(--nura-amber))", boxShadow: "0 0 10px rgba(var(--nura-amber-rgb),0.4)" }} />
+                  <div className="nura-glow" style={{ height: "100%", width: `${c.pct}%`, borderRadius: 3, background: "linear-gradient(90deg,var(--nura-amber-2),var(--nura-amber))", boxShadow: "0 0 10px rgba(var(--nura-amber-rgb),0.4)" }} />
                 </div>
               </div>
             ))}
@@ -171,7 +171,7 @@ export default function MovementDetailPage() {
 
         {/* NŪRA insight */}
         <GlassCard className="m-reveal" style={{ animationDelay: ".45s", marginTop: 16, borderRadius: 20, padding: 17, position: "relative", overflow: "hidden" }}>
-          <div aria-hidden style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 3, background: "linear-gradient(180deg,var(--nura-sage),var(--nura-amber))", boxShadow: "0 0 16px rgba(var(--nura-sage-rgb),0.5)" }} />
+          <div className="nura-glow" aria-hidden style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 3, background: "linear-gradient(180deg,var(--nura-sage),var(--nura-amber))", boxShadow: "0 0 16px rgba(var(--nura-sage-rgb),0.5)" }} />
           <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "2.5px", color: "var(--nura-accent-label)", textTransform: "uppercase" }}>NŪRA</div>
           <p style={{ fontSize: 13.5, lineHeight: 1.6, marginTop: 9 }}>{d.insight}</p>
         </GlassCard>

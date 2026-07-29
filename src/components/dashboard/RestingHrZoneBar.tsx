@@ -25,7 +25,7 @@ export default function RestingHrZoneBar({
           boxShadow: `0 0 14px rgba(${ROSE_RGB},0.18)`,
         }} />
         {/* Current-value marker */}
-        <div className="nura-marker-ring" style={{
+        <div className="nura-marker-ring nura-glow" style={{
           position: "absolute", top: -4, bottom: -4, left: `${pos}%`, transform: "translateX(-50%)",
           width: 3, borderRadius: 2, background: "var(--nura-marker)",
           boxShadow: "0 0 6px rgba(var(--nura-bg-rgb),0.9), 0 0 2px rgba(0,0,0,0.4)",

@@ -146,7 +146,7 @@ function HeartRateRing({ bpm, liveLabel }: { bpm: number; liveLabel: string }) {
 
         {/* Live · Apple Watch with a blinking red dot */}
         <div style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 11, letterSpacing: "1.2px", textTransform: "uppercase", color: "var(--nura-text-secondary)" }}>
-          <span className="hrr-dot" style={{ width: 7, height: 7, borderRadius: "50%", background: RING_FROM, boxShadow: `0 0 8px ${RING_FROM}` }} />
+          <span className="hrr-dot nura-glow" style={{ width: 7, height: 7, borderRadius: "50%", background: RING_FROM, boxShadow: `0 0 8px ${RING_FROM}` }} />
           {liveLabel}
         </div>
       </div>
@@ -273,7 +273,7 @@ export default function HeartRateDetailPage() {
 
         {/* NŪRA insight */}
         <GlassCard className="hr-reveal" style={{ animationDelay: ".36s", marginTop: 16, borderRadius: 20, padding: 17, position: "relative", overflow: "hidden" }}>
-          <div aria-hidden style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 3, background: "linear-gradient(180deg,var(--nura-amber),var(--nura-alert))", boxShadow: "0 0 16px rgba(var(--nura-alert-rgb),0.5)" }} />
+          <div className="nura-glow" aria-hidden style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 3, background: "linear-gradient(180deg,var(--nura-amber),var(--nura-alert))", boxShadow: "0 0 16px rgba(var(--nura-alert-rgb),0.5)" }} />
           <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "2.5px", color: CORAL, textTransform: "uppercase" }}>NŪRA</div>
           <p style={{ fontSize: 13.5, lineHeight: 1.6, marginTop: 9 }}>{d.insight}</p>
         </GlassCard>

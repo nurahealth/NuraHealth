@@ -444,7 +444,7 @@ function RangeBar({ b }: { b: Biomarker }) {
           position: "absolute", left: `${clamp(optEnd)}%`, width: `${clamp(high) - clamp(optEnd)}%`, height: "100%",
           background: `rgba(var(--nura-watch-rgb),0.4)`, borderRadius: "0 3px 3px 0",
         }} />
-        <div style={{
+        <div className="nura-glow" style={{
           position: "absolute", top: "50%", left: `${clamp(value)}%`,
           transform: "translate(-50%, -50%)",
           width: 9, height: 9, borderRadius: "50%",

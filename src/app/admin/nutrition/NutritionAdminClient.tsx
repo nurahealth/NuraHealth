@@ -1096,7 +1096,7 @@ function RecipeModal({ token, editing, ingredients, onClose, onSuccess }: { toke
             )}
             {/* Focal-point marker */}
             {imageUrl && (
-              <div style={{ position: "absolute", left: `${focalX * 100}%`, top: `${focalY * 100}%`, width: 16, height: 16, borderRadius: "50%", transform: "translate(-50%,-50%)", border: "2px solid #fff", boxShadow: "0 0 0 1.5px rgba(0,0,0,0.5), 0 1px 4px rgba(0,0,0,0.5)", pointerEvents: "none" }} />
+              <div className="nura-glow" style={{ position: "absolute", left: `${focalX * 100}%`, top: `${focalY * 100}%`, width: 16, height: 16, borderRadius: "50%", transform: "translate(-50%,-50%)", border: "2px solid #fff", boxShadow: "0 0 0 1.5px rgba(0,0,0,0.5), 0 1px 4px rgba(0,0,0,0.5)", pointerEvents: "none" }} />
             )}
             {(dragOver || !imageUrl) && (
               <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", textAlign: "center", padding: 6, background: dragOver ? `rgba(${SAGE_RGB},0.22)` : "transparent", pointerEvents: "none" }}>
