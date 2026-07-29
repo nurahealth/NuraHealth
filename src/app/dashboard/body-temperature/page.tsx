@@ -20,9 +20,9 @@ const INK = "var(--nura-fg-rgb)"; // off-white in dark, near-black in light
 const SANS = "var(--font-inter), system-ui, sans-serif";
 
 const TEAL = "var(--nura-teal)";
-const TEAL_RGB = "93,204,174";
+const TEAL_RGB = "var(--nura-teal-rgb)";
 const WARM = "var(--nura-amber)";       // amber deviation line
-const WARM_RGB = "224,162,62";
+const WARM_RGB = "var(--nura-amber-rgb)";
 const CORAL = "var(--nura-alert)";
 
 // Cool teal aurora at the top of the page.

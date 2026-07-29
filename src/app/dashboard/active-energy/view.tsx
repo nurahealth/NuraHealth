@@ -16,7 +16,7 @@ const FAINT = "var(--nura-text-tertiary)";
 const EMBER = "var(--nura-ember)";
 const EMBER_LIGHT = "var(--nura-ember-hi)";
 const INK = "var(--nura-fg-rgb)"; // off-white in dark, near-black in light
-const EMBER_RGB = "224,122,60";
+const EMBER_RGB = "var(--nura-ember-rgb)";
 const SANS = "var(--font-inter), system-ui, sans-serif";
 const bStyle: React.CSSProperties = { color: TEXT, fontWeight: 600 };
 

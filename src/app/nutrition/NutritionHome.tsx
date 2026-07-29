@@ -49,7 +49,7 @@ const SURFACE = "var(--nura-surface)";
 const SAGE = "var(--nura-sage)";
 const SAGE_RGB = "var(--nura-sage-rgb)";
 const AMBER = "var(--nura-good)";
-const AMBER_RGB = "211,162,83";
+const AMBER_RGB = "var(--nura-good-rgb)";
 const SANS = "var(--font-inter), system-ui, sans-serif";
 
 // Card lists stack on phones and split into two columns once the shell widens

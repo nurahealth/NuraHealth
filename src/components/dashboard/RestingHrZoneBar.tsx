@@ -6,7 +6,7 @@
 // (left) is better.
 
 const FAINT = "var(--nura-text-tertiary)";
-const ROSE_RGB = "240,168,144";
+const ROSE_RGB = "var(--nura-rose-rgb)";
 
 // teal (athlete / lowest) → sage → gold → coral (average / highest)
 const ZONE_GRADIENT = "linear-gradient(90deg, var(--nura-meter-teal) 0%, var(--nura-meter-calm) 38%, var(--nura-meter-warm) 72%, var(--nura-meter-hot) 100%)";

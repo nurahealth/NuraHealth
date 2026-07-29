@@ -39,7 +39,7 @@ const InfoIcon = () => (
 // prefers-reduced-motion — the ring then renders already filled.
 const RING_FROM = "var(--nura-heart)";
 const RING_TO = "var(--nura-heart-hi)";
-const RING_GLOW = "232,97,92"; // RGB triplet for the red glow
+const RING_GLOW = "var(--nura-heart-rgb)"; // ring track / glow triplet
 
 const ECG_PATH = "M0 15 H40 l5 -1 l4 3 l5 -13 l5 22 l5 -11 l5 0 H124";
 

@@ -18,10 +18,10 @@ const bStyle: React.CSSProperties = { color: TEXT, fontWeight: 600 };
 
 // Rose accents — resting HR reads as a warm, calm cardiovascular page.
 const ROSE = "var(--nura-rose)";
-const ROSE_RGB = "240,168,144";
+const ROSE_RGB = "var(--nura-rose-rgb)";
 // Teal carries the "better / typical / improving" meaning (low resting HR is good).
 const TEAL = "var(--nura-teal)";
-const TEAL_RGB = "93,204,174";
+const TEAL_RGB = "var(--nura-teal-rgb)";
 
 // Subtle dark-emerald ambient at the top of the page (fades to near-black).
 const EMERALD_AURORA =
@@ -61,7 +61,7 @@ const InfoIcon = () => (
 // All motion is disabled under prefers-reduced-motion (ring filled, number final).
 const RING_FROM = "var(--nura-optimal)";
 const RING_TO = "var(--nura-optimal-hi)";
-const RING_GLOW = "63,196,136"; // RGB triplet for the emerald glow
+const RING_GLOW = "var(--nura-optimal-rgb)"; // ring track / glow triplet
 const COUNT_FROM = 38; // count-up start
 const FILL_MS = 1400;
 

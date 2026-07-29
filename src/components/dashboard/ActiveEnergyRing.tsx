@@ -16,7 +16,7 @@ const TOKENS = {
   ember: ["--nura-ember", "#e07a3c"],
   emberLight: ["--nura-ember-hi", "#f0a05a"],
 } as const;
-const EMBER_RGB = "224,122,60";
+const EMBER_RGB = "var(--nura-ember-rgb)";
 
 export default function ActiveEnergyRing({
   kcal,

@@ -19,7 +19,7 @@ const SANS = "var(--font-inter), system-ui, sans-serif";
 // out) on the near-black background via a soft glow.
 const ICE = "var(--nura-ice)";
 const ICE_LIGHT = "var(--nura-ice-hi)";
-const ICE_RGB = "174,191,207";
+const ICE_RGB = "var(--nura-ice-rgb)";
 
 // Built-in example state — rendered whenever real data is missing so the view
 // never silently vanishes during development.
