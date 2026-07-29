@@ -111,23 +111,22 @@ export default function HealthPlanCard() {
   return (
     <div style={{
       position: "relative", overflow: "hidden",
-      // Flex column so the closing projection can be pinned to the bottom when
-      // the card is stretched to match its taller neighbour at desktop. With
-      // the card at its natural height (every width below lg) the auto margin
-      // has nothing to distribute, so this is inert on mobile.
       display: "flex", flexDirection: "column",
       background: "var(--nura-glass)", border: "1px solid var(--nura-glass-line)",
       borderRadius: 24, padding: "20px 16px 16px", marginBottom: 16,
       boxShadow: "inset 0 1px 0 var(--nura-card-highlight), var(--nura-card-shadow)",
     }}>
       <style>{`
-        /* Beside the (much taller) Overall Health card the plan card is
-           stretched to the row height. Pinning the closing projection to the
-           bottom turns the leftover into one deliberate gap above a footer
-           rather than a dead strip under the last accordion. Below lg the card
-           is its natural height, so auto resolves to 0 and nothing moves — the
-           6px inline margin still applies there. */
-        @media (min-width: 1024px) { .hp-proj { margin-top: auto !important; } }
+        /* The card spans the full 1200px measure at desktop, so the accordion
+           rows stretch (they're rows — that reads fine) but the prose inside
+           them gets a ceiling; a 1100px line of body copy is unreadable.
+           lg-only, so the phone card is untouched. */
+        @media (min-width: 1024px) {
+          .hp-prose { max-width: 74ch; }
+          .hp-dd-body, .hp-intro { max-width: 82ch; }
+          /* A Now→Target bar drawn 1100px long stops reading as a gauge. */
+          .hp-target { max-width: 720px; margin-left: auto !important; margin-right: auto !important; }
+        }
         .hp-step b, .hp-proj b, .hp-dd b { font-weight: 700; }
         .hp-step b { color: ${TEXT}; }
         .hp-proj b { color: var(--nura-accent-text); }
@@ -149,7 +148,7 @@ export default function HealthPlanCard() {
       </div>
 
       {/* Target bar */}
-      <div style={{ display: "flex", alignItems: "center", gap: 13, margin: "18px 4px 4px" }}>
+      <div className="hp-target" style={{ display: "flex", alignItems: "center", gap: 13, margin: "18px 4px 4px" }}>
         <div style={{ textAlign: "center", flex: "none" }}>
           <div style={{ fontSize: 9, letterSpacing: "0.8px", textTransform: "uppercase", color: FAINT, fontWeight: 600 }}>Now</div>
           <div style={{ fontSize: 22, fontWeight: 700, letterSpacing: "-0.5px", color: TEXT }}>{p.now}</div>
@@ -176,7 +175,7 @@ export default function HealthPlanCard() {
           <span style={{ display: "flex", flex: "none", marginTop: 2, transform: deepOpen ? "rotate(180deg)" : "none", transition: "transform .2s" }}><Chevron /></span>
         </div>
         {deepOpen && (
-          <div className="hp-dd" style={{ padding: "0 2px 15px 2px" }}>
+          <div className="hp-dd hp-dd-body" style={{ padding: "0 2px 15px 2px" }}>
             {ddParas.map((para, i) => (
               <p key={i} style={{ fontSize: 12.8, lineHeight: 1.55, color: "var(--nura-ink-strong)", marginTop: i === 0 ? 0 : 11 }} dangerouslySetInnerHTML={{ __html: para }} />
             ))}
@@ -195,7 +194,7 @@ export default function HealthPlanCard() {
       </div>
 
       {/* Intro — soft sage-tinted box above the domain list */}
-      <div className="hp-dd" style={{ margin: "14px 2px 4px", padding: "13px 15px", borderRadius: 14, background: "var(--nura-tint-accent)", border: "1px solid var(--nura-tint-accent-border)", fontSize: 12.5, lineHeight: 1.5, color: MUTED }} dangerouslySetInnerHTML={{ __html: INTRO_HTML }} />
+      <div className="hp-dd hp-intro" style={{ margin: "14px 2px 4px", padding: "13px 15px", borderRadius: 14, background: "var(--nura-tint-accent)", border: "1px solid var(--nura-tint-accent-border)", fontSize: 12.5, lineHeight: 1.5, color: MUTED }} dangerouslySetInnerHTML={{ __html: INTRO_HTML }} />
 
       {/* Domain accordions */}
       <div>
@@ -214,7 +213,7 @@ export default function HealthPlanCard() {
                 <span style={{ display: "flex", flex: "none", transform: isOpen ? "rotate(180deg)" : "none", transition: "transform .2s" }}><Chevron /></span>
               </div>
               {isOpen && (
-                <div style={{ padding: "0 2px 15px 46px" }}>
+                <div className="hp-prose" style={{ padding: "0 2px 15px 46px" }}>
                   {/* LIFTS */}
                   <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.3px", color: FAINT, marginBottom: 13 }}>
                     LIFTS · <b style={{ color: MUTED, fontWeight: 600 }}>{d.lifts}</b>

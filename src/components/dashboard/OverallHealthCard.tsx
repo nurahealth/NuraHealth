@@ -94,10 +94,6 @@ export default function OverallHealthCard() {
   return (
     <div style={{
       position: "relative", overflow: "hidden",
-      // See HealthPlanCard: the two hero cards stretch to a shared row height at
-      // desktop, so whichever ends up shorter pins its closing panel to the
-      // bottom instead of leaving a dead strip. Inert at the card's natural
-      // height, which is every width below lg.
       display: "flex", flexDirection: "column",
       background: "var(--nura-glass)", border: "1px solid var(--nura-glass-line)",
       borderRadius: 24, padding: "20px 16px 18px", marginBottom: 16,
@@ -106,11 +102,25 @@ export default function OverallHealthCard() {
       <style>{`
         .oh-pill-head:hover .oh-nm { color: var(--nura-text-strong); }
         .oh-imp-item { transition: border-color .18s; }
-        @media (min-width: 1024px) { .oh-improve { margin-top: auto !important; } }
+        /* The desktop card now spans the whole 1200px measure, so anything that
+           was sized as "100% of a half-width column" needs a ceiling of its
+           own. Without these the ring alone would render ~1100px tall and the
+           prose would run edge to edge. Everything here is lg-only — below it
+           the card is unchanged. */
+        .oh-halo-lg { display: none; }
+        @media (min-width: 1024px) {
+          .oh-ring { max-width: 480px; margin: 0 auto; }
+          .oh-explain, .oh-imp-body { max-width: 74ch; }
+          .oh-explain { margin-left: auto; margin-right: auto; }
+          /* The halo is anchored to the card, whose height changed; at this
+             width it rides with the ring instead. */
+          .oh-halo-sm { display: none; }
+          .oh-halo-lg { display: block; }
+        }
       `}</style>
       {/* Soft glow core behind the ring — dark only (see the flattening
           layer in globals.css). */}
-      <div aria-hidden className="nura-halo" style={{ position: "absolute", left: "50%", top: 120, width: 300, height: 300, transform: "translate(-50%,-50%)", pointerEvents: "none", background: "radial-gradient(circle, rgba(var(--nura-teal-rgb),0.12) 0%, rgba(var(--nura-teal-rgb),0) 62%)" }} />
+      <div aria-hidden className="nura-halo oh-halo-sm" style={{ position: "absolute", left: "50%", top: 120, width: 300, height: 300, transform: "translate(-50%,-50%)", pointerEvents: "none", background: "radial-gradient(circle, rgba(var(--nura-teal-rgb),0.12) 0%, rgba(var(--nura-teal-rgb),0) 62%)" }} />
 
       {/* Header */}
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", padding: "0 4px", position: "relative" }}>
@@ -128,12 +138,13 @@ export default function OverallHealthCard() {
       </div>
 
       {/* Hero ring */}
-      <div style={{ position: "relative" }}>
+      <div className="oh-ring" style={{ position: "relative" }}>
+        <div aria-hidden className="nura-halo oh-halo-lg" style={{ position: "absolute", left: "50%", top: "50%", width: 300, height: 300, transform: "translate(-50%,-50%)", pointerEvents: "none", background: "radial-gradient(circle, rgba(var(--nura-teal-rgb),0.12) 0%, rgba(var(--nura-teal-rgb),0) 62%)" }} />
         <HealthRing d={d} selected={selected} onSelect={togglePillar} />
       </div>
 
       {/* Explainer + hint */}
-      <div style={{ fontSize: 12.5, lineHeight: 1.5, color: MUTED, marginTop: 2, padding: "0 4px" }}>
+      <div className="oh-explain" style={{ fontSize: 12.5, lineHeight: 1.5, color: MUTED, marginTop: 2, padding: "0 4px" }}>
         <b style={{ color: TEXT, fontWeight: 600 }}>Your Health Score</b> is a weighted blend of six pillars — your single best read on how your whole body is doing right now.
       </div>
       {!selected && (
@@ -158,7 +169,7 @@ export default function OverallHealthCard() {
               </div>
               <div style={{ fontSize: 12, color: MUTED, margin: "-6px 0 0 20px", paddingBottom: 11 }}>{p.measures}</div>
               {open && (
-                <div style={{ padding: "2px 2px 15px 20px" }}>
+                <div className="oh-imp-body" style={{ padding: "2px 2px 15px 20px" }}>
                   {[
                     { k: "What it measures", v: p.measures },
                     { k: "Built from", v: p.builtFrom },
@@ -212,7 +223,7 @@ export default function OverallHealthCard() {
                   <span style={{ display: "flex", flex: "none", transform: open ? "rotate(180deg)" : "none", transition: "transform .2s" }}><Chevron /></span>
                 </div>
                 {open && (
-                  <div style={{ fontSize: 13, lineHeight: 1.5, color: "var(--nura-ink-strong)", margin: "10px 0 4px 39px" }}>
+                  <div className="oh-imp-body" style={{ fontSize: 13, lineHeight: 1.5, color: "var(--nura-ink-strong)", margin: "10px 0 4px 39px" }}>
                     {item.body}
                     {item.link && (
                       <div style={{ marginTop: 9 }}>

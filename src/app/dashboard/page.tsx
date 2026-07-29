@@ -104,21 +104,22 @@ export default function DashboardPage() {
   return (
     <NuraPageShell maxWidth={480} desktopMaxWidth={1280}>
       <style>{`
-        /* The two narrative cards: stacked on phones, side by side once there
-           is room. Without this they stretch to the full width and the reading
-           measure inside them blows out. */
+        /* The two narrative cards. One column at every width — including
+           desktop. Side by side they had independent heights, so opening an
+           accordion in one grew that column and stranded a half-screen of page
+           background beside the shorter one. Stacked, each card owns the whole
+           measure: an accordion opening has nothing beside it to strand, and
+           the page simply grows by the height of what opened. */
         .dash-hero { display: grid; grid-template-columns: 1fr; gap: 16px; align-items: start; }
         @media (min-width: 1024px) {
-          .dash-hero { grid-template-columns: 1fr 1fr; gap: var(--nura-card-gap); }
-          /* Overall Health runs far taller than the Plan card, and under
-             align-items:start the shorter column simply stopped — leaving a
-             half-screen of page background beside it before the metric grid
-             picked up again. Letting both cards stretch to the row height turns
-             that hole into card surface, so the two columns end together. The
-             cards carry an inline margin-bottom for the stacked (mobile) case;
-             inside the grid the gap owns that spacing instead. */
-          .dash-hero { align-items: stretch; }
+          /* The cards carry an inline margin-bottom for the phone case; here
+             the grid gap owns the spacing so the rhythm is one value. */
+          .dash-hero { gap: var(--nura-card-gap); }
           .dash-hero > * { margin-bottom: 0 !important; }
+          /* DOM order is Plan → Overall, which is the phone reading order.
+             Desktop leads with the score and follows with the plan. */
+          .dash-hero > :nth-child(1) { order: 2; }
+          .dash-hero > :nth-child(2) { order: 1; }
         }
         .dash-grid { display: grid; grid-template-columns: 1fr; gap: 14px; }
         @media (min-width: 640px) { .dash-grid { grid-template-columns: 1fr 1fr; gap: 16px; } }
@@ -128,9 +129,12 @@ export default function DashboardPage() {
            dangling column. */
         @media (min-width: 1024px) {
           .dash-grid { grid-template-columns: repeat(3, 1fr); gap: var(--nura-card-gap); }
-          /* One rhythm down the page: the gap between the hero row and the
-             metric grid matches the gap between the cards themselves. */
+          /* One rhythm down the page: every gap between two stacked blocks —
+             hero cards, metric grid, the customize row, the insight — is the
+             same single value, so nothing reads as a stranded margin. */
           .dash-grid { margin-top: var(--nura-card-gap) !important; }
+          .dash-customize { margin-top: var(--nura-card-gap) !important; }
+          .dash-insight { margin-top: var(--nura-card-gap) !important; }
         }
         .dash-card { transition: border-color 180ms, transform 180ms; }
         .dash-card:hover { border-color: rgba(var(--nura-sage-rgb),0.35) !important; transform: translateY(-2px); }
@@ -156,8 +160,8 @@ export default function DashboardPage() {
         {data.sources.map((s) => <SourcePill key={s.id} source={s} />)}
       </div>
 
-      {/* 3+4 — Health Plan and Overall Health. One column on phones (Plan
-          first, as before); two columns from lg. */}
+      {/* 3+4 — Health Plan and Overall Health. One full-width column at every
+          size; from lg the order flips so the score leads. */}
       <div className="dash-hero">
         <HealthPlanCard />
         <OverallHealthCard />
@@ -403,7 +407,7 @@ function MetricCard({ metric, onClick }: { metric: DashboardMetric; onClick: () 
 // ── 5 · NŪRA insight card ───────────────────────────────────────────────────────
 function InsightCard({ text, ctaLabel, onCta }: { text: string; ctaLabel: string; onCta: () => void }) {
   return (
-    <div style={{
+    <div className="dash-insight" style={{
       marginTop: 16, borderRadius: 20, padding: 22,
       background: `linear-gradient(135deg, rgba(var(--nura-sage-rgb),0.06), transparent 60%), ${CARD}`,
       border: `0.5px solid ${BORDER}`, borderLeft: `2px solid ${SAGE}`,
