@@ -842,6 +842,24 @@ html, body {
   border-color: rgba(26, 24, 20, 0.05) !important;
 }
 
+[data-theme="light"] .oh-improve {
+  /* "What to improve" is a content panel, not a warning, but it was painted
+     with --nura-tint-warn: over near-black that gradient is a barely-there
+     warm wash, and on white the same token is a solid #fdf6ee peach. It read
+     as a caution banner bolted onto the middle of the health card.
+
+     It becomes what it actually is — a nested card. Same surface, same
+     hairline and the soft shadow as its siblings, which is what separates it
+     from the white card behind it now that the tint is gone. The gold section
+     title and the sage plan icons are untouched; they were never the problem,
+     and #8a6118 gains contrast on white (5.5:1, up from 5.2:1 on the peach).
+
+     Scoped to light, so dark keeps its warm gradient wash exactly. */
+  background: var(--nura-card) !important;
+  border-color: rgba(26, 24, 20, 0.05) !important;
+  box-shadow: var(--nura-card-shadow-soft) !important;
+}
+
 [data-theme="light"] .dash-card {
   /* 18px reads as tight once the card is a bright surface with a soft edge —
      the chart and the footer both run close enough to the border to look
