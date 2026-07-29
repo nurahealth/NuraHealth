@@ -268,7 +268,7 @@ export default function ExerciseDetail({ exerciseId, sets, reps, rest_seconds, o
         {/* log sets — primary action for the set logging, centered & full-width
             within the padded column (matches the modal primary buttons), never
             flush against the screen edge. */}
-        <button type="button" onClick={saveSets} disabled={saving} style={{
+        <button className="nura-lift" type="button" onClick={saveSets} disabled={saving} style={{
           display: 'block', width: '100%', margin: '18px 0 34px',
           background: SAGE, color: BG, border: 'none', borderRadius: 14,
           padding: 16, fontSize: 15, fontWeight: 700, cursor: saving ? 'default' : 'pointer',

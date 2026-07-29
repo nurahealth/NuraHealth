@@ -191,7 +191,7 @@ export default function MetricChart({
           </defs>
 
           {/* Orange hotspot behind the most active stretch of the day */}
-          <ellipse
+          <ellipse className="nura-halo"
             cx={peakX.toFixed(1)} cy={((top + base) / 2).toFixed(1)} rx={(slot * 5).toFixed(1)} ry={(plotH * 0.62).toFixed(1)}
             fill={`url(#${uid}-hot)`} style={{ filter: "blur(6px)" }}
           />

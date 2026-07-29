@@ -22,8 +22,8 @@ const DEEP = "var(--nura-sleep-deep)";
 const REM = "var(--nura-teal)";
 const LIGHT = "var(--nura-sage)";
 const AWAKE = "var(--nura-good)";
-const DEEP_RGB = "90,160,230";
-const REM_RGB = "93,204,174";
+const DEEP_RGB = "var(--nura-sleep-deep-rgb)";
+const REM_RGB = "var(--nura-teal-rgb)";
 
 // Overnight-chart identities — each matches its own metric tab (not sleep-blue):
 // Heart rate → red, HRV → aqua-teal. Lighter shades feed the fill/glow.
@@ -260,7 +260,7 @@ export default function SleepDetailPage() {
             </div>
             <div style={{ display: "flex", gap: 5 }}>
               {d.cycles.pattern.map((p, i) => (
-                <div key={i} style={{
+                <div className="nura-glow" key={i} style={{
                   flex: 1, height: 22, borderRadius: 7,
                   background: p === "full"
                     ? `linear-gradient(90deg, rgba(${DEEP_RGB},0.5), rgba(${REM_RGB},0.5))`

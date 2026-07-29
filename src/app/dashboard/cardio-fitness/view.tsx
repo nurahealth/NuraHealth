@@ -220,7 +220,7 @@ function ArcGauge({ value, lo, hi, unit }: { value: number; lo: number; hi: numb
         {/* faint warm-gold track */}
         <circle cx={c} cy={c} r={r} fill="none" stroke="rgba(var(--nura-gold-ring-rgb),0.15)" strokeWidth={stroke} strokeLinecap="round" strokeDasharray={`${arcLen} ${circ}`} />
         {/* glow layer — a blurred copy of the fill behind it */}
-        <circle
+        <circle className="nura-halo"
           cx={c} cy={c} r={r} fill="none"
           stroke={`url(#${gid})`} strokeWidth={stroke} strokeLinecap="round"
           strokeDasharray={`${arcLen} ${circ}`} strokeDashoffset={offset}

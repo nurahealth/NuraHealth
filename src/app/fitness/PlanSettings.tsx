@@ -254,7 +254,7 @@ export default function PlanSettings() {
 
       <NuraPlexus opacity={0.22} particleCount={20} />
       {/* soft sage glow near the top */}
-      <div aria-hidden style={{
+      <div className="nura-halo" aria-hidden style={{
         position: 'absolute', top: -180, left: '50%', transform: 'translateX(-50%)',
         width: 720, height: 440, pointerEvents: 'none', zIndex: 1, filter: 'blur(18px)',
         background: 'radial-gradient(ellipse at center, rgba(var(--nura-sage-rgb),0.16), rgba(var(--nura-sage-rgb),0) 70%)',
@@ -351,7 +351,7 @@ export default function PlanSettings() {
               </div>
               {error && <div style={{ color: 'var(--nura-danger-soft)', marginTop: 4 }}>{error}</div>}
             </div>
-            <button type="button" className="ps-cta" onClick={() => setConfirm(true)} disabled={saving} style={{
+            <button type="button" className="ps-cta nura-lift" onClick={() => setConfirm(true)} disabled={saving} style={{
               flexShrink: 0, padding: '12px 20px', borderRadius: 13, border: 'none',
               cursor: saving ? 'default' : 'pointer', fontFamily: SANS, fontSize: 13.5, fontWeight: 700,
               color: DARK, background: SAGE_GRAD, boxShadow: '0 8px 26px rgba(var(--nura-sage-rgb),0.45), inset 0 1px 0 rgba(255,255,255,0.4)',

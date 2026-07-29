@@ -27,7 +27,7 @@ export default function StatusPill({
 }) {
   const s = MAP[status];
   return (
-    <span
+    <span className="nura-glow"
       style={{
         display: "inline-flex", alignItems: "center",
         padding: "4px 10px", borderRadius: 8,

@@ -667,11 +667,11 @@ const app: React.CSSProperties = { width: '100%', maxWidth: 'var(--fit-frame, 44
                         Completed
                       </div>
                     ) : sessionActiveHere ? (
-                      <button type="button" onClick={finishWorkout} disabled={logging} style={{ flex: 1, background: SAGE, color: BG, border: 'none', borderRadius: 13, padding: 14, fontSize: 15, fontWeight: 700, cursor: logging ? 'default' : 'pointer', opacity: logging ? 0.7 : 1, boxShadow: '0 8px 24px rgba(var(--nura-sage-rgb),.3)' }}>
+                      <button className="nura-lift" type="button" onClick={finishWorkout} disabled={logging} style={{ flex: 1, background: SAGE, color: BG, border: 'none', borderRadius: 13, padding: 14, fontSize: 15, fontWeight: 700, cursor: logging ? 'default' : 'pointer', opacity: logging ? 0.7 : 1, boxShadow: '0 8px 24px rgba(var(--nura-sage-rgb),.3)' }}>
                         {logging ? 'Saving…' : 'Finish workout'}
                       </button>
                     ) : (
-                      <button type="button" onClick={startWorkout} style={{ flex: 1, background: SAGE, color: BG, border: 'none', borderRadius: 13, padding: 14, fontSize: 15, fontWeight: 700, cursor: 'pointer', boxShadow: '0 8px 24px rgba(var(--nura-sage-rgb),.3)' }}>
+                      <button className="nura-lift" type="button" onClick={startWorkout} style={{ flex: 1, background: SAGE, color: BG, border: 'none', borderRadius: 13, padding: 14, fontSize: 15, fontWeight: 700, cursor: 'pointer', boxShadow: '0 8px 24px rgba(var(--nura-sage-rgb),.3)' }}>
                         Start workout
                       </button>
                     )}

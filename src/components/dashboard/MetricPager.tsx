@@ -154,7 +154,7 @@ export default function MetricPager({ initialMetric }: { initialMetric: string }
               }}
             >
               <span
-                className="mp-dot"
+                className="mp-dot nura-glow"
                 style={{
                   display: "block", height: 6, borderRadius: 999,
                   width: on ? 18 : 6,

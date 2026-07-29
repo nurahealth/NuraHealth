@@ -398,7 +398,7 @@ function StepsMovementCard({ d }: { d: StepsDetail }) {
       {/* Per-hour strip */}
       <div style={{ display: "flex", gap: 3, marginTop: 14 }}>
         {d.movementHours.map((s, i) => (
-          <div
+          <div className="nura-glow"
             key={i}
             style={{
               flex: 1, height: 30, borderRadius: 4,

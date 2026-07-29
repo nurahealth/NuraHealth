@@ -215,7 +215,7 @@ function LogWeightModal({ defaultUnit, onClose, onSaved }: {
 
           {err && <div style={{ fontSize: 12.5, color: 'var(--nura-danger-soft)' }}>{err}</div>}
 
-          <button type="button" onClick={() => save(close)} disabled={saving} style={{
+          <button className="nura-lift" type="button" onClick={() => save(close)} disabled={saving} style={{
             width: '100%', marginTop: 2, background: SAGE, color: BG, border: 'none', borderRadius: 14,
             padding: 14, fontSize: 15, fontWeight: 700, cursor: saving ? 'default' : 'pointer',
             opacity: saving ? 0.7 : 1, boxShadow: '0 8px 24px rgba(var(--nura-sage-rgb),.28)',
@@ -467,7 +467,7 @@ function AddPhotoModal({ onClose, onSaved }: { onClose: () => void; onSaved: () 
 
           {err && <div style={{ fontSize: 12.5, color: 'var(--nura-danger-soft)' }}>{err}</div>}
 
-          <button type="button" onClick={() => save(close)} disabled={saving} style={{
+          <button className="nura-lift" type="button" onClick={() => save(close)} disabled={saving} style={{
             width: '100%', marginTop: 2, background: SAGE, color: BG, border: 'none', borderRadius: 14,
             padding: 14, fontSize: 15, fontWeight: 700, cursor: saving ? 'default' : 'pointer',
             opacity: saving ? 0.7 : 1, boxShadow: '0 8px 24px rgba(var(--nura-sage-rgb),.28)',

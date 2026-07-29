@@ -38,7 +38,7 @@ export default function WeeklyBarStrip({
     <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 4, height, ...style }}>
       {days.map((d, i) => (
         <div key={i} style={{ flex: 1, height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-end", gap: 8 }}>
-          <div
+          <div className="nura-glow"
             style={{
               position: "relative", width: "100%", maxWidth: 26,
               height: `${Math.max(4, Math.round((d.value / top) * 100))}%`,

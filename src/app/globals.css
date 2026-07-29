@@ -565,6 +565,13 @@ html, body {
   fill: var(--nura-text-primary) !important;
 }
 
+[data-theme="light"] .nura-lift {
+  /* Primary buttons and selected tiles cast a tinted sage shadow in dark, which
+     gives them lift against near-black. On white a coloured shadow reads as a
+     colour bleed, so they take the standard card shadow instead. */
+  box-shadow: var(--nura-card-shadow) !important;
+}
+
 [data-theme="light"] .nura-marker-ring {
   /* A value marker sitting on a filled bar. In dark it is separated by a glow;
      on white a crisp hairline ring does the same job without the smudge. */
