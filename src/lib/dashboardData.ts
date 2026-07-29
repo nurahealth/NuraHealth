@@ -1349,7 +1349,7 @@ const OVERALL_HEALTH: OverallHealth = {
       measures: "How your body manages energy and temperature.",
       builtFrom: "Body-temperature deviation, respiratory rate, recovery balance.",
       reading: "Good, with a little room. Steady night-to-night — no red flags." },
-    { key: "activity", label: "Activity", score: 74, trend: "down", color: "--nura-good", ang: 90,
+    { key: "activity", label: "Activity", score: 74, trend: "down", color: "--nura-viz-gold", ang: 90,
       measures: "Your daily movement and exercise load.",
       builtFrom: "Steps, active energy, workouts, sedentary time.",
       reading: "Your lowest pillar. More daily movement here lifts every other score." },
@@ -1366,7 +1366,7 @@ const OVERALL_HEALTH: OverallHealth = {
   percentile: { value: "Top 18%", note: "for your age" },
   bestPillar: { label: "Recovery", note: "88 · strong" },
   plan: [
-    { icon: "move", color: "--nura-good", title: "Move more",
+    { icon: "move", color: "--nura-viz-gold", title: "Move more",
       summary: "Activity is your one lagging pillar at 74.",
       body: "Activity is your one lagging pillar at 74. A daily 20-minute walk and landing closer to 9k steps would lift your score faster than anything else." },
     { icon: "moon", color: "--nura-sleep-deep", title: "Lock a consistent bedtime",
@@ -1457,7 +1457,7 @@ const HEALTH_PLAN: HealthPlan = {
       "<b>Peppermint</b> in the morning for alertness and focus.",
       "<b>Eucalyptus</b> in the shower to support easy breathing.",
     ] },
-    { key: "movement", icon: "activity", color: "--nura-good", title: "Movement", summary: "Build a daily activity base.", lifts: "Activity · Heart", steps: [
+    { key: "movement", icon: "activity", color: "--nura-viz-gold", title: "Movement", summary: "Build a daily activity base.", lifts: "Activity · Heart", steps: [
       "Walk <b>10–15 min after meals</b> — steadies blood sugar and adds steps.",
       "2–3 easy <b>zone-2 cardio</b> sessions a week (conversational pace, 30–40 min).",
       "One <b>strength session</b> for muscle and metabolic health.",

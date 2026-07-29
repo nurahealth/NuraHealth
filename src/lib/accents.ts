@@ -19,6 +19,10 @@ export const ACCENTS = {
   "--nura-teal": ["--nura-teal", "#5dccae"],
   "--nura-sleep-deep": ["--nura-sleep-deep", "#5aa0e6"],
   "--nura-good": ["--nura-good", "#d3a253"],
+  // Same gold as --nura-good, but registered as a viz accent so light
+  // neutralises it with the rest of the categorical set instead of leaving it
+  // wearing a status colour. See the note beside the token in globals.css.
+  "--nura-viz-gold": ["--nura-viz-gold", "#d3a253"],
   "--nura-amber": ["--nura-amber", "#e0a23e"],
   "--nura-alert": ["--nura-alert", "#e8745a"],
   "--nura-optimal": ["--nura-optimal", "#5fbf8c"],
