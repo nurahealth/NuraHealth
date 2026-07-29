@@ -61,8 +61,8 @@ export const GLOBAL_CSS = `
   * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
   
   ::-webkit-scrollbar { width: 0; }
-  input::placeholder { color: rgba(var(--nura-fg-rgb),0.3) !important; }
-  textarea::placeholder { color: rgba(var(--nura-fg-rgb),0.3) !important; }
+  input::placeholder { color: var(--nura-ink-a30) !important; }
+  textarea::placeholder { color: var(--nura-ink-a30) !important; }
   button:active { transform: scale(0.97) !important; }
 `;
 

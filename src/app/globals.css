@@ -71,6 +71,27 @@
      functional — buttons, active nav, fills, links, icons — and every piece of
      running text is neutral ink. These two tokens carry that difference, so
      the split lives here rather than in 300 component call sites. */
+
+  /* ── Ink emphasis ladder ────────────────────────────────────────────────
+     Chart axis labels, legends and placeholders were written as alphas of the
+     off-white ink. In dark that is right. In light the same alphas over white
+     land between 2.2:1 and 3.9:1 — legible-ish but well under AA, and they read
+     as smudges rather than labels.
+
+     One token per alpha actually in use, so the dark column reproduces the
+     original value exactly; light collapses them onto two solid greys and lets
+     size and weight carry the hierarchy instead. Alphas at or above 0.72
+     already clear AA on white and are left alone. */
+  --nura-ink-a30: rgba(235, 230, 216, 0.30);
+  --nura-ink-a35: rgba(235, 230, 216, 0.35);
+  --nura-ink-a32: rgba(235, 230, 216, 0.32);
+  --nura-ink-a36: rgba(235, 230, 216, 0.36);
+  --nura-ink-a40: rgba(235, 230, 216, 0.40);
+  --nura-ink-a45: rgba(235, 230, 216, 0.45);
+  --nura-ink-a50: rgba(235, 230, 216, 0.50);
+  --nura-ink-a55: rgba(235, 230, 216, 0.55);
+  --nura-ink-a62: rgba(235, 230, 216, 0.62);
+
   --nura-accent-text: var(--nura-sage);    /* headings, emphasis, wordmark */
   --nura-accent-label: var(--nura-sage);   /* small uppercase eyebrows */
 
@@ -132,6 +153,7 @@
   --nura-aqua-hi: #7fdce8;
   --nura-aqua-hi-rgb: 127, 220, 232;
   --nura-ice-hi: #dbe6ef;
+  --nura-ice-hi-rgb: 219, 230, 239;
   --nura-ember-hi: #f0a05a;
   --nura-ember-hi-rgb: 240, 160, 90;
   --nura-ember-lo: #c85e28;
@@ -268,6 +290,17 @@
   --nura-accent-soft-border: rgba(79, 111, 92, 0.20);
   /* Accent-as-text goes neutral in light — see the note in the dark column.
      --nura-sage itself is unchanged and stays the functional accent. */
+
+  /* Ink ladder — solid, AA. See the note in the dark column. */
+  --nura-ink-a30: #6e6b63;              /*  5.3:1 */
+  --nura-ink-a35: #6e6b63;
+  --nura-ink-a32: #6e6b63;
+  --nura-ink-a36: #6e6b63;
+  --nura-ink-a40: #6e6b63;
+  --nura-ink-a45: #5a5750;              /*  7.2:1 */
+  --nura-ink-a50: #5a5750;
+  --nura-ink-a55: #5a5750;
+  --nura-ink-a62: #5a5750;
   --nura-accent-text: var(--nura-text-primary);     /* 17.4:1 */
   --nura-accent-label: var(--nura-text-secondary);  /*  7.2:1 */
   --nura-text-strong: #000000;
@@ -324,9 +357,10 @@
      column so gradients read the same way round, just darker overall. */
   --nura-gold-ring-lo: #6f4f0c;
   --nura-gold-ring-hi: #b0810f;
-  --nura-aqua-hi: #1293a8;
-  --nura-aqua-hi-rgb: 18, 147, 168;
-  --nura-ice-hi: #63819a;
+  --nura-aqua-hi: #0f8095;              /*  4.6:1 — also used as label text */
+  --nura-aqua-hi-rgb: 15, 128, 149;
+  --nura-ice-hi: #586f86;               /*  5.2:1 — also used as label text */
+  --nura-ice-hi-rgb: 88, 111, 134;
   --nura-ember-hi: #c46524;
   --nura-ember-hi-rgb: 196, 101, 36;
   --nura-ember-lo: #7d3d10;

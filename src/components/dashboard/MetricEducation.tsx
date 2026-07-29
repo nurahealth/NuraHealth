@@ -11,8 +11,8 @@ import { type ReactNode } from "react";
 const SANS = "var(--font-inter), system-ui, sans-serif";
 const SURFACE = "rgba(var(--nura-bg-tint-rgb),0.04)";
 const CREAM = "var(--nura-text-primary)";
-const MUTED = "rgba(var(--nura-bg-tint-rgb),0.62)";
-const FAINT = "rgba(var(--nura-bg-tint-rgb),0.45)";
+const MUTED = "var(--nura-ink-a62)";
+const FAINT = "var(--nura-ink-a45)";
 const HAIR = "rgba(var(--nura-bg-tint-rgb),0.1)";
 
 export interface MetricEducationItem {

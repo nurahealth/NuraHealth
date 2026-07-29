@@ -156,7 +156,7 @@ export default function ActiveEnergyTodayChart({ d, height = 170 }: { d: ActiveE
 
         {/* Right-edge gridline value labels */}
         {d.todayGridlines.map((gl, i) => (
-          <text key={`l${i}`} x={W - 4} y={yOf(gl) - 3} textAnchor="end" fill={`rgba(${INK},0.32)`} style={{ fontFamily: SANS, fontSize: 9, fontWeight: 600 }}>{String(gl)}</text>
+          <text key={`l${i}`} x={W - 4} y={yOf(gl) - 3} textAnchor="end" fill="var(--nura-ink-a32)" style={{ fontFamily: SANS, fontSize: 9, fontWeight: 600 }}>{String(gl)}</text>
         ))}
 
         {/* KCAL / HR unit label, top-left */}
@@ -169,7 +169,7 @@ export default function ActiveEnergyTodayChart({ d, height = 170 }: { d: ActiveE
       </svg>
 
       {/* X-axis */}
-      <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6, fontFamily: SANS, fontSize: 9.5, color: `rgba(${INK},0.30)`, letterSpacing: "0.3px" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6, fontFamily: SANS, fontSize: 9.5, color: "var(--nura-ink-a30)", letterSpacing: "0.3px" }}>
         <span>12a</span><span>6a</span><span>12p</span><span>6p</span><span>now</span>
       </div>
     </div>

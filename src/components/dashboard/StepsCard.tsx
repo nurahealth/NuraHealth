@@ -143,7 +143,7 @@ function WeeklyBars({ week, goal }: { week: StepsWeekDay[]; goal: number }) {
       ))}
 
       {/* Goal label — parked in the right gutter, aligned to the goal line */}
-      <text x={(plotR + 6).toFixed(1)} y={(goalY + 3.5).toFixed(1)} textAnchor="start" fontSize={9.5} fontWeight={600} fill={`rgba(${CREAM_RGB},0.55)`} style={{ fontFamily: SANS }}>
+      <text x={(plotR + 6).toFixed(1)} y={(goalY + 3.5).toFixed(1)} textAnchor="start" fontSize={9.5} fontWeight={600} fill="var(--nura-ink-a55)" style={{ fontFamily: SANS }}>
         {Math.round(goal / 1000)}k goal
       </text>
     </svg>

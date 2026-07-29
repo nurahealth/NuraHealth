@@ -15,7 +15,7 @@ const MUTED = "var(--nura-text-secondary)";
 const FAINT = "var(--nura-text-tertiary)";
 const EMBER = "var(--nura-ember)";
 const EMBER_LIGHT = "var(--nura-ember-hi)";
-const INK = "235,230,216"; // warm off-white (matches --nura-fg-rgb in dark)
+const INK = "var(--nura-fg-rgb)"; // off-white in dark, near-black in light
 const EMBER_RGB = "224,122,60";
 const SANS = "var(--font-inter), system-ui, sans-serif";
 const bStyle: React.CSSProperties = { color: TEXT, fontWeight: 600 };
@@ -170,7 +170,7 @@ export default function ActiveEnergyDetailPage() {
                 {i > 0 && <span style={{ width: 3, height: 3, borderRadius: "50%", background: `rgba(${INK},0.3)`, margin: "0 9px", flexShrink: 0 }} />}
                 <span>
                   <b style={{ fontWeight: 700, color: it.warm ? "var(--nura-ember)" : "var(--nura-text-primary)" }}>{it.num}</b>
-                  <span style={{ color: it.warm ? "var(--nura-ember)" : `rgba(${INK},0.55)` }}>{it.words}</span>
+                  <span style={{ color: it.warm ? "var(--nura-ember)" : "var(--nura-ink-a55)" }}>{it.words}</span>
                 </span>
               </span>
             ))}
@@ -253,7 +253,7 @@ function ActiveWeekChart({ d }: { d: ActiveEnergyDetail }) {
 
       {/* Dashed goal line — label sits in the right gutter, centered on the line */}
       <line x1={L} y1={yOf(d.moveGoal).toFixed(1)} x2={R} y2={yOf(d.moveGoal).toFixed(1)} stroke={`rgba(${INK},0.4)`} strokeWidth={1} strokeDasharray="4 5" />
-      <text x={R + 6} y={yOf(d.moveGoal).toFixed(1)} textAnchor="start" dominantBaseline="central" fontSize={9} fontWeight={600} fill={`rgba(${INK},0.5)`} style={{ fontFamily: SANS }}>{d.moveGoal} goal</text>
+      <text x={R + 6} y={yOf(d.moveGoal).toFixed(1)} textAnchor="start" dominantBaseline="central" fontSize={9} fontWeight={600} fill="var(--nura-ink-a50)" style={{ fontFamily: SANS }}>{d.moveGoal} goal</text>
 
       {/* Daily bars */}
       {d.week.map((day, i) => {
@@ -269,7 +269,7 @@ function ActiveWeekChart({ d }: { d: ActiveEnergyDetail }) {
               x={x.toFixed(1)} y={y.toFixed(1)} width={barW.toFixed(1)} height={Math.max(h, 2).toFixed(1)}
               rx={Math.min(barW / 2, Math.max(h, 2) / 2).toFixed(1)} fill={`url(#${uid}-${i})`} opacity={hit ? 1 : 0.5}
             />
-            <text x={(x + barW / 2).toFixed(1)} y={(y - 7).toFixed(1)} textAnchor="middle" fontSize={10} fontWeight={700} fill={hit ? "var(--nura-text-primary)" : `rgba(${INK},0.5)`} style={{ fontFamily: SANS }}>
+            <text x={(x + barW / 2).toFixed(1)} y={(y - 7).toFixed(1)} textAnchor="middle" fontSize={10} fontWeight={700} fill={hit ? "var(--nura-text-primary)" : "var(--nura-ink-a50)"} style={{ fontFamily: SANS }}>
               {day.value}{hit ? " ✓" : ""}
             </text>
             <text x={(x + barW / 2).toFixed(1)} y={(bot + 17).toFixed(1)} textAnchor="middle" fontSize={11} fontWeight={day.isToday ? 700 : 500} fill={day.isToday ? TEXT : FAINT} style={{ fontFamily: SANS }}>

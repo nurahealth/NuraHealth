@@ -413,7 +413,7 @@ export default function ChatSessionPage({ params }: { params: Promise<{ sessionI
                   }}>
                     <div style={{ width: 6, height: 6, borderRadius: "50%", background: SAGE }} />
                   </div>
-                  <span style={{ fontSize: 10, fontWeight: 500, letterSpacing: "1.2px", color: `rgba(var(--nura-sage-rgb),0.85)`, textTransform: "uppercase" }}>
+                  <span style={{ fontSize: 10, fontWeight: 500, letterSpacing: "1.2px", color: `var(--nura-accent-label)`, textTransform: "uppercase" }}>
                     NŪRA
                   </span>
                 </div>
@@ -459,7 +459,7 @@ export default function ChatSessionPage({ params }: { params: Promise<{ sessionI
                 <div style={{ width: 18, height: 18, borderRadius: "50%", background: 'var(--nura-tint-accent-strong)', border: '0.5px solid var(--nura-tint-accent-border)', display: "flex", alignItems: "center", justifyContent: "center" }}>
                   <div style={{ width: 6, height: 6, borderRadius: "50%", background: SAGE }} />
                 </div>
-                <span style={{ fontSize: 10, fontWeight: 500, letterSpacing: "1.2px", color: `rgba(var(--nura-sage-rgb),0.85)`, textTransform: "uppercase" }}>NŪRA</span>
+                <span style={{ fontSize: 10, fontWeight: 500, letterSpacing: "1.2px", color: `var(--nura-accent-label)`, textTransform: "uppercase" }}>NŪRA</span>
               </div>
               <div style={{
                 background: SURFACE, border: `0.5px solid ${BORDER}`,
@@ -583,7 +583,7 @@ export default function ChatSessionPage({ params }: { params: Promise<{ sessionI
             </button>
           </div>
 
-          <p style={{ textAlign: "center", margin: "8px 0 0", fontSize: 9.5, color: "rgba(var(--nura-fg-rgb),0.32)" }}>
+          <p style={{ textAlign: "center", margin: "8px 0 0", fontSize: 9.5, color: "var(--nura-ink-a32)" }}>
             NŪRA provides wellness information, not medical advice.
           </p>
         </div>

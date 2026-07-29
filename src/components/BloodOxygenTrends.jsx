@@ -2,10 +2,10 @@ import React from "react";
 
 const SANS = "var(--font-inter), system-ui, sans-serif";
 // Ice / platinum identity — crisp on the dark bg, cool-blue lean.
-const OX = "#cbd8e6"; // line / markers (bright platinum for contrast)
-const OX_RGB = "174,191,207"; // #aebfcf — fills / band / glow
-const CREAM = "#ebe6d8";
-const FAINT = "rgba(235,230,216,0.45)";
+const OX = "var(--nura-ice-hi)"; // line / markers
+const OX_RGB = "var(--nura-ice-rgb)"; // fills / band / glow
+const CREAM = "var(--nura-text-primary)";
+const FAINT = "var(--nura-ink-a45)";
 const BAND = `rgba(${OX_RGB},0.1)`;
 
 const yFor = (v) => 48 + (100 - v) * 12;
@@ -32,17 +32,17 @@ function Frame({ children, guides }) {
   return (
     <svg viewBox="0 0 340 216" style={{ display: "block", width: "100%", shapeRendering: "geometricPrecision", fontFamily: SANS }}>
       <rect x="44" y={yFor(100)} width="276" height={yFor(95) - yFor(100)} fill={BAND} />
-      <g stroke="rgba(235,230,216,0.045)">
+      <g stroke="rgba(var(--nura-fg-rgb),0.045)">
         {guides.map((gx, i) => (<line key={i} x1={gx} y1="48" x2={gx} y2="190" />))}
       </g>
-      <line x1="44" y1={yFor(95)} x2="320" y2={yFor(95)} stroke="rgba(235,230,216,0.28)" strokeWidth="1" strokeDasharray="2 4" />
-      <line x1="44" y1={yFor(100)} x2="320" y2={yFor(100)} stroke="rgba(235,230,216,0.04)" />
-      <line x1="44" y1={yFor(90)} x2="320" y2={yFor(90)} stroke="rgba(235,230,216,0.04)" />
-      <text x="38" y={yFor(100) + 4} textAnchor="end" fontSize="9.5" fill="rgba(235,230,216,0.4)">100</text>
-      <text x="38" y={yFor(95) + 4} textAnchor="end" fontSize="9.5" fill="rgba(235,230,216,0.4)">95</text>
-      <text x="38" y={yFor(90) + 4} textAnchor="end" fontSize="9.5" fill="rgba(235,230,216,0.4)">90</text>
+      <line x1="44" y1={yFor(95)} x2="320" y2={yFor(95)} stroke="rgba(var(--nura-fg-rgb),0.28)" strokeWidth="1" strokeDasharray="2 4" />
+      <line x1="44" y1={yFor(100)} x2="320" y2={yFor(100)} stroke="rgba(var(--nura-fg-rgb),0.04)" />
+      <line x1="44" y1={yFor(90)} x2="320" y2={yFor(90)} stroke="rgba(var(--nura-fg-rgb),0.04)" />
+      <text x="38" y={yFor(100) + 4} textAnchor="end" fontSize="9.5" fill="var(--nura-ink-a40)">100</text>
+      <text x="38" y={yFor(95) + 4} textAnchor="end" fontSize="9.5" fill="var(--nura-ink-a40)">95</text>
+      <text x="38" y={yFor(90) + 4} textAnchor="end" fontSize="9.5" fill="var(--nura-ink-a40)">90</text>
       {children}
-      <line x1="44" y1="190" x2="320" y2="190" stroke="rgba(235,230,216,0.1)" />
+      <line x1="44" y1="190" x2="320" y2="190" stroke="rgba(var(--nura-fg-rgb),0.1)" />
     </svg>
   );
 }
@@ -51,7 +51,7 @@ function Legend({ lineLabel }) {
   return (
     <div style={{ display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap", marginTop: 12, fontSize: 11, color: FAINT }}>
       <span><i style={{ display: "inline-block", verticalAlign: "middle", marginRight: 5, width: 14, height: 2, borderRadius: 2, background: OX }} />{lineLabel}</span>
-      <span><i style={{ display: "inline-block", verticalAlign: "middle", marginRight: 5, width: 12, height: 9, borderRadius: 2, background: "rgba(174,191,207,0.16)", border: "0.5px solid rgba(174,191,207,0.4)" }} />normal range (≥95%)</span>
+      <span><i style={{ display: "inline-block", verticalAlign: "middle", marginRight: 5, width: 12, height: 9, borderRadius: 2, background: "rgba(var(--nura-ice-rgb),0.16)", border: "0.5px solid rgba(var(--nura-ice-rgb),0.4)" }} />normal range (≥95%)</span>
     </div>
   );
 }
@@ -61,7 +61,7 @@ function SectionHead({ label, note, avg }) {
     <>
       <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", margin: "0 2px 3px" }}>
         <p style={{ fontSize: 15, fontWeight: 500, margin: 0 }}>{label}</p>
-        <span style={{ fontSize: 13, color: "rgba(235,230,216,0.62)" }}>avg <b style={{ color: CREAM, fontWeight: 600 }}>{avg}%</b></span>
+        <span style={{ fontSize: 13, color: "var(--nura-ink-a62)" }}>avg <b style={{ color: CREAM, fontWeight: 600 }}>{avg}%</b></span>
       </div>
       <p style={{ fontSize: 12, color: FAINT, margin: "0 2px 12px", lineHeight: 1.4 }}>{note}</p>
     </>
@@ -94,19 +94,19 @@ export default function BloodOxygenTrends({
         <Frame guides={timeX}>
           <defs>
             <linearGradient id="oxfillA" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0" stopColor="rgba(174,191,207,0.28)" />
-              <stop offset="1" stopColor="rgba(174,191,207,0)" />
+              <stop offset="0" stopColor="rgba(var(--nura-ice-rgb),0.28)" />
+              <stop offset="1" stopColor="rgba(var(--nura-ice-rgb),0)" />
             </linearGradient>
           </defs>
           <path d={n1area} fill="url(#oxfillA)" />
           <path d={n1path} fill="none" stroke={OX} strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
           <circle cx={n1[0][0]} cy={n1[0][1]} r="3" fill={OX} />
           <text x={n1[0][0]} y={n1[0][1] - 12} textAnchor="middle" fontSize="10" fontWeight="600" fill={CREAM}>{lastNight[0]}%</text>
-          <circle cx={n1[lowIdx][0]} cy={n1[lowIdx][1]} r="3.5" fill={CREAM} stroke="#070708" strokeWidth="1.5" />
+          <circle cx={n1[lowIdx][0]} cy={n1[lowIdx][1]} r="3.5" fill={CREAM} stroke="var(--nura-bg)" strokeWidth="1.5" />
           <text x={n1[lowIdx][0]} y={n1[lowIdx][1] + 16} textAnchor="middle" fontSize="10" fontWeight="600" fill={CREAM}>{lastNight[lowIdx]}%</text>
-          <text x={n1[lowIdx][0]} y={n1[lowIdx][1] + 28} textAnchor="middle" fontSize="9" fill="rgba(235,230,216,0.5)">low</text>
-          <circle cx={n1[n1.length - 1][0]} cy={n1[n1.length - 1][1]} r="8" fill="rgba(174,191,207,0.2)" />
-          <circle cx={n1[n1.length - 1][0]} cy={n1[n1.length - 1][1]} r="4.5" fill={OX} stroke="#070708" strokeWidth="1.8" />
+          <text x={n1[lowIdx][0]} y={n1[lowIdx][1] + 28} textAnchor="middle" fontSize="9" fill="var(--nura-ink-a50)">low</text>
+          <circle cx={n1[n1.length - 1][0]} cy={n1[n1.length - 1][1]} r="8" fill="rgba(var(--nura-ice-rgb),0.2)" />
+          <circle cx={n1[n1.length - 1][0]} cy={n1[n1.length - 1][1]} r="4.5" fill={OX} stroke="var(--nura-bg)" strokeWidth="1.8" />
           <text x={n1[n1.length - 1][0]} y={n1[n1.length - 1][1] - 12} textAnchor="middle" fontSize="10" fontWeight="600" fill={CREAM}>{lastNight[lastNight.length - 1]}%</text>
           {times.map((t, i) => (<text key={i} x={timeX[i]} y="207" textAnchor="middle" fontSize="10" fill={FAINT}>{t}</text>))}
         </Frame>
@@ -118,8 +118,8 @@ export default function BloodOxygenTrends({
         <Frame guides={n7.map((p) => p[0])}>
           <defs>
             <linearGradient id="oxfillB" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0" stopColor="rgba(174,191,207,0.28)" />
-              <stop offset="1" stopColor="rgba(174,191,207,0)" />
+              <stop offset="0" stopColor="rgba(var(--nura-ice-rgb),0.28)" />
+              <stop offset="1" stopColor="rgba(var(--nura-ice-rgb),0)" />
             </linearGradient>
           </defs>
           <path d={n7area} fill="url(#oxfillB)" />
@@ -130,14 +130,14 @@ export default function BloodOxygenTrends({
               <g key={i}>
                 {isLast ? (
                   <>
-                    <circle cx={p[0]} cy={p[1]} r="8" fill="rgba(174,191,207,0.2)" />
-                    <circle cx={p[0]} cy={p[1]} r="4.5" fill={OX} stroke="#070708" strokeWidth="1.8" />
+                    <circle cx={p[0]} cy={p[1]} r="8" fill="rgba(var(--nura-ice-rgb),0.2)" />
+                    <circle cx={p[0]} cy={p[1]} r="4.5" fill={OX} stroke="var(--nura-bg)" strokeWidth="1.8" />
                     <text x={p[0]} y={p[1] - 13} textAnchor="middle" fontSize="10.5" fontWeight="600" fill={CREAM}>{sevenNights[i].v}</text>
                   </>
                 ) : (
                   <>
                     <circle cx={p[0]} cy={p[1]} r="2.4" fill={OX} />
-                    <text x={p[0]} y={p[1] - 12} textAnchor="middle" fontSize="9" fill="rgba(203,216,230,0.85)">{sevenNights[i].v}</text>
+                    <text x={p[0]} y={p[1] - 12} textAnchor="middle" fontSize="9" fill="rgba(var(--nura-ice-hi-rgb),0.85)">{sevenNights[i].v}</text>
                   </>
                 )}
                 <text x={p[0]} y="207" textAnchor="middle" fontSize="10" fill={FAINT}>{sevenNights[i].day}</text>

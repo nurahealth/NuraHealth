@@ -1943,7 +1943,7 @@ function WeeklyComplianceCard({ stats }: { stats: Stats | null }) {
         <span style={{
           fontFamily: SANS, fontSize: 11, fontWeight: 600,
           letterSpacing: "0.1em", textTransform: "uppercase",
-          color: `rgba(var(--nura-fg-rgb), 0.5)`,
+          color: "var(--nura-ink-a50)",
         }}>
           This week
         </span>
@@ -3296,7 +3296,7 @@ function BarcodeMatchScreen({
             <div style={{
               fontFamily: SANS, fontSize: 11, fontWeight: 600,
               letterSpacing: "0.12em", textTransform: "uppercase",
-              color: `rgba(var(--nura-fg-rgb), 0.5)`,
+              color: "var(--nura-ink-a50)",
               marginBottom: 4,
             }}>
               {lookup.brand}

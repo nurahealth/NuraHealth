@@ -16,7 +16,7 @@ import {
 const TEXT = "var(--nura-text-primary)";
 const MUTED = "var(--nura-text-secondary)";
 const FAINT = "var(--nura-text-tertiary)";
-const INK = "235,230,216"; // warm off-white (matches --nura-fg-rgb in dark)
+const INK = "var(--nura-fg-rgb)"; // off-white in dark, near-black in light
 const SANS = "var(--font-inter), system-ui, sans-serif";
 
 const TEAL = "var(--nura-teal)";
@@ -150,7 +150,7 @@ export default function BodyTempDetailPage() {
                     border: "none", cursor: "pointer", borderRadius: 999, padding: "5px 16px",
                     fontFamily: SANS, fontSize: 12, fontWeight: 600,
                     background: on ? `rgba(${TEAL_RGB},0.16)` : "transparent",
-                    color: on ? TEAL : `rgba(${INK},0.5)`,
+                    color: on ? TEAL : "var(--nura-ink-a50)",
                   }}
                 >
                   °{u}
@@ -209,7 +209,7 @@ export default function BodyTempDetailPage() {
                     border: "none", cursor: "pointer", borderRadius: 999, padding: "5px 14px",
                     fontFamily: SANS, fontSize: 11.5, fontWeight: 600,
                     background: on ? `rgba(${TEAL_RGB},0.16)` : "transparent",
-                    color: on ? TEAL : `rgba(${INK},0.5)`,
+                    color: on ? TEAL : "var(--nura-ink-a50)",
                   }}
                 >
                   {r}D
@@ -324,7 +324,7 @@ function TrendChart({
       {ticks.map((t) => (
         <g key={t}>
           <line x1={0} x2={W} y1={yOf(t).toFixed(1)} y2={yOf(t).toFixed(1)} stroke={`rgba(${INK},0.06)`} />
-          <text x={W - 2} y={(yOf(t) - 3).toFixed(1)} textAnchor="end" fontFamily={SANS} fontSize={9} fill={`rgba(${INK},0.32)`}>{fmtDeltaDeg(t, unit)}</text>
+          <text x={W - 2} y={(yOf(t) - 3).toFixed(1)} textAnchor="end" fontFamily={SANS} fontSize={9} fill="var(--nura-ink-a32)">{fmtDeltaDeg(t, unit)}</text>
         </g>
       ))}
 
@@ -378,7 +378,7 @@ function WeeklyChart({ weeklyAvg, unit }: { weeklyAvg: number[]; unit: Temperatu
     <svg width="100%" height={H} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" style={{ display: "block", overflow: "visible", marginTop: 6 }}>
       {/* Baseline reference */}
       <line x1={4} x2={W} y1={baseY} y2={baseY} stroke={`rgba(${INK},0.3)`} strokeWidth={1} strokeDasharray="3 4" />
-      <text x={4} y={baseY - 6} fontFamily={SANS} fontSize={8.5} fontWeight={600} letterSpacing="0.5" fill={`rgba(${INK},0.4)`}>BASELINE</text>
+      <text x={4} y={baseY - 6} fontFamily={SANS} fontSize={8.5} fontWeight={600} letterSpacing="0.5" fill="var(--nura-ink-a40)">BASELINE</text>
 
       {weeklyAvg.map((v, i) => {
         const x = xOf(i), y = yOf(v);
@@ -393,7 +393,7 @@ function WeeklyChart({ weeklyAvg, unit }: { weeklyAvg: number[]; unit: Temperatu
             {last && <circle cx={x.toFixed(1)} cy={y.toFixed(1)} r={9} fill="none" stroke={fill} strokeOpacity={0.3} strokeWidth={1.5} />}
             <circle cx={x.toFixed(1)} cy={y.toFixed(1)} r={last ? 5.5 : 4} fill={fill} style={{ filter: `drop-shadow(0 0 ${last ? 8 : 5}px ${fill})` }} />
             <text x={x.toFixed(1)} y={valY.toFixed(1)} textAnchor="middle" fontFamily={SANS} fontSize={12} fontWeight={700} fill={last ? fill : "var(--nura-text-primary)"}>{fmtDeltaDeg(v, unit)}</text>
-            <text x={x.toFixed(1)} y={158} textAnchor="middle" fontFamily={SANS} fontSize={10.5} fill={`rgba(${INK},0.32)`}>{labels[i]}</text>
+            <text x={x.toFixed(1)} y={158} textAnchor="middle" fontFamily={SANS} fontSize={10.5} fill="var(--nura-ink-a32)">{labels[i]}</text>
           </g>
         );
       })}

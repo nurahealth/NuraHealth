@@ -302,7 +302,7 @@ export default function RecipesBrowseClient({
             </h2>
             {featured.description && (
               <p style={{
-                fontFamily: SANS, fontSize: 13, color: "rgba(var(--nura-bg-tint-rgb),0.78)", margin: 0, lineHeight: 1.5, maxWidth: 520,
+                fontFamily: SANS, fontSize: 13, color: "var(--nura-ink-strong)", margin: 0, lineHeight: 1.5, maxWidth: 520,
                 display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden",
               }}>
                 {featured.description}
@@ -310,7 +310,7 @@ export default function RecipesBrowseClient({
             )}
             <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 4 }}>
               {featured.total_minutes !== null && (
-                <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontFamily: SANS, fontSize: 12, color: "rgba(var(--nura-bg-tint-rgb),0.78)" }}>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontFamily: SANS, fontSize: 12, color: "var(--nura-ink-strong)" }}>
                   <Clock size={13} /> {featured.total_minutes} min
                 </span>
               )}

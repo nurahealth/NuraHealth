@@ -442,7 +442,7 @@ export default function Home() {
               />
               <div style={{
                 position: "absolute", left: 0, top: "50%", transform: "translateY(-50%)",
-                fontSize: 14, color: "rgba(var(--nura-fg-rgb),0.35)", fontFamily: SANS,
+                fontSize: 14, color: "var(--nura-ink-a35)", fontFamily: SANS,
                 pointerEvents: "none", whiteSpace: "nowrap", overflow: "hidden",
                 maxWidth: "100%",
                 opacity: phHidden ? 0 : 1,

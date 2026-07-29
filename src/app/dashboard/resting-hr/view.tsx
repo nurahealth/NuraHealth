@@ -12,7 +12,7 @@ import { hex, lerp, smooth } from "@/components/dashboard/ActiveEnergyTodayChart
 const TEXT = "var(--nura-text-primary)";
 const MUTED = "var(--nura-text-secondary)";
 const FAINT = "var(--nura-text-tertiary)";
-const INK = "235,230,216"; // warm off-white (matches --nura-fg-rgb in dark)
+const INK = "var(--nura-fg-rgb)"; // off-white in dark, near-black in light
 const SANS = "var(--font-inter), system-ui, sans-serif";
 const bStyle: React.CSSProperties = { color: TEXT, fontWeight: 600 };
 
@@ -294,7 +294,7 @@ export default function RestingHrDetailPage() {
                     border: "none", cursor: "pointer", borderRadius: 999, padding: "5px 14px",
                     fontFamily: SANS, fontSize: 12, fontWeight: 600, letterSpacing: "0.3px",
                     background: on ? `rgba(${RING_GLOW},0.18)` : "transparent",
-                    color: on ? RING_TO : `rgba(${INK},0.5)`,
+                    color: on ? RING_TO : "var(--nura-ink-a50)",
                   }}
                 >
                   {r}
@@ -412,7 +412,7 @@ function TrendChart({
       {d.monthGridlines.map((g) => (
         <g key={g}>
           <line x1={L} x2={R} y1={yOf(g).toFixed(1)} y2={yOf(g).toFixed(1)} stroke={`rgba(${INK},0.06)`} strokeWidth={1} />
-          <text x={L - 6} y={(yOf(g) + 3).toFixed(1)} textAnchor="end" fontSize={9} fill={`rgba(${INK},0.32)`} style={{ fontFamily: SANS }}>{g}</text>
+          <text x={L - 6} y={(yOf(g) + 3).toFixed(1)} textAnchor="end" fontSize={9} fill="var(--nura-ink-a32)" style={{ fontFamily: SANS }}>{g}</text>
         </g>
       ))}
 
@@ -439,7 +439,7 @@ function TrendChart({
         const x = L + f * plotW;
         const anchor = i === 0 ? "start" : i === xLabels.length - 1 ? "end" : "middle";
         return (
-          <text key={lab} x={x.toFixed(1)} y={(bot + 18).toFixed(1)} textAnchor={anchor} fontSize={9.5} fill={`rgba(${INK},0.3)`} style={{ fontFamily: SANS, letterSpacing: "0.3px" }}>{lab}</text>
+          <text key={lab} x={x.toFixed(1)} y={(bot + 18).toFixed(1)} textAnchor={anchor} fontSize={9.5} fill="var(--nura-ink-a30)" style={{ fontFamily: SANS, letterSpacing: "0.3px" }}>{lab}</text>
         );
       })}
     </svg>

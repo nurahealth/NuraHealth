@@ -259,7 +259,7 @@ export default function AcceptTermsPage() {
         {/* Footer */}
         <p style={{
           marginTop: 32, textAlign: "center",
-          fontFamily: SANS, fontSize: 10, color: "rgba(var(--nura-fg-rgb),0.32)",
+          fontFamily: SANS, fontSize: 10, color: "var(--nura-ink-a32)",
           letterSpacing: "1px", textTransform: "uppercase",
         }}>
           Wellness information · not medical advice

@@ -85,8 +85,8 @@ export default function BodyTempCardRing({
           transform={`rotate(${START} ${CX} ${CY})`}
         />
         {/* Baseline notch + label at top */}
-        <circle cx={b.x.toFixed(1)} cy={b.y.toFixed(1)} r={2} fill={`rgba(${INK},0.5)`} />
-        <text x={CX} y={(CY - R - 18).toFixed(1)} textAnchor="middle" fontFamily="Inter, sans-serif" fontSize={10.5} fontWeight={600} fill={`rgba(${INK},0.4)`} letterSpacing="0.8">BASELINE</text>
+        <circle cx={b.x.toFixed(1)} cy={b.y.toFixed(1)} r={2} fill="var(--nura-ink-a50)" />
+        <text x={CX} y={(CY - R - 18).toFixed(1)} textAnchor="middle" fontFamily="Inter, sans-serif" fontSize={10.5} fontWeight={600} fill="var(--nura-ink-a40)" letterSpacing="0.8">BASELINE</text>
         {/* Current-reading marker */}
         <circle cx={m.x.toFixed(1)} cy={m.y.toFixed(1)} r={8} fill="var(--nura-bg)" stroke={`rgba(${TEAL_RGB},0.5)`} strokeWidth={1} />
         <circle cx={m.x.toFixed(1)} cy={m.y.toFixed(1)} r={4.5} fill={MARKER} filter={`url(#${uid}-glow)`} />

@@ -337,13 +337,13 @@ function HrvZoneChart({ hrv }: { hrv: HrvTrendChart }) {
       {gridlines.map((g) => (
         <g key={g}>
           <line x1={L} y1={yOf(g).toFixed(1)} x2={R} y2={yOf(g).toFixed(1)} stroke={`rgba(${INK},0.05)`} />
-          <text x={L - 5} y={(yOf(g) + 3).toFixed(1)} textAnchor="end" fontSize={9} fill={`rgba(${INK},0.32)`} style={{ fontFamily: SANS }}>{g}</text>
+          <text x={L - 5} y={(yOf(g) + 3).toFixed(1)} textAnchor="end" fontSize={9} fill="var(--nura-ink-a32)" style={{ fontFamily: SANS }}>{g}</text>
         </g>
       ))}
 
       {/* Rolling-average dashed line */}
       <line x1={L} y1={yOf(average).toFixed(1)} x2={R} y2={yOf(average).toFixed(1)} stroke={`rgba(${INK},0.4)`} strokeWidth={1} strokeDasharray="4 5" />
-      <text x={L + 2} y={(yOf(average) - 4).toFixed(1)} fontSize={9} fill={`rgba(${INK},0.45)`} style={{ fontFamily: SANS }}>avg {average}</text>
+      <text x={L + 2} y={(yOf(average) - 4).toFixed(1)} fontSize={9} fill="var(--nura-ink-a45)" style={{ fontFamily: SANS }}>avg {average}</text>
 
       {/* Daily line + dots (aqua) */}
       <polyline points={poly} fill="none" strokeWidth={2.6} strokeLinecap="round" strokeLinejoin="round" style={{ stroke: AQUA, filter: `drop-shadow(0 0 4px rgba(${AQUA_RGB},0.55))` }} />

@@ -100,7 +100,7 @@ export default function SleepDepthChart({ data }: { data: SleepDepthChartData })
       </svg>
 
       {/* X-axis */}
-      <div style={{ display: "flex", justifyContent: "space-between", padding: "0 2px", marginTop: 5, fontFamily: SANS, fontSize: 10, color: `rgba(${INK},0.30)` }}>
+      <div style={{ display: "flex", justifyContent: "space-between", padding: "0 2px", marginTop: 5, fontFamily: SANS, fontSize: 10, color: "var(--nura-ink-a30)" }}>
         {axisLabels.map((l, i) => <span key={i}>{l}</span>)}
       </div>
 
@@ -108,7 +108,7 @@ export default function SleepDepthChart({ data }: { data: SleepDepthChartData })
       <div style={{ display: "flex", justifyContent: "space-between", gap: 8, marginTop: 14 }}>
         {stages.map((s) => (
           <div key={s.label} style={{ flex: 1, display: "flex", flexDirection: "column", gap: 4 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 6, fontFamily: SANS, fontSize: 10.5, color: `rgba(${INK},0.55)`, letterSpacing: "0.3px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 6, fontFamily: SANS, fontSize: 10.5, color: "var(--nura-ink-a55)", letterSpacing: "0.3px" }}>
               <i style={{ width: 8, height: 8, borderRadius: 2, background: s.color.startsWith("--") ? acc[s.color as keyof typeof acc] : s.color, flexShrink: 0 }} />
               {s.label}
             </div>

@@ -247,13 +247,13 @@ function StepsWeekChart({ d }: { d: StepsDetail }) {
       {d.weekGridlines.map((g) => (
         <g key={g}>
           <line x1={L} y1={yOf(g).toFixed(1)} x2={R} y2={yOf(g).toFixed(1)} stroke={`rgba(${INK},0.05)`} />
-          <text x={L - 6} y={(yOf(g) + 3).toFixed(1)} textAnchor="end" fontSize={9} fill={`rgba(${INK},0.32)`} style={{ fontFamily: SANS }}>{g / 1000}k</text>
+          <text x={L - 6} y={(yOf(g) + 3).toFixed(1)} textAnchor="end" fontSize={9} fill="var(--nura-ink-a32)" style={{ fontFamily: SANS }}>{g / 1000}k</text>
         </g>
       ))}
 
       {/* Dashed goal line — label sits in the right gutter, centered on the line */}
       <line x1={L} y1={yOf(d.weekGoal).toFixed(1)} x2={R} y2={yOf(d.weekGoal).toFixed(1)} stroke={`rgba(${INK},0.4)`} strokeWidth={1} strokeDasharray="4 5" />
-      <text x={R + 6} y={yOf(d.weekGoal).toFixed(1)} textAnchor="start" dominantBaseline="central" fontSize={9} fontWeight={600} fill={`rgba(${INK},0.5)`} style={{ fontFamily: SANS }}>10k goal</text>
+      <text x={R + 6} y={yOf(d.weekGoal).toFixed(1)} textAnchor="start" dominantBaseline="central" fontSize={9} fontWeight={600} fill="var(--nura-ink-a50)" style={{ fontFamily: SANS }}>10k goal</text>
 
       {/* Daily bars — orange (hit goal) vs muted grey (under), soft glow on both */}
       {d.week.map((day, i) => {
@@ -273,7 +273,7 @@ function StepsWeekChart({ d }: { d: StepsDetail }) {
                 rx={6} fill="none" stroke={`rgba(${INK},0.85)`} strokeWidth={1}
               />
             )}
-            <text x={(x + barW / 2).toFixed(1)} y={(y - 7).toFixed(1)} textAnchor="middle" fontSize={10} fontWeight={700} fill={day.isToday ? TEXT : `rgba(${INK},0.62)`} style={{ fontFamily: SANS }}>
+            <text x={(x + barW / 2).toFixed(1)} y={(y - 7).toFixed(1)} textAnchor="middle" fontSize={10} fontWeight={700} fill={day.isToday ? TEXT : "var(--nura-ink-a62)"} style={{ fontFamily: SANS }}>
               {(day.value / 1000).toFixed(1)}k
             </text>
             <text x={(x + barW / 2).toFixed(1)} y={(bot + 17).toFixed(1)} textAnchor="middle" fontSize={11} fontWeight={day.isToday ? 700 : 500} fill={day.isToday ? TEXT : FAINT} style={{ fontFamily: SANS }}>

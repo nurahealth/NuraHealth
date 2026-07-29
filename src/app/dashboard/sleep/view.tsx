@@ -14,7 +14,7 @@ const TEXT = "var(--nura-text-primary)";
 const MUTED = "var(--nura-text-secondary)";
 const FAINT = "var(--nura-text-tertiary)";
 const SANS = "var(--font-inter), system-ui, sans-serif";
-const INK = "235,230,216"; // warm off-white (matches --nura-fg-rgb in dark)
+const INK = "var(--nura-fg-rgb)"; // off-white in dark, near-black in light
 
 // Stage palette — shared by the hypnogram, the legend and the HR/HRV shading so
 // every night chart speaks the same color language.
@@ -537,12 +537,12 @@ function NightLineChart({
         return (
           <g key={`t${i}`}>
             <line x1={plotL} y1={gy.toFixed(1)} x2={plotR} y2={gy.toFixed(1)} stroke={`rgba(${INK},0.06)`} />
-            <text x={plotL - 8} y={(gy + 3).toFixed(1)} textAnchor="end" fontFamily={SANS} fontSize={9} fill={`rgba(${INK},0.4)`}>{t}</text>
+            <text x={plotL - 8} y={(gy + 3).toFixed(1)} textAnchor="end" fontFamily={SANS} fontSize={9} fill="var(--nura-ink-a40)">{t}</text>
           </g>
         );
       })}
       {/* Unit label atop the number column */}
-      <text x={plotL - 8} y={(plotT - 12).toFixed(1)} textAnchor="end" fontFamily={SANS} fontSize={8.5} fontWeight={600} letterSpacing="0.6px" fill={`rgba(${INK},0.36)`}>{unit}</text>
+      <text x={plotL - 8} y={(plotT - 12).toFixed(1)} textAnchor="end" fontFamily={SANS} fontSize={8.5} fontWeight={600} letterSpacing="0.6px" fill="var(--nura-ink-a36)">{unit}</text>
 
       {/* Gradient area fill (line color → transparent) + smooth line */}
       <path d={`${path} L ${pts[n - 1][0].toFixed(1)},${plotB} L ${pts[0][0].toFixed(1)},${plotB} Z`} fill={`url(#${uid}-fill)`} />

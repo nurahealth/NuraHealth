@@ -366,7 +366,7 @@ function AuthContent() {
           <div style={{ flex: 1, height: 0.5, background: BORDER }} />
           <span style={{
             fontFamily: SANS, fontSize: 10, fontWeight: 600, letterSpacing: "2px",
-            color: `rgba(var(--nura-sage-rgb),0.55)`, textTransform: "uppercase",
+            color: "var(--nura-accent-label)", textTransform: "uppercase",
           }}>
             OR
           </span>
@@ -438,7 +438,7 @@ function AuthContent() {
 
         <p style={{
           marginTop: 28, textAlign: "center",
-          fontFamily: SANS, fontSize: 10, color: "rgba(var(--nura-fg-rgb),0.32)",
+          fontFamily: SANS, fontSize: 10, color: "var(--nura-ink-a32)",
           letterSpacing: "1px", textTransform: "uppercase",
         }}>
           Wellness information · not medical advice
