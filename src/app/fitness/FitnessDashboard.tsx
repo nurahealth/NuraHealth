@@ -634,13 +634,13 @@ const app: React.CSSProperties = { width: '100%', maxWidth: 'var(--fit-frame, 44
             )}
 
             {/* TODAY HERO */}
-            <div style={{
+            <div className={training ? 'nura-flat-accent' : undefined} style={{
               position: 'relative', overflow: 'hidden', borderRadius: 22, padding: 20, marginBottom: 14,
               background: training ? 'linear-gradient(135deg,rgba(var(--nura-sage-rgb),.20),rgba(var(--nura-sage-rgb),.04))' : SURF,
               border: `1px solid ${training ? 'rgba(var(--nura-sage-rgb),.25)' : LINE}`,
             }}>
-              <div style={{ position: 'absolute', right: -40, top: -40, width: 180, height: 180, borderRadius: '50%', background: 'radial-gradient(circle,rgba(var(--nura-sage-rgb),.35),transparent 70%)', pointerEvents: 'none' }} />
-              <svg style={{ position: 'absolute', right: -10, bottom: -30, opacity: 0.13 }} width="150" height="150" viewBox="0 0 24 24" fill="none" stroke={SAGE} strokeWidth="1.2">
+              <div className="nura-halo" style={{ position: 'absolute', right: -40, top: -40, width: 180, height: 180, borderRadius: '50%', background: 'radial-gradient(circle,rgba(var(--nura-sage-rgb),.35),transparent 70%)', pointerEvents: 'none' }} />
+              <svg className="nura-halo" style={{ position: 'absolute', right: -10, bottom: -30, opacity: 0.13 }} width="150" height="150" viewBox="0 0 24 24" fill="none" stroke={SAGE} strokeWidth="1.2">
                 <path d="M6.5 6.5 17.5 17.5M3 8l3-3M16 21l3-3M8 3 5 6M21 16l-3 3" />
               </svg>
               <div style={{ fontSize: 11, letterSpacing: '.16em', color: "var(--nura-accent-text)", position: 'relative' }}>{heroEyebrow}</div>

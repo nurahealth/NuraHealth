@@ -978,7 +978,7 @@ function TimeToTakeSection({
   };
 
   return (
-    <div style={{
+    <div className="nura-flat-accent" style={{
       position: "relative", overflow: "hidden",
       borderRadius: 18,
       background: `linear-gradient(135deg, rgba(var(--nura-sage-rgb),0.16) 0%, rgba(var(--nura-sage-rgb),0.06) 100%)`,
@@ -1837,7 +1837,7 @@ const SAGE_TEXT = "var(--nura-sage)";
 function StreakCard({ stats }: { stats: Stats | null }) {
   if (!stats) {
     return (
-      <div style={{
+      <div className="nura-flat-accent" style={{
         position: "relative", overflow: "hidden",
         borderRadius: 18,
         background: "linear-gradient(135deg, rgba(var(--nura-sage-rgb),0.18) 0%, rgba(var(--nura-sage-rgb),0.08) 100%)",
@@ -1866,7 +1866,7 @@ function StreakCard({ stats }: { stats: Stats | null }) {
       : "Keep it going";
 
   return (
-    <div style={{
+    <div className="nura-flat-accent" style={{
       position: "relative", overflow: "hidden",
       borderRadius: 18,
       background: "linear-gradient(135deg, rgba(var(--nura-sage-rgb),0.18) 0%, rgba(var(--nura-sage-rgb),0.08) 100%)",
@@ -1874,7 +1874,7 @@ function StreakCard({ stats }: { stats: Stats | null }) {
       padding: "18px 20px", marginBottom: 12,
       display: "flex", alignItems: "center", gap: 16,
     }}>
-      <div aria-hidden style={{
+      <div aria-hidden className="nura-halo" style={{
         position: "absolute", top: -40, right: -40,
         width: 140, height: 140,
         background: "radial-gradient(circle, rgba(var(--nura-sage-rgb),0.32) 0%, rgba(var(--nura-sage-rgb),0) 70%)",

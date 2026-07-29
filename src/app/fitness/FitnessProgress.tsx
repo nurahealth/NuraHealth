@@ -955,14 +955,14 @@ export default function FitnessProgress() {
           </div>
 
           {/* hero — weekly ring */}
-          <div style={{
+          <div className="nura-flat-accent" style={{
             position: 'relative', overflow: 'hidden', borderRadius: 22, padding: 20, marginBottom: 20,
             background: 'linear-gradient(135deg,rgba(var(--nura-sage-rgb),.20),rgba(var(--nura-sage-rgb),.04))',
             border: '1px solid rgba(var(--nura-sage-rgb),.25)',
             display: 'flex', alignItems: 'center', gap: 20,
           }}>
             {/* soft radial corner-glow (matches the dashboard hero) */}
-            <div style={{ position: 'absolute', right: -40, top: -40, width: 180, height: 180, borderRadius: '50%', background: 'radial-gradient(circle,rgba(var(--nura-sage-rgb),.35),transparent 70%)', pointerEvents: 'none' }} />
+            <div className="nura-halo" style={{ position: 'absolute', right: -40, top: -40, width: 180, height: 180, borderRadius: '50%', background: 'radial-gradient(circle,rgba(var(--nura-sage-rgb),.35),transparent 70%)', pointerEvents: 'none' }} />
 
             {/* ring */}
             <div style={{ position: 'relative', width: 110, height: 110, flexShrink: 0 }}>
