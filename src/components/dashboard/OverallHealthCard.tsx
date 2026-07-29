@@ -94,6 +94,11 @@ export default function OverallHealthCard() {
   return (
     <div style={{
       position: "relative", overflow: "hidden",
+      // See HealthPlanCard: the two hero cards stretch to a shared row height at
+      // desktop, so whichever ends up shorter pins its closing panel to the
+      // bottom instead of leaving a dead strip. Inert at the card's natural
+      // height, which is every width below lg.
+      display: "flex", flexDirection: "column",
       background: "var(--nura-glass)", border: "1px solid var(--nura-glass-line)",
       borderRadius: 24, padding: "20px 16px 18px", marginBottom: 16,
       boxShadow: "inset 0 1px 0 var(--nura-card-highlight), var(--nura-card-shadow)",
@@ -101,6 +106,7 @@ export default function OverallHealthCard() {
       <style>{`
         .oh-pill-head:hover .oh-nm { color: var(--nura-text-strong); }
         .oh-imp-item { transition: border-color .18s; }
+        @media (min-width: 1024px) { .oh-improve { margin-top: auto !important; } }
       `}</style>
       {/* Soft glow core behind the ring — dark only (see the flattening
           layer in globals.css). */}
@@ -186,7 +192,7 @@ export default function OverallHealthCard() {
       </div>
 
       {/* What to improve */}
-      <div style={{ marginTop: 14, padding: 15, borderRadius: 16, border: "1px solid var(--nura-tint-warn-border)", background: "var(--nura-tint-warn)" }}>
+      <div className="oh-improve" style={{ marginTop: 14, padding: 15, borderRadius: 16, border: "1px solid var(--nura-tint-warn-border)", background: "var(--nura-tint-warn)" }}>
         <div style={{ fontSize: 10.5, letterSpacing: "1.4px", textTransform: "uppercase", color: GOLD, fontWeight: 700 }}>What to improve</div>
         <div style={{ fontSize: 11.5, color: FAINT, marginTop: 3 }}>Personalized from your readings — tap any to go deeper</div>
 

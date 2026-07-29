@@ -85,7 +85,7 @@ export default function StepsDetailPage() {
 
       <AuroraBackground gradient={GOLD_AURORA} />
 
-      <div style={{ position: "relative", zIndex: 1, maxWidth: 480, margin: "0 auto", padding: "calc(env(safe-area-inset-top, 0px) + 46px) 18px 44px" }}>
+      <div className="mp-col" style={{ position: "relative", zIndex: 1, maxWidth: 480, margin: "0 auto", padding: "calc(env(safe-area-inset-top, 0px) + 46px) 18px 44px" }}>
         {/* Header shell — back · NŪRA wordmark · info */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 0 2px" }}>
           <button

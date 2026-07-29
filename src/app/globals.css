@@ -622,6 +622,10 @@
   --nura-content-left: 0px;   /* left edge of the content area */
   --nura-measure-chat: 720px; /* chat column */
   --fit-frame: 440px;         /* standalone fitness screens (own backdrop + nav) */
+  --fit-detail: 440px;        /* focused fitness flows inside those screens */
+  --nura-metric-col: 480px;   /* dashboard metric-detail column (MetricPager) */
+  --nura-gutter: 18px;        /* page padding inside the content column */
+  --nura-card-gap: 14px;      /* space between sibling cards */
 }
 
 
@@ -638,14 +642,40 @@ body {
 
 @media (min-width: 1024px) {
   :root {
+    /* The rail is narrower on laptop-class screens. At 1024–1439 a 280px rail
+       eats 27% of the viewport and strands the content column; 248px still
+       fits every nav label and hands ~32px back to the page. */
+    --nura-sidebar-w: 248px;
     --nura-content-left: var(--nura-sidebar-w);
     --nura-measure-chat: 768px;
     --fit-frame: 900px;
+    --fit-detail: 660px;
+    --nura-metric-col: 720px;
+    --nura-gutter: 40px;
+    --nura-card-gap: 24px;
   }
   /* Push page content clear of the docked rail. Fixed overlays that should
      cover the whole viewport (modal scrims) keep inset:0 and are unaffected. */
   body {
     padding-left: var(--nura-sidebar-w);
+  }
+}
+
+@media (min-width: 1440px) {
+  :root {
+    /* Past 1440 there is room for the full rail again. */
+    --nura-sidebar-w: 280px;
+  }
+}
+
+/* The twelve metric-detail screens inside MetricPager are phone layouts: each
+   pins its column at 480px (or 392px for the compact four). Left alone at
+   desktop that reads as a phone floating in a black field. The mobile cap stays
+   inline — this only widens the column once the rail is docked, so every panel
+   in the pager settles on the same measure. */
+@media (min-width: 1024px) {
+  .mp-col {
+    max-width: var(--nura-metric-col) !important;
   }
 }
 

@@ -146,7 +146,10 @@ export default function ExerciseDetail({ exerciseId, sets, reps, rest_seconds, o
 
   // ── Section styles (1:1 with the reference CSS) ─────────────────────────────
   const wrap: React.CSSProperties = {
-    position: 'fixed', inset: 0, zIndex: 100, overflowY: 'auto',
+    // A full-screen SCREEN, not a modal: it starts where the content does so it
+    // does not slide underneath the docked rail (and centre its column on the
+    // whole viewport). --nura-content-left is 0 below lg.
+    position: 'fixed', inset: '0 0 0 var(--nura-content-left)', zIndex: 100, overflowY: 'auto',
     minHeight: '100vh', display: 'flex', justifyContent: 'center', padding: 20,
     // Radial tint layered over a SOLID base so the full-screen overlay is opaque
     // — otherwise the translucent top of the gradient lets the dashboard header
@@ -166,7 +169,7 @@ export default function ExerciseDetail({ exerciseId, sets, reps, rest_seconds, o
 
   return (
     <div style={wrap}>
-      <div style={{ width: '100%', maxWidth: 440, paddingBottom: 40 }}>
+      <div style={{ width: '100%', maxWidth: 'var(--fit-detail, 440px)', paddingBottom: 40 }}>
 
         {/* back — the ONE header for this screen (dashboard header is covered by
             the opaque overlay behind us) */}

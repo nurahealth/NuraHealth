@@ -330,7 +330,10 @@ export default function PlanSettings() {
       {/* Sticky glassy footer */}
       {!loading && (
         <footer style={{
-          position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 5,
+          // Starts at the content edge, not the viewport edge — otherwise the
+          // bar runs under the docked rail and its centred inner row sits ~140px
+          // left of the form it belongs to. 0 below lg.
+          position: 'fixed', left: 'var(--nura-content-left)', right: 0, bottom: 0, zIndex: 5,
           background: 'var(--nura-scrim-panel)', backdropFilter: 'blur(18px)', WebkitBackdropFilter: 'blur(18px)',
           borderTop: `1px solid rgba(var(--nura-bg-tint-rgb),0.10)`,
         }}>

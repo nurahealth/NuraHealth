@@ -18,7 +18,9 @@ interface Props {
   /**
    * Content width at lg and up. Defaults to `maxWidth`, i.e. a screen that
    * hasn't opted in keeps its phone width and simply centres — never stretched.
-   * Use ~1200 for card-grid screens and ~720 for reading/detail screens.
+   * Use ~1280 for card-grid screens and ~720 for reading/detail screens.
+   * The value is the OUTER cap: the shell is border-box, so the horizontal
+   * gutter comes out of it (1280 → a 1200px content measure).
    */
   desktopMaxWidth?: number;
 }
@@ -52,12 +54,15 @@ export default function NuraPageShell({
           max-width: var(--shell-max);
           margin: 0 auto;
           width: 100%;
-          padding: 20px 18px 80px;
+          padding: 20px var(--nura-gutter) 80px;
         }
         @media (min-width: 1024px) {
+          /* One centred measure for every screen: the cap comes from the page's
+             own desktopMaxWidth, the gutter is the shared token so the distance
+             from the rail to the first card is identical everywhere. */
           .nura-shell-content {
             max-width: var(--shell-max-lg);
-            padding: 28px 40px 96px;
+            padding: 32px var(--nura-gutter) 96px;
           }
         }
       `}</style>

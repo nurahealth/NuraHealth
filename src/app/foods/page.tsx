@@ -37,7 +37,7 @@ export default async function FoodsPage() {
   }));
 
   return (
-    <NuraPageShell maxWidth={1040} desktopMaxWidth={1200}>
+    <NuraPageShell maxWidth={1040} desktopMaxWidth={1280}>
       <FoodsBrowseClient foods={foods} />
     </NuraPageShell>
   );

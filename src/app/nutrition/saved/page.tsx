@@ -66,7 +66,7 @@ export default async function SavedRecipesPage() {
     .filter((r): r is Recipe => r !== null);
 
   return (
-    <NuraPageShell maxWidth={1040} desktopMaxWidth={1200}>
+    <NuraPageShell maxWidth={1040} desktopMaxWidth={1280}>
       <SavedRecipesClient recipes={recipes} userId={user.id} />
     </NuraPageShell>
   );

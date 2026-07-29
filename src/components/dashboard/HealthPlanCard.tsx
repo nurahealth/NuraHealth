@@ -111,11 +111,23 @@ export default function HealthPlanCard() {
   return (
     <div style={{
       position: "relative", overflow: "hidden",
+      // Flex column so the closing projection can be pinned to the bottom when
+      // the card is stretched to match its taller neighbour at desktop. With
+      // the card at its natural height (every width below lg) the auto margin
+      // has nothing to distribute, so this is inert on mobile.
+      display: "flex", flexDirection: "column",
       background: "var(--nura-glass)", border: "1px solid var(--nura-glass-line)",
       borderRadius: 24, padding: "20px 16px 16px", marginBottom: 16,
       boxShadow: "inset 0 1px 0 var(--nura-card-highlight), var(--nura-card-shadow)",
     }}>
       <style>{`
+        /* Beside the (much taller) Overall Health card the plan card is
+           stretched to the row height. Pinning the closing projection to the
+           bottom turns the leftover into one deliberate gap above a footer
+           rather than a dead strip under the last accordion. Below lg the card
+           is its natural height, so auto resolves to 0 and nothing moves — the
+           6px inline margin still applies there. */
+        @media (min-width: 1024px) { .hp-proj { margin-top: auto !important; } }
         .hp-step b, .hp-proj b, .hp-dd b { font-weight: 700; }
         .hp-step b { color: ${TEXT}; }
         .hp-proj b { color: var(--nura-accent-text); }

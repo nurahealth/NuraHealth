@@ -308,7 +308,7 @@ export default async function NutritionPage() {
   });
 
   return (
-    <NuraPageShell maxWidth={860} desktopMaxWidth={1200}>
+    <NuraPageShell maxWidth={860} desktopMaxWidth={1280}>
       <NutritionHome
         dateLabel={dateLabel}
         isSample={isSample}

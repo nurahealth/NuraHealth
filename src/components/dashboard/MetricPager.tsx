@@ -80,7 +80,12 @@ export default function MetricPager({ initialMetric }: { initialMetric: string }
     <>
       <style>{`
         .mp-scroller {
-          position: fixed; inset: 0; z-index: 1;
+          /* Fixed, so body's padding-left never reaches it: the panel column has
+             to be offset by hand or it renders underneath the docked rail and
+             centres its 480px column on the whole viewport instead of on the
+             content area. --nura-content-left is 0 below lg, so mobile is
+             untouched. */
+          position: fixed; inset: 0 0 0 var(--nura-content-left); z-index: 1;
           display: flex; flex-wrap: nowrap;
           overflow-x: auto; overflow-y: hidden;
           scroll-snap-type: x mandatory;
@@ -125,13 +130,17 @@ export default function MetricPager({ initialMetric }: { initialMetric: string }
         <ThemeToggle size={34} />
       </div>
 
+      {/* Both pinned chrome bars below live in the same fixed layer as the
+          scroller, so they take the same rail offset. */}
+
       {/* Page dots — pinned at top, active one elongated + tinted with its accent */}
       <div
         role="tablist"
         aria-label="Metric pages"
         style={{
           position: "fixed", top: "max(env(safe-area-inset-top), 10px)",
-          left: "50%", transform: "translateX(-50%)", zIndex: 50,
+          left: "calc(var(--nura-content-left) + (100vw - var(--nura-content-left)) / 2)",
+          transform: "translateX(-50%)", zIndex: 50,
           display: "flex", alignItems: "center", gap: 6,
           padding: "6px 10px", borderRadius: 999,
           background: "rgba(var(--nura-bg-rgb),0.32)",

@@ -85,7 +85,7 @@ export default function BloodOxygenDetailPage() {
         .ox-back:hover { color: ${CREAM} !important; }
       `}</style>
 
-      <div style={{
+      <div className="mp-col" style={{
         maxWidth: 392, margin: "0 auto",
         padding: "calc(env(safe-area-inset-top, 0px) + 46px) 16px max(env(safe-area-inset-bottom), 28px)",
         display: "flex", flexDirection: "column", gap: 14,
