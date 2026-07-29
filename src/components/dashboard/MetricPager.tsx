@@ -23,10 +23,10 @@ type MetricMeta = { id: string; accent: string; View: React.ComponentType };
 const METRICS: MetricMeta[] = [
   { id: "sleep", accent: "var(--nura-sleep-deep)", View: SleepView },
   { id: "hrv", accent: "var(--nura-aqua)", View: HrvView },
-  { id: "resting-hr", accent: "var(--nura-optimal)", View: RestingHrView },
+  { id: "resting-hr", accent: "var(--nura-pager-rhr)", View: RestingHrView },
   { id: "steps", accent: "var(--nura-orange)", View: StepsView },
   { id: "active-energy", accent: "var(--nura-ember)", View: ActiveEnergyView },
-  { id: "heart-rate", accent: "var(--nura-alert)", View: HeartRateView },
+  { id: "heart-rate", accent: "var(--nura-pager-heart)", View: HeartRateView },
   { id: "blood-oxygen", accent: "var(--nura-ice-hi)", View: BloodOxygenView },
   { id: "respiratory-rate", accent: "var(--nura-violet)", View: RespiratoryRateView },
   { id: "cardio-fitness", accent: "var(--nura-gold-ring)", View: CardioFitnessView },

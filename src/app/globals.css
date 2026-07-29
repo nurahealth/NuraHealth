@@ -173,6 +173,11 @@
   --nura-gauge-zone-2: var(--nura-teal);
   --nura-gauge-zone-3: var(--nura-good);
   --nura-gauge-zone-4: var(--nura-alert);
+  /* Pager dots are navigation, not status. Two of the per-metric accents are
+     status tokens, which would put brick/green on a nav control in light. */
+  --nura-pager-heart: var(--nura-alert);
+  --nura-pager-rhr: var(--nura-optimal);
+
   --nura-gauge-marker: var(--nura-text-primary);
   --nura-gauge-tick: rgba(235, 230, 216, 0.35);
 
@@ -375,6 +380,9 @@
   --nura-gauge-zone-2: var(--nura-track-neutral-strong);
   --nura-gauge-zone-3: var(--nura-track-neutral-strong);
   --nura-gauge-zone-4: var(--nura-track-neutral-strong);
+  --nura-pager-heart: var(--nura-data-primary);
+  --nura-pager-rhr: var(--nura-data-primary);
+
   --nura-gauge-marker: var(--nura-data-primary);
   --nura-gauge-tick: #cfcbc1;
 
