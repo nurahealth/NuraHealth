@@ -219,10 +219,18 @@ const DASHBOARD_DATA: DashboardData = {
           0.5, 0.36, 0.34, 0.46, 0.58, 0.52, 0.4, 0.3, 0.16, 0.2,
         ],
         stages: [
-          { label: "Deep", duration: "1h 22m", color: "var(--nura-sleep-deep)" },
-          { label: "REM", duration: "1h 48m", color: "var(--nura-teal)" },
-          { label: "Light", duration: "4h 02m", color: "var(--nura-sage)" },
-          { label: "Awake", duration: "0h 20m", color: "--nura-good" },
+          // The ordered stage ramp, not four separately-chosen hues. Awake was
+          // pointing at --nura-good, a STATUS colour, so on white it rendered
+          // amber next to three sage swatches — the one rainbow left in the
+          // light dashboard. The other three were hardcoded to the dark hues
+          // they happen to equal, which left the light ramp out of order:
+          // "Light" resolved to the deepened accent and came out darker than
+          // "REM". Every entry now names its stage token, which is defined per
+          // theme (dark: the original hues, light: monotonic sage steps).
+          { label: "Deep", duration: "1h 22m", color: "--nura-stage-deep" },
+          { label: "REM", duration: "1h 48m", color: "--nura-stage-rem" },
+          { label: "Light", duration: "4h 02m", color: "--nura-stage-light" },
+          { label: "Awake", duration: "0h 20m", color: "--nura-stage-awake" },
         ],
         axisLabels: ["11p", "1a", "3a", "5a", "7a"],
       },

@@ -812,6 +812,36 @@ html, body {
   box-shadow: var(--nura-card-shadow) !important;
 }
 
+/* ───────────────────────────────────────────────────────────────────────────
+   LIGHT-MODE CARD FINISH
+
+   Same flattening-layer contract as everything above: scoped to light so the
+   dark column is frozen, `!important` because the properties it refines are
+   authored as inline styles on the components.
+   ─────────────────────────────────────────────────────────────────────── */
+
+[data-theme="light"] .dash-card,
+[data-theme="light"] .oh-card,
+[data-theme="light"] .dash-insight {
+  /* Two lines doing one job. Over near-black a card needs a visible edge to
+     exist at all, so the hairline carries the separation. On a warm page with
+     a layered shadow underneath, that same edge is redundant — the shadow has
+     already said where the card ends — and at 10% it reads as a drawn outline
+     rather than a printed one. Halving it leaves a border that defines the
+     corner radius without competing with the elevation. */
+  border-color: rgba(26, 24, 20, 0.05) !important;
+}
+
+[data-theme="light"] .dash-card {
+  /* 18px reads as tight once the card is a bright surface with a soft edge —
+     the chart and the footer both run close enough to the border to look
+     clipped. 22 gives the content a margin that reads as deliberate. The card
+     is ~344px in the three-up grid and ~354px on a phone, so one value suits
+     both; and since row height is driven by min-height, the extra vertical
+     padding costs no layout at either size. */
+  padding: 22px !important;
+}
+
 /* Respect the iPhone notch and home indicator when installed as a standalone PWA */
 @media (display-mode: standalone) {
   body {
