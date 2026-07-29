@@ -278,6 +278,51 @@
    legible on white. Contrast ratios below are against #ffffff.
    ─────────────────────────────────────────────────────────────────────── */
 [data-theme="light"] {
+  /* ── LIGHT DATA-VIZ SYSTEM ──────────────────────────────────────────────
+     Four colour jobs, nothing else.
+
+     1 PRIMARY DATA   a single mid-to-deep sage step. The card title says what
+                      the metric is; the mark does not need its own hue.
+     2 ORDERED DATA   steps of the same ramp, light to dark, so magnitude reads
+                      as depth of colour.
+     3 DE-EMPHASIS    warm grey, never a hue.
+     4 STATUS         one fixed trio, used sparingly.
+
+     Floors: marks >= 3:1 on the card surface, text >= 4.5:1. Ratios below are
+     against #ffffff; the status trio is also verified on the tinted chip.
+     Steps 100-300 are below 3:1 and are therefore track/fill only — never a
+     visible mark. Dark is unaffected: this block is light-only. */
+  --nura-sage-100: #e3eae5;   /* 1.2  track / band fill */
+  --nura-sage-200: #c5d3ca;   /* 1.6  track */
+  --nura-sage-300: #9bb0a5;   /* 2.3  fill behind a line */
+  --nura-sage-400: #7d968a;   /* 3.2  lightest usable mark */
+  --nura-sage-500: #5f7a6e;   /* 4.7  default mark */
+  --nura-sage-600: #43604f;   /* 6.9  deepest mark / mark text */
+
+  /* 1 — every single-series chart mark */
+  --nura-data-primary: var(--nura-sage-500);
+  --nura-data-primary-soft: var(--nura-sage-300);
+  --nura-data-fill: var(--nura-sage-100);
+
+  /* 2 — ordered ramp. Four monotonic steps, all clearing 3:1. */
+  --nura-step-1: #7d968a;     /* 3.2  lightest — Awake / lowest effort */
+  --nura-step-2: #6b8579;     /* 4.0 */
+  --nura-step-3: #5a7367;     /* 5.1 */
+  --nura-step-4: #43604f;     /* 6.9  deepest — Deep sleep / peak effort */
+
+  /* 3 — de-emphasis. Track is decorative; the mark variant clears 3:1. */
+  --nura-track-neutral: #e7e5df;
+  --nura-track-neutral-strong: #dcd9d1;
+  --nura-data-muted: #847f74;  /* 4.0  under-goal bars, still a real mark */
+
+  /* 4 — status trio */
+  --nura-status-good: #3a7549;   /* 4.9 white · 4.9 chip */
+  --nura-status-warn: #8a6118;   /* 5.5 white · 4.9 chip */
+  --nura-status-alert: #a54134;  /* 6.2 white · 5.5 chip */
+  --nura-status-good-rgb: 58, 117, 73;
+  --nura-status-warn-rgb: 138, 97, 24;
+  --nura-status-alert-rgb: 165, 65, 52;
+
   /* ── Canvas ─────────────────────────────────────────────────────────── */
   --nura-bg: #faf9f6;                   /* warm off-white */
   --nura-bg-rgb: 250, 249, 246;
@@ -289,7 +334,7 @@
   --nura-card: #ffffff;
   --nura-glass: #ffffff;                /* solid, not translucent — kills the wash-out */
   --nura-glass-line: rgba(26, 24, 20, 0.08);
-  --nura-track: rgba(26, 24, 20, 0.07);
+  --nura-track: var(--nura-track-neutral);
 
   /* No inset highlight on white; depth comes from a real ambient shadow. */
   --nura-card-highlight: rgba(255, 255, 255, 0);
@@ -335,20 +380,20 @@
   --nura-ink-a62: #5a5750;
 
   /* Meter bars — desaturated for white. See the note in the dark column. */
-  --nura-meter-cool: #8fa8c4;
-  --nura-meter-teal: #7fb3a3;
-  --nura-meter-calm: #a8b8ad;
-  --nura-meter-warm: #d1b483;
-  --nura-meter-gold: #cdb488;
-  --nura-meter-hot: #cf9a90;
-  --nura-meter-gold-lo: #dccaa2;
-  --nura-meter-gold-mid: #c9ae78;
-  --nura-meter-gold-hi: #b09763;
-  --nura-meter-bp-normal: #93b089;
-  --nura-meter-bp-elevated: #cfc08a;
-  --nura-meter-bp-stage1: #d1a97f;
-  --nura-meter-bp-stage1-hi: #cb9a92;
-  --nura-meter-bp-stage2: #c08a8a;
+  --nura-meter-cool: var(--nura-track-neutral-strong);
+  --nura-meter-teal: var(--nura-track-neutral-strong);
+  --nura-meter-calm: var(--nura-track-neutral-strong);
+  --nura-meter-warm: var(--nura-track-neutral-strong);
+  --nura-meter-gold: var(--nura-track-neutral-strong);
+  --nura-meter-hot: var(--nura-track-neutral-strong);
+  --nura-meter-gold-lo: var(--nura-track-neutral-strong);
+  --nura-meter-gold-mid: var(--nura-track-neutral-strong);
+  --nura-meter-gold-hi: var(--nura-track-neutral-strong);
+  --nura-meter-bp-normal: var(--nura-track-neutral-strong);
+  --nura-meter-bp-elevated: var(--nura-track-neutral-strong);
+  --nura-meter-bp-stage1: var(--nura-track-neutral-strong);
+  --nura-meter-bp-stage1-hi: var(--nura-track-neutral-strong);
+  --nura-meter-bp-stage2: var(--nura-track-neutral-strong);
 
   --nura-area-a30: 0.08;
   --nura-area-a28: 0.08;
@@ -362,65 +407,65 @@
   --nura-ring-head: #2e2c28;
 
   /* ── Status ─────────────────────────────────────────────────────────── */
-  --nura-optimal: #2f7d57;              /*  5.0:1 */
-  --nura-optimal-rgb: 47, 125, 87;
-  --nura-good: #8a6410;                 /*  5.4:1 */
-  --nura-good-rgb: 138, 100, 16;
-  --nura-alert: #b03d24;                /*  5.9:1 */
-  --nura-alert-rgb: 176, 61, 36;
-  --nura-danger: #b8392f;               /*  5.7:1 */
-  --nura-danger-rgb: 184, 57, 47;
-  --nura-watch: #8a5a12;                /*  5.9:1 */
-  --nura-watch-rgb: 138, 90, 18;
+  --nura-optimal: var(--nura-status-good);              /*  5.0:1 */
+  --nura-optimal-rgb: var(--nura-status-good-rgb);
+  --nura-good: var(--nura-status-warn);                 /*  5.4:1 */
+  --nura-good-rgb: var(--nura-status-warn-rgb);
+  --nura-alert: var(--nura-status-alert);                /*  5.9:1 */
+  --nura-alert-rgb: var(--nura-status-alert-rgb);
+  --nura-danger: var(--nura-status-alert);               /*  5.7:1 */
+  --nura-danger-rgb: var(--nura-status-alert-rgb);
+  --nura-watch: var(--nura-status-warn);                /*  5.9:1 */
+  --nura-watch-rgb: var(--nura-status-warn-rgb);
 
   /* ── Data-viz ramp — darkened for white; hue identity preserved ─────── */
-  --nura-teal: #157a60;                 /*  5.3:1 */
-  --nura-teal-rgb: 21, 122, 96;
-  --nura-teal-mid: #1f6a56;
-  --nura-teal-mid-rgb: 31, 106, 86;
-  --nura-teal-deep: #0f4438;
-  --nura-sleep-deep: #1f6aa8;           /*  5.7:1 */
-  --nura-sleep-deep-rgb: 31, 106, 168;
-  --nura-amber: #8c610b;                /*  5.5:1 */
-  --nura-amber-rgb: 140, 97, 11;
-  --nura-amber-2: #7a5409;
-  --nura-amber-2-rgb: 122, 84, 9;
-  --nura-amber-deep: #5c3f06;
-  --nura-rose: #a8503a;                 /*  5.4:1 */
-  --nura-rose-rgb: 168, 80, 58;
-  --nura-heart: #b83a37;                /*  5.7:1 */
-  --nura-heart-rgb: 184, 58, 55;
-  --nura-heart-hi: #8f2b28;
-  --nura-heart-hi-rgb: 143, 43, 40;
-  --nura-violet: #6a4fa8;               /*  6.4:1 */
-  --nura-violet-rgb: 106, 79, 168;
-  --nura-mauve: #6a4fa8;
-  --nura-aqua: #0e7183;                 /*  5.7:1 */
-  --nura-aqua-rgb: 14, 113, 131;
-  --nura-ice: #4a6478;                  /*  6.2:1 */
-  --nura-ice-rgb: 74, 100, 120;
-  --nura-ember: #a1501a;                /*  5.7:1 */
-  --nura-ember-rgb: 161, 80, 26;
-  --nura-gold-ring: #8a6410;            /*  5.4:1 */
-  --nura-gold-ring-rgb: 138, 100, 16;
-  --nura-orange: #9c5f14;               /*  5.2:1 */
-  --nura-orange-rgb: 156, 95, 20;
+  --nura-teal: var(--nura-data-primary);                 /*  5.3:1 */
+  --nura-teal-rgb: 95, 122, 110;
+  --nura-teal-mid: var(--nura-sage-400);
+  --nura-teal-mid-rgb: 125, 150, 138;
+  --nura-teal-deep: var(--nura-sage-600);
+  --nura-sleep-deep: var(--nura-step-4);           /*  5.7:1 */
+  --nura-sleep-deep-rgb: 67, 96, 79;
+  --nura-amber: var(--nura-data-primary);                /*  5.5:1 */
+  --nura-amber-rgb: 95, 122, 110;
+  --nura-amber-2: var(--nura-sage-600);
+  --nura-amber-2-rgb: 67, 96, 79;
+  --nura-amber-deep: var(--nura-sage-600);
+  --nura-rose: var(--nura-data-primary);                 /*  5.4:1 */
+  --nura-rose-rgb: 95, 122, 110;
+  --nura-heart: var(--nura-data-primary);                /*  5.7:1 */
+  --nura-heart-rgb: 95, 122, 110;
+  --nura-heart-hi: var(--nura-sage-400);
+  --nura-heart-hi-rgb: 125, 150, 138;
+  --nura-violet: var(--nura-data-primary);               /*  6.4:1 */
+  --nura-violet-rgb: 95, 122, 110;
+  --nura-mauve: var(--nura-data-primary);
+  --nura-aqua: var(--nura-data-primary);                 /*  5.7:1 */
+  --nura-aqua-rgb: 95, 122, 110;
+  --nura-ice: var(--nura-data-primary);                  /*  6.2:1 */
+  --nura-ice-rgb: 95, 122, 110;
+  --nura-ember: var(--nura-data-primary);                /*  5.7:1 */
+  --nura-ember-rgb: 95, 122, 110;
+  --nura-gold-ring: var(--nura-data-primary);            /*  5.4:1 */
+  --nura-gold-ring-rgb: 95, 122, 110;
+  --nura-orange: var(--nura-data-primary);               /*  5.2:1 */
+  --nura-orange-rgb: 95, 122, 110;
 
   /* Ramp endpoints — kept dark-to-light in the same direction as the dark
      column so gradients read the same way round, just darker overall. */
-  --nura-gold-ring-lo: #6f4f0c;
-  --nura-gold-ring-hi: #b0810f;
-  --nura-aqua-hi: #0f8095;              /*  4.6:1 — also used as label text */
-  --nura-aqua-hi-rgb: 15, 128, 149;
-  --nura-ice-hi: #586f86;               /*  5.2:1 — also used as label text */
-  --nura-ice-hi-rgb: 88, 111, 134;
-  --nura-ember-hi: #c46524;
-  --nura-ember-hi-rgb: 196, 101, 36;
-  --nura-ember-lo: #7d3d10;
-  --nura-orange-hi: #c07a1a;
-  --nura-orange-mid: #ad6c16;
-  --nura-bar-dim-top: #d8d5cd;
-  --nura-bar-dim-bot: #c2beb4;
+  --nura-gold-ring-lo: var(--nura-sage-600);
+  --nura-gold-ring-hi: var(--nura-sage-400);
+  --nura-aqua-hi: var(--nura-sage-400);              /*  4.6:1 — also used as label text */
+  --nura-aqua-hi-rgb: 125, 150, 138;
+  --nura-ice-hi: var(--nura-sage-400);               /*  5.2:1 — also used as label text */
+  --nura-ice-hi-rgb: 125, 150, 138;
+  --nura-ember-hi: var(--nura-sage-400);
+  --nura-ember-hi-rgb: 125, 150, 138;
+  --nura-ember-lo: var(--nura-sage-600);
+  --nura-orange-hi: var(--nura-sage-400);
+  --nura-orange-mid: var(--nura-sage-400);
+  --nura-bar-dim-top: var(--nura-track-neutral-strong);
+  --nura-bar-dim-bot: var(--nura-track-neutral);
   /* On white cards the accent bars are dark, so the marker/tick invert. */
   --nura-marker: #1a1a1a;
   --nura-tick-on-accent: rgba(255, 255, 255, 0.7);
@@ -460,16 +505,16 @@
   --nura-wash-vo2: radial-gradient(120% 72% at 50% -12%, rgba(138,100,16,0.08), transparent 55%), var(--nura-bg);
   --nura-wash-bp: var(--nura-bg);
   --nura-aurora-opacity: 0;
-  --nura-danger-soft: #b8392f;          /*  5.7:1 */
+  --nura-danger-soft: var(--nura-status-alert);          /*  5.7:1 */
   --nura-btn-invert-bg: #1a1a1a;
   --nura-btn-invert-fg: #ffffff;
-  --nura-bp-normal: #3f7a34;            /*  4.9:1 */
-  --nura-bp-elevated: #86701a;          /*  5.0:1 */
-  --nura-bp-stage1: #9a5c14;            /*  5.3:1 */
-  --nura-bp-stage1-hi: #a3453a;         /*  5.9:1 */
-  --nura-bp-stage2: #9e3535;            /*  6.7:1 */
-  --nura-record: #c62828;               /*  5.6:1 — #ff4c5c is only 3.3:1 on white */
-  --nura-record-rgb: 198, 40, 40;
+  --nura-bp-normal: var(--nura-status-good);            /*  4.9:1 */
+  --nura-bp-elevated: var(--nura-status-warn);          /*  5.0:1 */
+  --nura-bp-stage1: var(--nura-status-warn);            /*  5.3:1 */
+  --nura-bp-stage1-hi: var(--nura-status-alert);         /*  5.9:1 */
+  --nura-bp-stage2: var(--nura-status-alert);            /*  6.7:1 */
+  --nura-record: var(--nura-status-alert);               /*  5.6:1 — #ff4c5c is only 3.3:1 on white */
+  --nura-record-rgb: var(--nura-status-alert-rgb);
   --nura-accent-disabled: #8fa398;      /* solid, so the label stays readable */
 }
 
