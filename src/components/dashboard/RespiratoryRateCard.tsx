@@ -1,18 +1,39 @@
 "use client";
 
+import { useMemo } from "react";
 import { getRespiratoryDetail, type DashboardMetric } from "@/lib/dashboardData";
 import MetricCardShell from "@/components/dashboard/MetricCardShell";
-import OvernightTraceChart from "@/components/dashboard/OvernightTraceChart";
+import MetricLineChart from "@/components/dashboard/MetricLineChart";
 import { useThemeTokens } from "@/lib/themeTokens";
 
-const TOKENS = { mauve: ["--nura-mauve", "#a98fc4"] } as const;
+const TOKENS = { series: ["--nura-series", "#9bb0a5"] } as const;
 const TEXT = "var(--nura-text-primary)";
+const TEXT_SEC = "var(--nura-text-secondary)";
 
-// Respiratory Rate card — overnight br/min trace with a dashed personal-baseline
-// line on the same 11p–7a sleep-window axis.
+/**
+ * Clock labels for `n` samples spread evenly across a sleep window, used for
+ * the chart's hover readout. The overnight trace is 32 samples from 11p to 7a,
+ * so a point is worth ~15 minutes and "01:45" is a truer answer than "#12".
+ */
+function sleepClockLabels(n: number, startHour: number, endHour: number): string[] {
+  const span = ((endHour - startHour + 24) % 24) * 60;
+  return Array.from({ length: n }, (_, i) => {
+    const mins = startHour * 60 + (i / Math.max(1, n - 1)) * span;
+    const h = Math.floor(mins / 60) % 24;
+    const m = Math.round(mins % 60);
+    const ap = h < 12 ? "am" : "pm";
+    const h12 = h % 12 === 0 ? 12 : h % 12;
+    return `${h12}:${String(m).padStart(2, "0")}${ap}`;
+  });
+}
+
+// Respiratory Rate card — overnight br/min trace on the shared single-series
+// line treatment, with the personal baseline as its dashed reference.
 export default function RespiratoryRateCard({ metric, onClick }: { metric: DashboardMetric; onClick: () => void }) {
-  const { mauve: MAUVE } = useThemeTokens(TOKENS);
+  const { series: SERIES } = useThemeTokens(TOKENS);
   const d = getRespiratoryDetail();
+  const clock = useMemo(() => sleepClockLabels(d.overnight.length, 23, 7), [d.overnight.length]);
+
   return (
     <MetricCardShell
       name={metric.name}
@@ -20,20 +41,27 @@ export default function RespiratoryRateCard({ metric, onClick }: { metric: Dashb
       onClick={onClick}
       value={d.avg.toFixed(1)}
       unit="br/min"
-      trend={<span style={{ color: MAUVE }}>steady</span>}
+      // "steady" is a plain-language reading of the trend, not a status —
+      // it was mauve, which made it look like a state the card was warning
+      // about. It is prose, so it is ink.
+      trend={<span style={{ color: TEXT_SEC, fontWeight: 500 }}>steady</span>}
       caption={<>Right on your <b style={{ color: TEXT, fontWeight: 600 }}>{d.baseline.toFixed(1)}</b> baseline — no signs of strain or illness.</>}
       pillLabel={d.statusLabel}
-      pillColor={MAUVE}
+      pillColor={SERIES}
     >
-      <OvernightTraceChart
+      <MetricLineChart
         data={d.overnight}
-        lo={d.floor}
-        hi={d.ceil}
-        ticks={d.ticks}
-        band={d.band}
-        refLine={d.baseline}
-        color={MAUVE}
-        axisLabels={d.axisLabels}
+        unit="br/min"
+        baseline={d.baseline}
+        // No explicit domain on purpose. The clinical 12–17 range flattens a
+        // night that only moves between 13.8 and 14.6 into a straight line —
+        // on a glanceable card the shape of the night is the information, and
+        // the dashed baseline is the reference that makes it mean something.
+        // The detail screen is where the full clinical range belongs.
+        xLabels={d.axisLabels}
+        pointLabels={clock}
+        format={(v) => v.toFixed(1)}
+        ariaLabel={`Overnight respiratory rate, ${d.overnight.length} readings from 11pm to 7am, averaging ${d.avg.toFixed(1)} breaths per minute against a ${d.baseline.toFixed(1)} baseline.`}
       />
     </MetricCardShell>
   );

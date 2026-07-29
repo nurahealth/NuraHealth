@@ -16,6 +16,8 @@ import { useThemeTokens } from "@/lib/themeTokens";
  */
 export const ACCENTS = {
   "--nura-sage": ["--nura-sage", "#9bb0a5"],
+  // The one-series card-chart colour. See the note beside it in globals.css.
+  "--nura-series": ["--nura-series", "#9bb0a5"],
   "--nura-teal": ["--nura-teal", "#5dccae"],
   "--nura-sleep-deep": ["--nura-sleep-deep", "#5aa0e6"],
   "--nura-good": ["--nura-good", "#d3a253"],
