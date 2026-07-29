@@ -92,7 +92,7 @@ export default function OverallHealthCard() {
   const togglePlan = (t: string) => setOpenPlan((s) => (s === t ? null : t));
 
   return (
-    <div style={{
+    <div className="oh-card" style={{
       position: "relative", overflow: "hidden",
       display: "flex", flexDirection: "column",
       background: "var(--nura-glass)", border: "1px solid var(--nura-glass-line)",
@@ -102,14 +102,24 @@ export default function OverallHealthCard() {
       <style>{`
         .oh-pill-head:hover .oh-nm { color: var(--nura-text-strong); }
         .oh-imp-item { transition: border-color .18s; }
-        /* The desktop card now spans the whole 1200px measure, so anything that
-           was sized as "100% of a half-width column" needs a ceiling of its
-           own. Without these the ring alone would render ~1100px tall and the
-           prose would run edge to edge. Everything here is lg-only — below it
-           the card is unchanged. */
-        .oh-halo-lg { display: none; }
+
+        /* Phone: one column, ring at the full card width — unchanged. The
+           halo sizes live here rather than inline so the wide breakpoint can
+           scale the lg one with the dial. */
+        .oh-ring { position: relative; width: 100%; }
+        .oh-halo-sm { width: 300px; height: 300px; }
+        .oh-halo-lg { display: none; width: 300px; height: 300px; }
+
         @media (min-width: 1024px) {
-          .oh-ring { max-width: 480px; margin: 0 auto; }
+          /* The desktop card spans the whole page measure, so anything that
+             was sized as "100% of a half-width column" needs a ceiling of its
+             own — otherwise the prose runs edge to edge. */
+          .oh-card { padding: 28px 32px 26px !important; }
+          /* Laptop width: still one column, but the dial is a hero rather than
+             a 300px token — it fills the card at 1024 and is capped just under
+             what the two-column layout hands it at 1280, so crossing that
+             breakpoint never shrinks the dial. */
+          .oh-ring { max-width: 500px; margin: 0 auto; }
           .oh-explain, .oh-imp-body { max-width: 74ch; }
           .oh-explain { margin-left: auto; margin-right: auto; }
           /* The halo is anchored to the card, whose height changed; at this
@@ -117,10 +127,36 @@ export default function OverallHealthCard() {
           .oh-halo-sm { display: none; }
           .oh-halo-lg { display: block; }
         }
+
+        @media (min-width: 1280px) {
+          /* Wide enough to seat the dial and the pillar list side by side.
+             That is what kills the flanking whitespace the centred dial used
+             to float in: the dial takes ~55% of the card and reads as the
+             hero, and the six pillars balance it on the right instead of
+             stretching across a 1000px row.
+
+             align-items:center rather than start on purpose — if one column
+             runs taller (a pillar opens, say) the difference splits into
+             symmetric breathing room around the dial instead of stranding a
+             void under one of them. */
+          .oh-body {
+            display: grid;
+            grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+            gap: 40px;
+            align-items: center;
+          }
+          .oh-ring { max-width: none; margin: 0; }
+          /* The explainer belongs to the dial, so it sits under it and is
+             measured against the dial column, not the card. */
+          .oh-explain { max-width: none; text-align: center; margin-top: 10px; }
+          .oh-side { min-width: 0; }
+          /* Glow scales with the dial instead of staying a fixed 300px disc. */
+          .oh-halo-lg { width: 58%; height: auto; aspect-ratio: 1; }
+        }
       `}</style>
       {/* Soft glow core behind the ring — dark only (see the flattening
           layer in globals.css). */}
-      <div aria-hidden className="nura-halo oh-halo-sm" style={{ position: "absolute", left: "50%", top: 120, width: 300, height: 300, transform: "translate(-50%,-50%)", pointerEvents: "none", background: "radial-gradient(circle, rgba(var(--nura-teal-rgb),0.12) 0%, rgba(var(--nura-teal-rgb),0) 62%)" }} />
+      <div aria-hidden className="nura-halo oh-halo-sm" style={{ position: "absolute", left: "50%", top: 120, transform: "translate(-50%,-50%)", pointerEvents: "none", background: "radial-gradient(circle, rgba(var(--nura-teal-rgb),0.12) 0%, rgba(var(--nura-teal-rgb),0) 62%)" }} />
 
       {/* Header */}
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", padding: "0 4px", position: "relative" }}>
@@ -137,69 +173,79 @@ export default function OverallHealthCard() {
         </div>
       </div>
 
-      {/* Hero ring */}
-      <div className="oh-ring" style={{ position: "relative" }}>
-        <div aria-hidden className="nura-halo oh-halo-lg" style={{ position: "absolute", left: "50%", top: "50%", width: 300, height: 300, transform: "translate(-50%,-50%)", pointerEvents: "none", background: "radial-gradient(circle, rgba(var(--nura-teal-rgb),0.12) 0%, rgba(var(--nura-teal-rgb),0) 62%)" }} />
-        <HealthRing d={d} selected={selected} onSelect={togglePillar} />
-      </div>
-
-      {/* Explainer + hint */}
-      <div className="oh-explain" style={{ fontSize: 12.5, lineHeight: 1.5, color: MUTED, marginTop: 2, padding: "0 4px" }}>
-        <b style={{ color: TEXT, fontWeight: 600 }}>Your Health Score</b> is a weighted blend of six pillars — your single best read on how your whole body is doing right now.
-      </div>
-      {!selected && (
-        <div style={{ fontSize: 11, color: "var(--nura-accent-label)", fontWeight: 600, textAlign: "center", marginTop: 12, letterSpacing: "0.2px" }}>
-          Tap a pillar to see what it means ↓
-        </div>
-      )}
-
-      {/* Pillar accordion */}
-      <div style={{ marginTop: 6 }}>
-        {d.pillars.map((p) => {
-          const open = selected === p.key;
-          return (
-            <div key={p.key} style={{ borderTop: "1px solid var(--nura-hairline)" }}>
-              <div className="oh-pill-head" onClick={() => togglePillar(p.key)} style={{ display: "flex", alignItems: "center", gap: 11, padding: "13px 2px", cursor: "pointer" }}>
-                <span style={{ width: 9, height: 9, borderRadius: "50%", flex: "none", background: acc[p.color] }} />
-                <span className="oh-nm" style={{ fontSize: 14, fontWeight: 700, flex: 1, color: TEXT, transition: "color .15s" }}>{p.label}</span>
-                <span className="nura-datum-ink" style={{ fontSize: 15, fontWeight: 700, color: acc[p.color] }}>
-                  {p.score}<span style={{ fontSize: 9, marginLeft: 3, color: tCol(p.trend, tk) }}>{tArrow(p.trend)}</span>
-                </span>
-                <span style={{ display: "flex", transform: open ? "rotate(180deg)" : "none", transition: "transform .2s" }}><Chevron /></span>
-              </div>
-              <div style={{ fontSize: 12, color: MUTED, margin: "-6px 0 0 20px", paddingBottom: 11 }}>{p.measures}</div>
-              {open && (
-                <div className="oh-imp-body" style={{ padding: "2px 2px 15px 20px" }}>
-                  {[
-                    { k: "What it measures", v: p.measures },
-                    { k: "Built from", v: p.builtFrom },
-                    { k: `Your reading · ${p.score}`, v: p.reading },
-                  ].map((row) => (
-                    <div key={row.k} style={{ marginBottom: 11 }}>
-                      <div style={{ fontSize: 9.5, letterSpacing: "1px", textTransform: "uppercase", color: FAINT, fontWeight: 700, marginBottom: 3 }}>{row.k}</div>
-                      <div style={{ fontSize: 13, lineHeight: 1.5, color: "var(--nura-ink-strong)" }}>{row.v}</div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Stat strip */}
-      <div style={{ display: "flex", marginTop: 8, borderTop: "1px solid var(--nura-hairline-strong)", borderBottom: "1px solid var(--nura-hairline-strong)" }}>
-        {[
-          { k: "Health age", v: String(d.healthAge.value), x: d.healthAge.note, mut: false },
-          { k: "Percentile", v: d.percentile.value, x: d.percentile.note, mut: true },
-          { k: "Best pillar", v: d.bestPillar.label, x: d.bestPillar.note, mut: false },
-        ].map((s, i) => (
-          <div key={s.k} style={{ flex: 1, textAlign: "center", padding: "12px 6px", borderLeft: i > 0 ? "1px solid var(--nura-hairline)" : undefined }}>
-            <div style={{ fontSize: 9, letterSpacing: "0.8px", textTransform: "uppercase", color: FAINT, fontWeight: 600 }}>{s.k}</div>
-            <div style={{ fontSize: 18, fontWeight: 700, marginTop: 4, letterSpacing: "-0.4px", color: TEXT }}>{s.v}</div>
-            <div style={{ fontSize: 10, color: s.mut ? FAINT : "var(--nura-teal)", fontWeight: 600, marginTop: 2 }}>{s.x}</div>
+      {/* Body — the dial (with its explainer) and the pillar list. One column
+          on phones and laptops; from 1200 they sit side by side so the dial
+          can grow into the width instead of floating in it. */}
+      <div className="oh-body">
+        <div className="oh-main">
+          {/* Hero ring */}
+          <div className="oh-ring">
+            <div aria-hidden className="nura-halo oh-halo-lg" style={{ position: "absolute", left: "50%", top: "50%", transform: "translate(-50%,-50%)", pointerEvents: "none", background: "radial-gradient(circle, rgba(var(--nura-teal-rgb),0.12) 0%, rgba(var(--nura-teal-rgb),0) 62%)" }} />
+            <HealthRing d={d} selected={selected} onSelect={togglePillar} />
           </div>
-        ))}
+
+          {/* Explainer */}
+          <div className="oh-explain" style={{ fontSize: 12.5, lineHeight: 1.5, color: MUTED, marginTop: 2, padding: "0 4px" }}>
+            <b style={{ color: TEXT, fontWeight: 600 }}>Your Health Score</b> is a weighted blend of six pillars — your single best read on how your whole body is doing right now.
+          </div>
+        </div>
+
+        <div className="oh-side">
+          {!selected && (
+            <div className="oh-hint" style={{ fontSize: 11, color: "var(--nura-accent-label)", fontWeight: 600, textAlign: "center", marginTop: 12, letterSpacing: "0.2px" }}>
+              Tap a pillar to see what it means ↓
+            </div>
+          )}
+
+          {/* Pillar accordion */}
+          <div style={{ marginTop: 6 }}>
+            {d.pillars.map((p) => {
+              const open = selected === p.key;
+              return (
+                <div key={p.key} style={{ borderTop: "1px solid var(--nura-hairline)" }}>
+                  <div className="oh-pill-head" onClick={() => togglePillar(p.key)} style={{ display: "flex", alignItems: "center", gap: 11, padding: "13px 2px", cursor: "pointer" }}>
+                    <span style={{ width: 9, height: 9, borderRadius: "50%", flex: "none", background: acc[p.color] }} />
+                    <span className="oh-nm" style={{ fontSize: 14, fontWeight: 700, flex: 1, color: TEXT, transition: "color .15s" }}>{p.label}</span>
+                    <span className="nura-datum-ink" style={{ fontSize: 15, fontWeight: 700, color: acc[p.color] }}>
+                      {p.score}<span style={{ fontSize: 9, marginLeft: 3, color: tCol(p.trend, tk) }}>{tArrow(p.trend)}</span>
+                    </span>
+                    <span style={{ display: "flex", transform: open ? "rotate(180deg)" : "none", transition: "transform .2s" }}><Chevron /></span>
+                  </div>
+                  <div style={{ fontSize: 12, color: MUTED, margin: "-6px 0 0 20px", paddingBottom: 11 }}>{p.measures}</div>
+                  {open && (
+                    <div className="oh-imp-body" style={{ padding: "2px 2px 15px 20px" }}>
+                      {[
+                        { k: "What it measures", v: p.measures },
+                        { k: "Built from", v: p.builtFrom },
+                        { k: `Your reading · ${p.score}`, v: p.reading },
+                      ].map((row) => (
+                        <div key={row.k} style={{ marginBottom: 11 }}>
+                          <div style={{ fontSize: 9.5, letterSpacing: "1px", textTransform: "uppercase", color: FAINT, fontWeight: 700, marginBottom: 3 }}>{row.k}</div>
+                          <div style={{ fontSize: 13, lineHeight: 1.5, color: "var(--nura-ink-strong)" }}>{row.v}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Stat strip */}
+          <div style={{ display: "flex", marginTop: 8, borderTop: "1px solid var(--nura-hairline-strong)", borderBottom: "1px solid var(--nura-hairline-strong)" }}>
+            {[
+              { k: "Health age", v: String(d.healthAge.value), x: d.healthAge.note, mut: false },
+              { k: "Percentile", v: d.percentile.value, x: d.percentile.note, mut: true },
+              { k: "Best pillar", v: d.bestPillar.label, x: d.bestPillar.note, mut: false },
+            ].map((s, i) => (
+              <div key={s.k} style={{ flex: 1, textAlign: "center", padding: "12px 6px", borderLeft: i > 0 ? "1px solid var(--nura-hairline)" : undefined }}>
+                <div style={{ fontSize: 9, letterSpacing: "0.8px", textTransform: "uppercase", color: FAINT, fontWeight: 600 }}>{s.k}</div>
+                <div style={{ fontSize: 18, fontWeight: 700, marginTop: 4, letterSpacing: "-0.4px", color: TEXT }}>{s.v}</div>
+                <div style={{ fontSize: 10, color: s.mut ? FAINT : "var(--nura-teal)", fontWeight: 600, marginTop: 2 }}>{s.x}</div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* What to improve */}
