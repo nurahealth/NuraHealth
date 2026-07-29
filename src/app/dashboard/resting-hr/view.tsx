@@ -394,8 +394,8 @@ function TrendChart({
     <svg width="100%" height={H} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" style={{ display: "block", overflow: "visible", marginTop: 12 }}>
       <defs>
         <linearGradient id={`${uid}-area`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={`rgba(${RING_GLOW},0.28)`} />
-          <stop offset="100%" stopColor={`rgba(${RING_GLOW},0)`} />
+          <stop offset="0%" stopColor={`rgba(${RING_GLOW},var(--nura-area-a28))`} />
+          <stop offset="100%" stopColor={`rgba(${RING_GLOW},var(--nura-area-a0))`} />
         </linearGradient>
       </defs>
 
@@ -479,8 +479,8 @@ function WeeklyAvgChart({ d }: { d: RestingHrDetail }) {
     <svg width="100%" height={H} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" style={{ display: "block", overflow: "visible", marginTop: 8 }}>
       <defs>
         <linearGradient id={`${uid}-area`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={`rgba(${ROSE_RGB},0.26)`} />
-          <stop offset="100%" stopColor={`rgba(${ROSE_RGB},0)`} />
+          <stop offset="0%" stopColor={`rgba(${ROSE_RGB},var(--nura-area-a26))`} />
+          <stop offset="100%" stopColor={`rgba(${ROSE_RGB},var(--nura-area-a0))`} />
         </linearGradient>
       </defs>
 

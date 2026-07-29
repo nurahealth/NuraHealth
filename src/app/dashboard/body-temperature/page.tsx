@@ -32,7 +32,7 @@ const TEAL_AURORA =
   "radial-gradient(70% 40% at 8% 14%, rgba(var(--nura-teal-rgb),0.10), transparent 60%)";
 
 // Zone bar: cool (blue) → normal (teal) → warm (gold) → elevated (coral).
-const ZONE_GRADIENT = "linear-gradient(90deg, var(--nura-sleep-deep) 0%, var(--nura-teal) 38%, var(--nura-good) 72%, var(--nura-alert) 100%)";
+const ZONE_GRADIENT = "linear-gradient(90deg, var(--nura-meter-cool) 0%, var(--nura-meter-teal) 38%, var(--nura-meter-gold) 72%, var(--nura-meter-hot) 100%)";
 
 // ── Chart color helper — colorAt(t, stops) over an arbitrary ramp ─────────────
 // Defined locally (reusing the shared hex/lerp) so it's guaranteed available

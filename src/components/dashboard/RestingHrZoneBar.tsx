@@ -9,7 +9,7 @@ const FAINT = "var(--nura-text-tertiary)";
 const ROSE_RGB = "240,168,144";
 
 // teal (athlete / lowest) → sage → gold → coral (average / highest)
-const ZONE_GRADIENT = "linear-gradient(90deg, var(--nura-teal) 0%, var(--nura-sage) 38%, var(--nura-amber) 72%, var(--nura-alert) 100%)";
+const ZONE_GRADIENT = "linear-gradient(90deg, var(--nura-meter-teal) 0%, var(--nura-meter-calm) 38%, var(--nura-meter-warm) 72%, var(--nura-meter-hot) 100%)";
 
 export default function RestingHrZoneBar({
   value, min, max, labels,
@@ -20,12 +20,12 @@ export default function RestingHrZoneBar({
   return (
     <div style={{ width: "100%" }}>
       <div style={{ position: "relative", height: 12 }}>
-        <div style={{
+        <div className="nura-glow" style={{
           position: "absolute", inset: 0, borderRadius: 999, background: ZONE_GRADIENT,
           boxShadow: `0 0 14px rgba(${ROSE_RGB},0.18)`,
         }} />
         {/* Current-value marker */}
-        <div style={{
+        <div className="nura-marker-ring" style={{
           position: "absolute", top: -4, bottom: -4, left: `${pos}%`, transform: "translateX(-50%)",
           width: 3, borderRadius: 2, background: "var(--nura-marker)",
           boxShadow: "0 0 6px rgba(var(--nura-bg-rgb),0.9), 0 0 2px rgba(0,0,0,0.4)",

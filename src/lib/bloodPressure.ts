@@ -50,5 +50,5 @@ export const systolicPct = (sys: number): number => Math.max(0, Math.min(100, ((
 export const diastolicPct = (dia: number): number => Math.max(0, Math.min(100, ((dia - 50) / 60) * 100));
 
 // The gradient stops for each meter track (shared by card + detail).
-export const SYS_GRADIENT = "linear-gradient(90deg, var(--nura-bp-normal) 0%, var(--nura-bp-normal) 33%, var(--nura-bp-elevated) 46%, var(--nura-bp-stage1) 62%, var(--nura-bp-stage1-hi) 82%, var(--nura-bp-stage2) 100%)";
-export const DIA_GRADIENT = "linear-gradient(90deg, var(--nura-bp-normal) 0%, var(--nura-bp-normal) 50%, var(--nura-bp-elevated) 61%, var(--nura-bp-stage1) 74%, var(--nura-bp-stage1-hi) 88%, var(--nura-bp-stage2) 100%)";
+export const SYS_GRADIENT = "linear-gradient(90deg, var(--nura-meter-bp-normal) 0%, var(--nura-meter-bp-normal) 33%, var(--nura-meter-bp-elevated) 46%, var(--nura-meter-bp-stage1) 62%, var(--nura-meter-bp-stage1-hi) 82%, var(--nura-meter-bp-stage2) 100%)";
+export const DIA_GRADIENT = "linear-gradient(90deg, var(--nura-meter-bp-normal) 0%, var(--nura-meter-bp-normal) 50%, var(--nura-meter-bp-elevated) 61%, var(--nura-meter-bp-stage1) 74%, var(--nura-meter-bp-stage1-hi) 88%, var(--nura-meter-bp-stage2) 100%)";

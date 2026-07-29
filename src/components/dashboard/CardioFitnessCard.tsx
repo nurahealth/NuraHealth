@@ -11,7 +11,7 @@ const FAINT = "var(--nura-text-tertiary)";
 
 // VO2-max classification zone bar — one gold identity: dim deep-gold on the LOW
 // end → bright champagne on the HIGH end, with a gold marker at the user's value.
-const ZONE_GRADIENT = "linear-gradient(90deg, var(--nura-gold-ring-lo) 0%, var(--nura-gold-ring) 58%, var(--nura-gold-ring-hi) 100%)";
+const ZONE_GRADIENT = "linear-gradient(90deg, var(--nura-meter-gold-lo) 0%, var(--nura-meter-gold-mid) 58%, var(--nura-meter-gold-hi) 100%)";
 
 // Cardio Fitness (VO2 max) card — classification zone bar.
 export default function CardioFitnessCard({ metric, onClick }: { metric: DashboardMetric; onClick: () => void }) {
@@ -40,7 +40,7 @@ export default function CardioFitnessCard({ metric, onClick }: { metric: Dashboa
       {/* Classification zone bar */}
       <div>
         <div style={{ position: "relative", height: 14, borderRadius: 7, background: ZONE_GRADIENT }}>
-          <div style={{ position: "absolute", top: -5, left: `${pos.toFixed(1)}%`, width: 3, height: 24, background: "var(--nura-gold-ring-hi)", borderRadius: 2, transform: "translateX(-50%)", boxShadow: "0 0 8px rgba(var(--nura-gold-ring-rgb),0.85)" }} />
+          <div className="nura-glow" style={{ position: "absolute", top: -5, left: `${pos.toFixed(1)}%`, width: 3, height: 24, background: "var(--nura-gold-ring-hi)", borderRadius: 2, transform: "translateX(-50%)", boxShadow: "0 0 8px rgba(var(--nura-gold-ring-rgb),0.85)" }} />
         </div>
         <div style={{ display: "flex", justifyContent: "space-between", marginTop: 9 }}>
           {d.zoneLabels.map((z, i) => (

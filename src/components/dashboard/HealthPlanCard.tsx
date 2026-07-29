@@ -144,7 +144,7 @@ export default function HealthPlanCard() {
         </div>
         <div style={{ flex: 1, position: "relative", height: 8, borderRadius: 999, background: "var(--nura-track)" }}>
           <div style={{ position: "absolute", left: 0, top: 0, height: "100%", borderRadius: 999, width: `${sc(p.now).toFixed(1)}%`, background: "linear-gradient(90deg,var(--nura-sage),var(--nura-teal))" }} />
-          <div style={{ position: "absolute", top: -4, width: 3, height: 16, borderRadius: 2, left: `${sc(p.target).toFixed(1)}%`, background: SAGE, boxShadow: `0 0 7px ${SAGE}` }} />
+          <div className="nura-glow" style={{ position: "absolute", top: -4, width: 3, height: 16, borderRadius: 2, left: `${sc(p.target).toFixed(1)}%`, background: SAGE, boxShadow: `0 0 7px ${SAGE}` }} />
         </div>
         <div style={{ textAlign: "center", flex: "none" }}>
           <div style={{ fontSize: 9, letterSpacing: "0.8px", textTransform: "uppercase", color: FAINT, fontWeight: 600 }}>Target</div>

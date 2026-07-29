@@ -102,8 +102,9 @@ export default function OverallHealthCard() {
         .oh-pill-head:hover .oh-nm { color: var(--nura-text-strong); }
         .oh-imp-item { transition: border-color .18s; }
       `}</style>
-      {/* Soft glow core behind the ring */}
-      <div aria-hidden style={{ position: "absolute", left: "50%", top: 120, width: 300, height: 300, transform: "translate(-50%,-50%)", pointerEvents: "none", background: "radial-gradient(circle, rgba(var(--nura-teal-rgb),0.12) 0%, rgba(var(--nura-teal-rgb),0) 62%)" }} />
+      {/* Soft glow core behind the ring — dark only (see the flattening
+          layer in globals.css). */}
+      <div aria-hidden className="nura-halo" style={{ position: "absolute", left: "50%", top: 120, width: 300, height: 300, transform: "translate(-50%,-50%)", pointerEvents: "none", background: "radial-gradient(circle, rgba(var(--nura-teal-rgb),0.12) 0%, rgba(var(--nura-teal-rgb),0) 62%)" }} />
 
       {/* Header */}
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", padding: "0 4px", position: "relative" }}>
@@ -144,7 +145,7 @@ export default function OverallHealthCard() {
               <div className="oh-pill-head" onClick={() => togglePillar(p.key)} style={{ display: "flex", alignItems: "center", gap: 11, padding: "13px 2px", cursor: "pointer" }}>
                 <span style={{ width: 9, height: 9, borderRadius: "50%", flex: "none", background: acc[p.color] }} />
                 <span className="oh-nm" style={{ fontSize: 14, fontWeight: 700, flex: 1, color: TEXT, transition: "color .15s" }}>{p.label}</span>
-                <span style={{ fontSize: 15, fontWeight: 700, color: acc[p.color] }}>
+                <span className="nura-datum-ink" style={{ fontSize: 15, fontWeight: 700, color: acc[p.color] }}>
                   {p.score}<span style={{ fontSize: 9, marginLeft: 3, color: tCol(p.trend, tk) }}>{tArrow(p.trend)}</span>
                 </span>
                 <span style={{ display: "flex", transform: open ? "rotate(180deg)" : "none", transition: "transform .2s" }}><Chevron /></span>
@@ -248,7 +249,7 @@ function HealthRing({ d, selected, onSelect }: { d: ReturnType<typeof getOverall
 
   // Depth rings.
   const depth: ReactElement[] = [
-    <circle key="core" cx={cx} cy={cy} r={118} fill={`url(#${uid}-core)`} />,
+    <circle key="core" className="nura-halo" cx={cx} cy={cy} r={118} fill={`url(#${uid}-core)`} />,
     <circle key="r100" cx={cx} cy={cy} r={100} fill="none" stroke={`rgba(${tk.inkRgb},0.045)`} />,
     <circle key="r110" cx={cx} cy={cy} r={110} fill="none" stroke={`rgba(${tk.inkRgb},0.03)`} />,
   ];
@@ -319,7 +320,7 @@ function HealthRing({ d, selected, onSelect }: { d: ReturnType<typeof getOverall
       {/* Center number */}
       {selPillar ? (
         <>
-          <text x={cx} y={cy - 2} textAnchor="middle" fontFamily={SANS} fontSize={32} fontWeight={700} fill={acc[selPillar.color]}>{selPillar.score}</text>
+          <text x={cx} y={cy - 2} textAnchor="middle" fontFamily={SANS} fontSize={32} fontWeight={700} className="nura-datum-ink" style={{ fill: acc[selPillar.color] }}>{selPillar.score}</text>
           <text x={cx} y={cy + 18} textAnchor="middle" fontFamily={SANS} fontSize={9} fontWeight={700} letterSpacing="1.4" fill={`rgba(${tk.inkRgb},0.5)`}>{selPillar.label.toUpperCase()}</text>
         </>
       ) : (
@@ -343,7 +344,7 @@ function HealthRing({ d, selected, onSelect }: { d: ReturnType<typeof getOverall
             <line x1={(cx + 64 * ca).toFixed(1)} y1={(cy + 64 * sa).toFixed(1)} x2={(cx + (big ? 86 : 82) * ca).toFixed(1)} y2={(cy + (big ? 86 : 82) * sa).toFixed(1)} stroke={acc[p.color]} strokeWidth={big ? 3 : 2.2} strokeLinecap="round" opacity={Number((0.85 * o).toFixed(2))} />
             <line x1={(cx + 92 * ca).toFixed(1)} y1={(cy + 92 * sa).toFixed(1)} x2={(cx + 110 * ca).toFixed(1)} y2={(cy + 110 * sa).toFixed(1)} stroke={acc[p.color]} strokeWidth={1.3} opacity={Number((0.45 * o).toFixed(2))} />
             <circle cx={(cx + 92 * ca).toFixed(1)} cy={(cy + 92 * sa).toFixed(1)} r={big ? 3.4 : 2.4} fill={acc[p.color]} opacity={o} style={{ filter: `drop-shadow(0 0 ${big ? 7 : 4}px ${acc[p.color]})` }} />
-            <text x={lx.toFixed(1)} y={vy.toFixed(1)} textAnchor={anchor} fontFamily={SANS} fontSize={17.5} fontWeight={700} fill={acc[p.color]} opacity={o}>
+            <text x={lx.toFixed(1)} y={vy.toFixed(1)} textAnchor={anchor} fontFamily={SANS} fontSize={17.5} fontWeight={700} className="nura-datum-ink" style={{ fill: acc[p.color] }} opacity={o}>
               {p.score}<tspan fontSize="9" dx="3" dy="-5" fill={tCol(p.trend, tk)}>{tArrow(p.trend)}</tspan>
             </text>
             <text x={lx.toFixed(1)} y={(vy + 11).toFixed(1)} textAnchor={anchor} fontFamily={SANS} fontSize={8.5} fontWeight={600} letterSpacing="0.6" fill={`rgba(${tk.inkRgb},0.5)`} opacity={o}>{p.label.toUpperCase()}</text>

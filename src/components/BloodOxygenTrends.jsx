@@ -94,8 +94,8 @@ export default function BloodOxygenTrends({
         <Frame guides={timeX}>
           <defs>
             <linearGradient id="oxfillA" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0" stopColor="rgba(var(--nura-ice-rgb),0.28)" />
-              <stop offset="1" stopColor="rgba(var(--nura-ice-rgb),0)" />
+              <stop offset="0" stopColor="rgba(var(--nura-ice-rgb),var(--nura-area-a28))" />
+              <stop offset="1" stopColor="rgba(var(--nura-ice-rgb),var(--nura-area-a0))" />
             </linearGradient>
           </defs>
           <path d={n1area} fill="url(#oxfillA)" />
@@ -118,8 +118,8 @@ export default function BloodOxygenTrends({
         <Frame guides={n7.map((p) => p[0])}>
           <defs>
             <linearGradient id="oxfillB" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0" stopColor="rgba(var(--nura-ice-rgb),0.28)" />
-              <stop offset="1" stopColor="rgba(var(--nura-ice-rgb),0)" />
+              <stop offset="0" stopColor="rgba(var(--nura-ice-rgb),var(--nura-area-a28))" />
+              <stop offset="1" stopColor="rgba(var(--nura-ice-rgb),var(--nura-area-a0))" />
             </linearGradient>
           </defs>
           <path d={n7area} fill="url(#oxfillB)" />

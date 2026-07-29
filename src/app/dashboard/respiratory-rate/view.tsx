@@ -330,8 +330,8 @@ function NightChart({ readings, avg, baseline }: { readings: number[]; avg: numb
     <svg viewBox="0 0 340 168" style={{ display: "block", width: "100%", height: "auto", overflow: "visible", marginTop: 6 }}>
       <defs>
         <linearGradient id={`${uid}-area`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="rgba(var(--nura-violet-rgb),0.30)" />
-          <stop offset="100%" stopColor="rgba(var(--nura-violet-rgb),0)" />
+          <stop offset="0%" stopColor="rgba(var(--nura-violet-rgb),var(--nura-area-a30))" />
+          <stop offset="100%" stopColor="rgba(var(--nura-violet-rgb),var(--nura-area-a0))" />
         </linearGradient>
       </defs>
       {[16, 15, 14, 13].map((v) => (

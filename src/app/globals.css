@@ -92,6 +92,37 @@
   --nura-ink-a55: rgba(235, 230, 216, 0.55);
   --nura-ink-a62: rgba(235, 230, 216, 0.62);
 
+  /* Area-fill stop alphas. Dark fades a tinted wash to nothing under the line;
+     on white that blooms, so light becomes an even 8% band instead. One token
+     per alpha in use, so the dark column stays exact. */
+
+  /* ── Meter bars ─────────────────────────────────────────────────────────
+     The zone/scale bars (VO2, blood pressure, resting HR, body temp) draw the
+     same hues as the data-viz ramp, but at full width they are the loudest
+     thing on a white card. These are a parallel, bar-only set: dark reproduces
+     the ramp exactly, light is desaturated so the bar reads as a printed scale
+     rather than a neon strip. Kept separate from the text tokens, which have
+     to stay AA. */
+  --nura-meter-cool: #5aa0e6;
+  --nura-meter-teal: #5dccae;
+  --nura-meter-calm: #9bb0a5;
+  --nura-meter-warm: #e0a23e;
+  --nura-meter-gold: #d3a253;
+  --nura-meter-hot: #e8745a;
+  --nura-meter-gold-lo: #c99a34;
+  --nura-meter-gold-mid: #e8c266;
+  --nura-meter-gold-hi: #f7dd90;
+  --nura-meter-bp-normal: #6ea862;
+  --nura-meter-bp-elevated: #d9c45e;
+  --nura-meter-bp-stage1: #d99a55;
+  --nura-meter-bp-stage1-hi: #cf7a6a;
+  --nura-meter-bp-stage2: #c75f5f;
+
+  --nura-area-a30: 0.30;
+  --nura-area-a28: 0.28;
+  --nura-area-a26: 0.26;
+  --nura-area-a0: 0;
+
   --nura-accent-text: var(--nura-sage);    /* headings, emphasis, wordmark */
   --nura-accent-label: var(--nura-sage);   /* small uppercase eyebrows */
 
@@ -262,8 +293,9 @@
 
   /* No inset highlight on white; depth comes from a real ambient shadow. */
   --nura-card-highlight: rgba(255, 255, 255, 0);
-  --nura-card-shadow: 0 1px 2px rgba(26, 24, 20, 0.05), 0 10px 28px rgba(26, 24, 20, 0.06);
-  --nura-card-shadow-soft: 0 1px 2px rgba(26, 24, 20, 0.04), 0 6px 18px rgba(26, 24, 20, 0.05);
+  /* One shadow for every card. Nothing heavier, nothing coloured. */
+  --nura-card-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  --nura-card-shadow-soft: 0 1px 3px rgba(0, 0, 0, 0.06);
 
   /* ── Ink — every value below passes AA on #ffffff ───────────────────── */
   --nura-text-primary: #1a1a1a;         /* 17.4:1 */
@@ -301,6 +333,27 @@
   --nura-ink-a50: #5a5750;
   --nura-ink-a55: #5a5750;
   --nura-ink-a62: #5a5750;
+
+  /* Meter bars — desaturated for white. See the note in the dark column. */
+  --nura-meter-cool: #8fa8c4;
+  --nura-meter-teal: #7fb3a3;
+  --nura-meter-calm: #a8b8ad;
+  --nura-meter-warm: #d1b483;
+  --nura-meter-gold: #cdb488;
+  --nura-meter-hot: #cf9a90;
+  --nura-meter-gold-lo: #dccaa2;
+  --nura-meter-gold-mid: #c9ae78;
+  --nura-meter-gold-hi: #b09763;
+  --nura-meter-bp-normal: #93b089;
+  --nura-meter-bp-elevated: #cfc08a;
+  --nura-meter-bp-stage1: #d1a97f;
+  --nura-meter-bp-stage1-hi: #cb9a92;
+  --nura-meter-bp-stage2: #c08a8a;
+
+  --nura-area-a30: 0.08;
+  --nura-area-a28: 0.08;
+  --nura-area-a26: 0.08;
+  --nura-area-a0: 0.08;
   --nura-accent-text: var(--nura-text-primary);     /* 17.4:1 */
   --nura-accent-label: var(--nura-text-secondary);  /*  7.2:1 */
   --nura-text-strong: #000000;
@@ -406,7 +459,7 @@
   --nura-wash-resp: radial-gradient(120% 72% at 50% -12%, rgba(106,79,168,0.08), transparent 55%), var(--nura-bg);
   --nura-wash-vo2: radial-gradient(120% 72% at 50% -12%, rgba(138,100,16,0.08), transparent 55%), var(--nura-bg);
   --nura-wash-bp: var(--nura-bg);
-  --nura-aurora-opacity: 0.3;
+  --nura-aurora-opacity: 0;
   --nura-danger-soft: #b8392f;          /*  5.7:1 */
   --nura-btn-invert-bg: #1a1a1a;
   --nura-btn-invert-fg: #ffffff;
@@ -475,6 +528,66 @@ body {
    so switching themes cross-fades instead of snapping. */
 html, body {
   transition: background-color 200ms ease, color 200ms ease;
+}
+
+/* ───────────────────────────────────────────────────────────────────────────
+   LIGHT-MODE FLATTENING LAYER
+
+   Glow, bloom, blur and translucent halos are dark-mode devices: they read as
+   light emitted from a near-black surface. Over white the same effects render
+   as grey smudges. Rather than branching on theme in ~80 components, the
+   effects stay authored for dark and are switched off here.
+
+   Scoped entirely under [data-theme="light"], so the dark column is untouched.
+   `!important` is required because every one of these is an inline style.
+   ─────────────────────────────────────────────────────────────────────── */
+[data-theme="light"] [style*="drop-shadow"] {
+  /* SVG bloom on rings, arcs, bars and peak labels. */
+  filter: none !important;
+}
+
+[data-theme="light"] .nura-glow {
+  /* Coloured `0 0 Npx` box-shadow halos. Opt-in, because the same property
+     also draws marker outline rings, which must survive. */
+  box-shadow: none !important;
+}
+
+[data-theme="light"] .nura-halo {
+  /* Decorative radial-gradient bloom and blurred blob artifacts. */
+  display: none !important;
+}
+
+[data-theme="light"] .nura-datum-ink {
+  /* Data values that are tinted by their series in dark. On white the colour
+     stops carrying meaning (the dot and the trend arrow already do) and just
+     makes the number harder to read, so the number itself becomes ink. */
+  color: var(--nura-text-primary) !important;
+  fill: var(--nura-text-primary) !important;
+}
+
+[data-theme="light"] .nura-marker-ring {
+  /* A value marker sitting on a filled bar. In dark it is separated by a glow;
+     on white a crisp hairline ring does the same job without the smudge. */
+  box-shadow: 0 0 0 2px var(--nura-card), 0 0 0 3px rgba(26, 24, 20, 0.22) !important;
+}
+
+[data-theme="light"] .nura-area-grad stop {
+  /* Area fills under a line fade from a bright stop to transparent, which
+     blooms on white. Flatten to an even 8% wash of the series colour. */
+  stop-opacity: 0.08 !important;
+}
+
+[data-theme="light"] .nura-flat {
+  /* Panels whose fill is a translucent gradient wash in dark. */
+  background: var(--nura-tint-neutral) !important;
+  border: 1px solid var(--nura-tint-neutral-border) !important;
+  box-shadow: var(--nura-card-shadow) !important;
+}
+
+[data-theme="light"] .nura-flat-accent {
+  background: var(--nura-tint-accent) !important;
+  border: 1px solid var(--nura-tint-accent-border) !important;
+  box-shadow: var(--nura-card-shadow) !important;
 }
 
 /* Respect the iPhone notch and home indicator when installed as a standalone PWA */

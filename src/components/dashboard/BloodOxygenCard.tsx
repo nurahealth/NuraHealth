@@ -65,9 +65,9 @@ export default function BloodOxygenCard({ metric, onClick }: { metric: Dashboard
         <div style={{ width: "100%" }}>
           <div style={{ position: "relative", height: 7 }}>
             <div style={{ position: "absolute", inset: 0, borderRadius: 999, background: hexA(ICE, 0.16) }} />
-            <div style={{ position: "absolute", top: 0, bottom: 0, left: "50%", right: 0, borderRadius: "0 999px 999px 0", background: hexA(ICE, 0.55), boxShadow: `0 0 8px rgba(${ICE_RGB},0.35)` }} />
+            <div className="nura-glow" style={{ position: "absolute", top: 0, bottom: 0, left: "50%", right: 0, borderRadius: "0 999px 999px 0", background: hexA(ICE, 0.55), boxShadow: `0 0 8px rgba(${ICE_RGB},0.35)` }} />
             <div style={{ position: "absolute", top: -1, left: "50%", transform: "translateX(-50%)", width: 1.5, height: 9, borderRadius: 1, background: "var(--nura-tick-on-accent)" }} />
-            <div style={{ position: "absolute", top: "50%", left: `${markPct.toFixed(1)}%`, transform: "translate(-50%,-50%)", width: 4, height: 15, borderRadius: 2.5, background: ICE_LIGHT, boxShadow: `0 0 0 2.5px ${CARD}, 0 0 7px rgba(${ICE_RGB},0.7)` }} />
+            <div className="nura-marker-ring" style={{ position: "absolute", top: "50%", left: `${markPct.toFixed(1)}%`, transform: "translate(-50%,-50%)", width: 4, height: 15, borderRadius: 2.5, background: ICE_LIGHT, boxShadow: `0 0 0 2.5px ${CARD}, 0 0 7px rgba(${ICE_RGB},0.7)` }} />
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6, fontFamily: SANS, fontSize: 10, color: TEXT_TER }}>
             <span>90</span><span>95</span><span>100</span>
