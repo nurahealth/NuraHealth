@@ -57,7 +57,7 @@ export default function ActiveEnergyCard({ metric, onClick }: { metric: Dashboar
 
       {/* Below the ring — progress note + status pill */}
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 7, marginTop: "auto" }}>
-        <span style={{ fontFamily: SANS, fontSize: 12, fontWeight: 600, color: EMBER }}>{note}</span>
+        <span className="nura-note-ink" style={{ fontFamily: SANS, fontSize: 12, fontWeight: 600, color: EMBER }}>{note}</span>
         <span style={{
           ...EYEBROW, fontSize: 9, color: EMBER, padding: "3px 8px", borderRadius: 999,
           background: `rgba(${EMBER_RGB},0.12)`, border: `0.5px solid rgba(${EMBER_RGB},0.35)`,

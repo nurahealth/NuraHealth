@@ -31,6 +31,11 @@ export const ACCENTS = {
   "--nura-ember": ["--nura-ember", "#e07a3c"],
   "--nura-gold-ring": ["--nura-gold-ring", "#e8c266"],
   "--nura-orange": ["--nura-orange", "#e3a263"],
+  // Ordered sleep-stage ramp — light steps the sage ramp, dark keeps its hues.
+  "--nura-stage-awake": ["--nura-stage-awake", "#d3a253"],
+  "--nura-stage-light": ["--nura-stage-light", "#9bb0a5"],
+  "--nura-stage-rem": ["--nura-stage-rem", "#5dccae"],
+  "--nura-stage-deep": ["--nura-stage-deep", "#5aa0e6"],
 } as const;
 
 /** A `--nura-*` custom property usable as a data-viz accent. */

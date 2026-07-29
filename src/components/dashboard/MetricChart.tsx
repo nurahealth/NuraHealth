@@ -35,18 +35,22 @@ const TOKENS = {
   htHi:    ["--nura-orange-hi", "#f3c795"],
   htMid:   ["--nura-orange-mid", "#f0bc84"],
   htBase:  ["--nura-orange", "#e3a263"],
-  teal:    ["--nura-teal", "#5dccae"],
-  amber:   ["--nura-amber", "#e0a23e"],
-  coral:   ["--nura-alert", "#e8745a"],
-  sage:    ["--nura-sage", "#9bb0a5"],
-  emerald: ["--nura-optimal", "#5fbf8c"],
+  hr1:     ["--nura-ramp-hr-1", "#5dccae"],
+  hr2:     ["--nura-ramp-hr-2", "#e0a23e"],
+  hr3:     ["--nura-ramp-hr-3", "#e8745a"],
+  hi1:     ["--nura-ramp-hi-1", "#e0a23e"],
+  hi2:     ["--nura-ramp-hi-2", "#9bb0a5"],
+  hi3:     ["--nura-ramp-hi-3", "#5fbf8c"],
+  lo1:     ["--nura-ramp-lo-1", "#5fbf8c"],
+  lo2:     ["--nura-ramp-lo-2", "#9bb0a5"],
+  lo3:     ["--nura-ramp-lo-3", "#e0a23e"],
 } as const;
 type ChartTokens = Record<keyof typeof TOKENS, string>;
 
 const rampsFor = (t: ChartTokens): Record<MetricChartData["ramp"], [string, string, string]> => ({
-  hr: [t.teal, t.amber, t.coral],
-  higherBetter: [t.amber, t.sage, t.emerald],
-  lowerBetter: [t.emerald, t.sage, t.amber],
+  hr: [t.hr1, t.hr2, t.hr3],
+  higherBetter: [t.hi1, t.hi2, t.hi3],
+  lowerBetter: [t.lo1, t.lo2, t.lo3],
 });
 
 function hexToRgb(h: string): [number, number, number] {

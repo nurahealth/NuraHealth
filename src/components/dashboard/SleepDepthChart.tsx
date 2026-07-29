@@ -23,10 +23,10 @@ const INK = "var(--nura-fg-rgb)"; // warm off-white in dark mode
 // Stage palette. The per-bar gradients lighten these, so they must resolve to
 // concrete hex — see lib/themeTokens.ts.
 const STAGE_TOKENS = {
-  deep:  ["--nura-sleep-deep", "#5aa0e6"],
-  rem:   ["--nura-teal", "#5dccae"],
-  light: ["--nura-sage", "#9bb0a5"],
-  awake: ["--nura-good", "#d3a253"],
+  deep:  ["--nura-stage-deep", "#5aa0e6"],
+  rem:   ["--nura-stage-rem", "#5dccae"],
+  light: ["--nura-stage-light", "#9bb0a5"],
+  awake: ["--nura-stage-awake", "#d3a253"],
 } as const;
 
 type Stage = keyof typeof STAGE_TOKENS;

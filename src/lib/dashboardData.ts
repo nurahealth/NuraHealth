@@ -575,9 +575,9 @@ const SLEEP_DETAIL: SleepDetail = {
   timeInBed: "8h 20m",
   stages: [
     { label: "Awake", color: "rgba(var(--nura-fg-rgb),0.4)", textColor: "#0d0d0e", duration: "0h 58m", pct: 12 },
-    { label: "REM sleep", color: "--nura-teal", textColor: "#06372c", duration: "2h 18m", pct: 28 },
-    { label: "Light sleep", color: "--nura-sage", textColor: "#16241e", duration: "3h 46m", pct: 46 },
-    { label: "Deep sleep", color: "--nura-sleep-deep", textColor: "#082742", duration: "1h 04m", pct: 13 },
+    { label: "REM sleep", color: "--nura-stage-rem", textColor: "#06372c", duration: "2h 18m", pct: 28 },
+    { label: "Light sleep", color: "--nura-stage-light", textColor: "#16241e", duration: "3h 46m", pct: 46 },
+    { label: "Deep sleep", color: "--nura-stage-deep", textColor: "#082742", duration: "1h 04m", pct: 13 },
   ],
   hypnogram: {
     // 0 deep · 1 light · 2 REM · 3 awake
@@ -585,7 +585,7 @@ const SLEEP_DETAIL: SleepDetail = {
       1, 1, 2, 1, 0, 0, 1, 1, 2, 3, 1, 1, 0, 0, 0, 1, 2, 2, 1, 1, 0, 1, 1, 2,
       2, 3, 1, 1, 1, 2, 2, 2, 1, 3, 1, 2, 2, 2, 3, 1, 1, 2, 2, 3, 3,
     ],
-    levelColors: ["--nura-sleep-deep", "--nura-sage", "--nura-teal", "rgba(var(--nura-fg-rgb),0.4)"],
+    levelColors: ["--nura-stage-deep", "--nura-stage-light", "--nura-stage-rem", "var(--nura-stage-awake)"],
     axisLabels: ["11:48 PM", "2 AM", "4 AM", "6 AM", "8:08 AM"],
   },
   cycles: {

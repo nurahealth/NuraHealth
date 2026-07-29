@@ -126,7 +126,7 @@ export default function ActiveEnergyDetailPage() {
             fillMs={1500}
             innerLabel={`of ${d.moveGoal} goal`}
           />
-          <span style={{
+          <span className="nura-note-ink" style={{
             display: "inline-flex", alignItems: "center", gap: 6, marginTop: 12,
             padding: "6px 15px", borderRadius: 999, fontSize: 12, fontWeight: 600, letterSpacing: "0.5px",
             color: EMBER, border: `1px solid rgba(${EMBER_RGB},0.4)`,

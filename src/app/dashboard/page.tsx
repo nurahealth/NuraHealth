@@ -42,10 +42,10 @@ const CARD = "var(--nura-card)";
 const SAGE = "var(--nura-sage)";
 const SANS = "var(--font-inter), system-ui, sans-serif";
 
-const STATUS: Record<MetricStatus, { color: string; rgb: string; label: string }> = {
-  optimal: { color: "var(--nura-optimal)", rgb: "var(--nura-optimal-rgb)", label: "Optimal" },
-  good: { color: "var(--nura-good)", rgb: "var(--nura-good-rgb)", label: "Good" },
-  alert: { color: "var(--nura-alert)", rgb: "var(--nura-alert-rgb)", label: "Alert" },
+const STATUS: Record<MetricStatus, { color: string; bg: string; label: string }> = {
+  optimal: { color: "var(--nura-chip-optimal-fg)", bg: "var(--nura-chip-optimal-bg)", label: "Optimal" },
+  good: { color: "var(--nura-chip-good-fg)", bg: "var(--nura-chip-good-bg)", label: "Good" },
+  alert: { color: "var(--nura-chip-alert-fg)", bg: "var(--nura-chip-alert-bg)", label: "Alert" },
 };
 
 const EYEBROW: React.CSSProperties = {
@@ -221,9 +221,9 @@ function StatusPill({ status, size = "md" }: { status: MetricStatus; size?: "sm"
   const pad = size === "sm" ? "3px 8px" : "5px 11px";
   const fs = size === "sm" ? 9 : 10;
   return (
-    <span style={{
+    <span className="nura-chip" style={{
       ...EYEBROW, fontSize: fs, color: s.color, padding: pad, borderRadius: 999,
-      background: `rgba(${s.rgb},0.12)`, border: `0.5px solid rgba(${s.rgb},0.35)`,
+      background: s.bg, border: `0.5px solid ${s.bg}`,
       whiteSpace: "nowrap",
     }}>
       {s.label}
@@ -294,12 +294,12 @@ function MetricCard({ metric, onClick }: { metric: DashboardMetric; onClick: () 
         </span>
         {showUnit && <span style={{ fontFamily: SANS, fontSize: 13, color: TEXT_SEC }}>{metric.unit}</span>}
         {metric.delta && !isActiveEnergy && !isRestingHr && (
-          <span style={{
+          <span className="nura-trend-ink" style={{
             fontFamily: SANS, fontSize: 12, fontWeight: 600,
             color: metric.delta.dir === "up" ? "var(--nura-optimal)" : SAGE,
             display: "inline-flex", alignItems: "center", gap: 2,
           }}>
-            {metric.delta.dir === "up" ? "▲" : "▼"}{metric.delta.value}
+            <span style={{ color: metric.delta.dir === "up" ? "var(--nura-status-good)" : "var(--nura-status-alert)" }}>{metric.delta.dir === "up" ? "▲" : "▼"}</span>{metric.delta.value}
           </span>
         )}
         {isRestingHr && rhr && (

@@ -6,10 +6,10 @@ import type { CSSProperties } from "react";
 
 export type PillStatus = "optimal" | "good" | "alert";
 
-const MAP: Record<PillStatus, { color: string; rgb: string; label: string }> = {
-  optimal: { color: "var(--nura-optimal)", rgb: "var(--nura-optimal-rgb)", label: "Optimal" },
-  good: { color: "var(--nura-good)", rgb: "var(--nura-good-rgb)", label: "Good" },
-  alert: { color: "var(--nura-alert)", rgb: "var(--nura-alert-rgb)", label: "Alert" },
+const MAP: Record<PillStatus, { color: string; bg: string; label: string }> = {
+  optimal: { color: "var(--nura-chip-optimal-fg)", bg: "var(--nura-chip-optimal-bg)", label: "Optimal" },
+  good: { color: "var(--nura-chip-good-fg)", bg: "var(--nura-chip-good-bg)", label: "Good" },
+  alert: { color: "var(--nura-chip-alert-fg)", bg: "var(--nura-chip-alert-bg)", label: "Alert" },
 };
 
 const SANS = "var(--font-inter), system-ui, sans-serif";
@@ -27,13 +27,13 @@ export default function StatusPill({
 }) {
   const s = MAP[status];
   return (
-    <span className="nura-glow"
+    <span className="nura-glow nura-chip"
       style={{
         display: "inline-flex", alignItems: "center",
         padding: "4px 10px", borderRadius: 8,
         fontFamily: SANS, fontSize: 12, fontWeight: 600, whiteSpace: "nowrap",
-        color: s.color, background: `rgba(${s.rgb},0.16)`,
-        boxShadow: glow ? `0 0 14px rgba(${s.rgb},0.10)` : "none",
+        color: s.color, background: s.bg,
+        boxShadow: glow ? "0 0 14px rgba(var(--nura-optimal-rgb),0.10)" : "none",
         ...style,
       }}
     >

@@ -13,15 +13,13 @@ import { useThemeTokens } from "@/lib/themeTokens";
 
 // SVG gradient stops + attribute fills — concrete hex required.
 const TOKENS = {
-  teal:    ["--nura-teal", "#5dccae"],
-  gold:    ["--nura-good", "#d3a253"],
-  cool:    ["--nura-sleep-deep", "#5aa0e6"],
-  warm:    ["--nura-alert", "#e8745a"],
+  teal:    ["--nura-gauge-zone-2", "#5dccae"],
+  gold:    ["--nura-gauge-zone-3", "#d3a253"],
+  cool:    ["--nura-gauge-zone-1", "#5aa0e6"],
+  warm:    ["--nura-gauge-zone-4", "#e8745a"],
   ink:     ["--nura-fg-rgb", "235,230,216"],
   tealRgb: ["--nura-teal-rgb", "93,204,174"],
-  coolRgb: ["--nura-sleep-deep-rgb", "90,160,230"],
-  warmRgb: ["--nura-alert-rgb", "232,116,90"],
-  marker:  ["--nura-text-primary", "#ebe6d8"],
+  marker:  ["--nura-gauge-marker", "#ebe6d8"],
 } as const;
 
 const CX = 98, CY = 98, R = 60, START = 135, SWEEP = 270;
@@ -34,7 +32,7 @@ export default function BodyTempCardRing({
   devC, unit, normalRange,
 }: { devC: number; unit: TemperatureUnit; normalRange: [number, number] }) {
   const { teal: TEAL, gold: GOLD, cool: COOL, warm: WARM, ink: INK,
-          tealRgb: TEAL_RGB, coolRgb: COOL_RGB, warmRgb: WARM_RGB, marker: MARKER } = useThemeTokens(TOKENS);
+          tealRgb: TEAL_RGB, marker: MARKER } = useThemeTokens(TOKENS);
   const rawId = useId();
   const uid = `bt-ring-${rawId.replace(/[^a-zA-Z0-9]/g, "")}`;
 
@@ -49,7 +47,7 @@ export default function BodyTempCardRing({
 
   const within = devC >= normalRange[0] && devC <= normalRange[1];
   const status = within ? "Normal" : devC > normalRange[1] ? "Elevated" : "Cool";
-  const statusColor = within ? TEAL : devC > normalRange[1] ? GOLD : COOL;
+  const statusColor = within ? "var(--nura-status-good)" : "var(--nura-status-warn)";
 
   // Shortened center sub-line — "0.4°F below" (no "baseline") so it doesn't crowd
   // the smaller ring; "Right at baseline" at zero deviation.
@@ -91,8 +89,8 @@ export default function BodyTempCardRing({
         <circle cx={m.x.toFixed(1)} cy={m.y.toFixed(1)} r={8} fill="var(--nura-bg)" stroke={`rgba(${TEAL_RGB},0.5)`} strokeWidth={1} />
         <circle cx={m.x.toFixed(1)} cy={m.y.toFixed(1)} r={4.5} fill={MARKER} filter={`url(#${uid}-glow)`} />
         {/* End-of-scale hints — centered, below + outboard of the lower arc ends */}
-        <text x={52} y={164} textAnchor="middle" fontFamily="Inter, sans-serif" fontSize={10.5} letterSpacing="0.8" fill={`rgba(${COOL_RGB},0.7)`} fontWeight={600}>COOL</text>
-        <text x={144} y={164} textAnchor="middle" fontFamily="Inter, sans-serif" fontSize={10.5} letterSpacing="0.8" fill={`rgba(${WARM_RGB},0.7)`} fontWeight={600}>WARM</text>
+        <text x={52} y={164} textAnchor="middle" fontFamily="Inter, sans-serif" fontSize={10.5} letterSpacing="0.8" fill="var(--nura-gauge-tick)" fontWeight={600}>COOL</text>
+        <text x={144} y={164} textAnchor="middle" fontFamily="Inter, sans-serif" fontSize={10.5} letterSpacing="0.8" fill="var(--nura-gauge-tick)" fontWeight={600}>WARM</text>
       </svg>
 
       {/* Center overlay — status-led: status word on top, worded deviation beneath */}

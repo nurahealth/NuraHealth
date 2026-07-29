@@ -67,7 +67,7 @@ export default function MetricCardShell({
       {/* Footer — caption + accent status pill */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginTop: "auto" }}>
         <span style={{ fontFamily: SANS, fontSize: 11.5, color: TEXT_TER, lineHeight: 1.4 }}>{caption}</span>
-        <span style={{
+        <span className="nura-chip" style={{
           ...EYEBROW, fontSize: 9, color: pillColor, padding: "3px 8px", borderRadius: 999,
           background: hexA(pillColor, 0.12), border: `0.5px solid ${hexA(pillColor, 0.35)}`,
           whiteSpace: "nowrap", flexShrink: 0,

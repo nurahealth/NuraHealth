@@ -145,6 +145,47 @@
   --nura-watch: #d4a574;
   --nura-watch-rgb: 212, 165, 116;
 
+
+  /* ── Ordered ramps ──────────────────────────────────────────────────────
+     Dark keeps its semantic ramps (cool->warm for effort, amber->emerald for
+     "higher is better"). Light collapses all of them to magnitude -> depth of
+     sage: the status chip carries good/bad, the bars only carry how much. */
+  --nura-stage-awake: var(--nura-good);
+  --nura-stage-light: var(--nura-sage);
+  --nura-stage-rem: var(--nura-teal);
+  --nura-stage-deep: var(--nura-sleep-deep);
+
+  /* Gauge zones. Dark paints a cool->warm arc; light is one neutral track with
+     a single sage marker, per rule 5 — the status chip says whether the value
+     is good, the track stays quiet. */
+  /* Status chips. Dark keeps a colour per state. Light collapses every
+     "things are fine" state onto one calm sage chip, so a healthy dashboard
+     reads uniformly; amber and brick then actually mean something. */
+  --nura-chip-optimal-fg: var(--nura-optimal);
+  --nura-chip-optimal-bg: rgba(95, 191, 140, 0.16);
+  --nura-chip-good-fg: var(--nura-good);
+  --nura-chip-good-bg: rgba(211, 162, 83, 0.16);
+  --nura-chip-alert-fg: var(--nura-alert);
+  --nura-chip-alert-bg: rgba(232, 116, 90, 0.16);
+  --nura-chip-border: transparent;
+
+  --nura-gauge-zone-1: var(--nura-sleep-deep);
+  --nura-gauge-zone-2: var(--nura-teal);
+  --nura-gauge-zone-3: var(--nura-good);
+  --nura-gauge-zone-4: var(--nura-alert);
+  --nura-gauge-marker: var(--nura-text-primary);
+  --nura-gauge-tick: rgba(235, 230, 216, 0.35);
+
+  --nura-ramp-hr-1: var(--nura-teal);
+  --nura-ramp-hr-2: var(--nura-amber);
+  --nura-ramp-hr-3: var(--nura-alert);
+  --nura-ramp-hi-1: var(--nura-amber);
+  --nura-ramp-hi-2: var(--nura-sage);
+  --nura-ramp-hi-3: var(--nura-optimal);
+  --nura-ramp-lo-1: var(--nura-optimal);
+  --nura-ramp-lo-2: var(--nura-sage);
+  --nura-ramp-lo-3: var(--nura-amber);
+
   /* ── Data-viz ramp ──────────────────────────────────────────────────── */
   --nura-teal: #5dccae;                 /* sleep / recovery */
   --nura-teal-rgb: 93, 204, 174;
@@ -314,6 +355,38 @@
   --nura-track-neutral: #e7e5df;
   --nura-track-neutral-strong: #dcd9d1;
   --nura-data-muted: #847f74;  /* 4.0  under-goal bars, still a real mark */
+
+
+  /* Ordered ramps — magnitude to depth. See the note in the dark column. */
+  --nura-stage-awake: var(--nura-step-1);
+  --nura-stage-light: var(--nura-step-2);
+  --nura-stage-rem: var(--nura-step-3);
+  --nura-stage-deep: var(--nura-step-4);
+
+  --nura-chip-optimal-fg: var(--nura-status-good);
+  --nura-chip-optimal-bg: var(--nura-tint-accent);
+  --nura-chip-good-fg: var(--nura-status-good);
+  --nura-chip-good-bg: var(--nura-tint-accent);
+  --nura-chip-alert-fg: var(--nura-status-alert);
+  --nura-chip-alert-bg: var(--nura-tint-danger);
+  --nura-chip-border: var(--nura-tint-accent-border);
+
+  --nura-gauge-zone-1: var(--nura-track-neutral-strong);
+  --nura-gauge-zone-2: var(--nura-track-neutral-strong);
+  --nura-gauge-zone-3: var(--nura-track-neutral-strong);
+  --nura-gauge-zone-4: var(--nura-track-neutral-strong);
+  --nura-gauge-marker: var(--nura-data-primary);
+  --nura-gauge-tick: #cfcbc1;
+
+  --nura-ramp-hr-1: var(--nura-step-1);
+  --nura-ramp-hr-2: var(--nura-step-2);
+  --nura-ramp-hr-3: var(--nura-step-4);
+  --nura-ramp-hi-1: var(--nura-step-1);
+  --nura-ramp-hi-2: var(--nura-step-2);
+  --nura-ramp-hi-3: var(--nura-step-4);
+  --nura-ramp-lo-1: var(--nura-step-1);
+  --nura-ramp-lo-2: var(--nura-step-2);
+  --nura-ramp-lo-3: var(--nura-step-4);
 
   /* 4 — status trio */
   --nura-status-good: #3a7549;   /* 4.9 white · 4.9 chip */
@@ -600,6 +673,28 @@ html, body {
 [data-theme="light"] .nura-halo {
   /* Decorative radial-gradient bloom and blurred blob artifacts. */
   display: none !important;
+}
+
+[data-theme="light"] .nura-trend-ink {
+  /* A trend reads "up 0.4". The direction is the coloured part; the magnitude
+     is data and stays ink. Only the glyph inside keeps the status colour. */
+  color: var(--nura-text-primary) !important;
+}
+
+[data-theme="light"] .nura-note-ink {
+  /* Sentences like "82% to goal · on track" were tinted end to end. The words
+     are prose; only the leading dot or glyph carries colour. */
+  color: var(--nura-ink-muted) !important;
+}
+
+[data-theme="light"] .nura-chip {
+  /* One pill shape everywhere. Scoped to light because dark is frozen. */
+  padding: 4px 10px !important;
+  border-radius: 999px !important;
+  font-size: 10px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.06em !important;
+  border: 1px solid var(--nura-chip-border) !important;
 }
 
 [data-theme="light"] .nura-datum-ink {

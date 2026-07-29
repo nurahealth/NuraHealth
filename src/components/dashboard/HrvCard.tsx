@@ -155,11 +155,11 @@ export default function HrvCard({ metric, onClick }: { metric: DashboardMetric; 
 
       {/* Below the ring — delta, trend note, status pill */}
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 7, marginTop: "auto" }}>
-        <span style={{
+        <span className="nura-trend-ink" style={{
           fontFamily: SANS, fontSize: 12, fontWeight: 600, color: AQUA,
           display: "inline-flex", alignItems: "center", gap: 3,
         }}>
-          {delta.dir === "up" ? "▲" : "▼"} {delta.value} vs last week
+          <span style={{ color: delta.dir === "up" ? "var(--nura-status-good)" : "var(--nura-status-alert)" }}>{delta.dir === "up" ? "▲" : "▼"}</span> {delta.value} vs last week
         </span>
         <span style={{ fontFamily: SANS, fontSize: 11.5, color: TEXT_TER, lineHeight: 1.4, textAlign: "center" }}>{caption}</span>
         <span style={{
