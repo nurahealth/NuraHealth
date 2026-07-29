@@ -831,6 +831,7 @@ html, body {
 
 [data-theme="light"] .dash-card,
 [data-theme="light"] .oh-card,
+[data-theme="light"] .hp-card,
 [data-theme="light"] .dash-insight {
   /* Two lines doing one job. Over near-black a card needs a visible edge to
      exist at all, so the hairline carries the separation. On a warm page with

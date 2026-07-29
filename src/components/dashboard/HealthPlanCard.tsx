@@ -109,7 +109,7 @@ export default function HealthPlanCard() {
   const ddParas = DEEP.paragraphs(lowest[0], lowest[1], p.now, p.target);
 
   return (
-    <div style={{
+    <div className="hp-card" style={{
       position: "relative", overflow: "hidden",
       display: "flex", flexDirection: "column",
       background: "var(--nura-glass)", border: "1px solid var(--nura-glass-line)",
