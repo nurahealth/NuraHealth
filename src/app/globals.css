@@ -38,6 +38,14 @@
   --nura-card-shadow: 0 22px 60px rgba(0, 0, 0, 0.45);
   --nura-card-shadow-soft: 0 18px 50px rgba(0, 0, 0, 0.35);
 
+  /* Lift — the resting and hover elevation of a card that opts in by class
+     rather than by inline style (the dashboard's metric grid, the customize
+     row, the insight panel). `none` here on purpose: dark separates cards
+     from a near-black page with a hairline and its own inset highlight, and
+     a drop shadow on top of that reads as mud. Light overrides both. */
+  --nura-card-lift: none;
+  --nura-card-lift-hover: none;
+
   /* ── Ink ────────────────────────────────────────────────────────────── */
   --nura-text-primary: #ebe6d8;
   --nura-text-secondary: rgba(235, 230, 216, 0.55);
@@ -405,8 +413,15 @@
   --nura-status-alert-rgb: 165, 65, 52;
 
   /* ── Canvas ─────────────────────────────────────────────────────────── */
-  --nura-bg: #faf9f6;                   /* warm off-white */
-  --nura-bg-rgb: 250, 249, 246;
+  /* The canvas has to sit clearly BELOW the cards. At #faf9f6 the page was
+     within 2% of the white cards, so every card floated on a hairline and the
+     screen read as one flat sheet. Dropping the canvas ~4% gives real
+     figure-ground: white cards now look lifted off a warm paper page, which
+     is what lets the layered shadow read at all. Still warm (R>G>B) — this is
+     ivory, not grey. Every ink token was verified on #ffffff and on the
+     tints; all of them gain contrast against a darker canvas, none lose it. */
+  --nura-bg: #f5f3ee;                   /* warm paper */
+  --nura-bg-rgb: 245, 243, 238;
   --nura-bg-elevated-rgb: 255, 255, 255;
 
   /* ── Surfaces ───────────────────────────────────────────────────────── */
@@ -419,9 +434,31 @@
 
   /* No inset highlight on white; depth comes from a real ambient shadow. */
   --nura-card-highlight: rgba(255, 255, 255, 0);
-  /* One shadow for every card. Nothing heavier, nothing coloured. */
-  --nura-card-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-  --nura-card-shadow-soft: 0 1px 3px rgba(0, 0, 0, 0.06);
+  /* Layered, not single. One 3px shadow is a sticker outline — it says "there
+     is an edge here" and nothing about height. Three offsets say it: a tight
+     contact shadow that keeps the edge crisp, a mid ambient that gives the
+     card its body, and a wide low-alpha spread that seats it on the page.
+     Tinted with the warm ink (26,24,20) rather than pure black, so it reads
+     as shade on a warm canvas instead of grey haze. */
+  --nura-card-shadow:
+    0 1px 2px rgba(26, 24, 20, 0.05),
+    0 4px 10px -3px rgba(26, 24, 20, 0.05),
+    0 14px 30px -12px rgba(26, 24, 20, 0.07);
+  --nura-card-shadow-soft:
+    0 1px 2px rgba(26, 24, 20, 0.04),
+    0 3px 8px -3px rgba(26, 24, 20, 0.04);
+
+  /* Resting + hover elevation for class-driven cards. Hover moves the card up
+     2px, so the shadow has to grow and soften by roughly the same amount or
+     the card looks like it slid rather than lifted. */
+  --nura-card-lift:
+    0 1px 2px rgba(26, 24, 20, 0.05),
+    0 4px 10px -3px rgba(26, 24, 20, 0.05),
+    0 14px 30px -12px rgba(26, 24, 20, 0.07);
+  --nura-card-lift-hover:
+    0 1px 2px rgba(26, 24, 20, 0.05),
+    0 8px 18px -5px rgba(26, 24, 20, 0.07),
+    0 24px 48px -16px rgba(26, 24, 20, 0.10);
 
   /* ── Ink — every value below passes AA on #ffffff ───────────────────── */
   --nura-text-primary: #1a1a1a;         /* 17.4:1 */
@@ -566,9 +603,9 @@
   --nura-tint-neutral-border: #e9e7e1;
 
   /* Page + elevated chrome — opaque, so nothing reads as see-through on white. */
-  --nura-page-gradient: #faf9f6;
+  --nura-page-gradient: #f5f3ee;
   --nura-elevated: rgba(255, 255, 255, 0.94);
-  --nura-scrim-panel: rgba(250, 249, 246, 0.92);
+  --nura-scrim-panel: rgba(245, 243, 238, 0.92);
   --nura-inset-dark: #f0eeea;
   --nura-modal: #ffffff;
 

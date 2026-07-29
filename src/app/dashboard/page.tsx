@@ -136,10 +136,30 @@ export default function DashboardPage() {
           .dash-customize { margin-top: var(--nura-card-gap) !important; }
           .dash-insight { margin-top: var(--nura-card-gap) !important; }
         }
-        .dash-card { transition: border-color 180ms, transform 180ms; }
-        .dash-card:hover { border-color: rgba(var(--nura-sage-rgb),0.35) !important; transform: translateY(-2px); }
+        /* Elevation is a token, not a literal, so dark can opt out: there
+           --nura-card-lift resolves to none and these rules are inert, leaving
+           the dark grid exactly as it was. Light gets a layered resting shadow
+           that grows and softens on hover, in step with the 2px rise — a
+           card that lifts without its shadow just looks like it slid. */
+        .dash-card {
+          box-shadow: var(--nura-card-lift);
+          transition: border-color 180ms, transform 180ms, box-shadow 180ms;
+        }
+        .dash-card:hover {
+          border-color: rgba(var(--nura-sage-rgb),0.35) !important;
+          transform: translateY(-2px);
+          box-shadow: var(--nura-card-lift-hover);
+        }
+        .dash-insight { box-shadow: var(--nura-card-lift); }
         .dash-cta:hover { color: var(--nura-sage-hover) !important; }
         .dash-customize:hover { border-color: rgba(var(--nura-sage-rgb),0.4) !important; color: var(--nura-text-primary) !important; }
+        /* The metric cards are role="link" tabIndex=0. They had a visible
+           hover and nothing for the keyboard; this is the same emphasis in
+           the same accent, and it never paints unless a key put focus there. */
+        .dash-card:focus-visible, .dash-customize:focus-visible {
+          outline: 2px solid var(--nura-sage);
+          outline-offset: 2px;
+        }
       `}</style>
 
       {/* 1 — Date eyebrow + greeting */}
