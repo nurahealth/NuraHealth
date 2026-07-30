@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { usePrefersReducedMotion } from "@/components/dashboard/chartTheme";
 import { getCardioFitnessDetail } from "@/lib/dashboardData";
 import { hexA, smooth } from "@/components/dashboard/cardChartHelpers";
 import MetricEducation, { type MetricEducationItem } from "@/components/dashboard/MetricEducation";
@@ -175,19 +176,16 @@ function ArcGauge({ value, lo, hi, unit }: { value: number; lo: number; hi: numb
   const targetOffset = arcLen * (1 - frac);
   const rotation = -(90 + arc / 2); // -225° → gap centered at bottom
 
+  const reduced = usePrefersReducedMotion();
   const [offset, setOffset] = useState(arcLen); // start empty
   const [shown, setShown] = useState(0); // count up from 0
-  const [reduced, setReduced] = useState(false);
   const rafRef = useRef(0);
 
   useEffect(() => {
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    if (mq.matches) {
-      setReduced(true);
-      setOffset(targetOffset); // already filled
-      setShown(value); // final value
-      return;
-    }
+    // Under reduced motion the effect does nothing and render derives the
+    // final values below — setting state synchronously inside an effect
+    // body is a cascading render.
+    if (reduced) return;
     const t = setTimeout(() => setOffset(targetOffset), 60);
     const dur = 1500;
     const ease = (p: number) => 1 - Math.pow(1 - p, 3);
@@ -199,8 +197,14 @@ function ArcGauge({ value, lo, hi, unit }: { value: number; lo: number; hi: numb
       if (p < 1) rafRef.current = requestAnimationFrame(step);
     };
     rafRef.current = requestAnimationFrame(step);
-    return () => { clearTimeout(t); cancelAnimationFrame(rafRef.current); };
-  }, [value, targetOffset]);
+    // Backstop: rAF is throttled for background tabs, and a stalled count-up
+    // leaves a WRONG number on screen rather than merely an unanimated one.
+    const settle = setTimeout(() => setShown(value), dur + 120);
+    return () => { clearTimeout(t); clearTimeout(settle); cancelAnimationFrame(rafRef.current); };
+  }, [value, targetOffset, reduced]);
+
+  const shownOffset = reduced ? targetOffset : offset;
+  const shownNum = reduced ? value : shown;
 
   const trans = reduced ? "none" : "stroke-dashoffset 1500ms cubic-bezier(.2,.7,.2,1)";
 
@@ -223,21 +227,21 @@ function ArcGauge({ value, lo, hi, unit }: { value: number; lo: number; hi: numb
         <circle className="nura-halo"
           cx={c} cy={c} r={r} fill="none"
           stroke={`url(#${gid})`} strokeWidth={stroke} strokeLinecap="round"
-          strokeDasharray={`${arcLen} ${circ}`} strokeDashoffset={offset}
+          strokeDasharray={`${arcLen} ${circ}`} strokeDashoffset={shownOffset}
           style={{ filter: "blur(7px)", opacity: 0.55, transition: trans }}
         />
         {/* crisp gold fill on top */}
         <circle
           cx={c} cy={c} r={r} fill="none"
           stroke={`url(#${gid})`} strokeWidth={stroke} strokeLinecap="round"
-          strokeDasharray={`${arcLen} ${circ}`} strokeDashoffset={offset}
+          strokeDasharray={`${arcLen} ${circ}`} strokeDashoffset={shownOffset}
           style={{ filter: `drop-shadow(0 0 4px rgba(${GOLD_RGB},0.5))`, transition: trans }}
         />
       </svg>
 
       {/* centered content — counting number + unit + label */}
       <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-        <span style={{ fontFamily: SANS, fontSize: 54, fontWeight: 600, letterSpacing: "-1px", lineHeight: 1, color: CREAM, textShadow: `0 0 18px rgba(${GOLD_RGB},0.45)` }}>{shown}</span>
+        <span style={{ fontFamily: SANS, fontSize: 54, fontWeight: 600, letterSpacing: "-1px", lineHeight: 1, color: CREAM, textShadow: `0 0 18px rgba(${GOLD_RGB},0.45)` }}>{shownNum}</span>
         <span style={{ fontFamily: SANS, fontSize: 11.5, color: MUTED, marginTop: 6 }}>{unit}</span>
         <span style={{ fontFamily: SANS, fontSize: 9.5, fontWeight: 600, letterSpacing: "0.22em", textTransform: "uppercase", color: GOLD, marginTop: 7 }}>Cardio Fitness</span>
       </div>

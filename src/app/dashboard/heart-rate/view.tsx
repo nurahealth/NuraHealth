@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useState } from "react";
 import { useRouter } from "next/navigation";
+import { usePrefersReducedMotion } from "@/components/dashboard/chartTheme";
 import { getHeartRateDetail, getMetric } from "@/lib/dashboardData";
 import AuroraBackground from "@/components/dashboard/AuroraBackground";
 import GlassCard from "@/components/dashboard/GlassCard";
@@ -64,20 +65,20 @@ function HeartRateRing({ bpm, liveLabel }: { bpm: number; liveLabel: string }) {
   const rotation = -(90 + arc / 2); // -225° → gap centered at bottom
 
   // Start empty; animate the fill up to `target` after mount (CSS transition).
+  const reduced = usePrefersReducedMotion();
   const [offset, setOffset] = useState(arcLen);
-  const [reduced, setReduced] = useState(false);
 
   useEffect(() => {
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    if (mq.matches) {
-      setReduced(true);
-      setOffset(target); // render already filled, no sweep
-      return;
-    }
+    // Under reduced motion the effect does nothing and render derives the
+    // final values below — setting state synchronously inside an effect
+    // body is a cascading render.
+    if (reduced) return;
     // Defer one tick so the empty→target transition actually plays.
     const t = setTimeout(() => setOffset(target), 60);
     return () => clearTimeout(t);
-  }, [target]);
+  }, [target, reduced]);
+
+  const shownOffset = reduced ? target : offset;
 
   return (
     <div style={{ position: "relative", width: size, height: size, margin: "0 auto" }}>
@@ -119,7 +120,7 @@ function HeartRateRing({ bpm, liveLabel }: { bpm: number; liveLabel: string }) {
         <circle
           cx={c} cy={c} r={r} fill="none"
           stroke={`url(#${gid})`} strokeWidth={stroke} strokeLinecap="round"
-          strokeDasharray={`${arcLen} ${circ}`} strokeDashoffset={offset}
+          strokeDasharray={`${arcLen} ${circ}`} strokeDashoffset={shownOffset}
           style={{
             filter: `drop-shadow(0 0 7px rgba(${RING_GLOW},0.6))`,
             transition: reduced ? "none" : "stroke-dashoffset 1.3s cubic-bezier(.2,.7,.2,1)",

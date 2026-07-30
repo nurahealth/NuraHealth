@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { usePrefersReducedMotion } from "@/components/dashboard/chartTheme";
 import { getMetric, getRecoveryDetail, type HrvTrendChart, type RecoveryDriver } from "@/lib/dashboardData";
 import AuroraBackground from "@/components/dashboard/AuroraBackground";
 import GlassCard from "@/components/dashboard/GlassCard";
@@ -75,19 +76,16 @@ function HrvRing({ hrv }: { hrv: number }) {
   const target = arcLen * (1 - frac);
   const rotation = -(90 + arc / 2); // -225° → gap centered at bottom
 
+  const reduced = usePrefersReducedMotion();
   const [offset, setOffset] = useState(arcLen); // start empty
   const [num, setNum] = useState(COUNT_FROM);
-  const [reduced, setReduced] = useState(false);
   const rafRef = useRef(0);
 
   useEffect(() => {
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    if (mq.matches) {
-      setReduced(true);
-      setOffset(target); // already filled
-      setNum(hrv); // final value, no count-up
-      return;
-    }
+    // Under reduced motion the effect does nothing and render derives the
+    // final values below — setting state synchronously inside an effect
+    // body is a cascading render.
+    if (reduced) return;
     // Defer one tick so the empty→target fill transition actually plays.
     const t = setTimeout(() => setOffset(target), 60);
     // Count the number up from COUNT_FROM → hrv over the same ~1.4s (ease-out).
@@ -100,8 +98,14 @@ function HrvRing({ hrv }: { hrv: number }) {
       if (p < 1) rafRef.current = requestAnimationFrame(stepFn);
     };
     rafRef.current = requestAnimationFrame(stepFn);
-    return () => { clearTimeout(t); cancelAnimationFrame(rafRef.current); };
-  }, [target, hrv]);
+    // Backstop: rAF is throttled for background tabs, and a stalled count-up
+    // leaves a WRONG number on screen rather than merely an unanimated one.
+    const settle = setTimeout(() => setNum(hrv), FILL_MS + 120);
+    return () => { clearTimeout(t); clearTimeout(settle); cancelAnimationFrame(rafRef.current); };
+  }, [target, hrv, reduced]);
+
+  const shownOffset = reduced ? target : offset;
+  const shownNum = reduced ? hrv : num;
 
   return (
     <div style={{ position: "relative", width: size, height: size, margin: "0 auto" }}>
@@ -124,7 +128,7 @@ function HrvRing({ hrv }: { hrv: number }) {
         <circle
           cx={c} cy={c} r={r} fill="none"
           stroke={`url(#${gid})`} strokeWidth={stroke} strokeLinecap="round"
-          strokeDasharray={`${arcLen} ${circ}`} strokeDashoffset={offset}
+          strokeDasharray={`${arcLen} ${circ}`} strokeDashoffset={shownOffset}
           style={{
             filter: `drop-shadow(0 0 7px rgba(${RING_GLOW},0.6))`,
             transition: reduced ? "none" : `stroke-dashoffset ${FILL_MS}ms cubic-bezier(.2,.7,.2,1)`,
@@ -135,7 +139,7 @@ function HrvRing({ hrv }: { hrv: number }) {
       {/* centered content — count-up number + muted label */}
       <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
         <div style={{ display: "inline-flex", alignItems: "baseline", gap: 7, lineHeight: 1 }}>
-          <span style={{ fontSize: 58, fontWeight: 800, letterSpacing: "-2px", color: TEXT, textShadow: `0 0 18px rgba(${RING_GLOW},0.35)` }}>{num}</span>
+          <span style={{ fontSize: 58, fontWeight: 800, letterSpacing: "-2px", color: TEXT, textShadow: `0 0 18px rgba(${RING_GLOW},0.35)` }}>{shownNum}</span>
           <span style={{ fontSize: 18, fontWeight: 600, color: MUTED }}>ms</span>
         </div>
         <div style={{ fontSize: 13, color: MUTED, marginTop: 8 }}>Heart rate variability</div>

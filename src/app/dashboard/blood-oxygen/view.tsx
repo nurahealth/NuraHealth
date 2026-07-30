@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { usePrefersReducedMotion } from "@/components/dashboard/chartTheme";
 import { getBloodOxygenDetail, SOURCE_LABEL, type BloodOxygenDetail } from "@/lib/dashboardData";
 import { spo2Status, type SpO2Status } from "@/lib/bloodOxygen";
 import BloodOxygenTrends from "@/components/BloodOxygenTrends";
@@ -194,19 +195,16 @@ function RingGauge({ spo2 }: { spo2: number }) {
   const target = arcLen * (1 - frac);
   const rotation = -(90 + arc / 2); // -225° → gap centered at bottom
 
+  const reduced = usePrefersReducedMotion();
   const [offset, setOffset] = useState(arcLen); // start empty
   const [shown, setShown] = useState(0); // count up from 0
-  const [reduced, setReduced] = useState(false);
   const rafRef = useRef(0);
 
   useEffect(() => {
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    if (mq.matches) {
-      setReduced(true);
-      setOffset(target); // already filled
-      setShown(spo2); // final value
-      return;
-    }
+    // Under reduced motion the effect does nothing and render derives the
+    // final values below — setting state synchronously inside an effect
+    // body is a cascading render.
+    if (reduced) return;
     const t = setTimeout(() => setOffset(target), 60);
     const dur = 1400;
     const ease = (p: number) => 1 - Math.pow(1 - p, 3);
@@ -218,8 +216,14 @@ function RingGauge({ spo2 }: { spo2: number }) {
       if (p < 1) rafRef.current = requestAnimationFrame(step);
     };
     rafRef.current = requestAnimationFrame(step);
-    return () => { clearTimeout(t); cancelAnimationFrame(rafRef.current); };
-  }, [spo2, target]);
+    // Backstop: rAF is throttled for background tabs, and a stalled count-up
+    // leaves a WRONG number on screen rather than merely an unanimated one.
+    const settle = setTimeout(() => setShown(spo2), dur + 120);
+    return () => { clearTimeout(t); clearTimeout(settle); cancelAnimationFrame(rafRef.current); };
+  }, [spo2, target, reduced]);
+
+  const shownOffset = reduced ? target : offset;
+  const shownNum = reduced ? spo2 : shown;
 
   return (
     <div style={{ position: "relative", width: size, height: size, margin: "0 auto" }}>
@@ -242,7 +246,7 @@ function RingGauge({ spo2 }: { spo2: number }) {
         <circle
           cx={c} cy={c} r={r} fill="none"
           stroke={`url(#${gid})`} strokeWidth={stroke} strokeLinecap="round"
-          strokeDasharray={`${arcLen} ${circ}`} strokeDashoffset={offset}
+          strokeDasharray={`${arcLen} ${circ}`} strokeDashoffset={shownOffset}
           style={{
             filter: `drop-shadow(0 0 7px rgba(${ICE_RGB},0.5))`,
             transition: reduced ? "none" : "stroke-dashoffset 1400ms cubic-bezier(.2,.7,.2,1)",
@@ -253,7 +257,7 @@ function RingGauge({ spo2 }: { spo2: number }) {
       {/* centered content — counting % + "overnight average" beneath */}
       <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
         <div style={{ display: "inline-flex", alignItems: "baseline", lineHeight: 1 }}>
-          <span style={{ fontFamily: SANS, fontSize: 52, fontWeight: 600, letterSpacing: "-1px", color: CREAM, textShadow: `0 0 18px rgba(${ICE_RGB},0.3)` }}>{shown}</span>
+          <span style={{ fontFamily: SANS, fontSize: 52, fontWeight: 600, letterSpacing: "-1px", color: CREAM, textShadow: `0 0 18px rgba(${ICE_RGB},0.3)` }}>{shownNum}</span>
           <span style={{ fontFamily: SANS, fontSize: 26, fontWeight: 600, color: CREAM }}>%</span>
         </div>
         <div style={{ fontFamily: SANS, fontSize: 12, color: MUTED, marginTop: 8 }}>overnight average</div>
