@@ -130,9 +130,8 @@ function HrvRing({ hrv }: { hrv: number }) {
           stroke={`url(#${gid})`} strokeWidth={stroke} strokeLinecap="round"
           strokeDasharray={`${arcLen} ${circ}`} strokeDashoffset={shownOffset}
           style={{
-            filter: `drop-shadow(0 0 7px rgba(${RING_GLOW},0.6))`,
-            transition: reduced ? "none" : `stroke-dashoffset ${FILL_MS}ms cubic-bezier(.2,.7,.2,1)`,
-          }}
+            
+            transition: reduced ? "none" : `stroke-dashoffset ${FILL_MS}ms cubic-bezier(.2,.7,.2,1)` }}
         />
       </svg>
 
@@ -198,8 +197,7 @@ export default function RecoveryDetailPage() {
     <div style={{
       position: "relative", minHeight: "100dvh", overflow: "hidden",
       color: TEXT, fontFamily: SANS,
-      background: "var(--nura-wash-hrv)",
-    }}>
+      background: "var(--nura-wash-hrv)" }}>
       <style>{`
         .r-reveal { opacity: 0; transform: translateY(18px); animation: r-rise .7s cubic-bezier(.2,.7,.2,1) forwards; }
         @keyframes r-rise { to { opacity: 1; transform: none; } }
@@ -237,8 +235,7 @@ export default function RecoveryDetailPage() {
           <span style={{
             display: "inline-flex", alignItems: "center", gap: 6, marginTop: 20,
             padding: "6px 15px", borderRadius: 999, fontSize: 12, fontWeight: 600, letterSpacing: "0.5px",
-            color: RING_FROM, border: `1px solid rgba(${RING_GLOW},0.4)`,
-          }}>
+            color: RING_FROM, border: `1px solid rgba(${RING_GLOW},0.4)` }}>
             <span className="nura-glow" style={{ width: 6, height: 6, borderRadius: "50%", background: RING_FROM, boxShadow: `0 0 8px rgba(${RING_GLOW},0.9)` }} />
             {pillText}
           </span>
@@ -350,11 +347,10 @@ function HrvZoneChart({ hrv }: { hrv: HrvTrendChart }) {
       <text x={L + 2} y={(yOf(average) - 4).toFixed(1)} fontSize={9} fill="var(--nura-ink-a45)" style={{ fontFamily: SANS }}>avg {average}</text>
 
       {/* Daily line + dots (aqua) */}
-      <polyline points={poly} fill="none" strokeWidth={2.6} strokeLinecap="round" strokeLinejoin="round" style={{ stroke: AQUA, filter: `drop-shadow(0 0 4px rgba(${AQUA_RGB},0.55))` }} />
+      <polyline points={poly} fill="none" strokeWidth={2.6} strokeLinecap="round" strokeLinejoin="round" style={{ stroke: AQUA}} />
       {pts.map((p, i) => (
         <circle
           key={i} cx={p.x.toFixed(1)} cy={p.y.toFixed(1)} r={i === last ? 4.4 : 3.4} fill={i === last ? AQUA_LIGHT : AQUA}
-          style={{ filter: i === last ? `drop-shadow(0 0 6px rgba(${AQUA_LIGHT_RGB},0.95))` : `drop-shadow(0 0 3px rgba(${AQUA_RGB},0.55))` }}
         />
       ))}
     </svg>

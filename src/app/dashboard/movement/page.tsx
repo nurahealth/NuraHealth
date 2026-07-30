@@ -45,8 +45,7 @@ export default function MovementDetailPage() {
     <div style={{
       position: "relative", minHeight: "100dvh", overflow: "hidden",
       color: TEXT, fontFamily: SANS,
-      background: "var(--nura-wash-movement)",
-    }}>
+      background: "var(--nura-wash-movement)" }}>
       <style>{`
         .m-reveal { opacity: 0; transform: translateY(18px); animation: m-rise .7s cubic-bezier(.2,.7,.2,1) forwards; }
         @keyframes m-rise { to { opacity: 1; transform: none; } }
@@ -91,8 +90,7 @@ export default function MovementDetailPage() {
               display: "inline-flex", alignItems: "center", gap: 6, marginTop: 9,
               padding: "5px 11px", borderRadius: 9, fontSize: 12, fontWeight: 600, color: AMBER,
               background: "rgba(var(--nura-metric-activity-rgb),0.12)", border: "1px solid rgba(var(--nura-metric-activity-rgb),0.20)",
-              boxShadow: "0 0 16px rgba(var(--nura-metric-activity-rgb),0.10)",
-            }}>
+              boxShadow: "0 0 16px rgba(var(--nura-metric-activity-rgb),0.10)" }}>
               <BoltIcon />{d.badge}
             </span>
           </div>
@@ -187,7 +185,7 @@ function IntradayBars({ series }: { series: IntradayChart["series"] }) {
   const bw = W / n;
   const max = Math.max(...series, 1);
   return (
-    <svg width="100%" height={90} viewBox={`0 0 ${W} 90`} preserveAspectRatio="none" style={{ marginTop: 12, filter: "drop-shadow(0 0 7px rgba(var(--nura-metric-activity-rgb),0.30))" }}>
+    <svg width="100%" height={90} viewBox={`0 0 ${W} 90`} preserveAspectRatio="none" style={{ marginTop: 12 }}>
       {series.map((v, i) => {
         const h = Math.max(2, (v / max) * maxH);
         return <rect key={i} x={(i * bw).toFixed(1)} y={(maxH + 4 - h).toFixed(1)} width={(bw - 1.1).toFixed(1)} height={h.toFixed(1)} rx="1.2" fill="var(--nura-metric-activity)" />;

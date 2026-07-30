@@ -48,7 +48,7 @@ export default function RadialGauge({
   const rawId = useId();
   const gid = `gauge-${rawId.replace(/[^a-zA-Z0-9]/g, "")}`;
 
-  // Pad the SVG canvas around the ring so the drop-shadow glow fades fully
+  // Pad the SVG canvas around the ring so the round stroke cap is never clipped
   // inside the viewport instead of being clipped to a square. The ring keeps
   // its original radius/position; the SVG is offset back by `pad` so the gauge
   // looks identical — only the glow has room to breathe.
@@ -117,10 +117,7 @@ export default function RadialGauge({
           cx={c} cy={c} r={r} fill="none"
           stroke={`url(#${gid})`} strokeWidth={stroke} strokeLinecap="round"
           strokeDasharray={`${arcLen} ${circ}`} strokeDashoffset={offset}
-          style={{
-            filter: `drop-shadow(0 0 7px rgba(${glowRgb},0.65))`,
-            transition: reduced ? "none" : "stroke-dashoffset 1.4s cubic-bezier(.2,.7,.2,1)",
-          }}
+          style={{ transition: reduced ? "none" : "stroke-dashoffset 1.4s cubic-bezier(.2,.7,.2,1)" }}
         />
       </svg>
       <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>

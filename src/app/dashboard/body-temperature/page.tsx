@@ -96,8 +96,7 @@ export default function BodyTempDetailPage() {
     <div style={{
       position: "relative", minHeight: "100dvh", overflow: "hidden",
       color: TEXT, fontFamily: SANS,
-      background: "var(--nura-wash-temp)",
-    }}>
+      background: "var(--nura-wash-temp)" }}>
       <style>{`
         .bt-reveal { opacity: 0; transform: translateY(18px); animation: bt-rise .7s cubic-bezier(.2,.7,.2,1) forwards; }
         @keyframes bt-rise { to { opacity: 1; transform: none; } }
@@ -134,7 +133,7 @@ export default function BodyTempDetailPage() {
 
         {/* Hero — status-led: status headline + worded deviation, unit toggle, zone bar */}
         <div className="bt-reveal" style={{ animationDelay: ".1s", display: "flex", flexDirection: "column", alignItems: "center", margin: "18px 0 4px" }}>
-          <div style={{ fontSize: 46, fontWeight: 700, color: statusColor, letterSpacing: "-1.5px", lineHeight: 1, filter: `drop-shadow(0 0 22px ${statusColor}40)` }}>{statusWord}</div>
+          <div style={{ fontSize: 46, fontWeight: 700, color: statusColor, letterSpacing: "-1.5px", lineHeight: 1}}>{statusWord}</div>
           <div style={{ fontSize: 14, color: MUTED, marginTop: 10 }}>{wordedDeviation(d.tonight, unit, true)}</div>
 
           {/* °F / °C toggle — updates the global preference */}
@@ -150,8 +149,7 @@ export default function BodyTempDetailPage() {
                     border: "none", cursor: "pointer", borderRadius: 999, padding: "5px 16px",
                     fontFamily: SANS, fontSize: 12, fontWeight: 600,
                     background: on ? `rgba(${TEAL_RGB},0.16)` : "transparent",
-                    color: on ? TEAL : "var(--nura-ink-a50)",
-                  }}
+                    color: on ? TEAL : "var(--nura-ink-a50)" }}
                 >
                   °{u}
                 </button>
@@ -209,8 +207,7 @@ export default function BodyTempDetailPage() {
                     border: "none", cursor: "pointer", borderRadius: 999, padding: "5px 14px",
                     fontFamily: SANS, fontSize: 11.5, fontWeight: 600,
                     background: on ? `rgba(${TEAL_RGB},0.16)` : "transparent",
-                    color: on ? TEAL : "var(--nura-ink-a50)",
-                  }}
+                    color: on ? TEAL : "var(--nura-ink-a50)" }}
                 >
                   {r}D
                 </button>
@@ -335,10 +332,10 @@ function TrendChart({
 
       {/* Area + amber line */}
       <path d={area} fill={`url(#${uid}-area)`} />
-      <path d={line} fill="none" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" style={{ stroke: WARM, filter: `drop-shadow(0 0 5px rgba(${WARM_RGB},0.5))` }} />
+      <path d={line} fill="none" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" style={{ stroke: WARM}} />
 
       {/* High (coral, label above) or low (teal, label below) flag */}
-      <circle cx={flagX.toFixed(1)} cy={flagY.toFixed(1)} r={2.6} fill={mark === "high" ? CORAL : TEAL} style={{ filter: `drop-shadow(0 0 5px ${mark === "high" ? CORAL : TEAL})` }} />
+      <circle cx={flagX.toFixed(1)} cy={flagY.toFixed(1)} r={2.6} fill={mark === "high" ? CORAL : TEAL} />
       <text
         x={flagX.toFixed(1)} y={(mark === "high" ? flagY - 9 : flagY + 14).toFixed(1)} textAnchor="middle"
         fontFamily={SANS} fontSize={9} fontWeight={700} fill={mark === "high" ? CORAL : TEAL}
@@ -348,7 +345,7 @@ function TrendChart({
 
       {/* Today — amber dot inside a halo ring */}
       <circle cx={todayX.toFixed(1)} cy={todayY.toFixed(1)} r={6.5} fill="none" strokeOpacity={0.35} strokeWidth={1.5}  style={{ stroke: WARM }}/>
-      <circle cx={todayX.toFixed(1)} cy={todayY.toFixed(1)} r={3} style={{ fill: WARM, filter: `drop-shadow(0 0 6px ${WARM})` }} />
+      <circle cx={todayX.toFixed(1)} cy={todayY.toFixed(1)} r={3} style={{ fill: WARM}} />
     </svg>
   );
 }
@@ -391,7 +388,7 @@ function WeeklyChart({ weeklyAvg, unit }: { weeklyAvg: number[]; unit: Temperatu
             {/* Stem from baseline to the dot */}
             <line x1={x.toFixed(1)} x2={x.toFixed(1)} y1={baseY} y2={y.toFixed(1)} stroke={fill} strokeOpacity={0.55} strokeWidth={2} strokeLinecap="round" />
             {last && <circle cx={x.toFixed(1)} cy={y.toFixed(1)} r={9} fill="none" stroke={fill} strokeOpacity={0.3} strokeWidth={1.5} />}
-            <circle cx={x.toFixed(1)} cy={y.toFixed(1)} r={last ? 5.5 : 4} fill={fill} style={{ filter: `drop-shadow(0 0 ${last ? 8 : 5}px ${fill})` }} />
+            <circle cx={x.toFixed(1)} cy={y.toFixed(1)} r={last ? 5.5 : 4} fill={fill} />
             <text x={x.toFixed(1)} y={valY.toFixed(1)} textAnchor="middle" fontFamily={SANS} fontSize={12} fontWeight={700} fill={last ? fill : "var(--nura-text-primary)"}>{fmtDeltaDeg(v, unit)}</text>
             <text x={x.toFixed(1)} y={158} textAnchor="middle" fontFamily={SANS} fontSize={10.5} fill="var(--nura-ink-a32)">{labels[i]}</text>
           </g>

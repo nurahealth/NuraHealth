@@ -81,8 +81,7 @@ function ChartSubhead({ caption, avg, color, rgb }: { caption: string; avg: stri
       <span style={{
         display: "inline-flex", alignItems: "center", flexShrink: 0, whiteSpace: "nowrap",
         padding: "3px 9px", borderRadius: 999, fontSize: 11.5, fontWeight: 600,
-        color, background: `rgba(${rgb},0.12)`, border: `1px solid rgba(${rgb},0.28)`,
-      }}>
+        color, background: `rgba(${rgb},0.12)`, border: `1px solid rgba(${rgb},0.28)` }}>
         {avg}
       </span>
     </div>
@@ -101,8 +100,7 @@ function Badge({ status, label }: { status: MetricStatus; label?: string }) {
     <span style={{
       display: "inline-flex", alignItems: "center", whiteSpace: "nowrap",
       padding: "4px 10px", borderRadius: 8, fontFamily: SANS, fontSize: 11.5, fontWeight: 600,
-      color: b.color, background: `rgba(${b.rgb},0.14)`, border: `1px solid rgba(${b.rgb},0.3)`,
-    }}>
+      color: b.color, background: `rgba(${b.rgb},0.14)`, border: `1px solid rgba(${b.rgb},0.3)` }}>
       {label ?? b.label}
     </span>
   );
@@ -141,8 +139,7 @@ export default function SleepDetailPage() {
     <div style={{
       position: "relative", minHeight: "100dvh", overflow: "hidden",
       color: TEXT, fontFamily: SANS,
-      background: "var(--nura-wash-sleep)",
-    }}>
+      background: "var(--nura-wash-sleep)" }}>
       <style>{`
         .s-reveal { opacity: 0; transform: translateY(18px); animation: s-rise .7s cubic-bezier(.2,.7,.2,1) forwards; }
         @keyframes s-rise { to { opacity: 1; transform: none; } }
@@ -188,8 +185,7 @@ export default function SleepDetailPage() {
           <span style={{
             display: "inline-flex", alignItems: "center", gap: 7, marginTop: 12,
             padding: "7px 15px", borderRadius: 999, fontSize: 12, fontWeight: 600, letterSpacing: "0.3px",
-            color: REM, border: `1px solid rgba(${REM_RGB},0.4)`, background: `rgba(${REM_RGB},0.06)`,
-          }}>
+            color: REM, border: `1px solid rgba(${REM_RGB},0.4)`, background: `rgba(${REM_RGB},0.06)` }}>
             <span className="nura-glow" style={{ width: 6, height: 6, borderRadius: "50%", background: REM, boxShadow: `0 0 8px ${REM}` }} />
             {d.heroPill}
           </span>
@@ -265,8 +261,7 @@ export default function SleepDetailPage() {
                   background: p === "full"
                     ? `linear-gradient(90deg, rgba(${DEEP_RGB},0.5), rgba(${REM_RGB},0.5))`
                     : `rgba(${REM_RGB},0.18)`,
-                  boxShadow: p === "full" ? `0 0 12px rgba(${REM_RGB},0.18)` : "none",
-                }} />
+                  boxShadow: p === "full" ? `0 0 12px rgba(${REM_RGB},0.18)` : "none" }} />
               ))}
             </div>
           </div>
@@ -343,8 +338,7 @@ export default function SleepDetailPage() {
         <div className="s-reveal" style={{
           animationDelay: ".56s", marginTop: 16, padding: "18px 20px", borderRadius: 18,
           border: `1px solid rgba(${DEEP_RGB},0.22)`,
-          background: `linear-gradient(135deg, rgba(${DEEP_RGB},0.10), rgba(${REM_RGB},0.03))`,
-        }}>
+          background: `linear-gradient(135deg, rgba(${DEEP_RGB},0.10), rgba(${REM_RGB},0.03))` }}>
           <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: "1.4px", color: DEEP, textTransform: "uppercase" }}>NŪRA insight</div>
           <p style={{ fontSize: 14, lineHeight: 1.55, marginTop: 8, color: `rgba(${INK},0.85)` }}>{d.insight}</p>
         </div>
@@ -445,7 +439,7 @@ function Hypnogram({ seq }: { seq: ("D" | "R" | "L" | "A")[] }) {
           <rect
             key={i} x={x.toFixed(1)} y={y.toFixed(1)} width={bw.toFixed(1)} height={h.toFixed(1)}
             rx={rx.toFixed(1)} fill={`url(#${uid}-${i})`}
-            style={s === "D" ? { filter: `drop-shadow(0 0 1.5px ${meta.color})` } : undefined}
+            style={s === "D" ? { } : undefined}
           />
         );
       })}
@@ -546,7 +540,7 @@ function NightLineChart({
 
       {/* Gradient area fill (line color → transparent) + smooth line */}
       <path d={`${path} L ${pts[n - 1][0].toFixed(1)},${plotB} L ${pts[0][0].toFixed(1)},${plotB} Z`} fill={`url(#${uid}-fill)`} />
-      <path d={path} fill="none" stroke={stroke} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" style={{ filter: `drop-shadow(0 0 4px rgba(${glowRgb},0.45))` }} />
+      <path d={path} fill="none" stroke={stroke} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
 
       {/* Dashed average line (its value lives in the header pill, not inline) */}
       <line x1={plotL} y1={avgY.toFixed(1)} x2={plotR} y2={avgY.toFixed(1)} stroke={`rgba(${INK},0.3)`} strokeWidth={1} strokeDasharray="4 5" />
@@ -561,7 +555,7 @@ function NightLineChart({
         const lx = Math.max(plotL + half, Math.min(plotR - half, mx));
         return (
           <g key={`m${i}`}>
-            <circle cx={mx.toFixed(1)} cy={my.toFixed(1)} r={2.8} fill={stroke} style={{ filter: `drop-shadow(0 0 4px rgba(${glowRgb},0.7))` }} />
+            <circle cx={mx.toFixed(1)} cy={my.toFixed(1)} r={2.8} fill={stroke} />
             <text x={lx.toFixed(1)} y={ly.toFixed(1)} textAnchor="middle" fontFamily={SANS} fontSize={9} fontWeight={600} fill={stroke}>{m.label}</text>
           </g>
         );

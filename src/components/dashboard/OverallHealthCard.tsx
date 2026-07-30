@@ -27,11 +27,11 @@ const GOLD = "var(--nura-good)";
 // See lib/themeTokens.ts.
 const RING_TOKENS = {
   sage:      ["--nura-sage", "#9bb0a5"],
-  teal:      ["--nura-teal", "#5dccae"],
-  blue:      ["--nura-sleep-deep", "#5aa0e6"],
+  teal:      ["--nura-metric-hrv", "#68b0a1"],
+  blue:      ["--nura-metric-sleep", "#88a2c9"],
   alert:     ["--nura-alert", "#e8745a"],
   inkRgb:    ["--nura-fg-rgb", "235,230,216"],
-  tealRgb:   ["--nura-teal-rgb", "93,204,174"],
+  tealRgb:   ["--nura-metric-hrv-rgb", "104,176,161"],
   scoreFrom: ["--nura-score-from", "#ffffff"],
   scoreTo:   ["--nura-score-to", "#cfe0d6"],
   ringHead:  ["--nura-ring-head", "#ffffff"],
@@ -165,10 +165,10 @@ export default function OverallHealthCard() {
             Overall <span style={{ fontStyle: "italic", color: "var(--nura-accent-text)" }}>health</span>
           </div>
           <div style={{ fontSize: 12, color: FAINT, marginTop: 3 }}>
-            A complete read on how your body&apos;s doing · <span style={{ color: "var(--nura-teal)" }}>▲ {d.weeklyTrend}</span> this week
+            A complete read on how your body&apos;s doing · <span style={{ color: "var(--nura-metric-hrv)" }}>▲ {d.weeklyTrend}</span> this week
           </div>
         </div>
-        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.8px", textTransform: "uppercase", color: "var(--nura-teal)", border: "1px solid var(--nura-tint-accent-border)", padding: "5px 11px", borderRadius: 999, background: "var(--nura-tint-accent)", whiteSpace: "nowrap" }}>
+        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.8px", textTransform: "uppercase", color: "var(--nura-metric-hrv)", border: "1px solid var(--nura-tint-accent-border)", padding: "5px 11px", borderRadius: 999, background: "var(--nura-tint-accent)", whiteSpace: "nowrap" }}>
           {d.status}
         </div>
       </div>
@@ -371,12 +371,12 @@ function HealthRing({ d, selected, onSelect }: { d: ReturnType<typeof getOverall
       </g>
 
       {/* Energy filaments */}
-      <g style={{ filter: `drop-shadow(0 0 5px rgba(${tk.tealRgb},0.28))` }}>{filaments}</g>
+      <g>{filaments}</g>
 
       {/* Progress arc + pulsing head */}
       <circle cx={cx} cy={cy} r={pr} fill="none" stroke={`rgba(${tk.inkRgb},0.06)`} strokeWidth={3} />
-      <circle cx={cx} cy={cy} r={pr} fill="none" stroke={`url(#${uid}-parc)`} strokeWidth={3.2} strokeLinecap="round" strokeDasharray={`${vis.toFixed(1)} ${circ.toFixed(1)}`} transform={`rotate(-90 ${cx} ${cy})`} style={{ filter: `drop-shadow(0 0 5px rgba(${tk.tealRgb},0.55))` }} opacity={sel ? 0.5 : 1} />
-      <circle cx={hx.toFixed(1)} cy={hy.toFixed(1)} r={3.4} fill={tk.ringHead} style={{ filter: `drop-shadow(0 0 7px ${tk.teal})` }}>
+      <circle cx={cx} cy={cy} r={pr} fill="none" stroke={`url(#${uid}-parc)`} strokeWidth={3.2} strokeLinecap="round" strokeDasharray={`${vis.toFixed(1)} ${circ.toFixed(1)}`} transform={`rotate(-90 ${cx} ${cy})`} opacity={sel ? 0.5 : 1} />
+      <circle cx={hx.toFixed(1)} cy={hy.toFixed(1)} r={3.4} fill={tk.ringHead}>
         <animate attributeName="opacity" values="1;0.45;1" dur="2.6s" repeatCount="indefinite" />
       </circle>
 
@@ -388,7 +388,7 @@ function HealthRing({ d, selected, onSelect }: { d: ReturnType<typeof getOverall
         </>
       ) : (
         <>
-          <text x={cx} y={cy + 5} textAnchor="middle" fontFamily={SANS} fontSize={54} fontWeight={700} fill={`url(#${uid}-num)`} style={{ filter: `drop-shadow(0 0 20px rgba(${tk.tealRgb},0.4))` }}>{d.score}</text>
+          <text x={cx} y={cy + 5} textAnchor="middle" fontFamily={SANS} fontSize={54} fontWeight={700} fill={`url(#${uid}-num)`}>{d.score}</text>
           <text x={cx} y={cy + 27} textAnchor="middle" fontFamily={SANS} fontSize={9} fontWeight={700} letterSpacing="1.8" fill={`rgba(${tk.inkRgb},0.45)`}>HEALTH SCORE</text>
         </>
       )}
@@ -406,7 +406,7 @@ function HealthRing({ d, selected, onSelect }: { d: ReturnType<typeof getOverall
           <g key={p.key} style={{ cursor: "pointer" }} onClick={() => onSelect(p.key)}>
             <line x1={(cx + 64 * ca).toFixed(1)} y1={(cy + 64 * sa).toFixed(1)} x2={(cx + (big ? 86 : 82) * ca).toFixed(1)} y2={(cy + (big ? 86 : 82) * sa).toFixed(1)} stroke={acc[p.color]} strokeWidth={big ? 3 : 2.2} strokeLinecap="round" opacity={Number((0.85 * o).toFixed(2))} />
             <line x1={(cx + 92 * ca).toFixed(1)} y1={(cy + 92 * sa).toFixed(1)} x2={(cx + 110 * ca).toFixed(1)} y2={(cy + 110 * sa).toFixed(1)} stroke={acc[p.color]} strokeWidth={1.3} opacity={Number((0.45 * o).toFixed(2))} />
-            <circle cx={(cx + 92 * ca).toFixed(1)} cy={(cy + 92 * sa).toFixed(1)} r={big ? 3.4 : 2.4} fill={acc[p.color]} opacity={o} style={{ filter: `drop-shadow(0 0 ${big ? 7 : 4}px ${acc[p.color]})` }} />
+            <circle cx={(cx + 92 * ca).toFixed(1)} cy={(cy + 92 * sa).toFixed(1)} r={big ? 3.4 : 2.4} fill={acc[p.color]} opacity={o} />
             <text x={lx.toFixed(1)} y={vy.toFixed(1)} textAnchor={anchor} fontFamily={SANS} fontSize={17.5} fontWeight={700} className="nura-datum-ink" style={{ fill: acc[p.color] }} opacity={o}>
               {p.score}<tspan fontSize="9" dx="3" dy="-5" fill={tCol(p.trend, tk)}>{tArrow(p.trend)}</tspan>
             </text>

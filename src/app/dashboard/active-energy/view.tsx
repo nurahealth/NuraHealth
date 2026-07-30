@@ -83,8 +83,7 @@ export default function ActiveEnergyDetailPage() {
     <div style={{
       position: "relative", minHeight: "100dvh", overflow: "hidden",
       color: TEXT, fontFamily: SANS,
-      background: "var(--nura-wash-energy)",
-    }}>
+      background: "var(--nura-wash-energy)" }}>
       <style>{`
         .ae-reveal { opacity: 0; transform: translateY(18px); animation: ae-rise .7s cubic-bezier(.2,.7,.2,1) forwards; }
         @keyframes ae-rise { to { opacity: 1; transform: none; } }
@@ -131,8 +130,7 @@ export default function ActiveEnergyDetailPage() {
           <span className="nura-note-ink" style={{
             display: "inline-flex", alignItems: "center", gap: 6, marginTop: 12,
             padding: "6px 15px", borderRadius: 999, fontSize: 12, fontWeight: 600, letterSpacing: "0.5px",
-            color: EMBER, border: `1px solid rgba(${EMBER_RGB},0.4)`,
-          }}>
+            color: EMBER, border: `1px solid rgba(${EMBER_RGB},0.4)` }}>
             <span className="nura-glow" style={{ width: 6, height: 6, borderRadius: "50%", background: EMBER, boxShadow: `0 0 8px ${EMBER}` }} />
             {percent}% to goal · {percent >= 100 ? "goal reached" : "on track"}
           </span>
@@ -161,8 +159,7 @@ export default function ActiveEnergyDetailPage() {
           <div style={{
             display: "flex", flexWrap: "wrap", alignItems: "center",
             marginTop: 14, paddingTop: 14, borderTop: `1px solid rgba(${INK},0.07)`,
-            fontSize: 12.5, lineHeight: 1.5,
-          }}>
+            fontSize: 12.5, lineHeight: 1.5 }}>
             {[
               { num: String(d.activeEnergy), words: " kcal", warm: false },
               { num: String(d.exerciseMinutes), words: " min exercise", warm: false },
@@ -266,7 +263,7 @@ function ActiveWeekChart({ d }: { d: ActiveEnergyDetail }) {
         const y = yOf(day.value);
         const h = bot - y;
         return (
-          <g key={i} style={hit ? { filter: `drop-shadow(0 0 6px rgba(${r},${g},${b},0.6))` } : undefined}>
+          <g key={i} style={hit ? { } : undefined}>
             <rect
               x={x.toFixed(1)} y={y.toFixed(1)} width={barW.toFixed(1)} height={Math.max(h, 2).toFixed(1)}
               rx={Math.min(barW / 2, Math.max(h, 2) / 2).toFixed(1)} fill={`url(#${uid}-${i})`} opacity={hit ? 1 : 0.5}

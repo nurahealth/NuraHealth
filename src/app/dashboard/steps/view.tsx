@@ -76,8 +76,7 @@ export default function StepsDetailPage() {
     <div style={{
       position: "relative", minHeight: "100dvh", overflow: "hidden",
       color: TEXT, fontFamily: SANS,
-      background: "var(--nura-wash-steps)",
-    }}>
+      background: "var(--nura-wash-steps)" }}>
       <style>{`
         .st-reveal { opacity: 0; transform: translateY(18px); animation: st-rise .7s cubic-bezier(.2,.7,.2,1) forwards; }
         @keyframes st-rise { to { opacity: 1; transform: none; } }
@@ -126,8 +125,7 @@ export default function StepsDetailPage() {
           <span style={{
             display: "inline-flex", alignItems: "center", gap: 6, marginTop: 18,
             padding: "6px 15px", borderRadius: 999, fontSize: 12, fontWeight: 600, letterSpacing: "0.5px",
-            color: GOLD, border: "1px solid rgba(var(--nura-metric-activity-rgb),0.4)",
-          }}>
+            color: GOLD, border: "1px solid rgba(var(--nura-metric-activity-rgb),0.4)" }}>
             <span className="nura-glow" style={{ width: 6, height: 6, borderRadius: "50%", background: GOLD, boxShadow: "0 0 8px var(--nura-metric-activity)" }} />
             {d.pill}
           </span>
@@ -155,8 +153,7 @@ export default function StepsDetailPage() {
           <div style={{
             display: "flex", flexWrap: "wrap", alignItems: "center",
             marginTop: 14, paddingTop: 14, borderTop: "1px solid rgba(var(--nura-bg-tint-rgb),0.07)",
-            fontSize: 12.5, lineHeight: 1.5,
-          }}>
+            fontSize: 12.5, lineHeight: 1.5 }}>
             {[
               { num: d.tiles[0].value, words: d.tiles[0].unit, gold: false },
               { num: d.tiles[1].value, words: " flights", gold: false },
@@ -236,13 +233,6 @@ function StepsWeekChart({ d }: { d: StepsDetail }) {
           <stop offset="0" style={{ stopColor: "var(--nura-bar-dim-top)" }} />
           <stop offset="1" style={{ stopColor: "var(--nura-bar-dim-bot)" }} />
         </linearGradient>
-        <filter id="swk-glow" x="-40%" y="-40%" width="180%" height="180%">
-          <feGaussianBlur stdDeviation="2" result="b" />
-          <feMerge>
-            <feMergeNode in="b" />
-            <feMergeNode in="SourceGraphic" />
-          </feMerge>
-        </filter>
       </defs>
 
       {/* Gridlines + edge labels */}
@@ -267,7 +257,7 @@ function StepsWeekChart({ d }: { d: StepsDetail }) {
           <g key={i}>
             <rect
               x={x.toFixed(1)} y={y.toFixed(1)} width={barW.toFixed(1)} height={Math.max(h, 2).toFixed(1)}
-              rx={6} fill={hit ? "url(#swk-orange)" : "url(#swk-grey)"} filter="url(#swk-glow)"
+              rx={6} fill={hit ? "url(#swk-orange)" : "url(#swk-grey)"}
             />
             {day.isToday && (
               <rect
@@ -374,8 +364,8 @@ function StepsPaceChart({ d }: { d: StepsDetail }) {
     <svg width="100%" height={150} viewBox={`0 0 ${W} 150`} preserveAspectRatio="none" style={{ display: "block" }}>
       <path d={gap} fill="rgba(var(--nura-orange-rgb),0.12)" />
       <path d={smooth(up)} fill="none" stroke="var(--nura-text-secondary)" strokeWidth={1.6} strokeDasharray="4 5" strokeLinecap="round" />
-      <path d={smooth(tp)} fill="none" strokeWidth={2.2} strokeLinecap="round" style={{ stroke: ORANGE, filter: "drop-shadow(0 0 4px rgba(var(--nura-orange-rgb),0.5))" }} />
-      <circle cx={tp[n - 1][0].toFixed(1)} cy={tp[n - 1][1].toFixed(1)} r={3.2} style={{ fill: ORANGE, filter: `drop-shadow(0 0 6px ${ORANGE})` }} />
+      <path d={smooth(tp)} fill="none" strokeWidth={2.2} strokeLinecap="round" style={{ stroke: ORANGE }} />
+      <circle cx={tp[n - 1][0].toFixed(1)} cy={tp[n - 1][1].toFixed(1)} r={3.2} style={{ fill: ORANGE}} />
     </svg>
   );
 }
@@ -405,8 +395,7 @@ function StepsMovementCard({ d }: { d: StepsDetail }) {
             style={{
               flex: 1, height: 30, borderRadius: 4,
               background: s === "a" ? `linear-gradient(180deg, ${ORANGE_LIGHT}, ${ORANGE})` : "rgba(var(--nura-bg-tint-rgb),0.07)",
-              boxShadow: s === "a" ? `0 0 8px rgba(${ORANGE_RGB},0.35)` : undefined,
-            }}
+              boxShadow: s === "a" ? `0 0 8px rgba(${ORANGE_RGB},0.35)` : undefined }}
           />
         ))}
       </div>

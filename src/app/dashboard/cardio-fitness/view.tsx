@@ -63,8 +63,7 @@ export default function CardioFitnessDetailPage() {
       <div className="mp-col" style={{
         maxWidth: 392, margin: "0 auto",
         padding: "calc(env(safe-area-inset-top, 0px) + 46px) 16px max(env(safe-area-inset-bottom), 28px)",
-        display: "flex", flexDirection: "column", gap: 14,
-      }}>
+        display: "flex", flexDirection: "column", gap: 14 }}>
 
         {/* 1 — HEADER */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -165,7 +164,7 @@ function ArcGauge({ value, lo, hi, unit }: { value: number; lo: number; hi: numb
 
   const size = 204;
   const stroke = 14;
-  const pad = 22; // room for the blurred glow + drop-shadow
+  const pad = 22;
   const box = size + pad * 2;
   const r = (size - stroke) / 2;
   const c = box / 2;
@@ -235,7 +234,7 @@ function ArcGauge({ value, lo, hi, unit }: { value: number; lo: number; hi: numb
           cx={c} cy={c} r={r} fill="none"
           stroke={`url(#${gid})`} strokeWidth={stroke} strokeLinecap="round"
           strokeDasharray={`${arcLen} ${circ}`} strokeDashoffset={shownOffset}
-          style={{ filter: `drop-shadow(0 0 4px rgba(${GOLD_RGB},0.5))`, transition: trans }}
+          style={{  transition: trans }}
         />
       </svg>
 

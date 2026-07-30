@@ -37,7 +37,18 @@ export const ACCENTS = {
   "--nura-ember": ["--nura-ember", "#e07a3c"],
   "--nura-gold-ring": ["--nura-gold-ring", "#e8c266"],
   "--nura-orange": ["--nura-orange", "#e3a263"],
-  // Ordered sleep-stage ramp — light steps the sage ramp, dark keeps its hues.
+  // The fixed metric map. Registered here so data-layer rows (the health
+  // pillars, plan icons) can name a metric family directly instead of reaching
+  // for whichever legacy hue happened to be nearest.
+  "--nura-metric-resp": ["--nura-metric-resp", "#a695cc"],
+  "--nura-metric-heart": ["--nura-metric-heart", "#cf8b7c"],
+  "--nura-metric-rhr": ["--nura-metric-rhr", "#c1948c"],
+  "--nura-metric-sleep": ["--nura-metric-sleep", "#88a2c9"],
+  "--nura-metric-hrv": ["--nura-metric-hrv", "#68b0a1"],
+  "--nura-metric-activity": ["--nura-metric-activity", "#cfa675"],
+  "--nura-metric-temp": ["--nura-metric-temp", "#7aaeb8"],
+  "--nura-metric-oxygen": ["--nura-metric-oxygen", "#95b09e"],
+  // Ordered sleep-stage ramp — one hue, four steps. See globals.css.
   "--nura-stage-awake": ["--nura-stage-awake", "#d3a253"],
   "--nura-stage-light": ["--nura-stage-light", "#9bb0a5"],
   "--nura-stage-rem": ["--nura-stage-rem", "#5dccae"],
