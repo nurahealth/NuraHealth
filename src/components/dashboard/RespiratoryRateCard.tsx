@@ -4,9 +4,8 @@ import { useMemo } from "react";
 import { getRespiratoryDetail, type DashboardMetric } from "@/lib/dashboardData";
 import MetricCardShell from "@/components/dashboard/MetricCardShell";
 import MetricLineChart from "@/components/dashboard/MetricLineChart";
-import { useThemeTokens } from "@/lib/themeTokens";
+import { useMetricPaint } from "@/lib/metricColors";
 
-const TOKENS = { series: ["--nura-series", "#9bb0a5"] } as const;
 const TEXT = "var(--nura-text-primary)";
 const TEXT_SEC = "var(--nura-text-secondary)";
 
@@ -30,7 +29,9 @@ function sleepClockLabels(n: number, startHour: number, endHour: number): string
 // Respiratory Rate card — overnight br/min trace on the shared single-series
 // line treatment, with the personal baseline as its dashed reference.
 export default function RespiratoryRateCard({ metric, onClick }: { metric: DashboardMetric; onClick: () => void }) {
-  const { series: SERIES } = useThemeTokens(TOKENS);
+  // The card and the expanded view now read the same row of the same map, which
+  // is why they can no longer disagree about what colour respiratory rate is.
+  const paint = useMetricPaint(metric.id);
   const d = getRespiratoryDetail();
   const clock = useMemo(() => sleepClockLabels(d.overnight.length, 23, 7), [d.overnight.length]);
 
@@ -47,10 +48,11 @@ export default function RespiratoryRateCard({ metric, onClick }: { metric: Dashb
       trend={<span style={{ color: TEXT_SEC, fontWeight: 500 }}>steady</span>}
       caption={<>Right on your <b style={{ color: TEXT, fontWeight: 600 }}>{d.baseline.toFixed(1)}</b> baseline — no signs of strain or illness.</>}
       pillLabel={d.statusLabel}
-      pillColor={SERIES}
+      pillColor={paint.hex}
     >
       <MetricLineChart
         data={d.overnight}
+        color={paint}
         unit="br/min"
         baseline={d.baseline}
         // No explicit domain on purpose. The clinical 12–17 range flattens a

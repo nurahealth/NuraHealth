@@ -1003,6 +1003,32 @@ html, body {
   padding: 22px !important;
 }
 
+/* ───────────────────────────────────────────────────────────────────────────
+   CHART ENTRANCE
+
+   A chart fades and rises the first time it draws. This is a CSS animation
+   rather than a JS-driven opacity transition on purpose: the JS version had to
+   flip a state flag inside requestAnimationFrame, and browsers throttle rAF for
+   occluded iframes and background tabs — so a chart could sit at opacity 0
+   until the tab was focused. A declarative animation runs off the compositor
+   and cannot be starved, and it takes reduced-motion for free below.
+
+   Charts only mount once they have measured their container (see chartTheme's
+   useMeasuredWidth), so the animation also covers the measure pass.
+   ─────────────────────────────────────────────────────────────────────── */
+@keyframes nura-chart-enter {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: none; }
+}
+
+.nura-chart-enter {
+  animation: nura-chart-enter 280ms cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nura-chart-enter { animation: none; }
+}
+
 /* Respect the iPhone notch and home indicator when installed as a standalone PWA */
 @media (display-mode: standalone) {
   body {

@@ -1,79 +1,63 @@
 "use client";
 
 import { useId, useMemo, useState } from "react";
-import { smooth, hexA } from "@/components/dashboard/cardChartHelpers";
-import { useThemeTokens } from "@/lib/themeTokens";
+import type { MetricPaint } from "@/lib/metricColors";
+import {
+  ALPHA, ENTER_CLASS, MARKER, PAD, STROKE,
+  BaselineBand, BaselineLine, ChartLegend, ChartTooltip, Marker, XAxis, YAxis,
+  fitTicks, linePath, niceScale, smoothPath,
+  useMeasuredWidth, useTweenedSeries,
+  type LegendItem,
+} from "@/components/dashboard/chartTheme";
 
 // ─────────────────────────────────────────────────────────────────────────────
-// MetricLineChart — the single-series line/area treatment for metric cards.
+// MetricLineChart — the single-series line/area treatment.
 //
-// This is the shared chart, not a Respiratory Rate chart that happens to be
-// reusable: nothing in here knows what it is plotting. Give it numbers, a unit
-// and (optionally) a baseline and it draws the same thing every time, which is
-// the whole point — twelve cards drawing one series should not be twelve
-// different charts.
+// This is THE shared chart, not a Respiratory Rate chart that happens to be
+// reusable: nothing in here knows what it is plotting. Give it numbers, a unit,
+// a metric colour and (optionally) a baseline or a baseline range, and it draws
+// the same thing every time — which is the whole point, because twelve cards
+// drawing one series should not be twelve different charts.
 //
 // The treatment:
-//   · one sage series, from --nura-series, so the card makes no colour choice
+//   · the metric's own colour, passed in from the fixed map in lib/metricColors,
+//     so this chart never picks a colour and a metric never changes colour
 //   · a crisp 2px stroke — no gradient along the line, no filter, no glow
-//   · a flat area fade underneath at 12% → 2%, which reads as ground rather
-//     than as bloom
-//   · a dashed, muted baseline with a small label, recessive by construction
-//   · hairline gridlines and mono tick labels that stay out of the way
-//   · a filled marker on the latest point, ringed in the card surface so it
-//     separates from the line it sits on
-//   · a hover crosshair and tooltip
+//   · a short area fade underneath, which reads as ground rather than as bloom
+//   · ONE flat baseline band with hairline edges (not stacked tinted strips)
+//   · a dashed neutral baseline with a small labelled value
+//   · gridlines thinned until they are at least MIN_GRID_GAP apart, with the
+//     tick labels in a right gutter OUTSIDE the plot
+//   · rounded markers on every point when the series is sparse; on a dense
+//     curve only the latest point, so the line stays a line
+//   · a hover crosshair and a compact tooltip pill above it
+//   · a ~280ms entrance, and a value tween when the series changes
 //
-// Every number rendered here is mono. Ticks, the tooltip readout and the
-// baseline value are all data, and data lines up.
+// It draws at 1:1 measured pixels — see the note at the top of chartTheme.tsx
+// for why that matters more than any individual number in here.
 // ─────────────────────────────────────────────────────────────────────────────
-
-const SERIES_TOKENS = { series: ["--nura-series", "#9bb0a5"] } as const;
-
-const MONO = "'JetBrains Mono', monospace";
-const SANS = "var(--font-inter), system-ui, sans-serif";
-
-// viewBox units. The svg is width:100% / height:auto, so these are a ratio,
-// not pixels — the right gutter holds the y labels, the foot holds the x ones.
-const W = 340;
-const PAD_L = 4, PAD_R = 30, PAD_T = 16, PAD_B = 22;
-
-/**
- * A domain and gridlines a human would have chosen: a step from the 1 / 2 /
- * 2.5 / 5 family, with the domain snapped out to whole steps.
- *
- * The alternative — pad the extremes by a percentage — gives axes labelled
- * 13.7 / 14.2 / 14.7, which nobody reads as a scale. This also decides how
- * many decimals the labels need, because that is a property of the step and
- * not of the value: a 0.5 step wants "14.0", a 5 step wants "15".
- */
-function niceScale(min: number, max: number, target = 3) {
-  const raw = (max - min || 1) / Math.max(1, target - 1);
-  const mag = 10 ** Math.floor(Math.log10(raw));
-  const norm = raw / mag;
-  const step = (norm <= 1 ? 1 : norm <= 2 ? 2 : norm <= 2.5 ? 2.5 : norm <= 5 ? 5 : 10) * mag;
-  const lo = Math.floor(min / step) * step;
-  const hi = Math.ceil(max / step) * step;
-  const ticks: number[] = [];
-  // Half-step slack on the loop bound: lo/hi come out of floating-point
-  // division, so `v <= hi` alone drops the top gridline about as often as not.
-  for (let v = lo; v <= hi + step / 2; v += step) ticks.push(Number(v.toFixed(10)));
-  return { lo, hi, ticks, decimals: Math.max(0, -Math.floor(Math.log10(step))) };
-}
 
 export interface MetricLineChartProps {
   /** Series values, oldest → newest. */
   data: number[];
+  /** The metric's colour, from `useMetricPaint(id)`. */
+  color: MetricPaint;
   /** Unit shown in the tooltip, e.g. "br/min". */
   unit?: string;
   /** Dashed reference line (personal baseline, average, goal), or null. */
   baseline?: number | null;
   /** Word after the baseline value in its label. */
   baselineLabel?: string;
-  /** Y domain. Omit either and it is derived from the data (and the baseline). */
+  /** Shaded normal/baseline RANGE [lo, hi] — one flat band. */
+  band?: [number, number] | null;
+  /** Legend text for the band. Only shown when a legend is warranted. */
+  bandLabel?: string;
+  /** Legend text for the series. Supplying this with `band` shows a legend. */
+  seriesLabel?: string;
+  /** Y domain. Omit either and it is derived from the data, baseline and band. */
   lo?: number;
   hi?: number;
-  /** Y gridline values. Omitted → three evenly spaced steps across the domain. */
+  /** Y gridline values. Omitted → a nice scale, thinned to fit. */
   ticks?: number[];
   /** Labels along the x axis, evenly spaced. */
   xLabels?: string[];
@@ -83,17 +67,27 @@ export interface MetricLineChartProps {
   format?: (v: number) => string;
   /** Axis-label formatter. Defaults to whatever precision the tick step needs. */
   tickFormat?: (v: number) => string;
-  /** viewBox height. Wider cards want a shorter chart; leave it alone mostly. */
+  /** Chart height in px. Detail screens want more room than cards. */
   height?: number;
+  /**
+   * Whether the underlying quantity is continuous. True (default) curves the
+   * line; false keeps it straight, because a curve through one-reading-per-day
+   * data invents values that were never measured.
+   */
+  continuous?: boolean;
   /** Sentence describing the series for screen readers. */
   ariaLabel?: string;
 }
 
 export default function MetricLineChart({
   data,
+  color,
   unit,
   baseline = null,
   baselineLabel = "baseline",
+  band = null,
+  bandLabel = "baseline range",
+  seriesLabel,
   lo,
   hi,
   ticks,
@@ -101,198 +95,151 @@ export default function MetricLineChart({
   pointLabels,
   format = (v) => String(v),
   tickFormat,
-  height = 150,
+  height = 168,
+  continuous = true,
   ariaLabel,
 }: MetricLineChartProps) {
-  const { series: SERIES } = useThemeTokens(SERIES_TOKENS);
   const rawId = useId();
   const uid = rawId.replace(/[^a-zA-Z0-9]/g, "");
   const [hover, setHover] = useState<number | null>(null);
 
+  const { ref, width: W } = useMeasuredWidth<HTMLDivElement>();
+  const ready = W > 0 && data.length > 0;
+  const series = useTweenedSeries(data);
+
   const H = height;
-  const n = data.length;
+  const plotL = PAD.left;
+  const plotR = Math.max(plotL + 1, W - PAD.right);
+  const plotT = PAD.top;
+  const plotB = H - PAD.bottom;
+  const plotH = Math.max(1, plotB - plotT);
+  const n = series.length;
 
-  // Domain and gridlines. A derived scale always contains the baseline — a
-  // reference line drawn outside the plot is worse than no reference line.
+  // Domain and gridlines. A derived scale always contains the baseline and the
+  // band — a reference drawn outside the plot is worse than no reference.
   const { yLo, yHi, gridTicks, fmtTick } = useMemo(() => {
-    const vals = baseline == null ? data : [...data, baseline];
+    const vals = [...data];
+    if (baseline != null) vals.push(baseline);
+    if (band) vals.push(band[0], band[1]);
     const nice = niceScale(Math.min(...vals), Math.max(...vals));
-    const dp = tickFormat ?? ((v: number) => v.toFixed(nice.decimals));
+    const dLo = lo ?? nice.lo;
+    const dHi = hi ?? nice.hi;
+    const raw = ticks ?? nice.ticks;
     return {
-      yLo: lo ?? nice.lo,
-      yHi: hi ?? nice.hi,
-      gridTicks: ticks ?? nice.ticks,
-      fmtTick: dp,
+      yLo: dLo,
+      yHi: dHi,
+      gridTicks: fitTicks(raw, plotH, dLo, dHi),
+      fmtTick: tickFormat ?? ((v: number) => v.toFixed(nice.decimals)),
     };
-  }, [data, baseline, lo, hi, ticks, tickFormat]);
+  }, [data, baseline, band, lo, hi, ticks, tickFormat, plotH]);
 
-  const xAt = (i: number) => PAD_L + (i / Math.max(1, n - 1)) * (W - PAD_L - PAD_R);
-  const yAt = (v: number) => PAD_T + (1 - (v - yLo) / (yHi - yLo || 1)) * (H - PAD_T - PAD_B);
+  // Nothing to lay out until the container has been measured. Reserving the
+  // full height here keeps the card from reflowing when the chart appears.
+  if (!ready) return <div ref={ref} style={{ width: "100%", height: H }} />;
 
-  const pts: [number, number][] = data.map((v, i) => [xAt(i), yAt(v)]);
-  const linePath = smooth(pts);
-  const floorY = H - PAD_B;
-  const areaPath = `${linePath} L${pts[n - 1][0].toFixed(1)},${floorY} L${pts[0][0].toFixed(1)},${floorY} Z`;
+  const xAt = (i: number) => plotL + (i / Math.max(1, n - 1)) * (plotR - plotL);
+  const yAt = (v: number) => plotT + (1 - (v - yLo) / (yHi - yLo || 1)) * plotH;
 
-  const lastX = pts[n - 1][0], lastY = pts[n - 1][1];
-  const active = hover == null ? null : { i: hover, x: pts[hover][0], y: pts[hover][1], v: data[hover] };
+  const pts: [number, number][] = series.map((v, i) => [xAt(i), yAt(v)]);
+  const path = continuous ? smoothPath(pts) : linePath(pts);
+  const area = `${path}L${pts[n - 1][0].toFixed(2)},${plotB}L${pts[0][0].toFixed(2)},${plotB}Z`;
 
-  // The baseline label sits above its line, unless that would push it into the
-  // top padding, in which case it hangs below instead.
-  const baseY = baseline == null ? 0 : yAt(baseline);
-  const baseLabelAbove = baseY - PAD_T > 12;
+  const last = pts[n - 1];
+  const active = hover == null ? null : { i: hover, x: pts[hover][0], y: pts[hover][1], v: series[hover] };
+  const sparse = n <= MARKER.sparseMax;
 
   const onMove = (e: React.MouseEvent<SVGSVGElement>) => {
     const r = e.currentTarget.getBoundingClientRect();
     if (!r.width) return;
-    const vx = ((e.clientX - r.left) / r.width) * W;
-    const t = (vx - PAD_L) / (W - PAD_L - PAD_R);
+    const t = ((e.clientX - r.left) - plotL) / Math.max(1, plotR - plotL);
     setHover(Math.max(0, Math.min(n - 1, Math.round(t * (n - 1)))));
   };
 
-  // Tooltip is HTML, not SVG — it needs the app's fonts, the card's border
-  // token and a real shadow. The svg keeps its aspect ratio, so a viewBox
-  // coordinate maps to a percentage of the wrapper directly.
-  const tipLeft = active ? Math.min(88, Math.max(12, (active.x / W) * 100)) : 0;
-  const tipTop = active ? (active.y / H) * 100 : 0;
+  // A legend earns its place only when there are two things to tell apart.
+  const legend: LegendItem[] = [];
+  if (band && seriesLabel) {
+    legend.push({ label: seriesLabel, color: color.hex, kind: "line" });
+    legend.push({ label: bandLabel, color: color.alpha(0.22), kind: "band" });
+  }
 
   return (
-    <div style={{ position: "relative", width: "100%" }}>
+    <div ref={ref} style={{ position: "relative", width: "100%" }}>
       <svg
-        viewBox={`0 0 ${W} ${H}`}
-        role="img"
-        aria-label={ariaLabel}
-        style={{ display: "block", width: "100%", height: "auto", touchAction: "pan-y" }}
+        width={W} height={H} viewBox={`0 0 ${W} ${H}`}
+        role="img" aria-label={ariaLabel}
+        className={ENTER_CLASS}
+        style={{ display: "block", touchAction: "pan-y" }}
         onMouseMove={onMove}
         onMouseLeave={() => setHover(null)}
       >
         <defs>
-          {/* Two stops, both low. An area fill is ground for the line to sit
-              on; the moment it is bright enough to read as its own shape it
-              is competing with the thing it is supposed to support. */}
-          <linearGradient id={`fill${uid}`} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stopColor={hexA(SERIES, 0.12)} />
-            <stop offset="1" stopColor={hexA(SERIES, 0.02)} />
+          {/* Two stops, both low. An area fill is ground for the line to sit on;
+              the moment it is bright enough to read as its own shape it is
+              competing with the thing it is supposed to support. */}
+          <linearGradient id={`fill${uid}`} x1="0" y1="0" x2="0" y2="1" className="nura-area-grad">
+            <stop offset="0" stopColor={color.hex} stopOpacity={ALPHA.areaTop} />
+            <stop offset="1" stopColor={color.hex} stopOpacity={ALPHA.areaBottom} />
           </linearGradient>
         </defs>
 
-        {/* Gridlines + right-gutter tick labels */}
-        {gridTicks.map((t, i) => {
-          const y = yAt(t);
-          return (
-            <g key={`${t}-${i}`}>
-              <line
-                x1={PAD_L} y1={y.toFixed(1)} x2={W - PAD_R} y2={y.toFixed(1)}
-                strokeWidth={1} style={{ stroke: "var(--nura-hairline)" }}
-              />
-              <text
-                x={W - PAD_R + 6} y={(y + 3).toFixed(1)}
-                fontFamily={MONO} fontSize={8.5}
-                style={{ fill: "var(--nura-text-tertiary)" }}
-              >
-                {fmtTick(t)}
-              </text>
-            </g>
-          );
-        })}
-
-        {/* Baseline — dashed, neutral, and deliberately not the series colour.
-            It is a reference, not a second series; tinting it sage would make
-            the eye read two lines of equal standing. */}
-        {baseline != null && (
-          <>
-            <line
-              x1={PAD_L} y1={baseY.toFixed(1)} x2={W - PAD_R} y2={baseY.toFixed(1)}
-              strokeWidth={1} strokeDasharray="3 4" opacity={0.55}
-              style={{ stroke: "var(--nura-text-tertiary)" }}
-            />
-            {/* The series can run anywhere, including straight through this
-                label, so it carries a halo in the card colour: stroke first,
-                fill on top. Cheaper and sharper than a backing rect, and it
-                needs no knowledge of the text's measured width. */}
-            <text
-              x={PAD_L + 2} y={(baseY + (baseLabelAbove ? -5 : 11)).toFixed(1)}
-              fontSize={8.5}
-              style={{
-                fill: "var(--nura-text-tertiary)",
-                paintOrder: "stroke",
-                stroke: "var(--nura-card)",
-                strokeWidth: 3,
-                strokeLinejoin: "round",
-              }}
-            >
-              <tspan fontFamily={MONO}>{format(baseline)}</tspan>
-              <tspan fontFamily={SANS} dx="3.5">{baselineLabel}</tspan>
-            </text>
-          </>
+        {/* The baseline RANGE, under everything — one flat wash, hairline edges */}
+        {band && (
+          <BaselineBand
+            x={plotL} y={yAt(band[1])} w={plotR - plotL}
+            h={yAt(band[0]) - yAt(band[1])} rgb={color.rgb}
+          />
         )}
 
-        <path d={areaPath} fill={`url(#fill${uid})`} />
+        <YAxis ticks={gridTicks} yAt={yAt} plotLeft={plotL} plotRight={plotR} format={fmtTick} />
+
+        {baseline != null && (
+          <BaselineLine
+            x1={plotL} x2={plotR} y={yAt(baseline)}
+            value={format(baseline)} suffix={baselineLabel}
+          />
+        )}
+
+        <path d={area} fill={`url(#fill${uid})`} />
         <path
-          d={linePath} fill="none" stroke={SERIES}
-          strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"
+          d={path} fill="none" stroke={color.hex}
+          strokeWidth={STROKE.series} strokeLinecap="round" strokeLinejoin="round"
         />
 
-        {/* Hover crosshair */}
+        {/* Markers. Every point when the series is sparse enough that each one
+            is a real reading worth hitting; otherwise only the latest, so a
+            dense curve stays a curve instead of a bead necklace. */}
+        {sparse
+          ? pts.map(([cx, cy], i) => <Marker key={i} cx={cx} cy={cy} color={color.hex} />)
+          : <Marker cx={last[0]} cy={last[1]} color={color.hex} r={MARKER.rLatest} />}
+
+        {/* Hover crosshair, drawn above the line but below the markers' ring */}
         {active && (
           <>
             <line
-              x1={active.x.toFixed(1)} y1={PAD_T} x2={active.x.toFixed(1)} y2={floorY}
-              strokeWidth={1} style={{ stroke: "var(--nura-border-strong)" }}
+              x1={active.x} y1={plotT} x2={active.x} y2={plotB}
+              strokeWidth={STROKE.crosshair} stroke="var(--nura-border-strong)"
             />
-            <circle
-              cx={active.x.toFixed(1)} cy={active.y.toFixed(1)} r={4}
-              fill={SERIES} strokeWidth={2} style={{ stroke: "var(--nura-card)" }}
-            />
+            <Marker cx={active.x} cy={active.y} color={color.hex} />
           </>
         )}
 
-        {/* Latest point. Ringed in the card surface so it reads as a marker
-            sitting on the line rather than a bulge in it. */}
-        <circle
-          cx={lastX.toFixed(1)} cy={lastY.toFixed(1)} r={4}
-          fill={SERIES} strokeWidth={2} style={{ stroke: "var(--nura-card)" }}
-        />
-
-        {/* X labels */}
-        {xLabels?.map((l, k) => {
-          const x = PAD_L + (k / Math.max(1, xLabels.length - 1)) * (W - PAD_L - PAD_R);
-          return (
-            <text
-              key={k} x={x.toFixed(1)} y={H - 5}
-              fontFamily={MONO} fontSize={8.5}
-              style={{ fill: "var(--nura-text-tertiary)" }}
-              textAnchor={k === 0 ? "start" : k === xLabels.length - 1 ? "end" : "middle"}
-            >
-              {l}
-            </text>
-          );
-        })}
+        {xLabels && <XAxis labels={xLabels} plotLeft={plotL} plotRight={plotR} y={H - 6} />}
       </svg>
 
       {active && (
-        <div
-          aria-hidden
-          style={{
-            position: "absolute", left: `${tipLeft}%`, top: `${tipTop}%`,
-            transform: "translate(-50%, calc(-100% - 10px))",
-            pointerEvents: "none", whiteSpace: "nowrap",
-            background: "var(--nura-card)", border: "1px solid var(--nura-border-strong)",
-            borderRadius: 8, padding: "5px 9px", boxShadow: "var(--nura-card-shadow-soft)",
-            display: "flex", alignItems: "baseline", gap: 7,
-          }}
-        >
-          <span style={{ fontFamily: SANS, fontSize: 10, color: "var(--nura-text-tertiary)" }}>
-            {pointLabels?.[active.i] ?? `#${active.i + 1}`}
-          </span>
-          <span style={{ fontFamily: MONO, fontSize: 12, fontWeight: 600, color: "var(--nura-text-primary)" }}>
-            {format(active.v)}
-          </span>
-          {unit && (
-            <span style={{ fontFamily: SANS, fontSize: 10, color: "var(--nura-text-secondary)" }}>{unit}</span>
-          )}
-        </div>
+        <ChartTooltip
+          leftPct={Math.min(92, Math.max(8, (active.x / W) * 100))}
+          topPx={active.y}
+          // Near the ceiling there is no room above the point, so the pill goes
+          // below rather than clipping out of the card.
+          flip={active.y - plotT < 34}
+          label={pointLabels?.[active.i]}
+          value={format(active.v)}
+          unit={unit}
+        />
       )}
+
+      <ChartLegend items={legend} />
     </div>
   );
 }
