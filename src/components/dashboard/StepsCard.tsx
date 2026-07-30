@@ -20,7 +20,7 @@ const EYEBROW: React.CSSProperties = {
 // drawn in the neutral de-emphasis track. Two states, one hue plus grey — the
 // bar's own colour never encodes anything else.
 const HIT_LABEL = "Hit";
-const MISS_FILL = "var(--nura-bar-dim-top)";
+const MISS_FILL = "var(--nura-bar-under)";
 
 // Dev fallback — mirrors the sample StepsDetail week when the store has none.
 const FALLBACK_WEEK: StepsWeekDay[] = [

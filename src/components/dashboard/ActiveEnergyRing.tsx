@@ -72,7 +72,13 @@ export default function ActiveEnergyRing({
       if (p < 1) rafRef.current = requestAnimationFrame(step);
     };
     rafRef.current = requestAnimationFrame(step);
-    return () => { clearTimeout(t); cancelAnimationFrame(rafRef.current); };
+    // Backstop. requestAnimationFrame is throttled for occluded iframes and
+    // background tabs, so a count-up that starts and then loses frames can
+    // leave a number stranded partway — showing "33 ms" for a 62 ms reading,
+    // which is worse than not animating at all. This guarantees the true value
+    // lands whether or not another frame ever arrives.
+    const settle = setTimeout(() => setNum(kcal), fillMs + 120);
+    return () => { clearTimeout(t); clearTimeout(settle); cancelAnimationFrame(rafRef.current); };
   }, [target, kcal, fillMs, reduced]);
 
   const shownOffset = reduced ? target : offset;
