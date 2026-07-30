@@ -19,20 +19,20 @@ const FAINT = "var(--nura-text-tertiary)";
 const INK = "var(--nura-fg-rgb)"; // off-white in dark, near-black in light
 const SANS = "var(--font-inter), system-ui, sans-serif";
 
-const TEAL = "var(--nura-teal)";
-const TEAL_RGB = "var(--nura-teal-rgb)";
-const WARM = "var(--nura-amber)";       // amber deviation line
-const WARM_RGB = "var(--nura-amber-rgb)";
+const TEAL = "var(--nura-metric-temp)";          // the cool pole
+const TEAL_RGB = "var(--nura-metric-temp-rgb)";
+const WARM = "var(--nura-metric-temp-warm)";     // the warm pole
+const WARM_RGB = "var(--nura-metric-temp-warm-rgb)";
 const CORAL = "var(--nura-alert)";
 
 // Cool teal aurora at the top of the page.
 const TEAL_AURORA =
-  "radial-gradient(80% 55% at 50% -6%, rgba(var(--nura-teal-rgb),0.26), transparent 60%)," +
-  "radial-gradient(60% 50% at 86% 6%, rgba(var(--nura-sleep-deep-rgb),0.14), transparent 60%)," +
-  "radial-gradient(70% 40% at 8% 14%, rgba(var(--nura-teal-rgb),0.10), transparent 60%)";
+  "radial-gradient(80% 55% at 50% -6%, rgba(var(--nura-metric-temp-rgb),0.26), transparent 60%)," +
+  "radial-gradient(60% 50% at 86% 6%, rgba(var(--nura-metric-temp-rgb),0.14), transparent 60%)," +
+  "radial-gradient(70% 40% at 8% 14%, rgba(var(--nura-metric-temp-rgb),0.10), transparent 60%)";
 
 // Zone bar: cool (blue) → normal (teal) → warm (gold) → elevated (coral).
-const ZONE_GRADIENT = "linear-gradient(90deg, var(--nura-meter-cool) 0%, var(--nura-meter-teal) 38%, var(--nura-meter-gold) 72%, var(--nura-meter-hot) 100%)";
+const ZONE_GRADIENT = "linear-gradient(90deg, var(--nura-metric-temp) 0%, rgba(var(--nura-metric-temp-rgb),0.22) 46%, rgba(var(--nura-metric-temp-warm-rgb),0.22) 54%, var(--nura-metric-temp-warm) 100%)";
 
 // ── Chart color helper — colorAt(t, stops) over an arbitrary ramp ─────────────
 // Defined locally (reusing the shared hex/lerp) so it's guaranteed available
@@ -90,7 +90,7 @@ export default function BodyTempDetailPage() {
   // Status-led headline — the hero word carries the state (no separate pill).
   const within = d.tonight >= d.normalRange[0] && d.tonight <= d.normalRange[1];
   const statusWord = within ? "Normal" : d.tonight > d.normalRange[1] ? "Elevated" : "Cool";
-  const statusColor = within ? TEAL : d.tonight > d.normalRange[1] ? "var(--nura-good)" : "var(--nura-sleep-deep)";
+  const statusColor = within ? TEAL : d.tonight > d.normalRange[1] ? "var(--nura-status-warn)" : "var(--nura-metric-temp)";
 
   return (
     <div style={{

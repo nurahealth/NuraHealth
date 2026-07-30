@@ -18,12 +18,12 @@ const INK = "var(--nura-fg-rgb)"; // off-white in dark, near-black in light
 
 // Stage palette — shared by the hypnogram, the legend and the HR/HRV shading so
 // every night chart speaks the same color language.
-const DEEP = "var(--nura-sleep-deep)";
-const REM = "var(--nura-teal)";
+const DEEP = "var(--nura-stage-deep)";
+const REM = "var(--nura-stage-rem)";
 const LIGHT = "var(--nura-sage)";
 const AWAKE = "var(--nura-good)";
-const DEEP_RGB = "var(--nura-sleep-deep-rgb)";
-const REM_RGB = "var(--nura-teal-rgb)";
+const DEEP_RGB = "var(--nura-metric-sleep-rgb)";
+const REM_RGB = "var(--nura-metric-sleep-rgb)";
 
 // Overnight-chart identities — each matches its own metric tab (not sleep-blue):
 // Heart rate → red, HRV → aqua-teal. Lighter shades feed the fill/glow.
@@ -36,9 +36,9 @@ const HRV_AQUA_GLOW = "var(--nura-aqua-hi-rgb)"; // #7fdce8 — lighter shade fo
 
 // Cool blue→teal aurora pinned to the top, matching the reference.
 const SLEEP_AURORA =
-  "radial-gradient(80% 50% at 50% -4%, rgba(var(--nura-sleep-deep-rgb),0.30), transparent 62%)," +
-  "radial-gradient(60% 46% at 86% 4%, rgba(var(--nura-teal-rgb),0.16), transparent 60%)," +
-  "radial-gradient(70% 40% at 10% 14%, rgba(var(--nura-sleep-deep-rgb),0.12), transparent 60%)";
+  "radial-gradient(80% 50% at 50% -4%, rgba(var(--nura-metric-sleep-rgb),0.30), transparent 62%)," +
+  "radial-gradient(60% 46% at 86% 4%, rgba(var(--nura-metric-sleep-rgb),0.16), transparent 60%)," +
+  "radial-gradient(70% 40% at 10% 14%, rgba(var(--nura-metric-sleep-rgb),0.12), transparent 60%)";
 
 // Stage code → display + hypnogram bar height (fraction of plot) + color.
 const STAGE_META: Record<"D" | "R" | "L" | "A", { short: string; label: string; color: string; h: number }> = {

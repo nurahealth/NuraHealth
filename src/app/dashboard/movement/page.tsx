@@ -12,12 +12,12 @@ import StatusPill from "@/components/dashboard/StatusPill";
 const TEXT = "var(--nura-text-primary)";
 const MUTED = "var(--nura-text-secondary)";
 const FAINT = "var(--nura-text-tertiary)";
-const AMBER = "var(--nura-amber)";
+const AMBER = "var(--nura-metric-activity)";
 const SAGE = "var(--nura-sage)";
 const SANS = "var(--font-inter), system-ui, sans-serif";
 
 const AMBER_AURORA =
-  "radial-gradient(80% 60% at 50% -6%, rgba(var(--nura-amber-rgb),0.30), transparent 60%)," +
+  "radial-gradient(80% 60% at 50% -6%, rgba(var(--nura-metric-activity-rgb),0.30), transparent 60%)," +
   "radial-gradient(60% 50% at 86% 6%, rgba(var(--nura-good-rgb),0.16), transparent 60%)," +
   "radial-gradient(70% 40% at 8% 14%, rgba(var(--nura-amber-2-rgb),0.12), transparent 60%)";
 
@@ -78,9 +78,9 @@ export default function MovementDetailPage() {
           <RadialGauge
             value={d.score}
             label="Movement"
-            gradientFrom="var(--nura-amber)"
+            gradientFrom="var(--nura-metric-activity)"
             gradientTo="var(--nura-amber-2)"
-            glowRgb="var(--nura-amber-rgb)"
+            glowRgb="var(--nura-metric-activity-rgb)"
           />
           <div>
             <div style={{ fontSize: 10, letterSpacing: "0.8px", textTransform: "uppercase", color: AMBER, fontWeight: 600 }}>
@@ -90,8 +90,8 @@ export default function MovementDetailPage() {
             <span className="nura-glow" style={{
               display: "inline-flex", alignItems: "center", gap: 6, marginTop: 9,
               padding: "5px 11px", borderRadius: 9, fontSize: 12, fontWeight: 600, color: AMBER,
-              background: "rgba(var(--nura-amber-rgb),0.12)", border: "1px solid rgba(var(--nura-amber-rgb),0.20)",
-              boxShadow: "0 0 16px rgba(var(--nura-amber-rgb),0.10)",
+              background: "rgba(var(--nura-metric-activity-rgb),0.12)", border: "1px solid rgba(var(--nura-metric-activity-rgb),0.20)",
+              boxShadow: "0 0 16px rgba(var(--nura-metric-activity-rgb),0.10)",
             }}>
               <BoltIcon />{d.badge}
             </span>
@@ -103,9 +103,9 @@ export default function MovementDetailPage() {
           <WeeklyBarStrip
             days={d.week}
             max={d.weekMax}
-            barGradient="linear-gradient(180deg, rgba(var(--nura-amber-rgb),0.32), rgba(var(--nura-amber-2-rgb),0.10))"
+            barGradient="linear-gradient(180deg, rgba(var(--nura-metric-activity-rgb),0.32), rgba(var(--nura-amber-2-rgb),0.10))"
             selectedGradient="linear-gradient(180deg,var(--nura-marker),var(--nura-orange-hi))"
-            accent="var(--nura-amber)"
+            accent="var(--nura-metric-activity)"
           />
         </div>
 
@@ -133,7 +133,7 @@ export default function MovementDetailPage() {
                   <StatusPill status={c.status} label={c.statusLabel} />
                 </div>
                 <div style={{ height: 5, background: "rgba(var(--nura-bg-tint-rgb),0.10)", borderRadius: 3, marginTop: 10, overflow: "hidden" }}>
-                  <div className="nura-glow" style={{ height: "100%", width: `${c.pct}%`, borderRadius: 3, background: "linear-gradient(90deg,var(--nura-amber-2),var(--nura-amber))", boxShadow: "0 0 10px rgba(var(--nura-amber-rgb),0.4)" }} />
+                  <div className="nura-glow" style={{ height: "100%", width: `${c.pct}%`, borderRadius: 3, background: "linear-gradient(90deg,var(--nura-amber-2),var(--nura-metric-activity))", boxShadow: "0 0 10px rgba(var(--nura-metric-activity-rgb),0.4)" }} />
                 </div>
               </div>
             ))}
@@ -171,7 +171,7 @@ export default function MovementDetailPage() {
 
         {/* NŪRA insight */}
         <GlassCard className="m-reveal" style={{ animationDelay: ".45s", marginTop: 16, borderRadius: 20, padding: 17, position: "relative", overflow: "hidden" }}>
-          <div className="nura-glow" aria-hidden style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 3, background: "linear-gradient(180deg,var(--nura-sage),var(--nura-amber))", boxShadow: "0 0 16px rgba(var(--nura-sage-rgb),0.5)" }} />
+          <div className="nura-glow" aria-hidden style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 3, background: "linear-gradient(180deg,var(--nura-sage),var(--nura-metric-activity))", boxShadow: "0 0 16px rgba(var(--nura-sage-rgb),0.5)" }} />
           <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "2.5px", color: "var(--nura-accent-label)", textTransform: "uppercase" }}>NŪRA</div>
           <p style={{ fontSize: 13.5, lineHeight: 1.6, marginTop: 9 }}>{d.insight}</p>
         </GlassCard>
@@ -187,10 +187,10 @@ function IntradayBars({ series }: { series: IntradayChart["series"] }) {
   const bw = W / n;
   const max = Math.max(...series, 1);
   return (
-    <svg width="100%" height={90} viewBox={`0 0 ${W} 90`} preserveAspectRatio="none" style={{ marginTop: 12, filter: "drop-shadow(0 0 7px rgba(var(--nura-amber-rgb),0.30))" }}>
+    <svg width="100%" height={90} viewBox={`0 0 ${W} 90`} preserveAspectRatio="none" style={{ marginTop: 12, filter: "drop-shadow(0 0 7px rgba(var(--nura-metric-activity-rgb),0.30))" }}>
       {series.map((v, i) => {
         const h = Math.max(2, (v / max) * maxH);
-        return <rect key={i} x={(i * bw).toFixed(1)} y={(maxH + 4 - h).toFixed(1)} width={(bw - 1.1).toFixed(1)} height={h.toFixed(1)} rx="1.2" fill="var(--nura-amber)" />;
+        return <rect key={i} x={(i * bw).toFixed(1)} y={(maxH + 4 - h).toFixed(1)} width={(bw - 1.1).toFixed(1)} height={h.toFixed(1)} rx="1.2" fill="var(--nura-metric-activity)" />;
       })}
     </svg>
   );

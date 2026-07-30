@@ -21,7 +21,7 @@ const bStyle: React.CSSProperties = { color: TEXT, fontWeight: 600 };
 // Warm coral/amber ambient so this reads as the cardiovascular page.
 const CORAL_AURORA =
   "radial-gradient(80% 60% at 50% -6%, rgba(var(--nura-alert-rgb),0.30), transparent 60%)," +
-  "radial-gradient(60% 50% at 86% 6%, rgba(var(--nura-amber-rgb),0.16), transparent 60%)," +
+  "radial-gradient(60% 50% at 86% 6%, rgba(var(--nura-metric-heart-rgb),0.16), transparent 60%)," +
   "radial-gradient(70% 40% at 8% 14%, rgba(var(--nura-alert-rgb),0.12), transparent 60%)";
 
 // ── Icons ───────────────────────────────────────────────────────────────────
@@ -275,7 +275,7 @@ export default function HeartRateDetailPage() {
 
         {/* NŪRA insight */}
         <GlassCard className="hr-reveal" style={{ animationDelay: ".36s", marginTop: 16, borderRadius: 20, padding: 17, position: "relative", overflow: "hidden" }}>
-          <div className="nura-glow" aria-hidden style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 3, background: "linear-gradient(180deg,var(--nura-amber),var(--nura-alert))", boxShadow: "0 0 16px rgba(var(--nura-alert-rgb),0.5)" }} />
+          <div className="nura-glow" aria-hidden style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 3, background: "linear-gradient(180deg,rgba(var(--nura-metric-heart-rgb),0.45),var(--nura-metric-heart))" }} />
           <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "2.5px", color: CORAL, textTransform: "uppercase" }}>NŪRA</div>
           <p style={{ fontSize: 13.5, lineHeight: 1.6, marginTop: 9 }}>{d.insight}</p>
         </GlassCard>

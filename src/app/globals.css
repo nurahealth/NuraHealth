@@ -293,51 +293,77 @@
   --nura-ramp-lo-2: var(--nura-sage);
   --nura-ramp-lo-3: var(--nura-amber);
 
-  /* ── Data-viz ramp ──────────────────────────────────────────────────── */
-  --nura-teal: #5dccae;                 /* sleep / recovery */
+  /* ── Data-viz ramp — now aliases onto the metric map ────────────────────
+     These are the ORIGINAL per-metric hues, and the detail screens are full of
+     them: --nura-violet on the respiratory screen, --nura-aqua on HRV,
+     --nura-ember on Active Energy, and so on. Each one already belonged to
+     exactly one metric — that was the intent — so rather than rewrite the same
+     substitution across eleven screens, each name now points at its family in
+     the map above. One edit, and every screen that referenced these follows.
+
+     They keep their own names because the call sites read better for it
+     (HR_RED, HRV_AQUA), and because a screen showing ANOTHER metric's row —
+     the sleep screen's heart-rate and HRV strips — gets that metric's real
+     colour for free, which is the whole point of a fixed map.
+
+     Note --nura-teal and --nura-amber are NOT aliased. Those two were genuinely
+     shared: teal meant HRV on one screen, the REM stage on another and the cool
+     pole of body temp on a third, and amber meant movement, the warm pole of
+     body temp, and a heart-rate zone. Aliasing them would have painted body
+     temp's poles in HRV teal and movement amber. Their call sites are fixed
+     individually instead, and these two keep concrete values for anything left
+     using them as a generic warm/cool. */
+  --nura-teal: #5dccae;                 /* generic cool — see note above */
   --nura-teal-rgb: 93, 204, 174;
-  --nura-teal-mid: #2f9e83;             /* mid teal — gradients / light-sleep */
+  --nura-teal-mid: #2f9e83;
   --nura-teal-mid-rgb: 47, 158, 131;
-  --nura-teal-deep: #15564a;            /* deep teal — deep-sleep */
-  --nura-sleep-deep: #5aa0e6;           /* blue — deep-sleep depth bars */
-  --nura-sleep-deep-rgb: 90, 160, 230;
-  --nura-amber: #e0a23e;                /* movement amber accent */
+  --nura-teal-deep: #15564a;
+  --nura-amber: #e0a23e;                /* generic warm — see note above */
   --nura-amber-rgb: 224, 162, 62;
-  --nura-amber-2: #c47f24;              /* deeper amber — gradients */
+  --nura-amber-2: #c47f24;
   --nura-amber-2-rgb: 196, 127, 36;
   --nura-amber-deep: #7a4e12;
-  --nura-rose: #f0a890;                 /* heart / resting-HR */
-  --nura-rose-rgb: 240, 168, 144;
-  --nura-heart: #e8615c;                /* heart-rate ring */
-  --nura-heart-rgb: 232, 97, 92;
-  --nura-heart-hi: #f2998f;
-  --nura-heart-hi-rgb: 242, 153, 143;
-  --nura-violet: #b9a0e6;               /* respiratory rate */
-  --nura-violet-rgb: 185, 160, 230;
-  --nura-mauve: #a98fc4;                /* respiratory card accent */
-  --nura-aqua: #4fc4d6;                 /* HRV */
-  --nura-aqua-rgb: 79, 196, 214;
-  --nura-ice: #aebfcf;                  /* blood oxygen */
-  --nura-ice-rgb: 174, 191, 207;
-  --nura-ember: #e07a3c;                /* active energy */
-  --nura-ember-rgb: 224, 122, 60;
-  --nura-gold-ring: #e8c266;            /* cardio fitness / VO2 max */
-  --nura-gold-ring-rgb: 232, 194, 102;
-  --nura-orange: #e3a263;               /* steps */
-  --nura-orange-rgb: 227, 162, 99;
 
-  /* Ramp endpoints — the light/deep ends of the card gradients and rings. */
-  --nura-gold-ring-lo: #c99a34;
-  --nura-gold-ring-hi: #f7dd90;
-  --nura-aqua-hi: #7fdce8;
-  --nura-aqua-hi-rgb: 127, 220, 232;
-  --nura-ice-hi: #dbe6ef;
-  --nura-ice-hi-rgb: 219, 230, 239;
-  --nura-ember-hi: #f0a05a;
-  --nura-ember-hi-rgb: 240, 160, 90;
-  --nura-ember-lo: #c85e28;
-  --nura-orange-hi: #f3c795;
-  --nura-orange-mid: #f0bc84;
+  --nura-sleep-deep: var(--nura-metric-sleep);
+  --nura-sleep-deep-rgb: var(--nura-metric-sleep-rgb);
+  --nura-rose: var(--nura-metric-rhr);
+  --nura-rose-rgb: var(--nura-metric-rhr-rgb);
+  --nura-heart: var(--nura-metric-heart);
+  --nura-heart-rgb: var(--nura-metric-heart-rgb);
+  --nura-heart-hi: var(--nura-metric-rhr-hi);
+  --nura-heart-hi-rgb: 214, 175, 168;
+  --nura-violet: var(--nura-metric-resp);
+  --nura-violet-rgb: var(--nura-metric-resp-rgb);
+  --nura-mauve: var(--nura-metric-resp);
+  --nura-aqua: var(--nura-metric-hrv);
+  --nura-aqua-rgb: var(--nura-metric-hrv-rgb);
+  --nura-ice: var(--nura-metric-oxygen);
+  --nura-ice-rgb: var(--nura-metric-oxygen-rgb);
+  --nura-ember: var(--nura-metric-activity);
+  --nura-ember-rgb: var(--nura-metric-activity-rgb);
+  --nura-gold-ring: var(--nura-metric-oxygen);
+  --nura-gold-ring-rgb: var(--nura-metric-oxygen-rgb);
+  --nura-orange: var(--nura-metric-activity);
+  --nura-orange-rgb: var(--nura-metric-activity-rgb);
+
+  /* Ramp endpoints — the light/deep ends of the card gradients and rings.
+     These followed their families onto the map. They resolve to the family's
+     own step rather than a lighter/darker one because the gradients they fed
+     are gone: a ring or bar is a solid mark now, so an endpoint that differs
+     from the base would only reintroduce the two-tone fills this pass removed.
+     Aliasing them also means they inherit the light column's contrast, which
+     the old literals (#f7dd90, #dbe6ef) could never have on white. */
+  --nura-gold-ring-lo: var(--nura-metric-oxygen);
+  --nura-gold-ring-hi: var(--nura-metric-oxygen);
+  --nura-aqua-hi: var(--nura-metric-hrv);
+  --nura-aqua-hi-rgb: var(--nura-metric-hrv-rgb);
+  --nura-ice-hi: var(--nura-metric-oxygen);
+  --nura-ice-hi-rgb: var(--nura-metric-oxygen-rgb);
+  --nura-ember-hi: var(--nura-metric-activity);
+  --nura-ember-hi-rgb: var(--nura-metric-activity-rgb);
+  --nura-ember-lo: var(--nura-metric-activity);
+  --nura-orange-hi: var(--nura-metric-activity);
+  --nura-orange-mid: var(--nura-metric-activity);
   /* Dimmed/inactive bars (e.g. days before today on the steps strip). */
   --nura-bar-dim-top: #615c53;
   --nura-bar-dim-bot: #403c36;
@@ -685,53 +711,32 @@
   --nura-watch: var(--nura-status-warn);                /*  5.9:1 */
   --nura-watch-rgb: var(--nura-status-warn-rgb);
 
-  /* ── Data-viz ramp — darkened for white; hue identity preserved ─────── */
+  /* ── Data-viz ramp — light column ───────────────────────────────────────
+     Every name that is ALIASED onto the metric map in the dark column is
+     deliberately absent here. `--nura-violet: var(--nura-metric-resp)` on :root
+     resolves against whichever column is active, and --nura-metric-resp is
+     redefined above for light — so the alias already produces the light value
+     and repeating it here would only be a second place to forget.
+
+     What remains is the two genuinely shared names, which keep a light-safe
+     step of their own, plus the light-only viz gold. */
   --nura-teal: var(--nura-data-primary);                 /*  5.3:1 */
   --nura-teal-rgb: 95, 122, 110;
   --nura-teal-mid: var(--nura-sage-400);
   --nura-teal-mid-rgb: 125, 150, 138;
   --nura-teal-deep: var(--nura-sage-600);
-  --nura-sleep-deep: var(--nura-step-4);           /*  5.7:1 */
-  --nura-sleep-deep-rgb: 67, 96, 79;
   --nura-amber: var(--nura-data-primary);                /*  5.5:1 */
   --nura-amber-rgb: 95, 122, 110;
   --nura-amber-2: var(--nura-sage-600);
   --nura-amber-2-rgb: 67, 96, 79;
   --nura-amber-deep: var(--nura-sage-600);
-  --nura-rose: var(--nura-data-primary);                 /*  5.4:1 */
-  --nura-rose-rgb: 95, 122, 110;
-  --nura-heart: var(--nura-data-primary);                /*  5.7:1 */
-  --nura-heart-rgb: 95, 122, 110;
-  --nura-heart-hi: var(--nura-sage-400);
-  --nura-heart-hi-rgb: 125, 150, 138;
-  --nura-violet: var(--nura-data-primary);               /*  6.4:1 */
-  --nura-violet-rgb: 95, 122, 110;
-  --nura-mauve: var(--nura-data-primary);
-  --nura-aqua: var(--nura-data-primary);                 /*  5.7:1 */
-  --nura-aqua-rgb: 95, 122, 110;
-  --nura-ice: var(--nura-data-primary);                  /*  6.2:1 */
-  --nura-ice-rgb: 95, 122, 110;
-  --nura-ember: var(--nura-data-primary);                /*  5.7:1 */
-  --nura-ember-rgb: 95, 122, 110;
-  --nura-gold-ring: var(--nura-data-primary);            /*  5.4:1 */
-  --nura-gold-ring-rgb: 95, 122, 110;
   --nura-viz-gold: var(--nura-data-primary);             /*  5.5:1 */
-  --nura-orange: var(--nura-data-primary);               /*  5.2:1 */
-  --nura-orange-rgb: 95, 122, 110;
 
   /* Ramp endpoints — kept dark-to-light in the same direction as the dark
      column so gradients read the same way round, just darker overall. */
-  --nura-gold-ring-lo: var(--nura-sage-600);
-  --nura-gold-ring-hi: var(--nura-sage-400);
-  --nura-aqua-hi: var(--nura-sage-400);              /*  4.6:1 — also used as label text */
-  --nura-aqua-hi-rgb: 125, 150, 138;
-  --nura-ice-hi: var(--nura-sage-400);               /*  5.2:1 — also used as label text */
-  --nura-ice-hi-rgb: 125, 150, 138;
-  --nura-ember-hi: var(--nura-sage-400);
-  --nura-ember-hi-rgb: 125, 150, 138;
-  --nura-ember-lo: var(--nura-sage-600);
-  --nura-orange-hi: var(--nura-sage-400);
-  --nura-orange-mid: var(--nura-sage-400);
+  /* Ramp endpoints. Same rule as above — these are the lighter/deeper steps of
+     families that are now aliased, so they follow the map rather than being
+     flattened to sage a second time. */
   --nura-bar-dim-top: var(--nura-track-neutral-strong);
   --nura-bar-dim-bot: var(--nura-track-neutral);
   --nura-bar-under: var(--nura-data-muted);   /* 3.99:1 on #ffffff */

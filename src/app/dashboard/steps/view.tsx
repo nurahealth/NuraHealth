@@ -14,16 +14,16 @@ import { smooth } from "@/components/dashboard/ActiveEnergyTodayChart";
 const TEXT = "var(--nura-text-primary)";
 const MUTED = "var(--nura-text-secondary)";
 const FAINT = "var(--nura-text-tertiary)";
-const GOLD = "var(--nura-amber)";
+const GOLD = "var(--nura-metric-activity)";
 const INK = "var(--nura-fg-rgb)"; // warm off-white in dark mode
 const SANS = "var(--font-inter), system-ui, sans-serif";
 const bStyle: React.CSSProperties = { color: TEXT, fontWeight: 600 };
 
 // Warm gold ambient so this reads as the movement / steps page.
 const GOLD_AURORA =
-  "radial-gradient(80% 60% at 50% -6%, rgba(var(--nura-amber-rgb),0.30), transparent 60%)," +
+  "radial-gradient(80% 60% at 50% -6%, rgba(var(--nura-metric-activity-rgb),0.30), transparent 60%)," +
   "radial-gradient(60% 50% at 86% 6%, rgba(var(--nura-good-rgb),0.16), transparent 60%)," +
-  "radial-gradient(70% 40% at 8% 14%, rgba(var(--nura-amber-rgb),0.12), transparent 60%)";
+  "radial-gradient(70% 40% at 8% 14%, rgba(var(--nura-metric-activity-rgb),0.12), transparent 60%)";
 
 // ── Icons ───────────────────────────────────────────────────────────────────
 const Chevron = () => (
@@ -126,9 +126,9 @@ export default function StepsDetailPage() {
           <span style={{
             display: "inline-flex", alignItems: "center", gap: 6, marginTop: 18,
             padding: "6px 15px", borderRadius: 999, fontSize: 12, fontWeight: 600, letterSpacing: "0.5px",
-            color: GOLD, border: "1px solid rgba(var(--nura-amber-rgb),0.4)",
+            color: GOLD, border: "1px solid rgba(var(--nura-metric-activity-rgb),0.4)",
           }}>
-            <span className="nura-glow" style={{ width: 6, height: 6, borderRadius: "50%", background: GOLD, boxShadow: "0 0 8px var(--nura-amber)" }} />
+            <span className="nura-glow" style={{ width: 6, height: 6, borderRadius: "50%", background: GOLD, boxShadow: "0 0 8px var(--nura-metric-activity)" }} />
             {d.pill}
           </span>
         </div>

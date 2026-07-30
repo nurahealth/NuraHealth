@@ -20,8 +20,8 @@ const bStyle: React.CSSProperties = { color: TEXT, fontWeight: 600 };
 const ROSE = "var(--nura-rose)";
 const ROSE_RGB = "var(--nura-rose-rgb)";
 // Teal carries the "better / typical / improving" meaning (low resting HR is good).
-const TEAL = "var(--nura-teal)";
-const TEAL_RGB = "var(--nura-teal-rgb)";
+const TEAL = "var(--nura-metric-rhr)";
+const TEAL_RGB = "var(--nura-metric-rhr-rgb)";
 
 // Subtle dark-emerald ambient at the top of the page (fades to near-black).
 const EMERALD_AURORA =
@@ -32,7 +32,7 @@ const EMERALD_AURORA =
 // ── Chart color helper (teal → sage → rose ramp, by value) ────────────────────
 // Defined locally and reusing the shared hex/lerp so it's guaranteed available
 // wherever these charts render — a missing colorAt silently blanks a chart.
-const WEEK_RAMP = ["var(--nura-teal)", "var(--nura-sage)", "var(--nura-rose)"]; // teal (best/lowest) → sage → rose
+const WEEK_RAMP = ["var(--nura-metric-rhr)", "var(--nura-sage)", "var(--nura-rose)"]; // teal (best/lowest) → sage → rose
 function colorAt(t: number): string {
   const u = Math.max(0, Math.min(1, t));
   const [a, b, c] = WEEK_RAMP.map(hex);
@@ -344,7 +344,7 @@ export default function RestingHrDetailPage() {
 
         {/* NŪRA insight */}
         <GlassCard className="rhr-reveal" style={{ animationDelay: ".42s", marginTop: 16, borderRadius: 20, padding: 17, position: "relative", overflow: "hidden" }}>
-          <div className="nura-glow" aria-hidden style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 3, background: `linear-gradient(180deg, ${ROSE}, var(--nura-teal))`, boxShadow: `0 0 16px rgba(${ROSE_RGB},0.5)` }} />
+          <div className="nura-glow" aria-hidden style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 3, background: `linear-gradient(180deg, ${ROSE}, var(--nura-metric-rhr))`, boxShadow: `0 0 16px rgba(${ROSE_RGB},0.5)` }} />
           <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "2.5px", color: ROSE, textTransform: "uppercase" }}>NŪRA</div>
           <p style={{ fontSize: 13.5, lineHeight: 1.6, marginTop: 9 }}>{d.insight}</p>
         </GlassCard>
