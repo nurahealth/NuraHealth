@@ -81,11 +81,11 @@ export const PAD = {
 export const PAD_BARE = { top: 12, right: 2, bottom: 22, left: 2 } as const;
 
 /**
- * Minimum vertical gap between gridlines, in real pixels. Below ~30px a
- * 10px label sitting on a gridline has less than its own height of clear space
- * above and below, and the axis reads as a stack rather than a scale.
+ * Minimum vertical gap between gridlines, in real pixels. At 32px a 10px label
+ * has more than twice its own height of clear space above and below; much under
+ * that and the axis reads as a stack rather than a scale.
  */
-export const MIN_GRID_GAP = 34;
+export const MIN_GRID_GAP = 32;
 
 /** Marker geometry. Diameter >= 8px, so a data point is a target, not a speck. */
 export const MARKER = {
@@ -155,12 +155,16 @@ export function fitTicks(ticks: number[], plotH: number, lo: number, hi: number)
   const span = hi - lo || 1;
   const gap = (Math.abs(ticks[1] - ticks[0]) / span) * plotH;
   if (gap >= MIN_GRID_GAP) return ticks;
+
   const stride = Math.max(2, Math.ceil(MIN_GRID_GAP / Math.max(1, gap)));
   const kept = ticks.filter((_, i) => i % stride === 0);
-  // Always keep the top line: without it the plot looks clipped at the ceiling.
-  const last = ticks[ticks.length - 1];
-  if (kept[kept.length - 1] !== last) kept.push(last);
-  return kept.length >= 2 ? kept : [ticks[0], last];
+
+  // Deliberately NOT force-appending the top tick. Doing that produced axes
+  // like 13.0 / 14.0 / 15.0 / 15.5 — three even steps and then a half one —
+  // and an axis whose steps are unequal is a worse lie than an axis that stops
+  // one line short of the ceiling. Evenly spaced always wins; the top of the
+  // plot simply carries a little headroom.
+  return kept.length >= 2 ? kept : [ticks[0], ticks[ticks.length - 1]];
 }
 
 // ── Paths ────────────────────────────────────────────────────────────────────

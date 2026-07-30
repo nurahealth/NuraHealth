@@ -122,9 +122,22 @@ export default function MetricLineChart({
     if (baseline != null) vals.push(baseline);
     if (band) vals.push(band[0], band[1]);
     const nice = niceScale(Math.min(...vals), Math.max(...vals));
-    const dLo = lo ?? nice.lo;
-    const dHi = hi ?? nice.hi;
-    const raw = ticks ?? nice.ticks;
+    let dLo = lo ?? nice.lo;
+    let dHi = hi ?? nice.hi;
+    let raw = ticks ?? nice.ticks;
+
+    // Guarantee the band reads as a BAND. When the baseline range is the widest
+    // thing on the chart, the nice scale snaps the domain to exactly the band's
+    // own edges — respiratory's 13.5–15.0 range against a 13.5–15.0 domain — and
+    // the "band" fills the entire plot as a flat wash that says nothing. One
+    // step of headroom on whichever side it touches gives it edges to have.
+    // Only when the domain is derived: an explicit lo/hi is the caller's call.
+    if (band && ticks == null) {
+      const step = nice.ticks.length > 1 ? nice.ticks[1] - nice.ticks[0] : 1;
+      if (lo == null && band[0] <= dLo) { dLo -= step; raw = [dLo, ...raw]; }
+      if (hi == null && band[1] >= dHi) { dHi += step; raw = [...raw, dHi]; }
+    }
+
     return {
       yLo: dLo,
       yHi: dHi,
