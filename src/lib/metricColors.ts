@@ -1,0 +1,124 @@
+"use client";
+
+import { useThemeTokens } from "@/lib/themeTokens";
+
+/**
+ * The fixed metric → colour map.
+ *
+ * A metric's colour is a property of the metric. Before this file it was a
+ * property of the call site: RespiratoryRateCard asked for `--nura-series` and
+ * got sage, respiratory-rate/view.tsx asked for `--nura-violet` and got purple,
+ * and the same number wore two colours depending on which screen you were on.
+ *
+ * Every surface that draws a metric — card, expanded view, tooltip, legend,
+ * ring, progress row — resolves its colour through here. Nothing else decides.
+ * Adding a metric means adding a row; it does not mean picking a colour at a
+ * component.
+ *
+ * Keys are the metric `id` from lib/dashboardData, which is also the route
+ * slug, so a detail screen can look itself up by its own path segment.
+ *
+ * Values are the DARK hex, per the hydration contract in lib/themeTokens: the
+ * server and the first client render both emit these, then the light values
+ * land once the stylesheet is live. Never put a light value here.
+ */
+const MARK = {
+  "respiratory-rate": ["--nura-metric-resp", "#a695cc"],
+  "heart-rate": ["--nura-metric-heart", "#cf8b7c"],
+  "resting-hr": ["--nura-metric-rhr", "#c1948c"],
+  "blood-pressure": ["--nura-metric-bp-sys", "#cf8b7c"],
+  sleep: ["--nura-metric-sleep", "#88a2c9"],
+  hrv: ["--nura-metric-hrv", "#68b0a1"],
+  steps: ["--nura-metric-activity", "#cfa675"],
+  exercise: ["--nura-metric-activity", "#cfa675"],
+  "active-energy": ["--nura-metric-activity", "#cfa675"],
+  distance: ["--nura-metric-activity", "#cfa675"],
+  movement: ["--nura-metric-activity", "#cfa675"],
+  "body-temperature": ["--nura-metric-temp", "#7aaeb8"],
+  "blood-oxygen": ["--nura-metric-oxygen", "#95b09e"],
+  "cardio-fitness": ["--nura-metric-oxygen", "#95b09e"],
+} as const;
+
+/** Secondary steps: gradient ends, the BP pair's second series, temp's warm pole. */
+const AUX = {
+  respHi: ["--nura-metric-resp-hi", "#c3b4e0"],
+  rhrHi: ["--nura-metric-rhr-hi", "#d6afa8"],
+  bpDia: ["--nura-metric-bp-dia", "#e6bcb0"],
+  tempWarm: ["--nura-metric-temp-warm", "#cf9880"],
+  /** The fallback for a chart with no metric identity at all. */
+  series: ["--nura-series", "#9bb0a5"],
+} as const;
+
+export type MetricColorId = keyof typeof MARK;
+
+/** True when `id` has a colour in the map — narrows a loose string. */
+export function isMetricColorId(id: string): id is MetricColorId {
+  return id in MARK;
+}
+
+/** The token name for a metric, for the rare place that wants raw `var()`. */
+export function metricColorToken(id: string): string {
+  return isMetricColorId(id) ? MARK[id][0] : AUX.series[0];
+}
+
+export interface MetricPaint {
+  /** Concrete "#rrggbb" — for hex maths and SVG presentation attributes. */
+  hex: string;
+  /** `var(--token)` — for style props, which accept it directly. */
+  varRef: string;
+  /** "r,g,b" — for building `rgba(...)` washes at a chosen alpha. */
+  rgb: string;
+  /** The mark at `a` alpha, e.g. the 7% baseline band or the area fill. */
+  alpha: (a: number) => string;
+}
+
+function paint(hex: string, token: string): MetricPaint {
+  const s = hex.replace("#", "");
+  // A token can resolve to a `var()` chain that has already been flattened to
+  // hex by getComputedStyle, but a malformed/missing value would slice to NaN
+  // and paint "rgba(NaN,…)" — which renders as nothing. Guard by falling back
+  // to the literal, so a bad token degrades to a visible mark.
+  const ok = /^[0-9a-f]{6}$/i.test(s);
+  const rgb = ok
+    ? `${parseInt(s.slice(0, 2), 16)},${parseInt(s.slice(2, 4), 16)},${parseInt(s.slice(4, 6), 16)}`
+    : "155,176,165";
+  return {
+    hex,
+    varRef: `var(${token})`,
+    rgb,
+    alpha: (a: number) => `rgba(${rgb},${a})`,
+  };
+}
+
+type Paints = Record<MetricColorId, MetricPaint> & {
+  respHi: MetricPaint;
+  rhrHi: MetricPaint;
+  bpDia: MetricPaint;
+  tempWarm: MetricPaint;
+  /** No-identity fallback (sage). */
+  series: MetricPaint;
+};
+
+const SPEC = { ...MARK, ...AUX } as Record<string, readonly [string, string]>;
+
+/**
+ * Every metric colour, resolved for the active theme. Call once per component
+ * and index by metric id — cheaper than one hook per metric, and it keeps the
+ * token spec a module-level constant as `useThemeTokens` requires.
+ */
+export function useMetricPaints(): Paints {
+  const resolved = useThemeTokens(SPEC);
+  const out = {} as Record<string, MetricPaint>;
+  for (const key in SPEC) out[key] = paint(resolved[key], SPEC[key][0]);
+  return out as Paints;
+}
+
+/**
+ * One metric's colour. `id` is a metric id / route slug; anything unrecognised
+ * falls back to the neutral single-series sage rather than throwing, so a new
+ * metric renders in a sane colour before it gets a row in the map.
+ */
+export function useMetricPaint(id: string): MetricPaint {
+  const paints = useMetricPaints();
+  return isMetricColorId(id) ? paints[id] : paints.series;
+}

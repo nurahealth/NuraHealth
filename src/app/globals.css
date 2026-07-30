@@ -80,6 +80,74 @@
      with the data-viz ramp without dragging buttons and nav along with it. */
   --nura-series: var(--nura-sage);
 
+  /* ── FIXED METRIC COLOUR MAP ────────────────────────────────────────────
+     A metric's colour is a property OF THE METRIC, not of the screen it is
+     drawn on. Respiratory was violet in its detail view and sage on its card,
+     because the card reached for --nura-series and the view reached for
+     --nura-violet — two call sites, two answers, same number.
+
+     These tokens are the one answer. Every place a metric appears — card,
+     expanded view, tooltip, legend, ring, progress row — resolves its colour
+     from here and nowhere else, so a metric cannot change colour by being
+     rendered somewhere new.
+
+     Seven families, one per physiological system, so related metrics read as
+     related: the four movement metrics share amber, both heart-pressure
+     metrics share coral. Metrics that share a family are separated by STEP,
+     not by hue (resting HR is a softer coral than heart rate), which keeps
+     them tellable apart without breaking the family read.
+
+     Both columns are held inside one muted tonal band — dark sits at 15–43%
+     saturation / 69–81% value, light at 22–69% / 45–64% — which is what makes
+     four different charts on one screen look like one system instead of a
+     pie-chart palette. Every value below clears 3:1 against its card surface
+     (measured: dark 6.5–8.0:1 on #161718, light 4.7–6.3:1 on #ffffff, and
+     4.0–5.5:1 on the tinted detail-screen washes). Ratios are noted inline. */
+  --nura-metric-resp: #a695cc;              /* violet   6.66:1 — Respiratory */
+  --nura-metric-resp-rgb: 166, 149, 204;
+  --nura-metric-resp-hi: #c3b4e0;           /*          9.34:1 — ring gradient end */
+
+  --nura-metric-heart: #cf8b7c;             /* coral    6.53:1 — Heart Rate */
+  --nura-metric-heart-rgb: 207, 139, 124;
+  --nura-metric-rhr: #c1948c;               /* coral·2  6.74:1 — Resting HR */
+  --nura-metric-rhr-rgb: 193, 148, 140;
+  --nura-metric-rhr-hi: #d6afa8;            /*          9.02:1 — ring gradient end */
+  /* Blood pressure draws TWO series on one plot, so its pair needs real
+     luminance separation (1.60:1 dark / 1.63:1 light) on top of the legend. */
+  --nura-metric-bp-sys: #cf8b7c;            /*          6.53:1 — systolic */
+  --nura-metric-bp-sys-rgb: 207, 139, 124;
+  --nura-metric-bp-dia: #e6bcb0;            /*         10.42:1 — diastolic */
+  --nura-metric-bp-dia-rgb: 230, 188, 176;
+
+  --nura-metric-sleep: #88a2c9;             /* indigo   6.89:1 — Sleep */
+  --nura-metric-sleep-rgb: 136, 162, 201;
+
+  --nura-metric-hrv: #68b0a1;               /* teal     7.11:1 — HRV / Recovery */
+  --nura-metric-hrv-rgb: 104, 176, 161;
+
+  /* One amber for all four movement metrics — Steps, Exercise, Active Energy
+     and Distance are the same story told four ways and should look it. */
+  --nura-metric-activity: #cfa675;          /* amber    8.00:1 — movement */
+  --nura-metric-activity-rgb: 207, 166, 117;
+
+  /* Body temp keeps its polarity — cool below baseline, warm above — but toned
+     down to the same muted band as its siblings. */
+  --nura-metric-temp: #7aaeb8;              /* cyan     7.33:1 — below baseline */
+  --nura-metric-temp-rgb: 122, 174, 184;
+  --nura-metric-temp-warm: #cf9880;         /* warm     7.23:1 — above baseline */
+  --nura-metric-temp-warm-rgb: 207, 152, 128;
+
+  --nura-metric-oxygen: #95b09e;            /* sage     7.68:1 — SpO2 / VO2 max */
+  --nura-metric-oxygen-rgb: 149, 176, 158;
+
+  /* The four tokens below were referenced by components but never defined, so
+     they resolved to nothing and the marks they painted fell back to browser
+     default or vanished. They are steps of the families above. */
+  --nura-violet-hi: var(--nura-metric-resp-hi);
+  --nura-optimal-hi: var(--nura-metric-rhr-hi);
+  --nura-sys-line: var(--nura-metric-bp-sys);
+  --nura-dia-line: var(--nura-metric-bp-dia);
+
   /* ── Accent-as-TEXT ─────────────────────────────────────────────────────
      Dark wears sage as a typographic colour: the NURA wordmark, the serif
      italic accents ("Overall *health*"), section eyebrows. That is the brand
@@ -176,10 +244,18 @@
      Dark keeps its semantic ramps (cool->warm for effort, amber->emerald for
      "higher is better"). Light collapses all of them to magnitude -> depth of
      sage: the status chip carries good/bad, the bars only carry how much. */
-  --nura-stage-awake: var(--nura-good);
-  --nura-stage-light: var(--nura-sage);
-  --nura-stage-rem: var(--nura-teal);
-  --nura-stage-deep: var(--nura-sleep-deep);
+  /* Sleep stages are four steps of ONE hue — the sleep indigo — because they
+     are one ordered quantity (depth), not four categories. Four hues made the
+     hypnogram a rainbow and gave "Awake" a status gold it hadn't earned.
+
+     On near-black the ramp ascends in presence (awake dimmest → deep
+     brightest), which is the dark-mode reading of "light to dark": the deepest
+     stage is the most emphatic mark. Light inverts it literally. Both
+     directions are monotonic in luminance and every step clears 3:1. */
+  --nura-stage-awake: #66748a;   /*  3.79:1 — shallowest */
+  --nura-stage-light: #7c8fab;   /*  5.45:1 */
+  --nura-stage-rem: #93a9cc;     /*  7.51:1 */
+  --nura-stage-deep: #aec4e3;    /* 10.09:1 — deepest */
 
   /* Gauge zones. Dark paints a cool->warm arc; light is one neutral track with
      a single sage marker, per rule 5 — the status chip says whether the value
@@ -389,11 +465,57 @@
   --nura-data-muted: #847f74;  /* 4.0  under-goal bars, still a real mark */
 
 
-  /* Ordered ramps — magnitude to depth. See the note in the dark column. */
-  --nura-stage-awake: var(--nura-step-1);
-  --nura-stage-light: var(--nura-step-2);
-  --nura-stage-rem: var(--nura-step-3);
-  --nura-stage-deep: var(--nura-step-4);
+  /* ── FIXED METRIC COLOUR MAP — light column ─────────────────────────────
+     This block is a deliberate revision of one earlier decision. Light used to
+     collapse every categorical hue onto sage, on the reasoning that the card
+     title already says which metric it is. That holds for a lone chart; it
+     stops holding once the same metric appears on a card, in an expanded view,
+     in a tooltip and in a progress row, because then the colour is the thing
+     that ties those four appearances together. So light gets the hue identity
+     back — darkened for white, and held inside one muted band so the screen
+     still reads as one system rather than a palette.
+
+     Each value is the same hue as its dark counterpart, stepped down until it
+     clears 3:1 on #ffffff. Measured ratios inline; all also clear 3:1 on the
+     tinted detail-screen washes (4.0–5.5:1). De-emphasis stays warm grey and
+     the status trio is untouched — a metric hue never carries good/bad. */
+  --nura-metric-resp: #6b5a96;              /* violet   5.95:1 */
+  --nura-metric-resp-rgb: 107, 90, 150;
+  --nura-metric-resp-hi: #8878ad;           /*          3.93:1 */
+
+  --nura-metric-heart: #a2564a;             /* coral    5.29:1 */
+  --nura-metric-heart-rgb: 162, 86, 74;
+  --nura-metric-rhr: #8a625b;               /* coral·2  5.28:1 */
+  --nura-metric-rhr-rgb: 138, 98, 91;
+  --nura-metric-rhr-hi: #a67c74;            /*          3.65:1 */
+  --nura-metric-bp-sys: #a2564a;            /*          5.29:1 */
+  --nura-metric-bp-sys-rgb: 162, 86, 74;
+  --nura-metric-bp-dia: #b48378;            /*          3.25:1 — 1.63:1 from systolic */
+  --nura-metric-bp-dia-rgb: 180, 131, 120;
+
+  --nura-metric-sleep: #48608a;             /* indigo   6.33:1 */
+  --nura-metric-sleep-rgb: 72, 96, 138;
+
+  --nura-metric-hrv: #33736a;               /* teal     5.52:1 */
+  --nura-metric-hrv-rgb: 51, 115, 106;
+
+  --nura-metric-activity: #836028;          /* amber    5.72:1 */
+  --nura-metric-activity-rgb: 131, 96, 40;
+
+  --nura-metric-temp: #3a6b75;              /* cyan     5.93:1 */
+  --nura-metric-temp-rgb: 58, 107, 117;
+  --nura-metric-temp-warm: #955c44;         /* warm     5.40:1 */
+  --nura-metric-temp-warm-rgb: 149, 92, 68;
+
+  --nura-metric-oxygen: #5f7a6e;            /* sage     4.67:1 */
+  --nura-metric-oxygen-rgb: 95, 122, 110;
+
+  /* Sleep stages — the same one-hue ramp as dark, read the literal way round:
+     awake lightest, deep darkest. Monotonic, every step >=3:1 on white. */
+  --nura-stage-awake: #7b8fb0;   /* 3.28:1 — shallowest */
+  --nura-stage-light: #63799e;   /* 4.41:1 */
+  --nura-stage-rem: #4e6790;     /* 5.73:1 */
+  --nura-stage-deep: #374d70;    /* 8.54:1 — deepest */
 
   --nura-chip-optimal-fg: var(--nura-status-good);
   --nura-chip-optimal-bg: var(--nura-tint-accent);
