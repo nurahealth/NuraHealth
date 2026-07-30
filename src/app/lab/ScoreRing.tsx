@@ -6,6 +6,8 @@
 // consistent stroke weight and a proportional progress arc.
 
 const SANS = "var(--font-inter), system-ui, sans-serif";
+// A score is a figure, and figures are mono across the app so they line up.
+const MONO = "'JetBrains Mono', ui-monospace, monospace";
 const FG_RGB = "var(--nura-fg-rgb)";
 
 const SAGE = "var(--nura-sage)"; // >= 80
@@ -77,14 +79,14 @@ export default function ScoreRing({
         style={{
           position: "absolute", inset: 0,
           display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-          fontFamily: SANS, color, lineHeight: 1,
+          fontFamily: MONO, color, lineHeight: 1,
         }}
       >
         <span style={{ fontSize: numberSize, fontWeight: 700, letterSpacing: "-0.02em" }}>
           {Math.round(score)}
         </span>
         {showScale && (
-          <span style={{ fontSize: scaleSize, fontWeight: 600, letterSpacing: "0.06em", opacity: 0.7, marginTop: size * 0.04 }}>
+          <span style={{ fontFamily: SANS, fontSize: scaleSize, fontWeight: 600, letterSpacing: "0.06em", opacity: 0.7, marginTop: size * 0.04 }}>
             /100
           </span>
         )}

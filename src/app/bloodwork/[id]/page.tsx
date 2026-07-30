@@ -30,6 +30,10 @@ const TEXT_TER = "var(--nura-text-tertiary)";
 const BORDER = "var(--nura-border)";
 const SURFACE = "var(--nura-surface)";
 const SAGE = "var(--nura-sage)";
+// The score trend is DATA, so it takes the data colour rather than the brand
+// accent. Identical today; the point is that the viz ramp can move without
+// dragging buttons and nav along with it. See the note in globals.css.
+const SERIES = "var(--nura-series)";
 const SAGE_ON = "var(--nura-bg)";
 const SAGE_RGB = "var(--nura-sage-rgb)";
 const AMBER = "var(--nura-watch)";
@@ -231,9 +235,11 @@ function TrendChart({ points: allPoints }: { points: ScoreTrendPoint[] }) {
               style={{ width: "100%", height: "100%", display: "block", overflow: "visible" }}
             >
               <defs>
-                <linearGradient id="trend-fill-d" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor={SAGE} stopOpacity="0.3" />
-                  <stop offset="100%" stopColor={SAGE} stopOpacity="0" />
+                {/* Matches the app's area fill: ground for the line, never its
+                    own shape. 0.3 read as a filled block under the curve. */}
+                <linearGradient id="trend-fill-d" className="nura-area-grad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={SERIES} stopOpacity="0.13" />
+                  <stop offset="100%" stopColor={SERIES} stopOpacity="0.015" />
                 </linearGradient>
               </defs>
 
@@ -242,7 +248,7 @@ function TrendChart({ points: allPoints }: { points: ScoreTrendPoint[] }) {
                 <line
                   key={i}
                   x1={0} x2={VIEW_W} y1={y} y2={y}
-                  stroke="var(--nura-border)" strokeOpacity={0.3} strokeWidth={1}
+                  stroke="var(--nura-hairline)" strokeWidth={1}
                   vectorEffect="non-scaling-stroke"
                 />
               ))}
@@ -253,7 +259,7 @@ function TrendChart({ points: allPoints }: { points: ScoreTrendPoint[] }) {
               {hasEnough && (
                 <path
                   d={linePath}
-                  fill="none" stroke={SAGE} strokeWidth={2.5}
+                  fill="none" stroke={SERIES} strokeWidth={2}
                   strokeLinejoin="round" strokeLinecap="round"
                   vectorEffect="non-scaling-stroke"
                 />
@@ -404,13 +410,13 @@ function Sparkline({ history, color, width = 100, height = 32 }: {
   return (
     <svg width={width} height={height}>
       <defs>
-        <linearGradient id={fillId} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={color} stopOpacity="0.5" />
-          <stop offset="100%" stopColor={color} stopOpacity="0" />
+        <linearGradient id={fillId} className="nura-area-grad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={color} stopOpacity="0.13" />
+          <stop offset="100%" stopColor={color} stopOpacity="0.015" />
         </linearGradient>
       </defs>
       <polygon points={`${pad},${height - pad} ${pts} ${toX(history.length - 1)},${height - pad}`} fill={`url(#${fillId})`} />
-      <polyline points={pts} fill="none" stroke={color} strokeWidth={1.5} strokeLinejoin="round" strokeLinecap="round" />
+      <polyline points={pts} fill="none" stroke={color} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
       <circle cx={lastX} cy={lastY} r={2.5} fill={color} />
     </svg>
   );

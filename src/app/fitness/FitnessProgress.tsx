@@ -1,10 +1,11 @@
 'use client';
 
-import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import NuraPlexus from '@/components/NuraPlexus';
 import FitnessBackButton from './FitnessBackButton';
-import { hexA, smooth } from '@/components/dashboard/cardChartHelpers';
+import MetricLineChart from '@/components/dashboard/MetricLineChart';
+import { useMetricPaint } from '@/lib/metricColors';
 import {
   addProgressPhoto,
   loadActiveProgram,
@@ -63,67 +64,32 @@ function fmtDay(iso: string): string {
 
 const HEATMAP_WEEKS = 13;
 
-// ── Weight trend chart — same SVG line + sage area-fill as the dashboard metric
-// charts (VO2/HRV/sleep), via the shared smooth()/hexA() helpers. Unique
-// gradient id per instance (useId). Needs ≥2 points; caller shows the empty
-// prompt otherwise.
+// ── Weight trend chart ───────────────────────────────────────────────────────
+// The shared single-series treatment. Body weight has no row in the metric
+// colour map — it is not one of the dashboard metrics — so it draws in
+// --nura-series, the neutral colour a chart wears when it has no identity of
+// its own to express. That is the same answer the map gives for anything
+// unrecognised, which is why this needs no special case.
+//
+// It was a bespoke SVG at 2.4px stroke with a translucent halo disc behind the
+// latest point and its own hardcoded 42/300/28/150 plot box. Now it inherits
+// the app's stroke weight, marker, tooltip, axis type and gridline spacing.
 function WeightTrendChart({ points, unit }: { points: { date: string; value: number }[]; unit: string }) {
-  const uid = useId().replace(/[^a-zA-Z0-9]/g, '');
-  const data = points.slice(-12); // keep the axis readable on long histories
-  const n = data.length;
-  const values = data.map((d) => d.value);
-  const X0 = 42, X1 = 300, top = 28, bot = 150;
-  const lo = Math.min(...values), hi = Math.max(...values);
-  const pad = (hi - lo) * 0.18 || 1; // headroom so the line never touches the frame
-  const LO = lo - pad, HI = hi + pad;
-  const yOf = (v: number) => top + (1 - (v - LO) / (HI - LO)) * (bot - top);
-  const xOf = (i: number) => (n > 1 ? X0 + (i * (X1 - X0)) / (n - 1) : X0);
-  const pts: [number, number][] = data.map((d, i) => [xOf(i), yOf(d.value)]);
-  const line = smooth(pts);
-  const area = `${line} L ${pts[n - 1][0].toFixed(1)},${bot} L ${pts[0][0].toFixed(1)},${bot} Z`;
-  const FAINT = 'var(--nura-text-tertiary)';
+  const paint = useMetricPaint("__weight__");   // no row → the neutral series
+  const data = points.slice(-12);               // keep the axis readable
+  const labels = data.map((d) => fmtDay(d.date));
 
   return (
-    <svg viewBox="0 0 340 176" shapeRendering="geometricPrecision" style={{ display: 'block', width: '100%', height: 'auto', overflow: 'visible' }}>
-      <defs>
-        <linearGradient id={`${uid}-fill`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={hexA(SAGE, 0.3)} />
-          <stop offset="100%" stopColor={hexA(SAGE, 0)} />
-        </linearGradient>
-      </defs>
-
-      {/* faint per-point vertical guides */}
-      {pts.map(([x], i) => (
-        <line key={i} x1={x.toFixed(1)} y1={top} x2={x.toFixed(1)} y2={bot} stroke="rgba(var(--nura-bg-tint-rgb),0.06)" strokeWidth={1} />
-      ))}
-
-      {/* y labels — high / low of the range, in mono */}
-      {[HI - pad, LO + pad].map((v) => (
-        <text key={v} x={34} y={(yOf(v) + 3).toFixed(1)} textAnchor="end" fontSize={10} fill={FAINT} style={{ fontFamily: MONO }}>{fmtWeight(v)}</text>
-      ))}
-
-      {/* sage gradient fill flush beneath the line, then the smooth line */}
-      <path d={area} fill={`url(#${uid}-fill)`} />
-      <path d={line} fill="none" stroke={SAGE} strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" />
-
-      {/* points — latest gets a halo dot + value label */}
-      {pts.map(([x, y], i) => {
-        const last = i === n - 1;
-        return last ? (
-          <g key={i}>
-            <circle cx={x.toFixed(1)} cy={y.toFixed(1)} r={9} fill={hexA(SAGE, 0.16)} />
-            <circle cx={x.toFixed(1)} cy={y.toFixed(1)} r={4.5} fill={SAGE} stroke={BG} strokeWidth={1.8} />
-            <text x={x.toFixed(1)} y={(y - 12).toFixed(1)} textAnchor="end" fontSize={11} fontWeight={700} fill={SAGE} style={{ fontFamily: MONO }}>{fmtWeight(values[i])} {unit}</text>
-          </g>
-        ) : (
-          <circle key={i} cx={x.toFixed(1)} cy={y.toFixed(1)} r={2.6} fill={SAGE} />
-        );
-      })}
-
-      {/* x labels — first & last dates only, to stay uncluttered */}
-      <text x={pts[0][0].toFixed(1)} y={170} textAnchor="start" fontSize={10} fill={FAINT} style={{ fontFamily: MONO }}>{fmtDay(data[0].date)}</text>
-      <text x={pts[n - 1][0].toFixed(1)} y={170} textAnchor="end" fontSize={10} fill={FAINT} style={{ fontFamily: MONO }}>{fmtDay(data[n - 1].date)}</text>
-    </svg>
+    <MetricLineChart
+      data={data.map((d) => d.value)}
+      color={paint}
+      unit={unit}
+      xLabels={[labels[0], labels[labels.length - 1]]}
+      pointLabels={labels}
+      format={(v) => fmtWeight(v)}
+      height={190}
+      ariaLabel={`Body weight over the last ${data.length} readings, in ${unit}.`}
+    />
   );
 }
 
