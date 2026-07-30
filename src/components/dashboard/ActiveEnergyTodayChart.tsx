@@ -1,32 +1,31 @@
 "use client";
 
-import { useId } from "react";
 import type { ActiveEnergyDetail } from "@/lib/dashboardData";
-import { useThemeTokens } from "@/lib/themeTokens";
+import type { MetricPaint } from "@/lib/metricColors";
+import {
+  ENTER_CLASS, MONO, PAD, STROKE, TYPE,
+  XAxis, YAxis, fitTicks, useMeasuredWidth,
+} from "@/components/dashboard/chartTheme";
 
 // Shared "Active Energy — Today" intraday chart, rendered by BOTH the Active
 // Energy detail page and the dashboard Active Energy card.
 //
-// Ember-orange lit-glass pills (per-bar vertical gradient + glow on the hottest
-// bars), faint horizontal gridlines, a glowing dashed average curve with an
-// "avg" tag, a "KCAL / HR" unit label, a glowing peak readout, and a faint
-// dashed "now" marker at the right edge.
-
-const SANS = "var(--font-inter), system-ui, sans-serif";
+// Flat bars in the movement amber, hairline gridlines with a right-gutter mono
+// axis, a dashed neutral average curve, a peak readout and a dashed "now"
+// marker. Same geometry and type scale as MetricChart, because they are the
+// same chart with different data.
+//
+// It used to be "ember-orange lit-glass pills": a three-stop hue ramp per bar,
+// a per-bar drop-shadow bloom, a glowing dashed curve and a glowing peak label.
+// The ramp is gone for the reason given in MetricChart (a hue ramp inside one
+// metric is the colour-drift problem in miniature, and alpha grading cannot
+// hold 3:1 on white); the glow is gone because bloom reads as grime over white,
+// which is why the light theme had to switch it all off again downstream.
 
 
 // ── Chart helpers (hex · lerp · light · colorAt · smooth) ─────────────────────
-// The intraday + weekly bars interpolate along an ember-orange ramp, so the work
-// happens on raw [r,g,b] triplets rather than CSS vars.
-// Bar colours are interpolated and fed to SVG attributes, so they resolve to
-// concrete hex via tokens. RAMP order: light ember → ember → deep ember.
-const TOKENS = {
-  ink:       ["--nura-fg-rgb", "235,230,216"],
-  emberRgb:  ["--nura-ember-rgb", "224,122,60"],
-  emberHi:   ["--nura-ember-hi", "#f0a05a"],
-  ember:     ["--nura-ember", "#e07a3c"],
-  emberLo:   ["--nura-ember-lo", "#c85e28"],
-} as const;
+// Re-exported through cardChartHelpers and used by several other charts, so
+// they stay even though this file no longer interpolates a ramp of its own.
 
 export function hex(h: string): [number, number, number] {
   const s = h.replace("#", "");
@@ -75,103 +74,107 @@ function hourLabel(h24: number): string {
   return `${h}${ap}`;
 }
 
-export default function ActiveEnergyTodayChart({ d, height = 170 }: { d: ActiveEnergyDetail; height?: number }) {
-  const tk = useThemeTokens(TOKENS);
-  const INK = tk.ink;
-  const EMBER_RGB = tk.emberRgb;
-  const RAMP = [tk.emberHi, tk.ember, tk.emberLo] as const;
-  const rawId = useId();
-  const uid = `ae-today-${rawId.replace(/[^a-zA-Z0-9]/g, "")}`;
+export default function ActiveEnergyTodayChart({
+  d, color, height = 176,
+}: {
+  d: ActiveEnergyDetail;
+  /** The metric's colour, from `useMetricPaint("active-energy")`. */
+  color: MetricPaint;
+  height?: number;
+}) {
+  const { ref, width: W } = useMeasuredWidth<HTMLDivElement>();
+
+  const H = height;
+  const plotL = PAD.left;
+  const plotR = Math.max(plotL + 1, W - PAD.right);
+  const plotT = PAD.top;
+  const plotB = H - PAD.bottom;
+  const plotH = Math.max(1, plotB - plotT);
 
   const data = d.todayHourly;
-  const W = 356, H = height, top = 22, base = H - 16, plotH = base - top;
   const span = (d.todayCeil - d.todayFloor) || 1;
-  const yOf = (v: number) => base - Math.max(0, Math.min(1, (v - d.todayFloor) / span)) * plotH;
   const normOf = (v: number) => Math.max(0, Math.min(1, (v - d.todayFloor) / span));
-  const n = data.length, slot = W / n, bw = Math.min(slot * 0.62, 5);
+  const yOf = (v: number) => plotB - normOf(v) * plotH;
+
+  if (!(W > 0) || !data.length) return <div ref={ref} style={{ width: "100%", height: H }} />;
+
+  const n = data.length;
+  const slot = (plotR - plotL) / n;
+  const bw = Math.min(slot * 0.62, 5);
+  const ticks = fitTicks(d.todayGridlines, plotH, d.todayFloor, d.todayCeil);
 
   // Peak bar.
   let pi = 0;
   data.forEach((v, i) => { if (v > data[pi]) pi = i; });
-  const peakV = data[pi];
-  const peakX = pi * slot + slot / 2;
-  const peakY = yOf(peakV);
-  const peakLabel = `${Math.round(peakV)} · PEAK · ${hourLabel(Math.round((pi / Math.max(1, n - 1)) * 24) % 24)}`;
-  const labelY = Math.max(11, peakY - 11);
-  const labelX = Math.max(46, Math.min(W - 46, peakX));
+  const peakX = plotL + pi * slot + slot / 2;
+  const peakLabel = `${Math.round(data[pi])} · PEAK · ${hourLabel(Math.round((pi / Math.max(1, n - 1)) * 24) % 24)}`;
 
   // Average curve.
   const bl = d.todayBaseline, m = bl.length;
-  const curvePts: [number, number][] = bl.map((v, k) => [m > 1 ? (k / (m - 1)) * W : 0, yOf(v)]);
-  const curve = smooth(curvePts);
-  const avgEnd = curvePts[curvePts.length - 1];
+  const curve = m > 1
+    ? smooth(bl.map((v, k) => [plotL + (k / (m - 1)) * (plotR - plotL), yOf(v)] as [number, number]))
+    : "";
 
   return (
-    <div style={{ marginTop: 2 }}>
-      <svg width="100%" height={H} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" style={{ display: "block", overflow: "visible" }}>
-        <defs>
-          {data.map((v, i) => {
-            const [r, g, b] = colorAt(normOf(v), RAMP);
-            const [lr, lg, lb] = light([r, g, b], 0.5);
-            return (
-              <linearGradient key={i} id={`${uid}-${i}`} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={`rgb(${lr},${lg},${lb})`} stopOpacity="1" />
-                <stop offset="50%" stopColor={`rgb(${r},${g},${b})`} stopOpacity="0.92" />
-                <stop offset="100%" stopColor={`rgb(${r},${g},${b})`} stopOpacity="0.42" />
-              </linearGradient>
-            );
-          })}
-        </defs>
+    <div ref={ref} style={{ width: "100%" }}>
+      <svg
+        width={W} height={H} viewBox={`0 0 ${W} ${H}`}
+        className={ENTER_CLASS} style={{ display: "block" }}
+      >
+        <YAxis ticks={ticks} yAt={yOf} plotLeft={plotL} plotRight={plotR} format={(v) => String(v)} />
 
-        {/* Horizontal gridlines */}
-        {d.todayGridlines.map((gl, i) => (
-          <line key={`g${i}`} x1={0} x2={W} y1={yOf(gl)} y2={yOf(gl)} stroke={`rgba(${INK},0.07)`} strokeWidth={1} />
-        ))}
-
-        {/* Lit-glass pill bars */}
+        {/* Bars — flat, one colour, height carries the value */}
         {data.map((v, i) => {
-          const norm = normOf(v);
-          const h = Math.max(norm * plotH, 2);
-          const x = i * slot + (slot - bw) / 2;
-          const y = base - h;
-          const rx = Math.min(bw / 2, h / 2);
-          const [r, g, b] = colorAt(norm, RAMP);
+          const h = Math.max(normOf(v) * plotH, 2);
+          const x = plotL + i * slot + (slot - bw) / 2;
           return (
             <rect
-              key={i} x={x.toFixed(1)} y={y.toFixed(1)} width={bw.toFixed(1)} height={h.toFixed(1)}
-              rx={rx.toFixed(1)} fill={`url(#${uid}-${i})`}
-              style={norm > 0.5 ? { filter: `drop-shadow(0 0 ${(1.5 + norm * 4).toFixed(1)}px rgba(${r},${g},${b},${(0.2 + norm * 0.45).toFixed(2)}))` } : undefined}
+              key={i} x={x.toFixed(2)} y={(plotB - h).toFixed(2)}
+              width={bw.toFixed(2)} height={h.toFixed(2)}
+              rx={Math.min(bw / 2, h / 2).toFixed(2)} fill={color.hex}
             />
           );
         })}
 
-        {/* Glowing dashed average curve + tag */}
+        {/* Dashed average curve — neutral, because it is a reference */}
         {curve && (
-          <path d={curve} fill="none" stroke={`rgba(${INK},0.5)`} strokeWidth={1.6} strokeDasharray="4 5" strokeLinecap="round" style={{ filter: `drop-shadow(0 0 5px rgba(${EMBER_RGB},0.45))` }} />
+          <path
+            d={curve} fill="none" stroke="var(--nura-text-tertiary)"
+            strokeWidth={STROKE.baseline} strokeDasharray="4 5"
+            strokeLinecap="round" opacity={0.55}
+          />
         )}
-        <text x={(W - 14).toFixed(1)} y={(avgEnd[1] - 6).toFixed(1)} textAnchor="end" fill={`rgba(${EMBER_RGB},0.9)`} style={{ fontFamily: SANS, fontSize: 9, fontWeight: 600 }}>avg</text>
 
-        {/* Faint dashed "now" marker at the right edge */}
-        <line x1={W - 1} x2={W - 1} y1={top} y2={base} stroke={`rgba(${INK},0.2)`} strokeWidth={1} strokeDasharray="3 4" />
+        {/* "now" marker at the right edge of the plot */}
+        <line
+          x1={plotR} x2={plotR} y1={plotT} y2={plotB}
+          stroke="var(--nura-border-strong)" strokeWidth={STROKE.grid} strokeDasharray="3 4"
+        />
 
-        {/* Right-edge gridline value labels */}
-        {d.todayGridlines.map((gl, i) => (
-          <text key={`l${i}`} x={W - 4} y={yOf(gl) - 3} textAnchor="end" fill="var(--nura-ink-a32)" style={{ fontFamily: SANS, fontSize: 9, fontWeight: 600 }}>{String(gl)}</text>
-        ))}
+        {/* Unit label, top-left */}
+        <text
+          x={plotL} y={plotT - 7} fontFamily={MONO} fontSize={TYPE.tick}
+          style={{ fill: "var(--nura-text-tertiary)" }}
+        >
+          KCAL/HR
+        </text>
 
-        {/* KCAL / HR unit label, top-left */}
-        <text x={1} y={11} fill={`rgba(${INK},0.42)`} style={{ fontFamily: SANS, fontSize: 8.5, fontWeight: 600, letterSpacing: "1px" }}>KCAL / HR</text>
-
-        {/* Peak readout — glowing label */}
-        <text x={labelX.toFixed(1)} y={labelY.toFixed(1)} textAnchor="middle" fill={tk.emberHi} style={{ fontFamily: SANS, fontSize: 9.5, fontWeight: 700, letterSpacing: "0.5px", filter: `drop-shadow(0 0 5px rgba(${EMBER_RGB},0.6))` }}>
+        {/* Peak readout */}
+        <text
+          x={Math.max(plotL + 46, Math.min(plotR - 46, peakX)).toFixed(2)}
+          y={Math.max(plotT - 4, yOf(data[pi]) - 9).toFixed(2)}
+          textAnchor="middle" fontFamily={MONO} fontSize={TYPE.tick}
+          style={{
+            fill: "var(--nura-text-secondary)",
+            paintOrder: "stroke", stroke: "var(--nura-card)",
+            strokeWidth: 3.5, strokeLinejoin: "round",
+          }}
+        >
           {peakLabel}
         </text>
-      </svg>
 
-      {/* X-axis */}
-      <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6, fontFamily: SANS, fontSize: 9.5, color: "var(--nura-ink-a30)", letterSpacing: "0.3px" }}>
-        <span>12a</span><span>6a</span><span>12p</span><span>6p</span><span>now</span>
-      </div>
+        <XAxis labels={["12a", "6a", "12p", "6p", "now"]} plotLeft={plotL} plotRight={plotR} y={H - 6} />
+      </svg>
     </div>
   );
 }

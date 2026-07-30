@@ -1,9 +1,8 @@
 "use client";
 
 import { getBloodOxygenDetail, SOURCE_LABEL, type DashboardMetric } from "@/lib/dashboardData";
-import { hexA } from "@/components/dashboard/cardChartHelpers";
 import { spo2Status, spo2FooterMessage } from "@/lib/bloodOxygen";
-import { useThemeTokens } from "@/lib/themeTokens";
+import { useMetricPaint } from "@/lib/metricColors";
 
 const SANS = "var(--font-inter), system-ui, sans-serif";
 const TEXT = "var(--nura-text-primary)";
@@ -12,22 +11,20 @@ const TEXT_TER = "var(--nura-text-tertiary)";
 const CARD = "var(--nura-card)";
 const BORDER = "var(--nura-border)";
 
-// Ice / platinum identity — matches the Blood Oxygen detail page. A cool-blue-
-// leaning silver kept crisp (not washed out) on the dark card via a soft glow.
-const TOKENS = {
-  ice: ["--nura-ice", "#aebfcf"],
-  iceLight: ["--nura-ice-hi", "#dbe6ef"],
-} as const;
-const ICE_RGB = "var(--nura-ice-rgb)";
-
 const EYEBROW: React.CSSProperties = {
   fontFamily: SANS, fontSize: 10, fontWeight: 600, letterSpacing: "1.6px", textTransform: "uppercase",
 };
 
-// Compact Blood Oxygen tile — big % readout, a platinum range bar (90–100, with
-// the 95–100 "normal" portion brighter) marking the reading, and a status pill.
+// Compact Blood Oxygen tile — big % readout, a range bar (90–100, with the
+// 95–100 "normal" portion stronger) marking the reading, and a status pill.
+//
+// This used to carry its own "ice / platinum" identity, which is how SpO2 ended
+// up a different colour from Cardio Fitness despite both being oxygen-delivery
+// metrics. Both now wear the sage family. The bar's glows are gone with it —
+// the marker keeps its hairline ring, which is what actually separates it from
+// the fill it sits on.
 export default function BloodOxygenCard({ metric, onClick }: { metric: DashboardMetric; onClick: () => void }) {
-  const { ice: ICE, iceLight: ICE_LIGHT } = useThemeTokens(TOKENS);
+  const paint = useMetricPaint(metric.id);
   const d = getBloodOxygenDetail();
   const status = spo2Status(d.lastNight);
   // Range bar: 90 → 100 scale; marker at the reading, tick at the 95 threshold.
@@ -61,13 +58,13 @@ export default function BloodOxygenCard({ metric, onClick }: { metric: Dashboard
           <span style={{ fontFamily: SANS, fontSize: 20, fontWeight: 600, color: TEXT_SEC }}>%</span>
         </div>
 
-        {/* Cyan range bar — dim 90–95, brighter 95–100, cream marker at the reading */}
+        {/* Range bar — dim 90–95, stronger 95–100, marker at the reading */}
         <div style={{ width: "100%" }}>
           <div style={{ position: "relative", height: 7 }}>
-            <div style={{ position: "absolute", inset: 0, borderRadius: 999, background: hexA(ICE, 0.16) }} />
-            <div className="nura-glow" style={{ position: "absolute", top: 0, bottom: 0, left: "50%", right: 0, borderRadius: "0 999px 999px 0", background: hexA(ICE, 0.55), boxShadow: `0 0 8px rgba(${ICE_RGB},0.35)` }} />
+            <div style={{ position: "absolute", inset: 0, borderRadius: 999, background: paint.alpha(0.16) }} />
+            <div style={{ position: "absolute", top: 0, bottom: 0, left: "50%", right: 0, borderRadius: "0 999px 999px 0", background: paint.alpha(0.55) }} />
             <div style={{ position: "absolute", top: -1, left: "50%", transform: "translateX(-50%)", width: 1.5, height: 9, borderRadius: 1, background: "var(--nura-tick-on-accent)" }} />
-            <div className="nura-marker-ring nura-glow" style={{ position: "absolute", top: "50%", left: `${markPct.toFixed(1)}%`, transform: "translate(-50%,-50%)", width: 4, height: 15, borderRadius: 2.5, background: ICE_LIGHT, boxShadow: `0 0 0 2.5px ${CARD}, 0 0 7px rgba(${ICE_RGB},0.7)` }} />
+            <div className="nura-marker-ring" style={{ position: "absolute", top: "50%", left: `${markPct.toFixed(1)}%`, transform: "translate(-50%,-50%)", width: 4, height: 15, borderRadius: 2.5, background: paint.hex, boxShadow: `0 0 0 2.5px ${CARD}` }} />
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6, fontFamily: SANS, fontSize: 10, color: TEXT_TER }}>
             <span>90</span><span>95</span><span>100</span>
@@ -79,8 +76,8 @@ export default function BloodOxygenCard({ metric, onClick }: { metric: Dashboard
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
         <span style={{ fontFamily: SANS, fontSize: 11.5, color: TEXT_TER, lineHeight: 1.4, textAlign: "center" }}>{spo2FooterMessage(status)}</span>
         <span style={{
-          ...EYEBROW, fontSize: 9, color: ICE_LIGHT, padding: "3px 8px", borderRadius: 999,
-          background: hexA(ICE, 0.14), border: `0.5px solid ${hexA(ICE, 0.4)}`,
+          ...EYEBROW, fontSize: 9, color: paint.hex, padding: "3px 8px", borderRadius: 999,
+          background: paint.alpha(0.14), border: `0.5px solid ${paint.alpha(0.4)}`,
           whiteSpace: "nowrap", flexShrink: 0,
         }}>
           {status}

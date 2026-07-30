@@ -1,8 +1,9 @@
 "use client";
 
-import { useId } from "react";
 import { getStepsDetail, SOURCE_LABEL, type DashboardMetric, type StepsWeekDay } from "@/lib/dashboardData";
-import { useThemeTokens } from "@/lib/themeTokens";
+import { useMetricPaint, type MetricPaint } from "@/lib/metricColors";
+
+import { MONO } from "@/components/dashboard/chartTheme";
 
 const SANS = "var(--font-inter), system-ui, sans-serif";
 const TEXT = "var(--nura-text-primary)";
@@ -15,16 +16,11 @@ const EYEBROW: React.CSSProperties = {
   fontFamily: SANS, fontSize: 10, fontWeight: 600, letterSpacing: "1.6px", textTransform: "uppercase",
 };
 
-// Bar fills — warm orange when the day hits goal, muted grey when it falls short.
-// SVG gradient stops — concrete hex required.
-const TOKENS = {
-  orTop: ["--nura-orange-hi", "#f3c795"],
-  orBot: ["--nura-orange", "#e3a263"],
-  greyTop: ["--nura-bar-dim-top", "#615c53"],
-  greyBot: ["--nura-bar-dim-bot", "#403c36"],
-  cream: ["--nura-text-primary", "#ebe6d8"],
-  creamRgb: ["--nura-fg-rgb", "235,230,216"],
-} as const;
+// A day that hit goal is drawn in the movement amber; a day that fell short is
+// drawn in the neutral de-emphasis track. Two states, one hue plus grey — the
+// bar's own colour never encodes anything else.
+const HIT_LABEL = "Hit";
+const MISS_FILL = "var(--nura-bar-dim-top)";
 
 // Dev fallback — mirrors the sample StepsDetail week when the store has none.
 const FALLBACK_WEEK: StepsWeekDay[] = [
@@ -45,11 +41,7 @@ const fmtK = (v: number) => `${(v / 1000).toFixed(1)}k`;
 // dashed goal line spans ONLY the bar area, with the "10k goal" label parked in a
 // reserved right-side gutter so it's never covered. Today's bar is outlined and
 // its weekday label is bold cream.
-function WeeklyBars({ week, goal }: { week: StepsWeekDay[]; goal: number }) {
-  const { orTop: OR_TOP, orBot: OR_BOT, greyTop: GREY_TOP, greyBot: GREY_BOT, cream: CREAM, creamRgb: CREAM_RGB } = useThemeTokens(TOKENS);
-  const rawId = useId();
-  const uid = `steps-${rawId.replace(/[^a-zA-Z0-9]/g, "")}`;
-
+function WeeklyBars({ week, goal, paint }: { week: StepsWeekDay[]; goal: number; paint: MetricPaint }) {
   const W = 320, H = 158;
   const L = 8;
   const gutter = 50;             // reserved right space for the goal label
@@ -78,35 +70,16 @@ function WeeklyBars({ week, goal }: { week: StepsWeekDay[]; goal: number }) {
 
   return (
     <svg width="100%" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" style={{ display: "block", overflow: "visible" }}>
-      <defs>
-        <linearGradient id={`${uid}-orange`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor={OR_TOP} />
-          <stop offset="1" stopColor={OR_BOT} />
-        </linearGradient>
-        <linearGradient id={`${uid}-grey`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor={GREY_TOP} />
-          <stop offset="1" stopColor={GREY_BOT} />
-        </linearGradient>
-        <filter id={`${uid}-glow`} x="-40%" y="-40%" width="180%" height="180%">
-          <feGaussianBlur stdDeviation="2" result="b" />
-          <feMerge>
-            <feMergeNode in="b" />
-            <feMergeNode in="SourceGraphic" />
-          </feMerge>
-        </filter>
-      </defs>
-
       {/* Dashed goal line — spans only the bar area */}
-      <line x1={L} y1={goalY.toFixed(1)} x2={plotR} y2={goalY.toFixed(1)} stroke={`rgba(${CREAM_RGB},0.28)`} strokeWidth={1} strokeDasharray="4 4" />
+      <line x1={L} y1={goalY.toFixed(1)} x2={plotR} y2={goalY.toFixed(1)} stroke="var(--nura-text-tertiary)" strokeWidth={1} strokeDasharray="4 4" opacity={0.6} />
 
-      {/* Bars (glowing gradient fills) */}
+      {/* Bars — flat fills, no gradient and no blur */}
       {bars.map((b, i) => (
         <rect
           key={i}
           x={b.x.toFixed(1)} y={b.topY.toFixed(1)} width={barW.toFixed(1)} height={Math.max(1, b.h).toFixed(1)}
           rx={3}
-          fill={`url(#${uid}-${b.hit ? "orange" : "grey"})`}
-          filter={`url(#${uid}-glow)`}
+          fill={b.hit ? paint.hex : MISS_FILL}
         />
       ))}
 
@@ -115,7 +88,7 @@ function WeeklyBars({ week, goal }: { week: StepsWeekDay[]; goal: number }) {
         <rect
           key={`t${i}`}
           x={b.x.toFixed(1)} y={b.topY.toFixed(1)} width={barW.toFixed(1)} height={Math.max(1, b.h).toFixed(1)}
-          rx={3} fill="none" stroke={`rgba(${CREAM_RGB},0.85)`} strokeWidth={1}
+          rx={3} fill="none" stroke="var(--nura-text-primary)" strokeWidth={1} opacity={0.85}
         />
       ))}
 
@@ -124,7 +97,7 @@ function WeeklyBars({ week, goal }: { week: StepsWeekDay[]; goal: number }) {
         <text
           key={`v${i}`}
           x={b.cx.toFixed(1)} y={(b.topY - 6).toFixed(1)} textAnchor="middle"
-          fontSize={9.5} fontWeight={600} fill={`rgba(${CREAM_RGB},0.72)`} style={{ fontFamily: SANS }}
+          fontSize={10} fontWeight={600} fill="var(--nura-text-secondary)" style={{ fontFamily: MONO }}
         >
           {fmtK(b.value)}
         </text>
@@ -136,14 +109,14 @@ function WeeklyBars({ week, goal }: { week: StepsWeekDay[]; goal: number }) {
           key={`d${i}`}
           x={b.cx.toFixed(1)} y={labelY.toFixed(1)} textAnchor="middle"
           fontSize={10} fontWeight={b.isToday ? 700 : 500}
-          fill={b.isToday ? CREAM : "var(--nura-text-tertiary)"} style={{ fontFamily: SANS }}
+          fill={b.isToday ? "var(--nura-text-primary)" : "var(--nura-text-tertiary)"} style={{ fontFamily: MONO }}
         >
           {b.label}
         </text>
       ))}
 
       {/* Goal label — parked in the right gutter, aligned to the goal line */}
-      <text x={(plotR + 6).toFixed(1)} y={(goalY + 3.5).toFixed(1)} textAnchor="start" fontSize={9.5} fontWeight={600} fill="var(--nura-ink-a55)" style={{ fontFamily: SANS }}>
+      <text x={(plotR + 6).toFixed(1)} y={(goalY + 3.5).toFixed(1)} textAnchor="start" fontSize={10} fill="var(--nura-text-tertiary)" style={{ fontFamily: MONO }}>
         {Math.round(goal / 1000)}k goal
       </text>
     </svg>
@@ -154,7 +127,7 @@ function WeeklyBars({ week, goal }: { week: StepsWeekDay[]; goal: number }) {
 // Standalone dashboard tile: today's total + a weekly Mon–Sun bar chart. Reads
 // real weekly step data (dev fallback if the store has none). Tappable → detail.
 export default function StepsCard({ metric, onClick }: { metric: DashboardMetric; onClick: () => void }) {
-  const { orTop: OR_TOP, orBot: OR_BOT, greyTop: GREY_TOP, greyBot: GREY_BOT } = useThemeTokens(TOKENS);
+  const paint = useMetricPaint(metric.id);
   const d = getStepsDetail();
   const week = d.week?.length ? d.week : FALLBACK_WEEK;
   const goal = d.weekGoal || d.goal || 10000;
@@ -190,17 +163,17 @@ export default function StepsCard({ metric, onClick }: { metric: DashboardMetric
 
       {/* Weekly bar chart */}
       <div style={{ flex: 1, display: "flex", alignItems: "center", marginTop: 12, marginBottom: 8 }}>
-        <WeeklyBars week={week} goal={goal} />
+        <WeeklyBars week={week} goal={goal} paint={paint} />
       </div>
 
-      {/* Legend — orange = hit goal, grey = under goal */}
+      {/* Legend — two series, so it earns a legend */}
       <div style={{ display: "flex", gap: 14, marginBottom: 10, fontFamily: SANS, fontSize: 10.5, color: TEXT_TER }}>
         <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-          <span style={{ width: 9, height: 9, borderRadius: 3, background: `linear-gradient(180deg, ${OR_TOP}, ${OR_BOT})` }} />
-          Hit {Math.round(goal / 1000)}k goal
+          <span style={{ width: 9, height: 9, borderRadius: 3, background: paint.hex }} />
+          {HIT_LABEL} {Math.round(goal / 1000)}k goal
         </span>
         <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-          <span style={{ width: 9, height: 9, borderRadius: 3, background: `linear-gradient(180deg, ${GREY_TOP}, ${GREY_BOT})` }} />
+          <span style={{ width: 9, height: 9, borderRadius: 3, background: MISS_FILL }} />
           Under goal
         </span>
       </div>

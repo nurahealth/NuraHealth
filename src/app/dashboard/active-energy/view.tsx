@@ -6,6 +6,7 @@ import { getActiveEnergyDetail, SOURCE_LABEL, type ActiveEnergyDetail } from "@/
 import AuroraBackground from "@/components/dashboard/AuroraBackground";
 import ActiveEnergyRing from "@/components/dashboard/ActiveEnergyRing";
 import GlassCard from "@/components/dashboard/GlassCard";
+import { useMetricPaint } from "@/lib/metricColors";
 import ActiveEnergyTodayChart, { colorAt, light } from "@/components/dashboard/ActiveEnergyTodayChart";
 import MetricEducation, { type MetricEducationItem } from "@/components/dashboard/MetricEducation";
 
@@ -38,6 +39,7 @@ const InfoIcon = () => (
 export default function ActiveEnergyDetailPage() {
   const router = useRouter();
   const d = getActiveEnergyDetail();
+  const paint = useMetricPaint("active-energy");
 
   const percent = Math.round((d.activeEnergy / d.moveGoal) * 100);
   const toGoal = Math.max(0, d.moveGoal - d.activeEnergy);
@@ -125,7 +127,7 @@ export default function ActiveEnergyDetailPage() {
             stroke={13}
             fillMs={1500}
             innerLabel={`of ${d.moveGoal} goal`}
-          />
+          color={paint} />
           <span className="nura-note-ink" style={{
             display: "inline-flex", alignItems: "center", gap: 6, marginTop: 12,
             padding: "6px 15px", borderRadius: 999, fontSize: 12, fontWeight: 600, letterSpacing: "0.5px",
@@ -153,7 +155,7 @@ export default function ActiveEnergyDetailPage() {
           <div style={{ fontSize: 15, fontWeight: 600 }}>Today</div>
           <div style={{ fontSize: 12.5, color: MUTED, margin: "3px 0 8px" }}>{d.rangeCaption}</div>
 
-          <ActiveEnergyTodayChart d={d} />
+          <ActiveEnergyTodayChart d={d} color={paint} />
 
           {/* Data strip below the x-axis */}
           <div style={{

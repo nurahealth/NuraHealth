@@ -32,6 +32,7 @@ import CardioFitnessCard from "@/components/dashboard/CardioFitnessCard";
 import BloodPressureCard from "@/components/dashboard/BloodPressureCard";
 import { useDashboardVisibility, useDashboardPrefs } from "@/lib/dashboardVisibility";
 import { useTemperatureUnitStore, fmtMagUnit, deviationDirection } from "@/lib/temperatureUnit";
+import { useMetricPaint } from "@/lib/metricColors";
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
 const TEXT = "var(--nura-text-primary)";
@@ -275,6 +276,10 @@ function StatusPill({ status, size = "md" }: { status: MetricStatus; size?: "sm"
 
 // ── 4 · Metric card ──────────────────────────────────────────────────────────────
 function MetricCard({ metric, onClick }: { metric: DashboardMetric; onClick: () => void }) {
+  // This card's chart, ring and accents all resolve to the one colour this
+  // metric wears everywhere else in the app.
+  const paint = useMetricPaint(metric.id);
+
   // Resting HR gets a bespoke treatment: value + daily delta, a zone bar (no
   // chart), and a "{n} bpm below your baseline" footer with an "Excellent" pill.
   const isRestingHr = metric.id === "resting-hr";
@@ -344,18 +349,22 @@ function MetricCard({ metric, onClick }: { metric: DashboardMetric; onClick: () 
             <span style={{ color: metric.delta.dir === "up" ? "var(--nura-status-good)" : "var(--nura-status-alert)" }}>{metric.delta.dir === "up" ? "▲" : "▼"}</span>{metric.delta.value}
           </span>
         )}
+        {/* These three read as part of their own metric, so they wear its
+            colour rather than whichever hue was nearest — resting HR was teal
+            (the HRV family) and both movement metrics were reaching for the
+            legacy amber token directly. */}
         {isRestingHr && rhr && (
-          <span style={{ fontFamily: SANS, fontSize: 12, fontWeight: 600, color: "var(--nura-teal)" }}>
+          <span style={{ fontFamily: SANS, fontSize: 12, fontWeight: 600, color: paint.hex }}>
             ▼ {rhr.dayDelta} vs yesterday
           </span>
         )}
         {isSteps && remaining > 0 && (
-          <span style={{ fontFamily: SANS, fontSize: 12, fontWeight: 600, color: "var(--nura-amber)" }}>
+          <span style={{ fontFamily: SANS, fontSize: 12, fontWeight: 600, color: paint.hex }}>
             {fmtNumber(remaining)} to go
           </span>
         )}
         {isActiveEnergy && aeToGoal > 0 && (
-          <span style={{ fontFamily: SANS, fontSize: 12, fontWeight: 600, color: "var(--nura-amber)" }}>
+          <span style={{ fontFamily: SANS, fontSize: 12, fontWeight: 600, color: paint.hex }}>
             {fmtNumber(aeToGoal)} to go
           </span>
         )}
@@ -366,12 +375,12 @@ function MetricCard({ metric, onClick }: { metric: DashboardMetric; onClick: () 
         {isBodyTemp && bt
           ? <BodyTempCardRing devC={bt.tonight} unit={tempUnit} normalRange={bt.normalRange} />
           : isRestingHr && rhr
-            ? <RestingHrZoneBar value={rhr.value} min={rhr.zoneMin} max={rhr.zoneMax} labels={rhr.zoneLabels} />
+            ? <RestingHrZoneBar value={rhr.value} min={rhr.zoneMin} max={rhr.zoneMax} labels={rhr.zoneLabels} color={paint} />
             : metric.sleepDepth
               ? <SleepDepthChart data={metric.sleepDepth} />
               : isActiveEnergy && ae
-                ? <ActiveEnergyTodayChart d={ae} height={140} />
-                : <MetricChart data={metric.chart} highTech={isSteps} />}
+                ? <ActiveEnergyTodayChart d={ae} color={paint} height={168} />
+                : <MetricChart data={metric.chart} color={paint} unit={metric.unit} showPeak={isSteps} />}
       </div>
 
       {/* Steps stat strip — distance · flights · kcal · active time */}
@@ -391,7 +400,7 @@ function MetricCard({ metric, onClick }: { metric: DashboardMetric; onClick: () 
       {/* Footer — Body Temp uses a centered "7-day {avg} · within range" line */}
       {isBodyTemp && bt ? (
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 7, marginTop: "auto", fontFamily: SANS, fontSize: 11.5, color: TEXT_SEC }}>
-          <span className="nura-glow" style={{ width: 5, height: 5, borderRadius: "50%", background: "var(--nura-teal)", boxShadow: "0 0 6px var(--nura-teal)" }} />
+          <span style={{ width: 5, height: 5, borderRadius: "50%", background: paint.hex }} />
           <span>
             {deviationDirection(bt.avg7) === "at"
               ? <>7-day avg <b style={{ color: TEXT, fontWeight: 700 }}>right at baseline</b> · within range</>
@@ -407,9 +416,9 @@ function MetricCard({ metric, onClick }: { metric: DashboardMetric; onClick: () 
           </span>
           <span style={{ flexShrink: 0 }}>
             {isRestingHr && rhr ? (
-              <span style={{
-                ...EYEBROW, fontSize: 9, color: "var(--nura-teal)", padding: "3px 8px", borderRadius: 999,
-                background: "rgba(var(--nura-teal-rgb),0.12)", border: "0.5px solid rgba(var(--nura-teal-rgb),0.35)",
+              <span className="nura-chip" style={{
+                ...EYEBROW, fontSize: 9, color: paint.hex, padding: "3px 8px", borderRadius: 999,
+                background: paint.alpha(0.12), border: `0.5px solid ${paint.alpha(0.35)}`,
                 whiteSpace: "nowrap",
               }}>
                 {rhr.status}

@@ -7,6 +7,7 @@ import RadialGauge from "@/components/dashboard/RadialGauge";
 import GlassCard from "@/components/dashboard/GlassCard";
 import MetricChart from "@/components/dashboard/MetricChart";
 import MetricEducation, { type MetricEducationItem } from "@/components/dashboard/MetricEducation";
+import { useMetricPaint } from "@/lib/metricColors";
 import { smooth } from "@/components/dashboard/ActiveEnergyTodayChart";
 
 // ── Tokens ──────────────────────────────────────────────────────────────────
@@ -37,6 +38,7 @@ export default function StepsDetailPage() {
   const router = useRouter();
   const d = getStepsDetail();
   const chart = getMetric("steps")?.chart; // reuse the dashboard card's chart data
+  const paint = useMetricPaint("steps");
 
   const summary = [
     { k: "Total", v: d.weekTotal },
@@ -147,7 +149,7 @@ export default function StepsDetailPage() {
         <GlassCard className="st-reveal" style={{ animationDelay: ".26s", marginTop: 16 }}>
           <div style={{ fontSize: 15, fontWeight: 600 }}>Today</div>
           <div style={{ fontSize: 12.5, color: MUTED, margin: "3px 0 8px" }}>{d.rangeCaption}</div>
-          {chart && <MetricChart data={chart} height={150} highTech />}
+          {chart && <MetricChart data={chart} color={paint} unit="steps" height={168} showPeak />}
 
           {/* Data strip — divided from the chart's x-axis row; wraps if needed */}
           <div style={{

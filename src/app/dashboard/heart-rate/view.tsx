@@ -7,6 +7,7 @@ import AuroraBackground from "@/components/dashboard/AuroraBackground";
 import GlassCard from "@/components/dashboard/GlassCard";
 import MetricChart from "@/components/dashboard/MetricChart";
 import MetricEducation, { type MetricEducationItem } from "@/components/dashboard/MetricEducation";
+import { useMetricPaint } from "@/lib/metricColors";
 
 // ── Tokens ──────────────────────────────────────────────────────────────────
 const TEXT = "var(--nura-text-primary)";
@@ -159,6 +160,7 @@ export default function HeartRateDetailPage() {
   const router = useRouter();
   const d = getHeartRateDetail();
   const chart = getMetric("heart-rate")?.chart; // reuse the dashboard card's chart data
+  const paint = useMetricPaint("heart-rate");
 
   // Educational rows for the shared "Understanding your heart rate" section.
   // "Your number" is built from the same values the hero + tiles use.
@@ -245,7 +247,7 @@ export default function HeartRateDetailPage() {
         <GlassCard className="hr-reveal" style={{ animationDelay: ".2s", marginTop: 16 }}>
           <div style={{ fontSize: 15, fontWeight: 600 }}>Today</div>
           <div style={{ fontSize: 12.5, color: MUTED, margin: "3px 0 8px" }}>{d.rangeCaption}</div>
-          {chart && <MetricChart data={chart} height={150} />}
+          {chart && <MetricChart data={chart} color={paint} unit="bpm" height={168} />}
         </GlassCard>
 
         {/* Heart rate zones */}
