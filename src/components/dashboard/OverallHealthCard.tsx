@@ -25,13 +25,17 @@ const GOLD = "var(--nura-good)";
 // ring ramp is interpolated, and SVG presentation attributes do not accept
 // var(). Fallbacks are the dark values, so SSR and first paint agree.
 // See lib/themeTokens.ts.
+// The dial's ramp was sage → HRV teal → sleep indigo: three metrics' hues
+// borrowed to make one arc, on a card that is about none of them. It is now
+// three steps of the shared ordered ramp, so the hero mark on the dashboard is
+// the same colour idea as every chart beneath it — magnitude as depth, one hue.
 const RING_TOKENS = {
-  sage:      ["--nura-sage", "#9bb0a5"],
-  teal:      ["--nura-metric-hrv", "#68b0a1"],
-  blue:      ["--nura-metric-sleep", "#88a2c9"],
+  ringLo:    ["--nura-step-2", "#869a8e"],
+  ringMid:   ["--nura-step-3", "#9bb0a5"],
+  ringHi:    ["--nura-step-4", "#bacdc1"],
   alert:     ["--nura-alert", "#e8745a"],
   inkRgb:    ["--nura-fg-rgb", "235,230,216"],
-  tealRgb:   ["--nura-metric-hrv-rgb", "104,176,161"],
+  ringRgb:   ["--nura-sage-rgb", "155,176,165"],
   scoreFrom: ["--nura-score-from", "#ffffff"],
   scoreTo:   ["--nura-score-to", "#cfe0d6"],
   ringHead:  ["--nura-ring-head", "#ffffff"],
@@ -60,7 +64,7 @@ function colorAt(t: number, stops: [number, string][]): string {
 const tArrow = (t: HealthTrend) => (t === "up" ? "▲" : t === "down" ? "▼" : "–");
 type RingTokens = Record<keyof typeof RING_TOKENS, string>;
 const tCol = (t: HealthTrend, tk: RingTokens) =>
-  t === "up" ? tk.teal : t === "down" ? tk.alert : `rgba(${tk.inkRgb},0.4)`;
+  t === "up" ? tk.ringMid : t === "down" ? tk.alert : `rgba(${tk.inkRgb},0.4)`;
 
 const Chevron = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={FAINT} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6" /></svg>
@@ -302,7 +306,7 @@ function HealthRing({ d, selected, onSelect }: { d: ReturnType<typeof getOverall
   const tk = useThemeTokens(RING_TOKENS);
   const acc = useAccents();
   // Health-Score ring ramp: sage → teal → blue, resolved from the theme.
-  const RAMP: [number, string][] = [[0, tk.sage], [0.45, tk.teal], [1, tk.blue]];
+  const RAMP: [number, string][] = [[0, tk.ringLo], [0.45, tk.ringMid], [1, tk.ringHi]];
   const rawId = useId();
   const uid = `oh-${rawId.replace(/[^a-zA-Z0-9]/g, "")}`;
   const cx = 195, cy = 184;
@@ -350,12 +354,12 @@ function HealthRing({ d, selected, onSelect }: { d: ReturnType<typeof getOverall
     <svg viewBox="0 0 390 372" style={{ width: "100%", height: "auto", display: "block" }}>
       <defs>
         <radialGradient id={`${uid}-core`} cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor={`rgba(${tk.tealRgb},0.22)`} />
-          <stop offset="60%" stopColor={`rgba(${tk.tealRgb},0.06)`} />
-          <stop offset="100%" stopColor={`rgba(${tk.tealRgb},0)`} />
+          <stop offset="0%" stopColor={`rgba(${tk.ringRgb},0.22)`} />
+          <stop offset="60%" stopColor={`rgba(${tk.ringRgb},0.06)`} />
+          <stop offset="100%" stopColor={`rgba(${tk.ringRgb},0)`} />
         </radialGradient>
         <linearGradient id={`${uid}-parc`} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor={tk.sage} /><stop offset="55%" stopColor={tk.teal} /><stop offset="100%" stopColor={tk.blue} />
+          <stop offset="0%" stopColor={tk.ringLo} /><stop offset="55%" stopColor={tk.ringMid} /><stop offset="100%" stopColor={tk.ringHi} />
         </linearGradient>
         <linearGradient id={`${uid}-num`} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor={tk.scoreFrom} /><stop offset="100%" stopColor={tk.scoreTo} />

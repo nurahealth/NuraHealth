@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { getBloodPressureDetail, SOURCE_LABEL, type BloodPressureDetail } from "@/lib/dashboardData";
 import { hexA, smooth } from "@/components/dashboard/cardChartHelpers";
+import { useMetricPaints } from "@/lib/metricColors";
 import {
   bpCategory, systolicCategory, diastolicCategory, BP_COLOR, type BPCategory,
   systolicPct, diastolicPct, SYS_GRADIENT, DIA_GRADIENT,
@@ -15,6 +16,11 @@ const CREAM = "var(--nura-text-primary)";
 const MUTED = "var(--nura-ink-muted)";
 const FAINT = "var(--nura-text-tertiary)";
 const HAIR = "var(--nura-hairline-strong)";
+// Systolic and diastolic are the one chart in the app that genuinely needs two
+// data colours — two series, one plot. They are two STEPS of the sage ladder
+// rather than two hues: systolic is the upper line and takes the more emphatic
+// step, and the legend names them. `var()` refs where a colour is only handed
+// to CSS; the chart itself needs them resolved (see the note in ReadingsChart).
 const SYS_LINE = "var(--nura-sys-line)";
 const DIA_LINE = "var(--nura-dia-line)";
 const SANS = "var(--font-inter), system-ui, sans-serif";
@@ -130,7 +136,10 @@ export default function BloodPressureDetailPage() {
 
           {/* Pill */}
           <div style={{ display: "flex", justifyContent: "center" }}>
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "7px 14px", borderRadius: 30, fontSize: 12.5, fontWeight: 600, color: CREAM, background: hexA(color, 0.1), border: `0.5px solid ${hexA(color, 0.45)}` }}>
+            {/* color is a `var()` (the clinical category token), so hexA would
+                parse it to NaN and the pill would silently lose its tint and
+                its border. color-mix takes the var directly. */}
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "7px 14px", borderRadius: 30, fontSize: 12.5, fontWeight: 600, color: CREAM, background: `color-mix(in srgb, ${color} 10%, transparent)`, border: `0.5px solid color-mix(in srgb, ${color} 45%, transparent)` }}>
               <span style={{ width: 6, height: 6, borderRadius: "50%", background: color }} />
               {category} blood pressure
             </span>
@@ -245,13 +254,22 @@ function Beat({ label, color, first, children }: { label: string; color: string;
 }
 
 // ── 8 · Last 7 readings dual smooth-line chart ───────────────────────────────
-// Two smooth trend lines (systolic rose / diastolic slate-blue) over a 70–150
+// Two smooth trend lines (systolic the deeper step, diastolic the lighter) over a 70–150
 // mmHg field, each with a subtle gradient fill. Dashed colour-matched 120/80
 // ceilings run the full width; y-axis gridlines + numbers sit at 140/120/100/80.
 // Generous top headroom keeps the ~122 systolic labels off the 140 line, and
 // bottom headroom keeps the ~75 diastolic labels off the day row. The latest
 // reading (Sun) gets a halo dot and a bold value on each line.
 function ReadingsChart({ readings }: { readings: { label: string; sys: number; dia: number }[] }) {
+  // hexA does hex maths, so it cannot be handed a `var()` — it parsed "va" as a
+  // red channel and returned "rgba(NaN,NaN,NaN,a)", which SVG rejects and falls
+  // back to BLACK for. That is where the black slab between the two lines came
+  // from: both area fills, both dashed ceilings and every non-latest value
+  // label were painted with it. Invisible on a near-black card; on a white one
+  // it was the loudest thing on the page. Resolved through the metric map.
+  const paints = useMetricPaints();
+  const sysHex = paints["blood-pressure"].hex;
+  const diaHex = paints.bpDia.hex;
   // X0 pulled right so the y-axis numbers (anchored at x=26) keep their own
   // far-left column; X1 leaves the ringed latest reading right-side clearance.
   const X0 = 52, X1 = 314, top = 24, bot = 158, LO = 70, HI = 150;
@@ -273,12 +291,12 @@ function ReadingsChart({ readings }: { readings: { label: string; sys: number; d
     <svg viewBox="0 0 340 198" shapeRendering="geometricPrecision" style={{ display: "block", width: "100%", height: "auto", overflow: "visible", marginTop: 8, fontFamily: SANS }}>
       <defs>
         <linearGradient id="bpSysFill" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={hexA(SYS_LINE, 0.22)} />
-          <stop offset="100%" stopColor={hexA(SYS_LINE, 0)} />
+          <stop offset="0%" stopColor={hexA(sysHex, 0.22)} />
+          <stop offset="100%" stopColor={hexA(sysHex, 0)} />
         </linearGradient>
         <linearGradient id="bpDiaFill" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={hexA(DIA_LINE, 0.22)} />
-          <stop offset="100%" stopColor={hexA(DIA_LINE, 0)} />
+          <stop offset="0%" stopColor={hexA(diaHex, 0.22)} />
+          <stop offset="100%" stopColor={hexA(diaHex, 0)} />
         </linearGradient>
       </defs>
 
@@ -291,7 +309,7 @@ function ReadingsChart({ readings }: { readings: { label: string; sys: number; d
       ))}
 
       {/* Dashed colour-matched ceilings across the full width — 120 sys, 80 dia */}
-      {([[120, SYS_LINE], [80, DIA_LINE]] as [number, string][]).map(([v, c]) => (
+      {([[120, sysHex], [80, diaHex]] as [number, string][]).map(([v, c]) => (
         <line key={v} x1={X0} y1={yOf(v)} x2={X1} y2={yOf(v)} stroke={hexA(c, 0.5)} strokeWidth={1} strokeDasharray="2 4" />
       ))}
 
@@ -311,9 +329,9 @@ function ReadingsChart({ readings }: { readings: { label: string; sys: number; d
           <g key={i}>
             {last ? (
               <>
-                <circle cx={sx.toFixed(1)} cy={sy.toFixed(1)} r={9} fill={hexA(SYS_LINE, 0.18)} />
+                <circle cx={sx.toFixed(1)} cy={sy.toFixed(1)} r={9} fill={hexA(sysHex, 0.18)} />
                 <circle cx={sx.toFixed(1)} cy={sy.toFixed(1)} r={4.5} strokeWidth={1.8}  style={{ fill: SYS_LINE, stroke: BG }}/>
-                <circle cx={dx.toFixed(1)} cy={dy.toFixed(1)} r={9} fill={hexA(DIA_LINE, 0.18)} />
+                <circle cx={dx.toFixed(1)} cy={dy.toFixed(1)} r={9} fill={hexA(diaHex, 0.18)} />
                 <circle cx={dx.toFixed(1)} cy={dy.toFixed(1)} r={4.5} strokeWidth={1.8}  style={{ fill: DIA_LINE, stroke: BG }}/>
                 <text x={sx.toFixed(1)} y={(sy - 12).toFixed(1)} textAnchor="middle" fontSize={12} fontWeight={700} style={{ fill: SYS_LINE }}>{p.sys}</text>
                 <text x={dx.toFixed(1)} y={(dy + 19).toFixed(1)} textAnchor="middle" fontSize={12} fontWeight={700} style={{ fill: DIA_LINE }}>{p.dia}</text>
@@ -322,8 +340,8 @@ function ReadingsChart({ readings }: { readings: { label: string; sys: number; d
               <>
                 <circle cx={sx.toFixed(1)} cy={sy.toFixed(1)} r={2.3}  style={{ fill: SYS_LINE }}/>
                 <circle cx={dx.toFixed(1)} cy={dy.toFixed(1)} r={2.3}  style={{ fill: DIA_LINE }}/>
-                <text x={sx.toFixed(1)} y={(sy - 10).toFixed(1)} textAnchor="middle" fontSize={9.5} fill={hexA(SYS_LINE, 0.7)}>{p.sys}</text>
-                <text x={dx.toFixed(1)} y={(dy + 16).toFixed(1)} textAnchor="middle" fontSize={9.5} fill={hexA(DIA_LINE, 0.7)}>{p.dia}</text>
+                <text x={sx.toFixed(1)} y={(sy - 10).toFixed(1)} textAnchor="middle" fontSize={9.5} fill={hexA(sysHex, 0.7)}>{p.sys}</text>
+                <text x={dx.toFixed(1)} y={(dy + 16).toFixed(1)} textAnchor="middle" fontSize={9.5} fill={hexA(diaHex, 0.7)}>{p.dia}</text>
               </>
             )}
             <text x={xOf(i).toFixed(1)} y={180} textAnchor="middle" fontSize={10} style={{ fill: FAINT }}>{dayLabel(i)}</text>

@@ -8,6 +8,7 @@ import AuroraBackground from "@/components/dashboard/AuroraBackground";
 import GlassCard from "@/components/dashboard/GlassCard";
 import MetricEducation, { type MetricEducationItem } from "@/components/dashboard/MetricEducation";
 import { hex, lerp, smooth } from "@/components/dashboard/ActiveEnergyTodayChart";
+import { useThemeTokens } from "@/lib/themeTokens";
 
 // ── Tokens ──────────────────────────────────────────────────────────────────
 const TEXT = "var(--nura-text-primary)";
@@ -24,19 +25,28 @@ const ROSE_RGB = "var(--nura-rose-rgb)";
 const TEAL = "var(--nura-metric-rhr)";
 const TEAL_RGB = "var(--nura-metric-rhr-rgb)";
 
-// Subtle dark-emerald ambient at the top of the page (fades to near-black).
+// Subtle ambient at the top of the page (fades to near-black).
 const EMERALD_AURORA =
-  "radial-gradient(80% 60% at 50% -6%, rgba(var(--nura-optimal-rgb),0.20), transparent 60%)," +
-  "radial-gradient(60% 50% at 86% 6%, rgba(var(--nura-optimal-rgb),0.10), transparent 60%)," +
-  "radial-gradient(70% 40% at 8% 14%, rgba(var(--nura-optimal-rgb),0.10), transparent 60%)";
+  "radial-gradient(80% 60% at 50% -6%, rgba(var(--nura-metric-rhr-rgb),0.20), transparent 60%)," +
+  "radial-gradient(60% 50% at 86% 6%, rgba(var(--nura-metric-rhr-rgb),0.10), transparent 60%)," +
+  "radial-gradient(70% 40% at 8% 14%, rgba(var(--nura-metric-rhr-rgb),0.10), transparent 60%)";
 
-// ── Chart color helper (teal → sage → rose ramp, by value) ────────────────────
+// ── Chart color helper — the weekly dots, shaded by value ────────────────────
 // Defined locally and reusing the shared hex/lerp so it's guaranteed available
 // wherever these charts render — a missing colorAt silently blanks a chart.
-const WEEK_RAMP = ["var(--nura-metric-rhr)", "var(--nura-sage)", "var(--nura-rose)"]; // teal (best/lowest) → sage → rose
-function colorAt(t: number): string {
+//
+// The ramp is passed in RESOLVED. It used to be three `var()` strings handed
+// straight to hex(), which parses "va" as a hex pair: every dot on this chart
+// was painted `rgb(NaN,NaN,NaN)`, i.e. nothing. It is three steps of the
+// ordered ramp now — lowest reading quietest, highest deepest.
+const WEEK_RAMP_TOKENS = {
+  lo: ["--nura-step-1", "#6d8175"],
+  mid: ["--nura-step-3", "#9bb0a5"],
+  hi: ["--nura-step-4", "#bacdc1"],
+} as const;
+function colorAt(t: number, ramp: readonly [string, string, string]): string {
   const u = Math.max(0, Math.min(1, t));
-  const [a, b, c] = WEEK_RAMP.map(hex);
+  const [a, b, c] = ramp.map(hex);
   const s = u < 0.5 ? a : b;
   const e = u < 0.5 ? b : c;
   const k = u < 0.5 ? u / 0.5 : (u - 0.5) / 0.5;
@@ -60,9 +70,14 @@ const InfoIcon = () => (
 // reading strength: clamp((90 − bpm) / 52, 0, 1) — 52 bpm ≈ 73% ("excellent").
 // No ECG/heartbeat — resting HR is an overnight summary, not a live metric.
 // All motion is disabled under prefers-reduced-motion (ring filled, number final).
-const RING_FROM = "var(--nura-optimal)";
-const RING_TO = "var(--nura-optimal-hi)";
-const RING_GLOW = "var(--nura-optimal-rgb)"; // ring track / glow triplet
+// The ring, the trend line and every glow on this page were --nura-optimal —
+// the emerald that means "Optimal" on a status chip. So the page asserted a
+// verdict in its paint before you had read a number, and a resting rate that
+// had drifted upward was still drawn in the good-news colour. They are the
+// metric colour now; the chip beside the number does the judging.
+const RING_FROM = "var(--nura-metric-rhr)";
+const RING_TO = "var(--nura-metric-rhr-hi)";
+const RING_GLOW = "var(--nura-metric-rhr-rgb)"; // ring track / glow triplet
 const COUNT_FROM = 38; // count-up start
 const FILL_MS = 1400;
 
@@ -447,12 +462,14 @@ function TrendChart({
 }
 
 // ── Weekly-average line ─────────────────────────────────────────────────────
-// A smooth rose trend line (glow + soft fill) through the last 4 weekly averages.
-// Each point is a dot colored along the teal→sage→rose ramp by value; the best
-// (lowest) week is a teal dot inside a halo ring. Values above, week labels below.
+// A smooth trend line (glow + soft fill) through the last 4 weekly averages.
+// Each point is a dot shaded along the ordered ramp by value; the best
+// (lowest) week wears a halo ring. Values above, week labels below.
 function WeeklyAvgChart({ d }: { d: RestingHrDetail }) {
   const rawId = useId();
   const uid = `rhr-week-${rawId.replace(/[^a-zA-Z0-9]/g, "")}`;
+  const wr = useThemeTokens(WEEK_RAMP_TOKENS);
+  const weekRamp: readonly [string, string, string] = [wr.lo, wr.mid, wr.hi];
 
   const W = 356, H = 176, L = 34, R = 322, top = 36, bot = 116;
   const plotW = R - L;
@@ -492,7 +509,7 @@ function WeeklyAvgChart({ d }: { d: RestingHrDetail }) {
       {vals.map((v, i) => {
         const [x, y] = pts[i];
         const best = i === bestIdx;
-        const fill = best ? TEAL : colorAt((v - vmin) / vspan);
+        const fill = best ? TEAL : colorAt((v - vmin) / vspan, weekRamp);
         return (
           <g key={i}>
             {best && <circle cx={x.toFixed(1)} cy={y.toFixed(1)} r={8} fill="none" stroke={`rgba(${TEAL_RGB},0.4)`} strokeWidth={1.5} />}

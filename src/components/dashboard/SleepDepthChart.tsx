@@ -28,10 +28,10 @@ const SANS = "var(--font-inter), system-ui, sans-serif";
 
 // Stage palette — resolved to concrete hex for SVG fills. See lib/themeTokens.
 const STAGE_TOKENS = {
-  deep:  ["--nura-stage-deep", "#aec4e3"],
-  rem:   ["--nura-stage-rem", "#93a9cc"],
-  light: ["--nura-stage-light", "#7c8fab"],
-  awake: ["--nura-stage-awake", "#66748a"],
+  deep:  ["--nura-stage-deep", "#bacdc1"],
+  rem:   ["--nura-stage-rem", "#9bb0a5"],
+  light: ["--nura-stage-light", "#869a8e"],
+  awake: ["--nura-stage-awake", "#6d8175"],
 } as const;
 
 type Stage = keyof typeof STAGE_TOKENS;

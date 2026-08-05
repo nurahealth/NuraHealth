@@ -18,7 +18,7 @@ const HAIR = "var(--nura-hairline-strong)";
 const SANS = "var(--font-inter), system-ui, sans-serif";
 
 const GOLD = "var(--nura-gold-ring)";
-const GOLD_RGB = "var(--nura-gold-ring-rgb)"; // #e8c266 — rich champagne gold for glows
+const GOLD_RGB = "var(--nura-gold-ring-rgb)"; // the ring/glow triplet
 // Hero ring gradient — rich gold ramp (deep amber → bright champagne).
 const RING_LO = "var(--nura-gold-ring-lo)";
 const RING_MID = "var(--nura-gold-ring)";

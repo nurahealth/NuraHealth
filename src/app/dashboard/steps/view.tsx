@@ -22,7 +22,7 @@ const bStyle: React.CSSProperties = { color: TEXT, fontWeight: 600 };
 // Warm gold ambient so this reads as the movement / steps page.
 const GOLD_AURORA =
   "radial-gradient(80% 60% at 50% -6%, rgba(var(--nura-metric-activity-rgb),0.30), transparent 60%)," +
-  "radial-gradient(60% 50% at 86% 6%, rgba(var(--nura-good-rgb),0.16), transparent 60%)," +
+  "radial-gradient(60% 50% at 86% 6%, rgba(var(--nura-metric-activity-rgb),0.16), transparent 60%)," +
   "radial-gradient(70% 40% at 8% 14%, rgba(var(--nura-metric-activity-rgb),0.12), transparent 60%)";
 
 // ── Icons ───────────────────────────────────────────────────────────────────
@@ -163,8 +163,12 @@ export default function StepsDetailPage() {
               <span key={i} style={{ display: "inline-flex", alignItems: "center" }}>
                 {i > 0 && <span style={{ width: 3, height: 3, borderRadius: "50%", background: "var(--nura-ink-faint)", margin: "0 9px", flexShrink: 0 }} />}
                 <span>
-                  <b style={{ fontWeight: 700, color: it.gold ? "var(--nura-good)" : "var(--nura-text-primary)" }}>{it.num}</b>
-                  <span style={{ color: it.gold ? "var(--nura-good)" : "var(--nura-text-secondary)" }}>{it.words}</span>
+                  {/* "N to go" was --nura-good, the status gold, for emphasis.
+                      A remaining count is not a warning; --nura-accent-text
+                      keeps the dark-mode emphasis and goes ink in light, where
+                      a tinted stat number is exactly what this pass removes. */}
+                  <b style={{ fontWeight: 700, color: it.gold ? "var(--nura-accent-text)" : "var(--nura-text-primary)" }}>{it.num}</b>
+                  <span style={{ color: "var(--nura-text-secondary)" }}>{it.words}</span>
                 </span>
               </span>
             ))}
@@ -278,12 +282,14 @@ function StepsWeekChart({ d }: { d: StepsDetail }) {
   );
 }
 
-// One warm orange identity across the page (no teal/green). GOLD_HEX is the
-// muted "behind / down" indicator; positive/lead accents use ORANGE.
+// One identity across the page. The "behind / down" indicator used to be
+// --nura-good, the status gold, which put a status colour on an ordinary
+// number and made "slightly under your usual" look like a rating. It is
+// neutral ink now — the arrow says the direction, the colour says nothing.
 const ORANGE = "var(--nura-orange)";        // base
 const ORANGE_LIGHT = "var(--nura-orange-mid)";  // light
-const ORANGE_RGB = "var(--nura-orange-rgb)"; // #e3a263
-const GOLD_HEX = "var(--nura-good)";
+const ORANGE_RGB = "var(--nura-orange-rgb)"; // series tint
+const GOLD_HEX = "var(--nura-text-secondary)";
 
 // ── Card 1 · Pace vs your usual ───────────────────────────────────────────────
 // How today's cumulative steps are tracking against a typical day: a lead line

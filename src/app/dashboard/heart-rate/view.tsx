@@ -14,16 +14,19 @@ import { useMetricPaint } from "@/lib/metricColors";
 const TEXT = "var(--nura-text-primary)";
 const MUTED = "var(--nura-text-secondary)";
 const FAINT = "var(--nura-text-tertiary)";
-const CORAL = "var(--nura-alert)";
+// The page identity. It was --nura-alert, the status brick: an ordinary
+// heart-rate page announced itself in the colour reserved for "something is
+// wrong". It is the metric colour now, like every other detail screen.
+const CORAL = "var(--nura-metric-heart)";
 const INK = "var(--nura-fg-rgb)"; // warm off-white in dark mode
 const SANS = "var(--font-inter), system-ui, sans-serif";
 const bStyle: React.CSSProperties = { color: TEXT, fontWeight: 600 };
 
-// Warm coral/amber ambient so this reads as the cardiovascular page.
+// Ambient bloom behind the page — the metric colour, not the alert red.
 const CORAL_AURORA =
-  "radial-gradient(80% 60% at 50% -6%, rgba(var(--nura-alert-rgb),0.30), transparent 60%)," +
+  "radial-gradient(80% 60% at 50% -6%, rgba(var(--nura-metric-heart-rgb),0.30), transparent 60%)," +
   "radial-gradient(60% 50% at 86% 6%, rgba(var(--nura-metric-heart-rgb),0.16), transparent 60%)," +
-  "radial-gradient(70% 40% at 8% 14%, rgba(var(--nura-alert-rgb),0.12), transparent 60%)";
+  "radial-gradient(70% 40% at 8% 14%, rgba(var(--nura-metric-heart-rgb),0.12), transparent 60%)";
 
 // ── Icons ───────────────────────────────────────────────────────────────────
 const Chevron = () => (

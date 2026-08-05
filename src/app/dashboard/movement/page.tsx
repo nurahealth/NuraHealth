@@ -18,7 +18,7 @@ const SANS = "var(--font-inter), system-ui, sans-serif";
 
 const AMBER_AURORA =
   "radial-gradient(80% 60% at 50% -6%, rgba(var(--nura-metric-activity-rgb),0.30), transparent 60%)," +
-  "radial-gradient(60% 50% at 86% 6%, rgba(var(--nura-good-rgb),0.16), transparent 60%)," +
+  "radial-gradient(60% 50% at 86% 6%, rgba(var(--nura-metric-activity-rgb),0.16), transparent 60%)," +
   "radial-gradient(70% 40% at 8% 14%, rgba(var(--nura-amber-2-rgb),0.12), transparent 60%)";
 
 // ── Icons ───────────────────────────────────────────────────────────────────

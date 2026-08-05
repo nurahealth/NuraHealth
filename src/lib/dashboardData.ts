@@ -484,9 +484,14 @@ export interface SleepStageDetail {
   label: string;
   /** Tag background color. */
   color: string;
-  /** Tag text color. NOTE: currently unconsumed by any component — left as
-   *  literal hex rather than tokenised, to avoid inventing tokens for dead
-   *  data. Tokenise if a component ever renders it. */
+  /** Tag text color — the ink that sits ON the filled stage swatch. Still
+   *  unconsumed by any component. It used to hold four literal hexes picked
+   *  against the old per-stage hues (a blue for Deep, a teal for REM); those
+   *  went stale the moment the stages collapsed onto the sage ramp, and a
+   *  single literal cannot be right in both themes anyway — the swatch is
+   *  dark in light mode and bright in dark. --nura-sage-bg-on is exactly this
+   *  value and it flips with the theme, so the field is now correct if a
+   *  component ever does render it. */
   textColor: string;
   duration: string;
   pct: number;
@@ -582,10 +587,12 @@ const SLEEP_DETAIL: SleepDetail = {
   ],
   timeInBed: "8h 20m",
   stages: [
-    { label: "Awake", color: "rgba(var(--nura-fg-rgb),0.4)", textColor: "#0d0d0e", duration: "0h 58m", pct: 12 },
-    { label: "REM sleep", color: "--nura-stage-rem", textColor: "#06372c", duration: "2h 18m", pct: 28 },
-    { label: "Light sleep", color: "--nura-stage-light", textColor: "#16241e", duration: "3h 46m", pct: 46 },
-    { label: "Deep sleep", color: "--nura-stage-deep", textColor: "#082742", duration: "1h 04m", pct: 13 },
+    // Awake is the shallowest STAGE, not an absence of one — it takes the
+    // ramp's first step like the other three rather than a neutral ink wash.
+    { label: "Awake", color: "--nura-stage-awake", textColor: "var(--nura-sage-bg-on)", duration: "0h 58m", pct: 12 },
+    { label: "REM sleep", color: "--nura-stage-rem", textColor: "var(--nura-sage-bg-on)", duration: "2h 18m", pct: 28 },
+    { label: "Light sleep", color: "--nura-stage-light", textColor: "var(--nura-sage-bg-on)", duration: "3h 46m", pct: 46 },
+    { label: "Deep sleep", color: "--nura-stage-deep", textColor: "var(--nura-sage-bg-on)", duration: "1h 04m", pct: 13 },
   ],
   hypnogram: {
     // 0 deep · 1 light · 2 REM · 3 awake
@@ -902,11 +909,15 @@ const HEART_RATE_DETAIL: HeartRateDetail = {
   average: 78,
   max: 138,
   rangeCaption: "Continuous · range 52–138 bpm",
+  // Intensity zones are ORDERED, not categorical: Peak is more of the same
+  // thing Resting is. They used to be brick / amber / gold / emerald, which
+  // read as a verdict — sitting still scored green and a cardio block scored
+  // red. They now walk the shared ramp, so effort reads as depth of colour.
   zones: [
-    { name: "Peak", range: "150+ bpm", duration: "0h 18m", pct: 3, color: "var(--nura-alert)" },
-    { name: "Cardio", range: "110–150", duration: "1h 42m", pct: 8, color: "var(--nura-amber)" },
-    { name: "Fat burn", range: "70–110", duration: "5h 20m", pct: 22, color: "var(--nura-good)" },
-    { name: "Resting", range: "52–70", duration: "16h 10m", pct: 67, color: "var(--nura-optimal)" },
+    { name: "Peak", range: "150+ bpm", duration: "0h 18m", pct: 3, color: "var(--nura-step-4)" },
+    { name: "Cardio", range: "110–150", duration: "1h 42m", pct: 8, color: "var(--nura-step-3)" },
+    { name: "Fat burn", range: "70–110", duration: "5h 20m", pct: 22, color: "var(--nura-step-2)" },
+    { name: "Resting", range: "52–70", duration: "16h 10m", pct: 67, color: "var(--nura-step-1)" },
   ],
   insight:
     "You spent most of today at rest with one solid cardio block around midday. Your resting rate of 54 is low and steady — a good marker of cardiovascular fitness.",

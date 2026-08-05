@@ -38,11 +38,12 @@ export function lerp(a: number, b: number, t: number): number {
 export function light([r, g, b]: [number, number, number], amt: number): [number, number, number] {
   return [Math.round(lerp(r, 255, amt)), Math.round(lerp(g, 255, amt)), Math.round(lerp(b, 255, amt))];
 }
-/** Resolve a 0–1 intensity to an [r,g,b] along the amber→coral ramp. */
-/** Dark-theme ember ramp. Only used as the default for callers that have not
- *  been migrated onto tokens yet (the Active Energy detail page); migrated
- *  callers pass a theme-resolved ramp. */
-const RAMP_DARK = ["#f0a05a", "#e07a3c", "#c85e28"] as const;
+/** Resolve a 0–1 intensity to an [r,g,b] along an ordered ramp. */
+/** Last-resort default, for a caller that renders before its tokens resolve.
+ *  Three steps of the dark sage ladder — it was the amber→coral ember ramp,
+ *  which is how an un-migrated caller could silently paint a chart in a hue
+ *  the theme no longer contains. Migrated callers pass a resolved ramp. */
+const RAMP_DARK = ["#6d8175", "#9bb0a5", "#bacdc1"] as const;
 
 export function colorAt(t: number, ramp: readonly string[] = RAMP_DARK): [number, number, number] {
   const u = Math.max(0, Math.min(1, t));

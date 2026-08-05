@@ -19,8 +19,8 @@ const bStyle: React.CSSProperties = { color: TEXT, fontWeight: 600 };
 // Aqua-teal identity for the whole page (ring, pill, chart, accents).
 const AQUA = "var(--nura-aqua)";
 const AQUA_LIGHT = "var(--nura-aqua-hi)";
-const AQUA_RGB = "var(--nura-aqua-rgb)"; // #4fc4d6
-const AQUA_LIGHT_RGB = "var(--nura-aqua-hi-rgb)"; // #7fdce8
+const AQUA_RGB = "var(--nura-aqua-rgb)"; // series tint
+const AQUA_LIGHT_RGB = "var(--nura-aqua-hi-rgb)"; // lighter step for the glow
 
 // Subtle dark-aqua ambient at the top of the page (fades to near-black).
 const AQUA_AURORA =

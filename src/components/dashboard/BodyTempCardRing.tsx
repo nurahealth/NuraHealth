@@ -2,7 +2,6 @@
 
 import { useId } from "react";
 import { deviationDirection, fmtMagUnit, type TemperatureUnit } from "@/lib/temperatureUnit";
-import { useMetricPaints } from "@/lib/metricColors";
 
 // Body Temp dashboard-card ring — a 270° arc (gap at the bottom) with a faint
 // full track under a cool→warm zone track, a baseline notch at the TOP
@@ -11,12 +10,15 @@ import { useMetricPaints } from "@/lib/metricColors";
 // The center shows the deviation in the user's unit and a status word. Marker
 // position is unit-independent (a ratio on the scale).
 //
-// The zone track keeps body temp's polarity — cool below baseline, warm above —
-// which is the one place a two-ended scale is the honest encoding. It was a
-// FOUR-stop ramp (blue → teal → gold → coral) that borrowed the sleep, HRV,
-// movement and heart hues on its way across, so a single ring contained four
-// other metrics' colours. It is now the two poles this metric actually owns,
-// toned to the same muted band as everything else.
+// The zone track is a two-ended SCALE, not a series: it exists so the marker
+// has somewhere to sit. It was a four-stop ramp (blue → teal → gold → coral)
+// that borrowed the sleep, HRV, movement and heart hues on its way across, so
+// a single ring contained four other metrics' colours; then it was two poles
+// of body temp's own hue, which still said "cool is one thing, warm is
+// another" in colour. Polarity is a status reading and the centre of the ring
+// already states it in words, so the track is now one neutral scale —
+// symmetric, quiet at baseline, deepening toward either end — and the only
+// coloured thing on the ring is the marker showing where the value fell.
 
 const CX = 98, CY = 98, R = 60, START = 135, SWEEP = 270;
 const pol = (a: number) => ({
@@ -27,9 +29,6 @@ const pol = (a: number) => ({
 export default function BodyTempCardRing({
   devC, unit, normalRange,
 }: { devC: number; unit: TemperatureUnit; normalRange: [number, number] }) {
-  const paints = useMetricPaints();
-  const cool = paints["body-temperature"];   // the cyan pole
-  const warm = paints.tempWarm;              // the warm pole
   const rawId = useId();
   const uid = `bt-ring-${rawId.replace(/[^a-zA-Z0-9]/g, "")}`;
 
@@ -55,13 +54,12 @@ export default function BodyTempCardRing({
     <div style={{ position: "relative", width: "100%", display: "flex", justifyContent: "center" }}>
       <svg viewBox="0 0 196 196" style={{ width: "100%", maxWidth: 196, height: "auto", display: "block" }}>
         <defs>
-          {/* Two poles and a neutral middle, so "at baseline" is the quiet
-              point on the scale rather than another colour. */}
+          {/* Symmetric, with the quiet point at baseline, so distance from
+              baseline is the only thing the track encodes. */}
           <linearGradient id={`${uid}-zone`} x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0%" stopColor={cool.hex} />
-            <stop offset="50%" stopColor={cool.alpha(0.22)} />
-            <stop offset="50%" stopColor={warm.alpha(0.22)} />
-            <stop offset="100%" stopColor={warm.hex} />
+            <stop offset="0%" stopColor="var(--nura-scale-end)" />
+            <stop offset="50%" stopColor="var(--nura-scale-mid)" />
+            <stop offset="100%" stopColor="var(--nura-scale-end)" />
           </linearGradient>
         </defs>
 

@@ -24,21 +24,26 @@ const hexA = (h: string, a: number) => {
   return `rgba(${r},${g},${b},${a})`;
 };
 
-// Per-metric color + icon (mirrors each card/detail page's established accent).
+// Per-metric icon, and the accent it is drawn in. The colours here used to be
+// hand-picked per row to mirror each detail page's accent, which meant three of
+// them (--nura-alert, --nura-good) were status tokens: a settings list showed
+// Heart Rate in alert brick and Steps in warning gold whether or not anything
+// was wrong with either. Each row now names its own metric in the fixed map,
+// so this list can never drift from what the metric is actually drawn in.
 const META: Record<string, { color: AccentToken; icon: string }> = {
-  sleep: { color: "--nura-sleep-deep", icon: "moon" },
-  hrv: { color: "--nura-teal", icon: "wave" },
-  "resting-hr": { color: "--nura-teal", icon: "heart" },
-  "heart-rate": { color: "--nura-alert", icon: "heart" },
-  steps: { color: "--nura-good", icon: "steps" },
-  "active-energy": { color: "--nura-amber", icon: "flame" },
-  "body-temperature": { color: "--nura-teal", icon: "temp" },
-  exercise: { color: "--nura-teal", icon: "dumbbell" },
-  distance: { color: "--nura-sleep-deep", icon: "route" },
-  "blood-oxygen": { color: "--nura-teal", icon: "drop" },
-  "respiratory-rate": { color: "--nura-mauve", icon: "lungs" },
-  "cardio-fitness": { color: "--nura-good", icon: "activity" },
-  "blood-pressure": { color: "--nura-rose", icon: "gauge" },
+  sleep: { color: "--nura-metric-sleep", icon: "moon" },
+  hrv: { color: "--nura-metric-hrv", icon: "wave" },
+  "resting-hr": { color: "--nura-metric-rhr", icon: "heart" },
+  "heart-rate": { color: "--nura-metric-heart", icon: "heart" },
+  steps: { color: "--nura-metric-activity", icon: "steps" },
+  "active-energy": { color: "--nura-metric-activity", icon: "flame" },
+  "body-temperature": { color: "--nura-metric-temp", icon: "temp" },
+  exercise: { color: "--nura-metric-activity", icon: "dumbbell" },
+  distance: { color: "--nura-metric-activity", icon: "route" },
+  "blood-oxygen": { color: "--nura-metric-oxygen", icon: "drop" },
+  "respiratory-rate": { color: "--nura-metric-resp", icon: "lungs" },
+  "cardio-fitness": { color: "--nura-metric-oxygen", icon: "activity" },
+  "blood-pressure": { color: "--nura-metric-heart", icon: "gauge" },
 };
 const FALLBACK = { color: "--nura-sage" as AccentToken, icon: "dot" };
 

@@ -6,7 +6,7 @@ import { getSleepDetail, SOURCE_LABEL, type MetricStatus } from "@/lib/dashboard
 import AuroraBackground from "@/components/dashboard/AuroraBackground";
 import RadialGauge from "@/components/dashboard/RadialGauge";
 import GlassCard from "@/components/dashboard/GlassCard";
-import { hex, light, smooth } from "@/components/dashboard/ActiveEnergyTodayChart";
+import { smooth } from "@/components/dashboard/ActiveEnergyTodayChart";
 import MetricEducation, { type MetricEducationItem } from "@/components/dashboard/MetricEducation";
 
 // ── Tokens ──────────────────────────────────────────────────────────────────
@@ -18,21 +18,26 @@ const INK = "var(--nura-fg-rgb)"; // off-white in dark, near-black in light
 
 // Stage palette — shared by the hypnogram, the legend and the HR/HRV shading so
 // every night chart speaks the same color language.
+// All four stages come off the ordered ramp. Light and Awake used to reach
+// past it — Light took the brand sage and Awake took --nura-good, the status
+// gold — so a hypnogram carried two ramp steps, an accent and a status colour
+// in one strip, and the quietest stage of the night was the loudest mark.
 const DEEP = "var(--nura-stage-deep)";
 const REM = "var(--nura-stage-rem)";
-const LIGHT = "var(--nura-sage)";
-const AWAKE = "var(--nura-good)";
+const LIGHT = "var(--nura-stage-light)";
+const AWAKE = "var(--nura-stage-awake)";
 const DEEP_RGB = "var(--nura-metric-sleep-rgb)";
 const REM_RGB = "var(--nura-metric-sleep-rgb)";
 
-// Overnight-chart identities — each matches its own metric tab (not sleep-blue):
-// Heart rate → red, HRV → aqua-teal. Lighter shades feed the fill/glow.
+// The overnight heart-rate and HRV strips. These used to carry each metric's
+// own hue so the strip matched its tab; every metric is the one data colour
+// now, and the strips are told apart by their titles and their axes.
 const HR_RED = "var(--nura-heart)";
-const HR_RED_RGB = "var(--nura-heart-rgb)"; // #e8615c — pill tint
-const HR_RED_GLOW = "var(--nura-heart-hi-rgb)"; // #f2998f — lighter shade for the glow
+const HR_RED_RGB = "var(--nura-heart-rgb)"; // pill tint
+const HR_RED_GLOW = "var(--nura-heart-hi-rgb)"; // lighter step for the glow
 const HRV_AQUA = "var(--nura-aqua)";
-const HRV_AQUA_RGB = "var(--nura-aqua-rgb)"; // #4fc4d6 — pill tint
-const HRV_AQUA_GLOW = "var(--nura-aqua-hi-rgb)"; // #7fdce8 — lighter shade for the glow
+const HRV_AQUA_RGB = "var(--nura-aqua-rgb)"; // pill tint
+const HRV_AQUA_GLOW = "var(--nura-aqua-hi-rgb)"; // lighter step for the glow
 
 // Cool blue→teal aurora pinned to the top, matching the reference.
 const SLEEP_AURORA =
@@ -88,19 +93,24 @@ function ChartSubhead({ caption, avg, color, rgb }: { caption: string; avg: stri
   );
 }
 
-// ── Status badge (Optimal = teal · Good = gold · Alert = coral) ────────────────
-const BADGE: Record<MetricStatus, { color: string; rgb: string; label: string }> = {
-  optimal: { color: REM, rgb: REM_RGB, label: "Optimal" },
-  good: { color: AWAKE, rgb: "211,162,83", label: "Good" },
-  alert: { color: "var(--nura-alert)", rgb: "232,116,90", label: "Alert" },
+// ── Status badge ─────────────────────────────────────────────────────────────
+// These were painted from the SLEEP STAGE ramp plus a hardcoded gold — Optimal
+// wore the REM step and Good wore the Awake step, so the chip that judges a
+// reading was drawn in the same colours as the reading itself, and the gold
+// literal ignored the theme entirely. They use the shared chip tokens now:
+// calm sage for the fine states, amber and brick kept for actual attention.
+const BADGE: Record<MetricStatus, { fg: string; bg: string; label: string }> = {
+  optimal: { fg: "var(--nura-chip-optimal-fg)", bg: "var(--nura-chip-optimal-bg)", label: "Optimal" },
+  good: { fg: "var(--nura-chip-good-fg)", bg: "var(--nura-chip-good-bg)", label: "Good" },
+  alert: { fg: "var(--nura-chip-alert-fg)", bg: "var(--nura-chip-alert-bg)", label: "Alert" },
 };
 function Badge({ status, label }: { status: MetricStatus; label?: string }) {
   const b = BADGE[status];
   return (
-    <span style={{
+    <span className="nura-chip" style={{
       display: "inline-flex", alignItems: "center", whiteSpace: "nowrap",
       padding: "4px 10px", borderRadius: 8, fontFamily: SANS, fontSize: 11.5, fontWeight: 600,
-      color: b.color, background: `rgba(${b.rgb},0.14)`, border: `1px solid rgba(${b.rgb},0.3)` }}>
+      color: b.fg, background: b.bg, border: "1px solid var(--nura-chip-border)" }}>
       {label ?? b.label}
     </span>
   );
@@ -410,10 +420,12 @@ function Hypnogram({ seq }: { seq: ("D" | "R" | "L" | "A")[] }) {
       <defs>
         {seq.map((s, i) => {
           const c = STAGE_META[s].color;
-          const [lr, lg, lb] = light(hex(c), 0.34);
+          // `c` is a var() reference, so hex() parsed it to NaN and the lit top
+          // stop came out rgb(NaN,…) — which SVG resolves to black. color-mix
+          // takes the reference and lightens it against the live theme.
           return (
             <linearGradient key={i} id={`${uid}-${i}`} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0" stopColor={`rgb(${lr},${lg},${lb})`} />
+              <stop offset="0" stopColor={`color-mix(in srgb, ${c}, white 34%)`} />
               <stop offset="0.55" stopColor={c} />
               <stop offset="1" stopColor={c} stopOpacity="0.4" />
             </linearGradient>

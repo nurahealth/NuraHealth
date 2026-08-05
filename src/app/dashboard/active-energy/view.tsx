@@ -9,6 +9,7 @@ import GlassCard from "@/components/dashboard/GlassCard";
 import { useMetricPaint } from "@/lib/metricColors";
 import ActiveEnergyTodayChart, { colorAt, light } from "@/components/dashboard/ActiveEnergyTodayChart";
 import MetricEducation, { type MetricEducationItem } from "@/components/dashboard/MetricEducation";
+import { useThemeTokens } from "@/lib/themeTokens";
 
 // ── Tokens ──────────────────────────────────────────────────────────────────
 const TEXT = "var(--nura-text-primary)";
@@ -21,7 +22,17 @@ const EMBER_RGB = "var(--nura-ember-rgb)";
 const SANS = "var(--font-inter), system-ui, sans-serif";
 const bStyle: React.CSSProperties = { color: TEXT, fontWeight: 600 };
 
-// Dark-ember ambient so this reads as the energy / activity page (no teal/green).
+// The weekly bars shade by value, and the shading is done in hex maths, so the
+// ramp has to arrive as concrete colours. Left unpassed it fell through to the
+// module default — a hardcoded amber→coral ember ramp that no theme could
+// touch, so these seven bars stayed lit in the old palette on a white card.
+const WEEK_RAMP_TOKENS = {
+  lo: ["--nura-step-1", "#6d8175"],
+  mid: ["--nura-step-3", "#9bb0a5"],
+  hi: ["--nura-step-4", "#bacdc1"],
+} as const;
+
+// Ambient bloom behind the page — the metric colour, like every detail screen.
 const EMBER_AURORA =
   "radial-gradient(80% 60% at 50% -6%, rgba(var(--nura-ember-rgb),0.26), transparent 60%)," +
   "radial-gradient(60% 50% at 86% 6%, rgba(var(--nura-ember-hi-rgb),0.16), transparent 60%)," +
@@ -218,13 +229,15 @@ export default function ActiveEnergyDetailPage() {
 }
 
 // ── This week · daily bars vs the Move goal ───────────────────────────────────
-// Seven amber→coral lit-glass bars with the kcal value above each. Days that hit
+// Seven lit-glass bars, shaded along the ordered ramp, kcal value above each. Days that hit
 // the goal get a "✓", full color, and a soft glow; missed days are dimmed. A
 // dashed goal line (label in the right gutter) and weekday labels with today
 // highlighted complete the panel.
 function ActiveWeekChart({ d }: { d: ActiveEnergyDetail }) {
   const rawId = useId();
   const uid = `ae-week-${rawId.replace(/[^a-zA-Z0-9]/g, "")}`;
+  const wr = useThemeTokens(WEEK_RAMP_TOKENS);
+  const ramp = [wr.lo, wr.mid, wr.hi];
 
   const W = 356, H = 192, L = 24, R = 302, top = 28, bot = 152;
   const plotW = R - L;
@@ -238,7 +251,7 @@ function ActiveWeekChart({ d }: { d: ActiveEnergyDetail }) {
     <svg width="100%" height={H} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" style={{ display: "block", overflow: "visible", marginTop: 6 }}>
       <defs>
         {d.week.map((day, i) => {
-          const [r, g, b] = colorAt(Math.max(0, Math.min(1, (day.value - d.weekFloor) / span)));
+          const [r, g, b] = colorAt(Math.max(0, Math.min(1, (day.value - d.weekFloor) / span)), ramp);
           const [lr, lg, lb] = light([r, g, b], 0.5);
           return (
             <linearGradient key={i} id={`${uid}-${i}`} x1="0" y1="0" x2="0" y2="1">
@@ -258,7 +271,7 @@ function ActiveWeekChart({ d }: { d: ActiveEnergyDetail }) {
       {d.week.map((day, i) => {
         const hit = day.value >= d.moveGoal;
         const norm = Math.max(0, Math.min(1, (day.value - d.weekFloor) / span));
-        const [r, g, b] = colorAt(norm);
+        const [r, g, b] = colorAt(norm, ramp);
         const x = L + i * slot + (slot - barW) / 2;
         const y = yOf(day.value);
         const h = bot - y;

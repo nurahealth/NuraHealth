@@ -6,6 +6,7 @@ import { getBodyTempDetail, SOURCE_LABEL, type BodyTempDetail } from "@/lib/dash
 import AuroraBackground from "@/components/dashboard/AuroraBackground";
 import GlassCard from "@/components/dashboard/GlassCard";
 import { hex, lerp, smooth } from "@/components/dashboard/ActiveEnergyTodayChart";
+import { useThemeTokens } from "@/lib/themeTokens";
 import {
   useTemperatureUnitStore,
   fmtDeltaBare, fmtDeltaDeg, fmtDeltaUnit, fmtMagUnit, wordedDeviation,
@@ -19,11 +20,22 @@ const FAINT = "var(--nura-text-tertiary)";
 const INK = "var(--nura-fg-rgb)"; // off-white in dark, near-black in light
 const SANS = "var(--font-inter), system-ui, sans-serif";
 
-const TEAL = "var(--nura-metric-temp)";          // the cool pole
+// Both "poles" resolve to the one data colour now — see the note on the metric
+// map in globals.css. The names stay because the call sites read as a scale.
+const TEAL = "var(--nura-metric-temp)";
 const TEAL_RGB = "var(--nura-metric-temp-rgb)";
-const WARM = "var(--nura-metric-temp-warm)";     // the warm pole
+const WARM = "var(--nura-metric-temp-warm)";
 const WARM_RGB = "var(--nura-metric-temp-warm-rgb)";
 const CORAL = "var(--nura-alert)";
+
+// The weekly dots interpolate along a ramp, and hex maths cannot read a
+// `var()` — the ramp used to be written as var() strings and every dot came
+// out `rgb(NaN,NaN,NaN)`, i.e. no fill at all. Resolved through the theme.
+const RAMP_TOKENS = {
+  near: ["--nura-step-1", "#6d8175"],
+  mid: ["--nura-step-3", "#9bb0a5"],
+  far: ["--nura-step-4", "#bacdc1"],
+} as const;
 
 // Cool teal aurora at the top of the page.
 const TEAL_AURORA =
@@ -31,8 +43,10 @@ const TEAL_AURORA =
   "radial-gradient(60% 50% at 86% 6%, rgba(var(--nura-metric-temp-rgb),0.14), transparent 60%)," +
   "radial-gradient(70% 40% at 8% 14%, rgba(var(--nura-metric-temp-rgb),0.10), transparent 60%)";
 
-// Zone bar: cool (blue) → normal (teal) → warm (gold) → elevated (coral).
-const ZONE_GRADIENT = "linear-gradient(90deg, var(--nura-metric-temp) 0%, rgba(var(--nura-metric-temp-rgb),0.22) 46%, rgba(var(--nura-metric-temp-warm-rgb),0.22) 54%, var(--nura-metric-temp-warm) 100%)";
+// Zone bar. It ran blue → teal → gold → coral, which is a four-hue verdict
+// under a reading; it is now a symmetric track that is quiet at baseline and
+// deepens toward either end. Neutral warm grey in light, faint sage in dark.
+const ZONE_GRADIENT = "linear-gradient(90deg, var(--nura-scale-end) 0%, var(--nura-scale-mid) 46%, var(--nura-scale-mid) 54%, var(--nura-scale-end) 100%)";
 
 // ── Chart color helper — colorAt(t, stops) over an arbitrary ramp ─────────────
 // Defined locally (reusing the shared hex/lerp) so it's guaranteed available
@@ -367,8 +381,17 @@ function WeeklyChart({ weeklyAvg, unit }: { weeklyAvg: number[]; unit: Temperatu
   const scaleMax = Math.max(0.1, Math.max(...weeklyAvg.map((v) => Math.abs(v))) * 1.35);
   const xOf = (i: number) => pad + (n > 1 ? i * ((W - 2 * pad) / (n - 1)) : 0);
   const yOf = (v: number) => baseY - (Math.max(-scaleMax, Math.min(scaleMax, v)) / scaleMax) * amp;
-  // Diverging ramp around baseline: blue → teal → sage → gold → coral.
-  const ramp: [number, string][] = [[0, "var(--nura-sleep-deep)"], [0.25, "var(--nura-teal)"], [0.5, "var(--nura-sage)"], [0.75, "var(--nura-good)"], [1, "var(--nura-alert)"]];
+  // Diverging ramp around baseline. It was blue → teal → sage → gold → coral:
+  // five hues, four of them borrowed from other metrics, and the two ends were
+  // a verdict (cold = calm blue, hot = alert coral) painted onto a reading that
+  // is symmetric — 0.4° below baseline is exactly as notable as 0.4° above.
+  // It is now symmetric in colour too: quiet at baseline, deepening toward
+  // either end, so the ramp shows MAGNITUDE of deviation and the status word
+  // in the centre of the ring says which direction and whether it matters.
+  const rt = useThemeTokens(RAMP_TOKENS);
+  const ramp: [number, string][] = [
+    [0, rt.far], [0.25, rt.mid], [0.5, rt.near], [0.75, rt.mid], [1, rt.far],
+  ];
   const norm = (v: number) => (v + scaleMax) / (2 * scaleMax);
 
   return (
