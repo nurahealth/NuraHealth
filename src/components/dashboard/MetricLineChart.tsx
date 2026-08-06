@@ -192,9 +192,26 @@ export default function MetricLineChart({
           {/* Two stops, both low. An area fill is ground for the line to sit on;
               the moment it is bright enough to read as its own shape it is
               competing with the thing it is supposed to support. */}
-          <linearGradient id={`fill${uid}`} x1="0" y1="0" x2="0" y2="1" className="nura-area-grad">
-            <stop offset="0" stopColor={color.hex} stopOpacity={ALPHA.areaTop} />
-            <stop offset="1" stopColor={color.hex} stopOpacity={ALPHA.areaBottom} />
+          {/* Light fades the body tone from 10% to nothing — a clean vertical
+              wash under the line. It opts OUT of .nura-area-grad, whose job was
+              to flatten dark's bloom-y multi-stop fill to one even band; this
+              gradient is already flat and clean, and being flattened would kill
+              the fade. Dark keeps the class and the behaviour. */}
+          <linearGradient
+            id={`fill${uid}`} x1="0" y1="0" x2="0" y2="1"
+            className={lightForm ? undefined : "nura-area-grad"}
+          >
+            <stop
+              offset="0"
+              style={lightForm ? { stopColor: "var(--nura-sage-mid)" } : undefined}
+              stopColor={lightForm ? undefined : color.hex}
+              stopOpacity={lightForm ? 0.1 : ALPHA.areaTop}
+            />
+            <stop
+              offset="1"
+              style={lightForm ? { stopColor: "var(--nura-sage-mid)" } : undefined}
+              stopColor={lightForm ? undefined : color.hex}
+              stopOpacity={lightForm ? 0 : ALPHA.areaBottom} />
           </linearGradient>
         </defs>
 
@@ -220,16 +237,21 @@ export default function MetricLineChart({
           d={path} fill="none" stroke={color.hex}
           // 2.5px in light: a 2px stroke that was confident against near-black
           // reads thin and tentative on white at the same size.
-          strokeWidth={lightForm ? 2.5 : STROKE.series}
+          // 2px emphasis tone in light — the line is the mark, so it takes the
+          // deep step rather than the body one.
+          style={lightForm ? { stroke: "var(--nura-sage-deep)" } : undefined}
+          strokeWidth={lightForm ? 2 : STROKE.series}
           strokeLinecap="round" strokeLinejoin="round"
         />
 
         {/* Markers. Every point when the series is sparse enough that each one
             is a real reading worth hitting; otherwise only the latest, so a
             dense curve stays a curve instead of a bead necklace. */}
+        {/* The latest point is the reading the card is quoting, so it takes
+            the emphasis tone alongside the stroke. */}
         {sparse && !lightForm
           ? pts.map(([cx, cy], i) => <Marker key={i} cx={cx} cy={cy} color={color.hex} />)
-          : <Marker cx={last[0]} cy={last[1]} color={color.hex} r={MARKER.rLatest} />}
+          : <Marker cx={last[0]} cy={last[1]} color={lightForm ? "var(--nura-sage-deep)" : color.hex} r={MARKER.rLatest} />}
 
         {/* Hover crosshair, drawn above the line but below the markers' ring */}
         {active && (
@@ -238,7 +260,7 @@ export default function MetricLineChart({
               x1={active.x} y1={plotT} x2={active.x} y2={plotB}
               strokeWidth={STROKE.crosshair} stroke="var(--nura-border-strong)"
             />
-            <Marker cx={active.x} cy={active.y} color={color.hex} />
+            <Marker cx={active.x} cy={active.y} color={lightForm ? "var(--nura-sage-deep)" : color.hex} />
           </>
         )}
 

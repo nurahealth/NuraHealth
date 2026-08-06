@@ -1,4 +1,4 @@
-import type { ReactElement } from "react";
+import { useId, type ReactElement } from "react";
 import type { SleepDepthChartData } from "@/lib/dashboardData";
 import { useThemeTokens, useIsLightForm } from "@/lib/themeTokens";
 import { useAccents } from "@/lib/accents";
@@ -24,7 +24,7 @@ import { useAccents } from "@/lib/accents";
 // is barely a mark at all, and the ordered ramp now carries the distinction
 // that the lightening was there to prop up.
 
-import { MONO, bucketAverage, roundedTopBar } from "@/components/dashboard/chartTheme";
+import { MONO, bucketAverage, roundedTopBar, SageBarDefs, sageFill, type SageTone } from "@/components/dashboard/chartTheme";
 
 const SANS = "var(--font-inter), system-ui, sans-serif";
 
@@ -38,6 +38,11 @@ const STAGE_TOKENS = {
 
 type Stage = keyof typeof STAGE_TOKENS;
 
+/** Light draws the four stages from the three shared tones (see chartTheme). */
+const LIGHT_STAGE_TONE: Record<Stage, SageTone> = {
+  deep: "deep", rem: "mid", light: "mid", awake: "faint",
+};
+
 // Depth → stage band. Mirrors the reference thresholds.
 function bandStage(d: number): Stage {
   if (d >= 0.78) return "deep";
@@ -50,6 +55,8 @@ export default function SleepDepthChart({ data }: { data: SleepDepthChartData })
   const STAGE_HEX = useThemeTokens(STAGE_TOKENS);
   const acc = useAccents();
   const lightForm = useIsLightForm();
+  const rawUid = useId();
+  const uid = `sd-${rawUid.replace(/[^a-zA-Z0-9]/g, "")}`;
   const { depth: rawDepth, stages, axisLabels } = data;
 
   // A night sampled every few minutes is ~90 bars. On near-black that is the
@@ -72,7 +79,10 @@ export default function SleepDepthChart({ data }: { data: SleepDepthChartData })
     const h = bot - yy;
     return (
       lightForm ? (
-        <path key={i} d={roundedTopBar(x, yy, bw, h, 4)} fill={STAGE_HEX[bandStage(d)]} />
+        // Depth maps onto the three tones: deep sleep is the emphasis, light
+        // and REM are body, awake is the quiet one. Same ordering the stage
+        // ramp always had, expressed in the shared palette.
+        <path key={i} d={roundedTopBar(x, yy, bw, h, 4)} fill={sageFill(uid, LIGHT_STAGE_TONE[bandStage(d)])} />
       ) : (
         <rect
           key={i} x={x.toFixed(1)} y={yy.toFixed(1)} width={bw.toFixed(1)}
@@ -95,6 +105,7 @@ export default function SleepDepthChart({ data }: { data: SleepDepthChartData })
   return (
     <div>
       <svg width="100%" height={H} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" style={{ display: "block", overflow: "visible" }}>
+        {lightForm && <defs><SageBarDefs uid={uid} /></defs>}
         {gridlines}
         {bars}
       </svg>

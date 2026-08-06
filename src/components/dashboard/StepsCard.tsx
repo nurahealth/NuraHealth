@@ -1,9 +1,11 @@
 "use client";
 
+import { useId } from "react";
+
 import { getStepsDetail, SOURCE_LABEL, type DashboardMetric, type StepsWeekDay } from "@/lib/dashboardData";
 import { useMetricPaint, type MetricPaint } from "@/lib/metricColors";
 
-import { MONO, roundedTopBar } from "@/components/dashboard/chartTheme";
+import { MONO, roundedTopBar, SageBarDefs, sageFill } from "@/components/dashboard/chartTheme";
 import { useIsLightForm } from "@/lib/themeTokens";
 
 const SANS = "var(--font-inter), system-ui, sans-serif";
@@ -44,6 +46,8 @@ const fmtK = (v: number) => `${(v / 1000).toFixed(1)}k`;
 // its weekday label is bold cream.
 function WeeklyBars({ week, goal, paint }: { week: StepsWeekDay[]; goal: number; paint: MetricPaint }) {
   const lightForm = useIsLightForm();
+  const rawUid = useId();
+  const uid = `st-${rawUid.replace(/[^a-zA-Z0-9]/g, "")}`;
   const W = 320, H = 158;
   const L = 8;
   const gutter = 50;             // reserved right space for the goal label
@@ -72,6 +76,8 @@ function WeeklyBars({ week, goal, paint }: { week: StepsWeekDay[]; goal: number;
 
   return (
     <svg width="100%" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" style={{ display: "block", overflow: "visible" }}>
+      {lightForm && <defs><SageBarDefs uid={uid} /></defs>}
+
       {/* Dashed goal line — spans only the bar area */}
       <line x1={L} y1={goalY.toFixed(1)} x2={plotR} y2={goalY.toFixed(1)} stroke="var(--nura-text-tertiary)" strokeWidth={1} strokeDasharray="4 4" opacity={0.6} />
 
@@ -79,7 +85,9 @@ function WeeklyBars({ week, goal, paint }: { week: StepsWeekDay[]; goal: number;
           tops, so the row sits on the axis instead of floating above it. */}
       {bars.map((b, i) => (
         lightForm ? (
-          <path key={i} d={roundedTopBar(b.x, b.topY, barW, Math.max(1, b.h), 4)} fill={b.hit ? paint.hex : MISS_FILL} />
+          // Hit goal = emphasis tone, missed = the quiet tone. The week reads
+          // as "which days counted" before you have read a single number.
+          <path key={i} d={roundedTopBar(b.x, b.topY, barW, Math.max(1, b.h), 4)} fill={sageFill(uid, b.hit ? "deep" : "faint")} />
         ) : (
           <rect
             key={i}

@@ -347,11 +347,24 @@ function HealthRing({ d, selected, onSelect }: { d: ReturnType<typeof getOverall
     const frac = i / N, a = frac * 2 * Math.PI - Math.PI / 2;
     const seed = (Math.sin(i * 0.5) * 0.5 + 0.5) * 0.55 + (Math.sin(i * 1.7 + 1) * 0.5 + 0.5) * 0.45;
     const inner = 66, outer = inner + 4 + seed * 12, bright = frac <= frac0;
-    const col = bright ? colorAt(frac / frac0, RAMP) : `rgba(${tk.inkRgb},0.10)`;
-    const op = bright ? 0.32 + seed * 0.55 : 0.5;
+    // Dark interpolates each filament along the sage → teal → blue ramp and
+    // varies its opacity by seed, which is what gives the ring its shimmer.
+    // Light gives the same pillars the flat three-tone reading: filled ones are
+    // the emphasis tone, the unfilled remainder is the quiet one — so the ring
+    // states the score by how far the deep band runs, not by brightness.
+    const col = lightForm
+      ? (bright ? "var(--nura-sage-deep)" : "var(--nura-sage-faint)")
+      : (bright ? colorAt(frac / frac0, RAMP) : `rgba(${tk.inkRgb},0.10)`);
+    const op = lightForm ? 1 : (bright ? 0.32 + seed * 0.55 : 0.5);
     const x1 = cx + inner * Math.cos(a), y1 = cy + inner * Math.sin(a);
     const x2 = cx + outer * Math.cos(a), y2 = cy + outer * Math.sin(a);
     filaments.push(<line key={`f${i}`} x1={x1.toFixed(1)} y1={y1.toFixed(1)} x2={x2.toFixed(1)} y2={y2.toFixed(1)} stroke={col} strokeWidth={1.8} strokeLinecap="round" opacity={Number((sel ? op * 0.5 : op).toFixed(2))} />);
+    // The brighter tip: a 3px cap in the tone's top step, so each pillar reads
+    // lit from the outside in. Light only — dark's shimmer already does this.
+    if (lightForm && bright) {
+      const tipR = outer - 3;
+      filaments.push(<line key={`t${i}`} x1={(cx + tipR * Math.cos(a)).toFixed(1)} y1={(cy + tipR * Math.sin(a)).toFixed(1)} x2={x2.toFixed(1)} y2={y2.toFixed(1)} stroke="var(--nura-sage-deep-edge)" strokeWidth={1.8} strokeLinecap="round" />);
+    }
     if (bright && seed > 0.82 && !sel) {
       filaments.push(<circle key={`s${i}`} cx={x2.toFixed(1)} cy={y2.toFixed(1)} r={1.3} fill={rgb(light(colorAtRgb(frac / frac0, RAMP), 0.45))} opacity={0.9} />);
     }
@@ -405,10 +418,7 @@ function HealthRing({ d, selected, onSelect }: { d: ReturnType<typeof getOverall
       {/* In light the filaments stay, but only as texture: at 22% they give the
           dial a woven centre to sit in without competing with the arc. They are
           the reason the middle does not read as a hole. */}
-      <g
-        style={{ filter: `drop-shadow(0 0 5px rgba(${tk.tealRgb},0.28))` }}
-        opacity={lightForm ? 0.22 : 1}
-      >
+      <g style={{ filter: `drop-shadow(0 0 5px rgba(${tk.tealRgb},0.28))` }}>
         {filaments}
       </g>
 

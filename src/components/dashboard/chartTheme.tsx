@@ -623,3 +623,49 @@ export function thinLabels<T>(items: T[], max = 3): T[] {
   for (let i = 0; i < max; i++) out.push(items[Math.round((i * (items.length - 1)) / (max - 1))]);
   return out;
 }
+
+/* ───────────────────────────────────────────────────────────────────────────
+   THE BAR HIGHLIGHT — light mode only.
+
+   A flat fill is honest and a little dead. Real objects are lit from above, so
+   every bar and tick gets a vertical ramp from its tone at the base to ~12%
+   brighter at the top, with a crisp brighter line along the top edge itself.
+   No blur, no glow, no drop-shadow: the highlight is geometry, not atmosphere,
+   which is exactly why it survives on a white card where a bloom would not.
+
+   The bright edge is the first 3% of the gradient rather than a separate 1px
+   element. A real 1px rect would need its own path per bar (and would round
+   differently on a 4px-radius top); a hard stop at 3% renders as a crisp line
+   that scales with the bar and costs nothing.
+   ─────────────────────────────────────────────────────────────────────── */
+
+export type SageTone = "deep" | "mid" | "faint";
+
+/** The gradient id for `tone` within a chart instance. Pair with SageBarDefs. */
+export function sageFill(uid: string, tone: SageTone): string {
+  return `url(#${uid}-sage-${tone})`;
+}
+
+/**
+ * The three bar gradients. Drop once inside a chart's <defs>, then fill marks
+ * with sageFill(uid, tone). Colours come from tokens via `style` — an SVG
+ * presentation ATTRIBUTE will not resolve var(), a CSS property will.
+ */
+export function SageBarDefs({ uid }: { uid: string }) {
+  return (
+    <>
+      {(["deep", "mid", "faint"] as SageTone[]).map((tone) => (
+        <linearGradient key={tone} id={`${uid}-sage-${tone}`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" style={{ stopColor: `var(--nura-sage-${tone}-edge)` }} />
+          <stop offset="3%" style={{ stopColor: `var(--nura-sage-${tone}-top)` }} />
+          <stop offset="100%" style={{ stopColor: `var(--nura-sage-${tone})` }} />
+        </linearGradient>
+      ))}
+    </>
+  );
+}
+
+/** One step brighter, for hover. Faint has nowhere quieter to go, so it lifts. */
+export function brighter(tone: SageTone): SageTone {
+  return tone === "mid" ? "deep" : tone === "faint" ? "mid" : "deep";
+}

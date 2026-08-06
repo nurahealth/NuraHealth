@@ -605,6 +605,31 @@
   --nura-sage-500: #5f7a6e;   /* 4.7  default mark */
   --nura-sage-600: #43604f;   /* 6.9  deepest mark / mark text */
 
+  /* ── THREE-TONE SAGE — the light chart palette ──────────────────────────
+     One hue, three jobs, and the difference between them is what makes a chart
+     read at a glance instead of after study:
+
+       DEEP   the thing you are meant to look at — the latest bar, a day that
+              hit goal, a filled dial tick, a line stroke, the latest point.
+       MID    everything else that is still data. Clears 3:1 on white (3.18),
+              so a "standard" mark is never a second-class one.
+       FAINT  the absence of data — empty track, inactive tick, reference band,
+              a day that missed. Deliberately below the mark floor: it is the
+              hole the marks sit in, not a reading.
+
+     Each tone also carries a TOP and an EDGE step (+12% and +22% toward white)
+     for the bar highlight below. They are tokens rather than computed in JS so
+     the whole palette is legible in one place. */
+  --nura-sage-deep: #4e6a5c;        /* 5.93:1 */
+  --nura-sage-deep-top: #637c70;
+  --nura-sage-deep-edge: #758b80;
+  --nura-sage-mid: #7d968a;         /* 3.18:1 */
+  --nura-sage-mid-top: #8da398;
+  --nura-sage-mid-edge: #9aada4;
+  --nura-sage-faint: #dbe4de;       /* 1.30:1 — quiet by design, see above */
+  --nura-sage-faint-top: #dfe7e2;
+  --nura-sage-faint-edge: #e3eae5;
+
   /* 1 — every single-series chart mark */
   --nura-series: var(--nura-data-primary);   /*  4.7:1 on #ffffff */
   --nura-data-primary: var(--nura-sage-500);

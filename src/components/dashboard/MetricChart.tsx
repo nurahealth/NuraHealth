@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useId, useMemo, useState } from "react";
 import type { MetricChartData } from "@/lib/dashboardData";
 import type { MetricPaint } from "@/lib/metricColors";
 import {
@@ -8,6 +8,7 @@ import {
   ChartTooltip, XAxis, YAxis,
   fitTicks, smoothPath, useMeasuredWidth,
   bucketAverage, roundedTopBar, thinLabels,
+  SageBarDefs, sageFill, brighter, type SageTone,
 } from "@/components/dashboard/chartTheme";
 import { useIsLightForm } from "@/lib/themeTokens";
 
@@ -78,6 +79,8 @@ export default function MetricChart({
   const { ref, width: W } = useMeasuredWidth<HTMLDivElement>();
   const [hover, setHover] = useState<number | null>(null);
   const lightForm = useIsLightForm();
+  const rawUid = useId();
+  const uid = `mc-${rawUid.replace(/[^a-zA-Z0-9]/g, "")}`;
 
   // Light draws a different chart, not a recoloured one: the same day averaged
   // down to at most 18 buckets. A 96-sample intraday series at 1px per bar is
@@ -153,6 +156,8 @@ export default function MetricChart({
         onMouseMove={onMove}
         onMouseLeave={() => setHover(null)}
       >
+        {lightForm && <defs><SageBarDefs uid={uid} /></defs>}
+
         {/* Overnight window. Neutral ink, not the metric colour: it annotates
             WHEN, so tinting it with the series would read as more data. */}
         <rect
@@ -174,12 +179,18 @@ export default function MetricChart({
           const glowR = (2 + t * 5).toFixed(1);
           const glowA = (0.3 + t * 0.45).toFixed(2);
           const dim = hover != null && hover !== i;
+          // The latest reading is the one the card's big number is quoting, so
+          // it carries the emphasis tone; the rest of the day is body tone.
+          // Hover lifts a bar one step rather than dimming its neighbours —
+          // brightening the thing you pointed at beats greying out the chart.
+          const base: SageTone = i === n - 1 ? "deep" : "mid";
+          const tone: SageTone = hover === i ? brighter(base) : base;
           return lightForm ? (
             <path
               key={i}
               d={roundedTopBar(barX(i), plotB - h, bw, h, 4)}
-              fill={color.hex}
-              opacity={dim ? 0.45 : 1}
+              fill={sageFill(uid, tone)}
+              opacity={dim ? 0.62 : 1}
             />
           ) : (
             <rect
