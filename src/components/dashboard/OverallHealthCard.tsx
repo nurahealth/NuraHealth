@@ -359,10 +359,18 @@ function HealthRing({ d, selected, onSelect }: { d: ReturnType<typeof getOverall
   const circ = 2 * Math.PI * arcR;
   const offset = circ * (1 - frac0);
 
-  // Blur is the one value that cannot come from a token: stdDeviation is an
-  // SVG attribute, and an attribute will not resolve var().
-  const blur = lightForm ? 7 * s : 5 * s;
-  const haloOpacity = lightForm ? 0.32 : 0.45;
+  // The halo stack. Light runs two layers — a wide soft bloom for spread and a
+  // tight bright aura hugging the arc; dark runs the single layer it always
+  // has. Widths and blurs are in the same spec units as DIAL and scale with it.
+  //
+  // stdDeviation and stroke-width are SVG ATTRIBUTES, and an attribute will not
+  // resolve var(), so the numbers live here while the colours stay tokens.
+  const halos = lightForm
+    ? [
+        { id: "hw", w: 17, blur: 13, op: 0.55, color: "var(--nura-dial-halo-wide)" },
+        { id: "ht", w: 14, blur: 4, op: 0.30, color: "var(--nura-dial-halo-tight)" },
+      ]
+    : [{ id: "h", w: DIAL.haloW, blur: 5, op: 0.45, color: "var(--nura-dial-halo)" }];
 
   // 72 textural ticks. Not data — they give the empty centre something to be.
   const ticks: ReactElement[] = [];
@@ -420,20 +428,27 @@ function HealthRing({ d, selected, onSelect }: { d: ReturnType<typeof getOverall
           <stop offset="0%" stopColor="var(--nura-dial-arc-from)" />
           <stop offset="100%" stopColor="var(--nura-dial-arc-to)" />
         </linearGradient>
-        {/* Generous region: the default -10%/+10% clips a 7px blur on a ring
-            this size, which shows up as the halo being sliced off at 390px. */}
-        <filter id={`${uid}-halo`} x="-30%" y="-30%" width="160%" height="160%">
-          <feGaussianBlur stdDeviation={blur.toFixed(2)} />
-        </filter>
+        {/* Generous region: the default -10%/+10% clips the blur on a ring this
+            size, which shows up as the halo being sliced off at 390px. At -40%
+            there is room for the widest layer's ~3σ spread with margin. */}
+        {halos.map((h) => (
+          <filter key={h.id} id={`${uid}-${h.id}`} x="-40%" y="-40%" width="180%" height="180%">
+            <feGaussianBlur stdDeviation={(h.blur * s).toFixed(2)} />
+          </filter>
+        ))}
       </defs>
 
-      {/* 1 — halo, beneath everything */}
-      <circle
-        {...arcGeom} className="nura-dial-arc" style={sweepVars}
-        stroke="var(--nura-dial-halo)" strokeWidth={DIAL.haloW * s}
-        opacity={sel ? haloOpacity * 0.5 : haloOpacity}
-        filter={`url(#${uid}-halo)`}
-      />
+      {/* 1 — halo, beneath everything. Widest first so the tight aura reads on
+          top of the bloom rather than under it. */}
+      {halos.map((h) => (
+        <circle
+          key={h.id}
+          {...arcGeom} className="nura-dial-arc" style={sweepVars}
+          stroke={h.color} strokeWidth={h.w * s}
+          opacity={sel ? h.op * 0.5 : h.op}
+          filter={`url(#${uid}-${h.id})`}
+        />
+      ))}
 
       {/* 2 — track */}
       <circle cx={cx} cy={cy} r={arcR} fill="none" stroke="var(--nura-dial-track)" strokeWidth={arcW} />

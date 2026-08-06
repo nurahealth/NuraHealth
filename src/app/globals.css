@@ -1075,15 +1075,23 @@
      the right shape — dark must be able to disagree with light about these.
      With sage back as the data colour they simply point at the data token and
      the status trio again. */
-  /* Halo dial — light skin. Same structure, see the dark column. */
+  /* Halo dial — light skin. Same structure, see the dark column.
+     The light halo is TWO layers rather than one: a wide soft bloom carrying
+     the spread, and a tight bright aura sitting just off the arc. One layer on
+     white either reads as a grey smudge (wide and dark enough to see) or as
+     nothing (tight and pale enough to be clean); two layers get both — a lift
+     that is legible without a visible edge. Dark keeps its single layer, where
+     one blur on near-black already does the job. */
   --nura-dial-track: #e8ede9;
   --nura-dial-ticks: #dfe7e1;
-  --nura-dial-arc-from: #3e5a4c;
-  --nura-dial-arc-to: #7d968a;
+  --nura-dial-arc-from: #2f4a39;
+  --nura-dial-arc-to: #86a292;
   --nura-dial-halo: #7d968a;
-  --nura-dial-edge: rgba(255, 255, 255, 0.55);
+  --nura-dial-halo-wide: #7d968a;
+  --nura-dial-halo-tight: #9bb0a5;
+  --nura-dial-edge: rgba(255, 255, 255, 0.75);
   --nura-dial-dot-fill: #ffffff;
-  --nura-dial-dot-stroke: #3e5a4c;
+  --nura-dial-dot-stroke: #2f4a39;
   --nura-dial-score: #1a1a1a;
   --nura-dial-label: #9a9e9a;
 
