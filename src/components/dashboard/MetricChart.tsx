@@ -7,8 +7,7 @@ import {
   ENTER_CLASS, MONO, PAD, STROKE, TYPE,
   ChartTooltip, XAxis, YAxis,
   fitTicks, smoothPath, useMeasuredWidth,
-  bucketAverage, roundedTopBar, thinLabels,
-  SageBarDefs, sageFill, brighter, type SageTone,
+  roundedTopBar, SageBarDefs, sageFill, barTones, brighter, BarTopEdge,
 } from "@/components/dashboard/chartTheme";
 import { useIsLightForm } from "@/lib/themeTokens";
 
@@ -75,20 +74,15 @@ export default function MetricChart({
   /** Draw a "value · PEAK · time" readout over the tallest bar (Steps opts in). */
   showPeak?: boolean;
 }) {
-  const { readings: rawReadings, baseline, floor, ceiling, gridlines } = data;
+  const { readings, baseline, floor, ceiling, gridlines } = data;
   const { ref, width: W } = useMeasuredWidth<HTMLDivElement>();
   const [hover, setHover] = useState<number | null>(null);
+  // Light and dark draw the SAME chart — same sample count, same bar width,
+  // same overlays, same axis. `lightForm` may only pick colours below.
   const lightForm = useIsLightForm();
   const rawUid = useId();
   const uid = `mc-${rawUid.replace(/[^a-zA-Z0-9]/g, "")}`;
-
-  // Light draws a different chart, not a recoloured one: the same day averaged
-  // down to at most 18 buckets. A 96-sample intraday series at 1px per bar is
-  // texture on white; 18 bars at ~10px each are readings you can point at.
-  const readings = useMemo(
-    () => (lightForm ? bucketAverage(rawReadings) : rawReadings),
-    [lightForm, rawReadings],
-  );
+  const tones = useMemo(() => barTones(readings), [readings]);
 
   const H = height;
   const plotL = PAD.left;
@@ -102,13 +96,8 @@ export default function MetricChart({
   const yOf = (v: number) => plotB - norm(v) * plotH;
 
   const ticks = useMemo(
-    () => {
-      const t = fitTicks(gridlines, plotH, floor, ceiling);
-      // Three gridlines is enough to read a value off a bar chart; the fourth
-      // and fifth are furniture. Light only — dark's axis is unchanged.
-      return lightForm ? thinLabels(t, 3) : t;
-    },
-    [gridlines, plotH, floor, ceiling, lightForm],
+    () => fitTicks(gridlines, plotH, floor, ceiling),
+    [gridlines, plotH, floor, ceiling],
   );
 
   // Reserve the full height while measuring so the card cannot reflow.
@@ -116,12 +105,7 @@ export default function MetricChart({
 
   const n = readings.length;
   const slot = (plotR - plotL) / n;
-  // Dark keeps its hairline bars. Light takes most of the slot and never goes
-  // below 6px, so a bar is a shape rather than a stroke; the 3px it gives back
-  // is the gap, which is what makes the count legible.
-  const bw = lightForm
-    ? Math.max(6, slot - 3)
-    : Math.min(slot * 0.62, 5);
+  const bw = Math.min(slot * 0.62, 5);
 
   // Dashed average curve from the coarse baseline series.
   const m = baseline.length;
@@ -179,19 +163,14 @@ export default function MetricChart({
           const glowR = (2 + t * 5).toFixed(1);
           const glowA = (0.3 + t * 0.45).toFixed(2);
           const dim = hover != null && hover !== i;
-          // The latest reading is the one the card's big number is quoting, so
-          // it carries the emphasis tone; the rest of the day is body tone.
           // Hover lifts a bar one step rather than dimming its neighbours —
-          // brightening the thing you pointed at beats greying out the chart.
-          const base: SageTone = i === n - 1 ? "deep" : "mid";
-          const tone: SageTone = hover === i ? brighter(base) : base;
+          // brightening what you pointed at beats greying out the chart.
+          const tone = hover === i ? brighter(tones[i]) : tones[i];
           return lightForm ? (
-            <path
-              key={i}
-              d={roundedTopBar(barX(i), plotB - h, bw, h, 4)}
-              fill={sageFill(uid, tone)}
-              opacity={dim ? 0.62 : 1}
-            />
+            <g key={i} opacity={dim ? 0.62 : 1}>
+              <path d={roundedTopBar(barX(i), plotB - h, bw, h, 2)} fill={sageFill(uid, tone)} />
+              {tone !== "faint" && <BarTopEdge x={barX(i)} y={plotB - h} w={bw} r={2} />}
+            </g>
           ) : (
             <rect
               key={i}
@@ -207,18 +186,19 @@ export default function MetricChart({
 
         {/* Dashed average curve. Neutral for the same reason as a baseline: it
             is a reference, not a second series. */}
-        {/* One data layer in light. The dashed mean over 18 bars is a second
-            series competing with the first, and the bars already carry the
-            shape it was tracing. */}
-        {curve && !lightForm && (
+        {/* Dashed average curve. Neutral for the same reason as a baseline: it
+            is a reference, not a second series. */}
+        {curve && (
           <path
-            d={curve} fill="none" stroke="var(--nura-text-tertiary)"
-            strokeWidth={STROKE.baseline} strokeDasharray="4 5"
-            strokeLinecap="round" opacity={0.55}
+            d={curve} fill="none"
+            stroke={lightForm ? "var(--nura-chart-reference)" : "var(--nura-text-tertiary)"}
+            strokeWidth={lightForm ? 1 : STROKE.baseline}
+            strokeDasharray={lightForm ? "3 4" : "4 5"}
+            strokeLinecap="round" opacity={lightForm ? 1 : 0.55}
           />
         )}
 
-        {showPeak && !lightForm && (
+        {showPeak && (
           <text
             x={Math.max(46, Math.min(plotR - 46, barX(peakIdx) + bw / 2)).toFixed(2)}
             y={Math.max(plotT - 4, yOf(readings[peakIdx]) - 9).toFixed(2)}
@@ -242,7 +222,7 @@ export default function MetricChart({
         )}
 
         <XAxis
-          labels={lightForm ? ["12a", "12p", "now"] : ["12a", "6a", "12p", "6p", "now"]}
+          labels={["12a", "6a", "12p", "6p", "now"]}
           plotLeft={plotL} plotRight={plotR} y={H - 6}
         />
       </svg>

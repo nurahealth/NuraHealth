@@ -605,30 +605,39 @@
   --nura-sage-500: #5f7a6e;   /* 4.7  default mark */
   --nura-sage-600: #43604f;   /* 6.9  deepest mark / mark text */
 
-  /* ── THREE-TONE SAGE — the light chart palette ──────────────────────────
-     One hue, three jobs, and the difference between them is what makes a chart
-     read at a glance instead of after study:
+  /* ── THREE-TONE SAGE — the approved light chart palette ─────────────────
+     One hue, three jobs. The difference between them is what lets a chart be
+     read at a glance rather than studied:
 
-       DEEP   the thing you are meant to look at — the latest bar, a day that
-              hit goal, a filled dial tick, a line stroke, the latest point.
-       MID    everything else that is still data. Clears 3:1 on white (3.18),
-              so a "standard" mark is never a second-class one.
-       FAINT  the absence of data — empty track, inactive tick, reference band,
-              a day that missed. Deliberately below the mark floor: it is the
-              hole the marks sit in, not a reading.
+       DEEP   what you are meant to look at — peaks, the latest readings, a day
+              that hit goal, filled dial ticks, line strokes, ring fills.
+       MID    everything else that is still data. 3.18:1 on white, so a
+              "standard" mark is never a second-class one.
+       FAINT  quiet values and empty structure — unfilled ticks, tracks.
 
-     Each tone also carries a TOP and an EDGE step (+12% and +22% toward white)
-     for the bar highlight below. They are tokens rather than computed in JS so
-     the whole palette is legible in one place. */
-  --nura-sage-deep: #4e6a5c;        /* 5.93:1 */
-  --nura-sage-deep-top: #637c70;
-  --nura-sage-deep-edge: #758b80;
-  --nura-sage-mid: #7d968a;         /* 3.18:1 */
-  --nura-sage-mid-top: #8da398;
-  --nura-sage-mid-edge: #9aada4;
-  --nura-sage-faint: #dbe4de;       /* 1.30:1 — quiet by design, see above */
-  --nura-sage-faint-top: #dfe7e2;
-  --nura-sage-faint-edge: #e3eae5;
+     Each tone carries its own two-stop BAR gradient (base → top). These are
+     the approved mockup values, not computed lightenings, which is why they
+     are written out rather than derived: the ramp is slightly cooler at the
+     base than a straight tint would give, and that is what stops a column of
+     bars looking like plastic. */
+  --nura-sage-deep: #4e6a5c;             /* 5.93:1 */
+  --nura-sage-deep-base: #46604f;
+  --nura-sage-deep-top: #5d7b6b;
+  --nura-sage-mid: #7d968a;              /* 3.18:1 */
+  --nura-sage-mid-base: #71897c;
+  --nura-sage-mid-top: #8aa093;
+  --nura-sage-faint: #e2e9e4;
+  --nura-sage-faint-base: #dde5df;
+  --nura-sage-faint-top: #e7ede8;
+
+  /* Empty track under any fill — ring, gauge, meter, dial arc. */
+  --nura-chart-track: #e8ede9;
+  /* The lit top edge on a bar. White at 38% rather than a lighter sage: a
+     tint of the tone reads as a lighter bar, white reads as light ON the bar. */
+  --nura-bar-edge: rgba(255, 255, 255, 0.38);
+  /* Reference/average overlays. Ink, not sage — they annotate the data, they
+     are not more of it. */
+  --nura-chart-reference: rgba(20, 24, 21, 0.10);
 
   /* 1 — every single-series chart mark */
   --nura-series: var(--nura-data-primary);   /*  4.7:1 on #ffffff */
@@ -700,13 +709,17 @@
   --nura-stage-rem: var(--nura-step-3);     /* 5.11:1 */
   --nura-stage-deep: var(--nura-step-4);    /* 6.94:1 — deepest */
 
-  --nura-chip-optimal-fg: var(--nura-status-good);
-  --nura-chip-optimal-bg: var(--nura-tint-accent);
-  --nura-chip-good-fg: var(--nura-status-good);
-  --nura-chip-good-bg: var(--nura-tint-accent);
+  /* Status chips — one style on every chip. Deep sage text on a sage wash with
+     a sage hairline, so a chip and the mark it describes are visibly the same
+     family instead of two unrelated accents. Brick is kept for genuine
+     attention; nothing else is coloured. */
+  --nura-chip-optimal-fg: var(--nura-sage-deep);
+  --nura-chip-optimal-bg: rgba(125, 150, 138, 0.14);
+  --nura-chip-good-fg: var(--nura-sage-deep);
+  --nura-chip-good-bg: rgba(125, 150, 138, 0.14);
   --nura-chip-alert-fg: var(--nura-status-alert);
   --nura-chip-alert-bg: var(--nura-tint-danger);
-  --nura-chip-border: var(--nura-tint-accent-border);
+  --nura-chip-border: rgba(125, 150, 138, 0.25);
 
   --nura-gauge-zone-1: var(--nura-track-neutral-strong);
   --nura-gauge-zone-2: var(--nura-track-neutral-strong);
@@ -1223,18 +1236,15 @@ html, body {
    information the marker position did not already carry.
    ─────────────────────────────────────────────────────────────────────── */
 [data-theme="light"] .nura-meter-track {
-  background: var(--nura-track-neutral) !important;
+  background: var(--nura-chart-track) !important;
 }
 
 [data-theme="light"] .nura-meter-dot {
-  top: 50% !important;
-  bottom: auto !important;
-  width: 12px !important;
-  height: 12px !important;
-  border-radius: 999px !important;
-  background: var(--nura-series) !important;
-  transform: translate(-50%, -50%) !important;
-  box-shadow: 0 0 0 2.5px var(--nura-card) !important;
+  /* Colour only. The marker keeps dark's geometry — same size, same position,
+     same shape — because light and dark are one design in two skins. An
+     earlier pass grew this into a 12px dot, which made the light gauge a
+     different instrument from the dark one. */
+  background: var(--nura-sage-deep) !important;
 }
 
 /* Zone ticks sitting ON the old filled ramp were white so they could show

@@ -88,13 +88,13 @@ function HrvMiniRing({ hrv, paint }: { hrv: number; paint: MetricPaint }) {
         {/* faint full 270° track */}
         <circle
           cx={c} cy={c} r={r} fill="none"
-          stroke={lightForm ? "var(--nura-track-neutral)" : paint.alpha(0.16)}
+          stroke={lightForm ? "var(--nura-chart-track)" : paint.alpha(0.16)}
           strokeWidth={stroke} strokeLinecap="round" strokeDasharray={`${arcLen} ${circ}`}
         />
         {/* the fill — solid, in the metric's colour */}
         <circle
           cx={c} cy={c} r={r} fill="none"
-          stroke={paint.hex} strokeWidth={stroke} strokeLinecap="round"
+          stroke={lightForm ? "var(--nura-sage-deep)" : paint.hex} strokeWidth={stroke} strokeLinecap="round"
           strokeDasharray={`${arcLen} ${circ}`} strokeDashoffset={shownOffset}
           style={{ filter: `drop-shadow(0 0 5px rgba(${paint.rgb},0.6))`, transition: reduced ? "none" : `stroke-dashoffset ${FILL_MS}ms cubic-bezier(.2,.7,.2,1)` }}
         />

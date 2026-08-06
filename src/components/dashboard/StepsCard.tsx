@@ -5,7 +5,7 @@ import { useId } from "react";
 import { getStepsDetail, SOURCE_LABEL, type DashboardMetric, type StepsWeekDay } from "@/lib/dashboardData";
 import { useMetricPaint, type MetricPaint } from "@/lib/metricColors";
 
-import { MONO, roundedTopBar, SageBarDefs, sageFill } from "@/components/dashboard/chartTheme";
+import { MONO, roundedTopBar, SageBarDefs, sageFill, BarTopEdge } from "@/components/dashboard/chartTheme";
 import { useIsLightForm } from "@/lib/themeTokens";
 
 const SANS = "var(--font-inter), system-ui, sans-serif";
@@ -79,15 +79,22 @@ function WeeklyBars({ week, goal, paint }: { week: StepsWeekDay[]; goal: number;
       {lightForm && <defs><SageBarDefs uid={uid} /></defs>}
 
       {/* Dashed goal line — spans only the bar area */}
-      <line x1={L} y1={goalY.toFixed(1)} x2={plotR} y2={goalY.toFixed(1)} stroke="var(--nura-text-tertiary)" strokeWidth={1} strokeDasharray="4 4" opacity={0.6} />
+      <line
+        x1={L} y1={goalY.toFixed(1)} x2={plotR} y2={goalY.toFixed(1)}
+        stroke={lightForm ? "var(--nura-chart-reference)" : "var(--nura-text-tertiary)"}
+        strokeWidth={1} strokeDasharray={lightForm ? "3 4" : "4 4"} opacity={lightForm ? 1 : 0.6}
+      />
 
       {/* Bars — flat fills, no gradient and no blur. Light rounds only the
           tops, so the row sits on the axis instead of floating above it. */}
       {bars.map((b, i) => (
         lightForm ? (
-          // Hit goal = emphasis tone, missed = the quiet tone. The week reads
-          // as "which days counted" before you have read a single number.
-          <path key={i} d={roundedTopBar(b.x, b.topY, barW, Math.max(1, b.h), 4)} fill={sageFill(uid, b.hit ? "deep" : "faint")} />
+          // Hit goal = emphasis tone; missed stays the warm grey it has always
+          // been, which is the de-emphasis colour for an under-goal context.
+          <g key={i}>
+            <path d={roundedTopBar(b.x, b.topY, barW, Math.max(1, b.h), 2)} fill={b.hit ? sageFill(uid, "deep") : MISS_FILL} />
+            {b.hit && <BarTopEdge x={b.x} y={b.topY} w={barW} r={2} />}
+          </g>
         ) : (
           <rect
             key={i}
@@ -98,9 +105,8 @@ function WeeklyBars({ week, goal, paint }: { week: StepsWeekDay[]; goal: number;
         )
       ))}
 
-      {/* Today's outline — crisp cream stroke on top (no glow). Light does not
-          need it: today is the only bar carrying a number. */}
-      {bars.filter((b) => b.isToday && !lightForm).map((b, i) => (
+      {/* Today's outline — crisp cream stroke on top (no glow) */}
+      {bars.filter((b) => b.isToday).map((b, i) => (
         <rect
           key={`t${i}`}
           x={b.x.toFixed(1)} y={b.topY.toFixed(1)} width={barW.toFixed(1)} height={Math.max(1, b.h).toFixed(1)}
@@ -108,11 +114,8 @@ function WeeklyBars({ week, goal, paint }: { week: StepsWeekDay[]; goal: number;
         />
       ))}
 
-      {/* Value labels above each bar. Light prints ONE — today's. Seven
-          numbers over seven bars restates the chart in digits: the bar heights
-          already rank the week, and the exact figure only matters for the day
-          you are looking at. */}
-      {bars.filter((b) => !lightForm || b.isToday).map((b, i) => (
+      {/* Value labels above each bar — soft cream, centered, non-overlapping */}
+      {bars.map((b, i) => (
         <text
           key={`v${i}`}
           x={b.cx.toFixed(1)} y={(b.topY - 6).toFixed(1)} textAnchor="middle"

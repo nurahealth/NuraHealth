@@ -98,13 +98,13 @@ export default function ActiveEnergyRing({
           // Track: a tint of the series in dark (it has to glow faintly off the
           // near-black); a soft warm grey in light, so the ring reads as "fill
           // against empty" rather than "dark sage against pale sage".
-          stroke={lightForm ? "var(--nura-track-neutral)" : color.alpha(0.16)}
+          stroke={lightForm ? "var(--nura-chart-track)" : color.alpha(0.16)}
           strokeWidth={stroke} strokeLinecap="round" strokeDasharray={`${arcLen} ${circ}`}
         />
         {/* the fill — solid, loading up to goal progress */}
         <circle
           cx={c} cy={c} r={r} fill="none"
-          stroke={color.hex} strokeWidth={stroke} strokeLinecap="round"
+          stroke={lightForm ? "var(--nura-sage-deep)" : color.hex} strokeWidth={stroke} strokeLinecap="round"
           strokeDasharray={`${arcLen} ${circ}`} strokeDashoffset={shownOffset}
           style={{ filter: `drop-shadow(0 0 7px rgba(${color.rgb},0.6))`, transition: reduced ? "none" : `stroke-dashoffset ${fillMs}ms cubic-bezier(.2,.7,.2,1)` }}
         />

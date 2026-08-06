@@ -24,7 +24,7 @@ import { useAccents } from "@/lib/accents";
 // is barely a mark at all, and the ordered ramp now carries the distinction
 // that the lightening was there to prop up.
 
-import { MONO, bucketAverage, roundedTopBar, SageBarDefs, sageFill, type SageTone } from "@/components/dashboard/chartTheme";
+import { MONO, roundedTopBar, SageBarDefs, sageFill, BarTopEdge, type SageTone } from "@/components/dashboard/chartTheme";
 
 const SANS = "var(--font-inter), system-ui, sans-serif";
 
@@ -57,20 +57,15 @@ export default function SleepDepthChart({ data }: { data: SleepDepthChartData })
   const lightForm = useIsLightForm();
   const rawUid = useId();
   const uid = `sd-${rawUid.replace(/[^a-zA-Z0-9]/g, "")}`;
-  const { depth: rawDepth, stages, axisLabels } = data;
-
-  // A night sampled every few minutes is ~90 bars. On near-black that is the
-  // hypnogram texture the card was designed around; on white it is a barcode.
-  // Light averages the night into 18 blocks — still the shape of the night,
-  // but each block is a stretch you could name.
-  const depth = lightForm ? bucketAverage(rawDepth) : rawDepth;
+  // Same hypnogram in both themes — every sample, same width, same gridlines.
+  const { depth, stages, axisLabels } = data;
 
   // Geometry mirrors the reference SVG (viewBox 0 0 356 124).
   const W = 356, H = 124, top = 10, bot = 92;
   const plotH = bot - top;
   const n = depth.length;
   const slot = W / n;
-  const bw = lightForm ? Math.max(6, slot - 3) : Math.min(slot * 0.62, 7);
+  const bw = Math.min(slot * 0.62, 7);
   const yOf = (d: number) => bot - d * plotH;
 
   const bars: ReactElement[] = depth.map((d, i) => {
@@ -82,7 +77,10 @@ export default function SleepDepthChart({ data }: { data: SleepDepthChartData })
         // Depth maps onto the three tones: deep sleep is the emphasis, light
         // and REM are body, awake is the quiet one. Same ordering the stage
         // ramp always had, expressed in the shared palette.
-        <path key={i} d={roundedTopBar(x, yy, bw, h, 4)} fill={sageFill(uid, LIGHT_STAGE_TONE[bandStage(d)])} />
+        <g key={i}>
+          <path d={roundedTopBar(x, yy, bw, h, 2)} fill={sageFill(uid, LIGHT_STAGE_TONE[bandStage(d)])} />
+          {LIGHT_STAGE_TONE[bandStage(d)] !== "faint" && <BarTopEdge x={x} y={yy} w={bw} r={2} />}
+        </g>
       ) : (
         <rect
           key={i} x={x.toFixed(1)} y={yy.toFixed(1)} width={bw.toFixed(1)}
@@ -98,7 +96,7 @@ export default function SleepDepthChart({ data }: { data: SleepDepthChartData })
   });
 
   // Three faint horizontal gridlines for structure.
-  const gridlines = (lightForm ? [0.5] : [0.25, 0.5, 0.75]).map((f, i) => (
+  const gridlines = [0.25, 0.5, 0.75].map((f, i) => (
     <line key={`g${i}`} x1={0} x2={W} y1={top + plotH * f} y2={top + plotH * f} stroke="var(--nura-hairline)" strokeWidth={1} />
   ));
 

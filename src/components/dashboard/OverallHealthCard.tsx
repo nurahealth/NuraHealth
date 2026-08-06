@@ -324,13 +324,8 @@ function HealthRing({ d, selected, onSelect }: { d: ReturnType<typeof getOverall
   // Depth rings.
   const depth: ReactElement[] = [
     <circle key="core" className="nura-halo" cx={cx} cy={cy} r={118} fill={`url(#${uid}-core)`} />,
-    // Two hairline depth rings at r=100/110. They sit just outside light's arc
-    // and read as a stray outline beside it; in dark they are the field the
-    // filaments fade into.
-    ...(lightForm ? [] : [
-      <circle key="r100" cx={cx} cy={cy} r={100} fill="none" stroke={`rgba(${tk.inkRgb},0.045)`} />,
-      <circle key="r110" cx={cx} cy={cy} r={110} fill="none" stroke={`rgba(${tk.inkRgb},0.03)`} />,
-    ]),
+    <circle key="r100" cx={cx} cy={cy} r={100} fill="none" stroke={`rgba(${tk.inkRgb},0.045)`} />,
+    <circle key="r110" cx={cx} cy={cy} r={110} fill="none" stroke={`rgba(${tk.inkRgb},0.03)`} />,
   ];
 
   // Rotating dotted outer ring.
@@ -352,21 +347,21 @@ function HealthRing({ d, selected, onSelect }: { d: ReturnType<typeof getOverall
     // Light gives the same pillars the flat three-tone reading: filled ones are
     // the emphasis tone, the unfilled remainder is the quiet one — so the ring
     // states the score by how far the deep band runs, not by brightness.
+    // Identical geometry in both themes — same 168 pillars, same lengths, same
+    // tip dots. Dark interpolates each along the sage → teal → blue ramp and
+    // varies opacity by seed (that shimmer is the dark dial). Light states it
+    // flatly instead: filled pillars run the deep gradient, the rest are the
+    // faint tone, so the score reads as how far the dark band travels.
     const col = lightForm
-      ? (bright ? "var(--nura-sage-deep)" : "var(--nura-sage-faint)")
+      ? (bright ? `url(#${uid}-tick)` : "var(--nura-sage-faint)")
       : (bright ? colorAt(frac / frac0, RAMP) : `rgba(${tk.inkRgb},0.10)`);
     const op = lightForm ? 1 : (bright ? 0.32 + seed * 0.55 : 0.5);
+    const sw = lightForm ? (bright ? 2.6 : 2.2) : 1.8;
     const x1 = cx + inner * Math.cos(a), y1 = cy + inner * Math.sin(a);
     const x2 = cx + outer * Math.cos(a), y2 = cy + outer * Math.sin(a);
-    filaments.push(<line key={`f${i}`} x1={x1.toFixed(1)} y1={y1.toFixed(1)} x2={x2.toFixed(1)} y2={y2.toFixed(1)} stroke={col} strokeWidth={1.8} strokeLinecap="round" opacity={Number((sel ? op * 0.5 : op).toFixed(2))} />);
-    // The brighter tip: a 3px cap in the tone's top step, so each pillar reads
-    // lit from the outside in. Light only — dark's shimmer already does this.
-    if (lightForm && bright) {
-      const tipR = outer - 3;
-      filaments.push(<line key={`t${i}`} x1={(cx + tipR * Math.cos(a)).toFixed(1)} y1={(cy + tipR * Math.sin(a)).toFixed(1)} x2={x2.toFixed(1)} y2={y2.toFixed(1)} stroke="var(--nura-sage-deep-edge)" strokeWidth={1.8} strokeLinecap="round" />);
-    }
+    filaments.push(<line key={`f${i}`} x1={x1.toFixed(1)} y1={y1.toFixed(1)} x2={x2.toFixed(1)} y2={y2.toFixed(1)} stroke={col} strokeWidth={sw} strokeLinecap="round" opacity={Number((sel ? op * 0.5 : op).toFixed(2))} />);
     if (bright && seed > 0.82 && !sel) {
-      filaments.push(<circle key={`s${i}`} cx={x2.toFixed(1)} cy={y2.toFixed(1)} r={1.3} fill={rgb(light(colorAtRgb(frac / frac0, RAMP), 0.45))} opacity={0.9} />);
+      filaments.push(<circle key={`s${i}`} cx={x2.toFixed(1)} cy={y2.toFixed(1)} r={lightForm ? 1.15 : 1.3} fill={lightForm ? "#8fa89b" : rgb(light(colorAtRgb(frac / frac0, RAMP), 0.45))} opacity={0.9} />);
     }
   }
 
@@ -376,8 +371,10 @@ function HealthRing({ d, selected, onSelect }: { d: ReturnType<typeof getOverall
   // out to r=94 so it reads as the dial rather than as a hoop inside a field of
   // filaments. Dark keeps the 3.2px arc at r=60, where the filaments around it
   // are the hero and the arc is the precise edge on top of them.
-  const pr = lightForm ? 94 : 60;
-  const arcW = lightForm ? 11 : 3.2;
+  // Same radius in both themes; light thickens the stroke slightly per the
+  // approved values and swaps the gradient for a flat deep sage.
+  const pr = 60;
+  const arcW = lightForm ? 4.5 : 3.2;
   const circ = 2 * Math.PI * pr, vis = circ * frac0;
   const headA = ((-90 + 360 * frac0) * Math.PI) / 180;
   const hx = cx + pr * Math.cos(headA), hy = cy + pr * Math.sin(headA);
@@ -393,6 +390,12 @@ function HealthRing({ d, selected, onSelect }: { d: ReturnType<typeof getOverall
         <linearGradient id={`${uid}-parc`} x1="0" y1="0" x2="1" y2="1">
           <stop offset="0%" stopColor={tk.ringLo} /><stop offset="55%" stopColor={tk.ringMid} /><stop offset="100%" stopColor={tk.ringHi} />
         </linearGradient>
+        {/* Filled tick pillars, light: the approved deep ramp along the pillar
+            so each one reads lit from the outside in. */}
+        <linearGradient id={`${uid}-tick`} x1="0" y1="1" x2="0" y2="0">
+          <stop offset="0%" stopColor="#46604f" />
+          <stop offset="100%" stopColor="#6f8a7c" />
+        </linearGradient>
         <linearGradient id={`${uid}-num`} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor={tk.scoreFrom} /><stop offset="100%" stopColor={tk.scoreTo} />
         </linearGradient>
@@ -400,14 +403,11 @@ function HealthRing({ d, selected, onSelect }: { d: ReturnType<typeof getOverall
 
       {depth}
 
-      {/* Rotating dotted ring — dark only. 72 orbiting dots outside a thick
-          light arc is exactly the density this pass exists to remove. */}
-      {!lightForm && (
-        <g>
-          {odots}
-          <animateTransform attributeName="transform" type="rotate" from={`0 ${cx} ${cy}`} to={`360 ${cx} ${cy}`} dur="90s" repeatCount="indefinite" />
-        </g>
-      )}
+      {/* Rotating dotted ring */}
+      <g>
+        {odots}
+        <animateTransform attributeName="transform" type="rotate" from={`0 ${cx} ${cy}`} to={`360 ${cx} ${cy}`} dur="90s" repeatCount="indefinite" />
+      </g>
 
       {/* Energy filaments */}
       {/* Bloom is a dark-mode device — light on near-black. It is authored
@@ -425,26 +425,21 @@ function HealthRing({ d, selected, onSelect }: { d: ReturnType<typeof getOverall
       {/* Progress arc + pulsing head */}
       <circle
         cx={cx} cy={cy} r={pr} fill="none"
-        stroke={lightForm ? "var(--nura-track-neutral)" : `rgba(${tk.inkRgb},0.06)`}
+        stroke={lightForm ? "var(--nura-chart-track)" : `rgba(${tk.inkRgb},0.06)`}
         strokeWidth={arcW}
       />
       <circle
         cx={cx} cy={cy} r={pr} fill="none"
-        stroke={lightForm ? tk.ringMid : `url(#${uid}-parc)`}
+        stroke={lightForm ? "var(--nura-sage-deep)" : `url(#${uid}-parc)`}
         strokeWidth={arcW} strokeLinecap="round"
         strokeDasharray={`${vis.toFixed(1)} ${circ.toFixed(1)}`}
         transform={`rotate(-90 ${cx} ${cy})`}
         style={{ filter: `drop-shadow(0 0 5px rgba(${tk.tealRgb},0.55))` }}
         opacity={sel ? 0.5 : 1}
       />
-      {/* The pulsing head is dark's terminus marker. A rounded cap on an 11px
-          stroke already terminates the arc, and a blinking dot on a calm light
-          card is noise. */}
-      {!lightForm && (
-        <circle cx={hx.toFixed(1)} cy={hy.toFixed(1)} r={3.4} fill={tk.ringHead} style={{ filter: `drop-shadow(0 0 7px ${tk.teal})` }}>
-          <animate attributeName="opacity" values="1;0.45;1" dur="2.6s" repeatCount="indefinite" />
-        </circle>
-      )}
+      <circle cx={hx.toFixed(1)} cy={hy.toFixed(1)} r={3.4} fill={lightForm ? "var(--nura-sage-deep)" : tk.ringHead} style={{ filter: `drop-shadow(0 0 7px ${tk.teal})` }}>
+        <animate attributeName="opacity" values="1;0.45;1" dur="2.6s" repeatCount="indefinite" />
+      </circle>
 
       {/* Center number */}
       {selPillar ? (
@@ -471,17 +466,8 @@ function HealthRing({ d, selected, onSelect }: { d: ReturnType<typeof getOverall
         return (
           <g key={p.key} style={{ cursor: "pointer" }} onClick={() => onSelect(p.key)}>
             <line x1={(cx + 64 * ca).toFixed(1)} y1={(cy + 64 * sa).toFixed(1)} x2={(cx + (big ? 86 : 82) * ca).toFixed(1)} y2={(cy + (big ? 86 : 82) * sa).toFixed(1)} stroke={acc[p.color]} strokeWidth={big ? 3 : 2.2} strokeLinecap="round" opacity={Number((0.85 * o).toFixed(2))} />
-            {/* Connector + dot ride at r=92, which is exactly where light's
-                thick arc now sits — and they are decoration either way: the
-                score and its label are already printed at the end of the spoke,
-                and the pillar list beside the dial repeats both. Dark keeps
-                them; light drops them and lets the arc own that band. */}
-            {!lightForm && (
-              <>
-                <line x1={(cx + 92 * ca).toFixed(1)} y1={(cy + 92 * sa).toFixed(1)} x2={(cx + 110 * ca).toFixed(1)} y2={(cy + 110 * sa).toFixed(1)} stroke={acc[p.color]} strokeWidth={1.3} opacity={Number((0.45 * o).toFixed(2))} />
-                <circle cx={(cx + 92 * ca).toFixed(1)} cy={(cy + 92 * sa).toFixed(1)} r={big ? 3.4 : 2.4} fill={acc[p.color]} opacity={o} style={{ filter: `drop-shadow(0 0 ${big ? 7 : 4}px ${acc[p.color]})` }} />
-              </>
-            )}
+            <line x1={(cx + 92 * ca).toFixed(1)} y1={(cy + 92 * sa).toFixed(1)} x2={(cx + 110 * ca).toFixed(1)} y2={(cy + 110 * sa).toFixed(1)} stroke={lightForm ? "rgba(125,150,138,0.5)" : acc[p.color]} strokeWidth={lightForm ? 1.2 : 1.3} opacity={lightForm ? o : Number((0.45 * o).toFixed(2))} />
+            <circle cx={(cx + 92 * ca).toFixed(1)} cy={(cy + 92 * sa).toFixed(1)} r={lightForm ? 3 : (big ? 3.4 : 2.4)} fill={lightForm ? "var(--nura-sage-mid)" : acc[p.color]} opacity={o} style={{ filter: `drop-shadow(0 0 ${big ? 7 : 4}px ${acc[p.color]})` }} />
             <text x={lx.toFixed(1)} y={vy.toFixed(1)} textAnchor={anchor} fontFamily={SANS} fontSize={17.5} fontWeight={700} className="nura-datum-ink" style={{ fill: acc[p.color] }} opacity={o}>
               {p.score}<tspan fontSize="9" dx="3" dy="-5" fill={tCol(p.trend, tk)}>{tArrow(p.trend)}</tspan>
             </text>

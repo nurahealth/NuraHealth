@@ -5,7 +5,7 @@ import type { MetricPaint } from "@/lib/metricColors";
 import {
   ALPHA, ENTER_CLASS, MARKER, PAD, STROKE,
   BaselineBand, BaselineLine, ChartLegend, ChartTooltip, Marker, XAxis, YAxis,
-  fitTicks, linePath, niceScale, smoothPath, thinLabels,
+  fitTicks, linePath, niceScale, smoothPath,
   useMeasuredWidth, useTweenedSeries,
   type LegendItem,
 } from "@/components/dashboard/chartTheme";
@@ -143,11 +143,10 @@ export default function MetricLineChart({
     return {
       yLo: dLo,
       yHi: dHi,
-      // Three gridlines maximum in light — see the same note in MetricChart.
-      gridTicks: lightForm ? thinLabels(fitTicks(raw, plotH, dLo, dHi), 3) : fitTicks(raw, plotH, dLo, dHi),
+      gridTicks: fitTicks(raw, plotH, dLo, dHi),
       fmtTick: tickFormat ?? ((v: number) => v.toFixed(nice.decimals)),
     };
-  }, [data, baseline, band, lo, hi, ticks, tickFormat, plotH, lightForm]);
+  }, [data, baseline, band, lo, hi, ticks, tickFormat, plotH]);
 
   // Nothing to lay out until the container has been measured. Reserving the
   // full height here keeps the card from reflowing when the chart appears.
@@ -237,10 +236,9 @@ export default function MetricLineChart({
           d={path} fill="none" stroke={color.hex}
           // 2.5px in light: a 2px stroke that was confident against near-black
           // reads thin and tentative on white at the same size.
-          // 2px emphasis tone in light — the line is the mark, so it takes the
-          // deep step rather than the body one.
+          // Same 2px weight as dark (STROKE.series); light only swaps the hue.
           style={lightForm ? { stroke: "var(--nura-sage-deep)" } : undefined}
-          strokeWidth={lightForm ? 2 : STROKE.series}
+          strokeWidth={STROKE.series}
           strokeLinecap="round" strokeLinejoin="round"
         />
 
@@ -249,8 +247,8 @@ export default function MetricLineChart({
             dense curve stays a curve instead of a bead necklace. */}
         {/* The latest point is the reading the card is quoting, so it takes
             the emphasis tone alongside the stroke. */}
-        {sparse && !lightForm
-          ? pts.map(([cx, cy], i) => <Marker key={i} cx={cx} cy={cy} color={color.hex} />)
+        {sparse
+          ? pts.map(([cx, cy], i) => <Marker key={i} cx={cx} cy={cy} color={lightForm ? "var(--nura-sage-deep)" : color.hex} />)
           : <Marker cx={last[0]} cy={last[1]} color={lightForm ? "var(--nura-sage-deep)" : color.hex} r={MARKER.rLatest} />}
 
         {/* Hover crosshair, drawn above the line but below the markers' ring */}
@@ -264,7 +262,7 @@ export default function MetricLineChart({
           </>
         )}
 
-        {xLabels && <XAxis labels={lightForm ? thinLabels(xLabels, 3) : xLabels} plotLeft={plotL} plotRight={plotR} y={H - 6} />}
+        {xLabels && <XAxis labels={xLabels} plotLeft={plotL} plotRight={plotR} y={H - 6} />}
       </svg>
 
       {active && (

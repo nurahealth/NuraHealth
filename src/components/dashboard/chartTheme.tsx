@@ -560,41 +560,12 @@ export function XAxis({
 }
 
 /* ───────────────────────────────────────────────────────────────────────────
-   LIGHT FORM — fewer, wider, rounder marks.
+   SHARED BAR GEOMETRY
 
-   The dark charts draw every sample: 50–120 one-pixel bars, which on near-black
-   reads as a lit waveform and is the look the brand shipped with. On white the
-   same mark count reads as a barcode — dense enough that the eye resolves
-   texture instead of values, and no palette fixes that. These helpers are how
-   the light form gets to be a different chart rather than a recoloured one.
+   Both themes draw the same bars. `roundedTopBar` exists because `rx` on a
+   <rect> rounds all four corners, which on a bar sitting at the axis leaves
+   two notches where it meets the baseline.
    ─────────────────────────────────────────────────────────────────────── */
-
-/** Most bars a light-mode chart may draw. Above ~24 the gaps stop reading. */
-export const LIGHT_MAX_BARS = 18;
-
-/**
- * Down-sample a series to at most `max` buckets by averaging.
- *
- * Averaging rather than picking every Nth sample: a stride would let one spike
- * stand in for a whole bucket (or drop it entirely, depending on phase), which
- * changes what the chart claims. A mean of the bucket is a smaller, honest
- * statement — "this is roughly what that stretch looked like".
- *
- * Returns the original array when it is already short enough, so the caller can
- * use the result unconditionally.
- */
-export function bucketAverage(values: number[], max = LIGHT_MAX_BARS): number[] {
-  if (values.length <= max) return values;
-  const out: number[] = [];
-  for (let b = 0; b < max; b++) {
-    const lo = Math.floor((b * values.length) / max);
-    const hi = Math.max(lo + 1, Math.floor(((b + 1) * values.length) / max));
-    let sum = 0;
-    for (let i = lo; i < hi; i++) sum += values[i];
-    out.push(sum / (hi - lo));
-  }
-  return out;
-}
 
 /**
  * A bar with rounded TOP corners and square feet.
@@ -616,27 +587,19 @@ export function roundedTopBar(x: number, y: number, w: number, h: number, r = 4)
   ].join(" ");
 }
 
-/** Keep at most `max` evenly-spaced entries of a label/tick list, ends first. */
-export function thinLabels<T>(items: T[], max = 3): T[] {
-  if (items.length <= max) return items;
-  const out: T[] = [];
-  for (let i = 0; i < max; i++) out.push(items[Math.round((i * (items.length - 1)) / (max - 1))]);
-  return out;
-}
 
 /* ───────────────────────────────────────────────────────────────────────────
-   THE BAR HIGHLIGHT — light mode only.
+   THE BAR TREATMENT — light rendering only, identical geometry to dark.
 
-   A flat fill is honest and a little dead. Real objects are lit from above, so
-   every bar and tick gets a vertical ramp from its tone at the base to ~12%
-   brighter at the top, with a crisp brighter line along the top edge itself.
-   No blur, no glow, no drop-shadow: the highlight is geometry, not atmosphere,
-   which is exactly why it survives on a white card where a bloom would not.
+   Three tones and a lit top edge. The tone is chosen from the DATA, not from
+   the index alone, so the same rule reads correctly on a flat day and a spiky
+   one: the top ~18% of readings and the newest one or two are the emphasis
+   tone, the bottom ~18% recede, everything between is body.
 
-   The bright edge is the first 3% of the gradient rather than a separate 1px
-   element. A real 1px rect would need its own path per bar (and would round
-   differently on a 4px-radius top); a hard stop at 3% renders as a crisp line
-   that scales with the bar and costs nothing.
+   The edge is a real 1.4px stroke inset at the top of the bar rather than a
+   gradient stop, because a stop is a fraction of bar height — on a short bar
+   it vanishes and on a tall one it becomes a band. A stroke is 1.4px on every
+   bar, which is what makes a column of them look machined.
    ─────────────────────────────────────────────────────────────────────── */
 
 export type SageTone = "deep" | "mid" | "faint";
@@ -644,6 +607,23 @@ export type SageTone = "deep" | "mid" | "faint";
 /** The gradient id for `tone` within a chart instance. Pair with SageBarDefs. */
 export function sageFill(uid: string, tone: SageTone): string {
   return `url(#${uid}-sage-${tone})`;
+}
+
+/**
+ * Tone per bar. `values` is the whole series so the thresholds are relative to
+ * what is actually on screen; `i` and `n` bring in recency.
+ */
+export function barTones(values: number[]): SageTone[] {
+  const sorted = [...values].sort((a, b) => a - b);
+  const at = (q: number) => sorted[Math.min(sorted.length - 1, Math.floor(q * (sorted.length - 1)))];
+  const hi = at(0.82);
+  const lo = at(0.18);
+  const n = values.length;
+  return values.map((v, i) => {
+    if (i >= n - 2 || v >= hi) return "deep";
+    if (v <= lo) return "faint";
+    return "mid";
+  });
 }
 
 /**
@@ -656,12 +636,36 @@ export function SageBarDefs({ uid }: { uid: string }) {
     <>
       {(["deep", "mid", "faint"] as SageTone[]).map((tone) => (
         <linearGradient key={tone} id={`${uid}-sage-${tone}`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" style={{ stopColor: `var(--nura-sage-${tone}-edge)` }} />
-          <stop offset="3%" style={{ stopColor: `var(--nura-sage-${tone}-top)` }} />
-          <stop offset="100%" style={{ stopColor: `var(--nura-sage-${tone})` }} />
+          <stop offset="0%" style={{ stopColor: `var(--nura-sage-${tone}-top)` }} />
+          <stop offset="100%" style={{ stopColor: `var(--nura-sage-${tone}-base)` }} />
         </linearGradient>
       ))}
     </>
+  );
+}
+
+/**
+ * The lit inner top edge — a rounded stroke just below the bar's cap.
+ *
+ * Inset scales with the bar rather than sitting at a fixed distance: these
+ * charts run from 4px intraday bars to 20px weekly ones, and a fixed inset
+ * either vanishes on the narrow ones or floats in the middle of the wide ones.
+ * At 28% per side the highlight is always visibly shorter than the bar and
+ * always present, which is what makes a row of them look machined.
+ *
+ * Marked `data-decor` so the light/dark structural-parity check can tell a
+ * rendering flourish from a data mark.
+ */
+export function BarTopEdge({ x, y, w, r = 2 }: { x: number; y: number; w: number; r?: number }) {
+  if (w < 2.5) return null;
+  const inset = Math.min(r * 0.6, w * 0.28);
+  return (
+    <line
+      data-decor="bar-edge"
+      x1={(x + inset).toFixed(2)} y1={(y + 1.1).toFixed(2)}
+      x2={(x + w - inset).toFixed(2)} y2={(y + 1.1).toFixed(2)}
+      stroke="var(--nura-bar-edge)" strokeWidth={1.4} strokeLinecap="round"
+    />
   );
 }
 
