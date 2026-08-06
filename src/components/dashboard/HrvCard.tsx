@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useIsLightForm } from "@/lib/themeTokens";
 import { SOURCE_LABEL, type DashboardMetric } from "@/lib/dashboardData";
 import { useMetricPaint, type MetricPaint } from "@/lib/metricColors";
 import { usePrefersReducedMotion } from "@/components/dashboard/chartTheme";
@@ -35,6 +36,7 @@ function HrvMiniRing({ hrv, paint }: { hrv: number; paint: MetricPaint }) {
   const stroke = 9;
   const pad = 12; // breathing room so the glow isn't clipped
   const box = size + pad * 2;
+  const lightForm = useIsLightForm();
   const r = (size - stroke) / 2;
   const c = box / 2;
   const circ = 2 * Math.PI * r;
@@ -85,7 +87,8 @@ function HrvMiniRing({ hrv, paint }: { hrv: number; paint: MetricPaint }) {
       >
         {/* faint full 270° track */}
         <circle
-          cx={c} cy={c} r={r} fill="none" stroke={paint.alpha(0.16)}
+          cx={c} cy={c} r={r} fill="none"
+          stroke={lightForm ? "var(--nura-track-neutral)" : paint.alpha(0.16)}
           strokeWidth={stroke} strokeLinecap="round" strokeDasharray={`${arcLen} ${circ}`}
         />
         {/* the fill — solid, in the metric's colour */}

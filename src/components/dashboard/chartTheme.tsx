@@ -558,3 +558,68 @@ export function XAxis({
     </>
   );
 }
+
+/* ───────────────────────────────────────────────────────────────────────────
+   LIGHT FORM — fewer, wider, rounder marks.
+
+   The dark charts draw every sample: 50–120 one-pixel bars, which on near-black
+   reads as a lit waveform and is the look the brand shipped with. On white the
+   same mark count reads as a barcode — dense enough that the eye resolves
+   texture instead of values, and no palette fixes that. These helpers are how
+   the light form gets to be a different chart rather than a recoloured one.
+   ─────────────────────────────────────────────────────────────────────── */
+
+/** Most bars a light-mode chart may draw. Above ~24 the gaps stop reading. */
+export const LIGHT_MAX_BARS = 18;
+
+/**
+ * Down-sample a series to at most `max` buckets by averaging.
+ *
+ * Averaging rather than picking every Nth sample: a stride would let one spike
+ * stand in for a whole bucket (or drop it entirely, depending on phase), which
+ * changes what the chart claims. A mean of the bucket is a smaller, honest
+ * statement — "this is roughly what that stretch looked like".
+ *
+ * Returns the original array when it is already short enough, so the caller can
+ * use the result unconditionally.
+ */
+export function bucketAverage(values: number[], max = LIGHT_MAX_BARS): number[] {
+  if (values.length <= max) return values;
+  const out: number[] = [];
+  for (let b = 0; b < max; b++) {
+    const lo = Math.floor((b * values.length) / max);
+    const hi = Math.max(lo + 1, Math.floor(((b + 1) * values.length) / max));
+    let sum = 0;
+    for (let i = lo; i < hi; i++) sum += values[i];
+    out.push(sum / (hi - lo));
+  }
+  return out;
+}
+
+/**
+ * A bar with rounded TOP corners and square feet.
+ *
+ * `rx` on a <rect> rounds all four, which on a bar sitting at the axis leaves
+ * two little notches where it meets the baseline. The radius also clamps to
+ * half the height so a short bar becomes a dome rather than an hourglass.
+ */
+export function roundedTopBar(x: number, y: number, w: number, h: number, r = 4): string {
+  const rr = Math.max(0, Math.min(r, w / 2, h));
+  return [
+    `M${(x).toFixed(2)},${(y + h).toFixed(2)}`,
+    `V${(y + rr).toFixed(2)}`,
+    `Q${(x).toFixed(2)},${(y).toFixed(2)} ${(x + rr).toFixed(2)},${(y).toFixed(2)}`,
+    `H${(x + w - rr).toFixed(2)}`,
+    `Q${(x + w).toFixed(2)},${(y).toFixed(2)} ${(x + w).toFixed(2)},${(y + rr).toFixed(2)}`,
+    `V${(y + h).toFixed(2)}`,
+    "Z",
+  ].join(" ");
+}
+
+/** Keep at most `max` evenly-spaced entries of a label/tick list, ends first. */
+export function thinLabels<T>(items: T[], max = 3): T[] {
+  if (items.length <= max) return items;
+  const out: T[] = [];
+  for (let i = 0; i < max; i++) out.push(items[Math.round((i * (items.length - 1)) / (max - 1))]);
+  return out;
+}

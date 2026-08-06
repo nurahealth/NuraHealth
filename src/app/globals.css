@@ -394,8 +394,9 @@
   /* The Resilience pillar on the dial. It is the one pillar whose original
      colour IS the brand sage, so it was pointed straight at --nura-sage — and
      that token is the INTERACTIVE accent, which light keeps sage on purpose.
-     Left alone it would have been the single green mark in a graphite chart.
-     Split, so dark keeps the original and light joins the ink. */
+     Left alone, light would paint it from the button accent rather than from
+     the data colour — the same green by luck, not by system. Split, so each
+     column names it deliberately. */
   --nura-pillar-resilience: var(--nura-sage);
 
   /* The status WORD a gauge prints in its centre ("Normal", "Elevated") when
@@ -583,69 +584,43 @@
    legible on white. Contrast ratios below are against #ffffff.
    ─────────────────────────────────────────────────────────────────────── */
 [data-theme="light"] {
-  /* ── LIGHT DATA-VIZ SYSTEM — GRAPHITE MONOCHROME ────────────────────────
+  /* ── LIGHT DATA-VIZ SYSTEM ──────────────────────────────────────────────
      Four colour jobs, nothing else.
 
-     1 PRIMARY DATA   charcoal ink. Not a hue at all.
-     2 ORDERED DATA   steps of one grey ramp, light to near-black, so magnitude
-                      reads as depth.
-     3 DE-EMPHASIS    a lighter warm grey, clearly below the marks.
+     1 PRIMARY DATA   a single mid-to-deep sage step. The card title says what
+                      the metric is; the mark does not need its own hue.
+     2 ORDERED DATA   steps of the same ramp, light to dark, so magnitude reads
+                      as depth of colour.
+     3 DE-EMPHASIS    warm grey, never a hue.
      4 STATUS         one fixed trio, used sparingly.
 
-     WHY GREY AND NOT SAGE. The light column used to draw its data in a deep
-     sage, which was defensible — one hue, one system. But it made every chart
-     in the app a brand statement, and it put the data marks in the same colour
-     family as the buttons and the active nav, so "this is a control" and "this
-     is a reading" were saying the same thing. Graphite separates them: data is
-     ink, sage is the thing you can press. It is also what the light UIs this
-     app is measured against do — Stripe, Linear, Apple Health all draw in
-     near-black and spend colour only where it means something.
+     Floors: marks >= 3:1 on the card surface, text >= 4.5:1. Ratios below are
+     against #ffffff; the status trio is also verified on the tinted chip.
+     Steps 100-300 are below 3:1 and are therefore track/fill only — never a
+     visible mark. Dark is unaffected: this block is light-only. */
+  --nura-sage-100: #e3eae5;   /* 1.2  track / band fill */
+  --nura-sage-200: #c5d3ca;   /* 1.6  track */
+  --nura-sage-300: #9bb0a5;   /* 2.3  fill behind a line */
+  --nura-sage-400: #7d968a;   /* 3.2  lightest usable mark */
+  --nura-sage-500: #5f7a6e;   /* 4.7  default mark */
+  --nura-sage-600: #43604f;   /* 6.9  deepest mark / mark text */
 
-     The ramp is warm-neutral (R>G>B by a hair) so it sits on the ivory canvas
-     rather than looking like cold grey pasted on warm paper.
+  /* 1 — every single-series chart mark */
+  --nura-series: var(--nura-data-primary);   /*  4.7:1 on #ffffff */
+  --nura-data-primary: var(--nura-sage-500);
+  --nura-data-primary-soft: var(--nura-sage-300);
+  --nura-data-fill: var(--nura-sage-100);
 
-     Floors: marks >= 3:1 on the white card, text >= 4.5:1. Ratios measured
-     against #ffffff. Steps 100-300 are below 3:1 and are therefore track/fill
-     only — never a visible mark. Dark is untouched: this block is light-only,
-     and dark keeps its per-metric palette and its bloom. */
-  --nura-graphite-100: #efedea;   /*  1.17  track / band fill */
-  --nura-graphite-200: #ddd9d4;   /*  1.40  track */
-  --nura-graphite-300: #c4bfb8;   /*  1.83  fill behind a line */
-  --nura-graphite-400: #8a857e;   /*  3.66  lightest usable mark */
-  --nura-graphite-500: #55524e;   /*  7.77  mid mark */
-  --nura-graphite-600: #2a2a2c;   /* 14.32  primary mark / deepest step */
+  /* 2 — ordered ramp. Four monotonic steps, all clearing 3:1. */
+  --nura-step-1: #7d968a;     /* 3.2  lightest — Awake / lowest effort */
+  --nura-step-2: #6b8579;     /* 4.0 */
+  --nura-step-3: #5a7367;     /* 5.1 */
+  --nura-step-4: #43604f;     /* 6.9  deepest — Deep sleep / peak effort */
 
-  /* Compatibility aliases. The light data ladder is graphite now, so nothing
-     here should ever ask for a "sage-N" step — but if the light column simply
-     stopped defining them they would fall through to the DARK ladder, and a
-     stray reference would quietly paint a sage mark on a white chart. Pointing
-     them at graphite makes that failure mode impossible: reach for the wrong
-     name in light and you still get ink. */
-  --nura-sage-100: var(--nura-graphite-100);
-  --nura-sage-200: var(--nura-graphite-200);
-  --nura-sage-300: var(--nura-graphite-300);
-  --nura-sage-400: var(--nura-graphite-400);
-  --nura-sage-500: var(--nura-graphite-500);
-  --nura-sage-600: var(--nura-graphite-600);
-
-  /* 1 — every single-series chart mark. Charcoal, full stop. */
-  --nura-series: var(--nura-data-primary);      /* 14.32:1 on #ffffff */
-  --nura-data-primary: var(--nura-graphite-600);
-  --nura-data-primary-soft: var(--nura-graphite-300);
-  --nura-data-fill: var(--nura-graphite-100);
-
-  /* 2 — ordered ramp. Four monotonic lightness steps, all clearing 3:1, so a
-         hypnogram or a zone bar reads as depth rather than as four colours. */
-  --nura-step-1: #8a857e;     /*  3.66  lightest — Awake / lowest effort */
-  --nura-step-2: #6a6660;     /*  5.70 */
-  --nura-step-3: #4a4845;     /*  9.11 */
-  --nura-step-4: #2a2a2c;     /* 14.32  deepest — Deep sleep / peak effort */
-
-  /* 3 — de-emphasis. Track is decorative; the mark variant clears 3:1 because
-         an under-goal day is still a reading, not a background. */
-  --nura-track-neutral: #eeece8;
-  --nura-track-neutral-strong: #dedad4;
-  --nura-data-muted: #8a857e;  /*  3.66  under-goal bars, still a real mark */
+  /* 3 — de-emphasis. Track is decorative; the mark variant clears 3:1. */
+  --nura-track-neutral: #e7e5df;
+  --nura-track-neutral-strong: #dcd9d1;
+  --nura-data-muted: #847f74;  /* 4.0  under-goal bars, still a real mark */
 
 
   /* ── FIXED METRIC COLOUR MAP — light column ─────────────────────────────
@@ -656,47 +631,42 @@
      the price of the hue was a dashboard of muted violet, indigo, coral, amber
      and cyan cards that read as mud on white — a palette rather than a system.
 
-     So light collapses. Every metric resolves to the same charcoal; the pair
-     that genuinely needs two values (blood pressure, two series on one plot)
-     is separated by lightness — systolic ink, diastolic the light grey step.
-     Ratios are against #ffffff and every value also clears 3:1 on the tinted
+     So light collapses, and this time dark follows it. Every metric resolves
+     to the same deep sage step; the pair that genuinely needs two values
+     (blood pressure, two series on one plot) is separated by step. Ratios are
+     against #ffffff and every value also clears 3:1 on the tinted
      detail-screen washes. De-emphasis stays warm grey and the status trio is
-     untouched — a data colour never carries good/bad.
-
-     DARK DOES NOT FOLLOW. It keeps its per-metric palette (violet respiratory,
-     coral heart, cyan HRV, blue sleep, ember movement) and its bloom. The two
-     columns disagree about this map on purpose; that is the whole reason the
-     map exists as an indirection. */
+     untouched — a data colour never carries good/bad. */
   --nura-metric-resp: var(--nura-data-primary);
-  --nura-metric-resp-rgb: 42, 42, 44;
-  --nura-metric-resp-hi: var(--nura-graphite-400);   /* 3.18:1 */
+  --nura-metric-resp-rgb: 95, 122, 110;
+  --nura-metric-resp-hi: var(--nura-sage-400);   /* 3.18:1 */
 
   --nura-metric-heart: var(--nura-data-primary);
-  --nura-metric-heart-rgb: 42, 42, 44;
+  --nura-metric-heart-rgb: 95, 122, 110;
   --nura-metric-rhr: var(--nura-data-primary);
-  --nura-metric-rhr-rgb: 42, 42, 44;
-  --nura-metric-rhr-hi: var(--nura-graphite-400);    /* 3.18:1 */
-  --nura-metric-bp-sys: var(--nura-graphite-600);    /* 6.94:1 — systolic */
-  --nura-metric-bp-sys-rgb: 42, 42, 44;
-  --nura-metric-bp-dia: var(--nura-graphite-400);    /* 3.18:1 — 2.18:1 from systolic */
-  --nura-metric-bp-dia-rgb: 138, 133, 126;
+  --nura-metric-rhr-rgb: 95, 122, 110;
+  --nura-metric-rhr-hi: var(--nura-sage-400);    /* 3.18:1 */
+  --nura-metric-bp-sys: var(--nura-sage-600);    /* 6.94:1 — systolic */
+  --nura-metric-bp-sys-rgb: 67, 96, 79;
+  --nura-metric-bp-dia: var(--nura-sage-400);    /* 3.18:1 — 2.18:1 from systolic */
+  --nura-metric-bp-dia-rgb: 125, 150, 138;
 
   --nura-metric-sleep: var(--nura-data-primary);
-  --nura-metric-sleep-rgb: 42, 42, 44;
+  --nura-metric-sleep-rgb: 95, 122, 110;
 
   --nura-metric-hrv: var(--nura-data-primary);
-  --nura-metric-hrv-rgb: 42, 42, 44;
+  --nura-metric-hrv-rgb: 95, 122, 110;
 
   --nura-metric-activity: var(--nura-data-primary);
-  --nura-metric-activity-rgb: 42, 42, 44;
+  --nura-metric-activity-rgb: 95, 122, 110;
 
   --nura-metric-temp: var(--nura-data-primary);
-  --nura-metric-temp-rgb: 42, 42, 44;
+  --nura-metric-temp-rgb: 95, 122, 110;
   --nura-metric-temp-warm: var(--nura-data-primary);
-  --nura-metric-temp-warm-rgb: 42, 42, 44;
+  --nura-metric-temp-warm-rgb: 95, 122, 110;
 
   --nura-metric-oxygen: var(--nura-data-primary);
-  --nura-metric-oxygen-rgb: 42, 42, 44;
+  --nura-metric-oxygen-rgb: 95, 122, 110;
 
   /* Sleep stages — the shared ordered ramp, read the literal way round in
      light: awake lightest, deep darkest. Monotonic, every step >=3:1. */
@@ -705,35 +675,23 @@
   --nura-stage-rem: var(--nura-step-3);     /* 5.11:1 */
   --nura-stage-deep: var(--nura-step-4);    /* 6.94:1 — deepest */
 
-  /* Status chips. The "everything is fine" states go NEUTRAL: a calm chip was
-     previously a sage tint, which put the same colour on "Optimal" as on the
-     buttons and the active nav — and now that the charts are graphite, a sage
-     chip would have been the only coloured thing left on a card full of ink.
-     A healthy dashboard should read quiet, so fine states are ink on a warm
-     grey, and colour is spent only where it means "look at this": brick for
-     alert, amber (--nura-status-warn) wherever a screen genuinely escalates.
-     Contrast on the chip fill: ink 10.2:1, brick 5.5:1. */
-  --nura-chip-optimal-fg: var(--nura-ink-strong);
-  --nura-chip-optimal-bg: #f2f0ec;
-  --nura-chip-good-fg: var(--nura-ink-strong);
-  --nura-chip-good-bg: #f2f0ec;
+  --nura-chip-optimal-fg: var(--nura-status-good);
+  --nura-chip-optimal-bg: var(--nura-tint-accent);
+  --nura-chip-good-fg: var(--nura-status-good);
+  --nura-chip-good-bg: var(--nura-tint-accent);
   --nura-chip-alert-fg: var(--nura-status-alert);
   --nura-chip-alert-bg: var(--nura-tint-danger);
-  --nura-chip-border: #e4e1db;
+  --nura-chip-border: var(--nura-tint-accent-border);
 
   --nura-gauge-zone-1: var(--nura-track-neutral-strong);
   --nura-gauge-zone-2: var(--nura-track-neutral-strong);
   --nura-gauge-zone-3: var(--nura-track-neutral-strong);
   --nura-gauge-zone-4: var(--nura-track-neutral-strong);
-  /* Pager dots are NAVIGATION, not data — they say which panel you are on.
-     That is a selected state, so they keep the accent while the charts beside
-     them go to ink. This is the boundary the graphite pass draws: sage means
-     "you can act on this", graphite means "this is a reading". */
-  --nura-pager-heart: var(--nura-sage);
-  --nura-pager-rhr: var(--nura-sage);
+  --nura-pager-heart: var(--nura-data-primary);
+  --nura-pager-rhr: var(--nura-data-primary);
 
   --nura-gauge-marker: var(--nura-data-primary);
-  --nura-gauge-tick: #c9c5be;   /* 1.72 — a tick, deliberately below the marks */
+  --nura-gauge-tick: #cfcbc1;
   --nura-scale-end: var(--nura-track-neutral-strong);
   --nura-scale-mid: var(--nura-track-neutral);
 
@@ -745,22 +703,11 @@
   --nura-hr-zone-3: var(--nura-step-3);
   --nura-hr-zone-4: var(--nura-step-4);
 
-  /* Light half of the dial split — three steps of the graphite ramp, so the
-     hero arc still deepens as the score climbs but reads as ink. The "glow"
-     rgb feeds a radial core gradient, which is NOT a drop-shadow and so is not
-     caught by the flattening layer — left as sage it painted a faint green
-     halo behind an otherwise monochrome dial. Warm ink at low alpha instead. */
+  /* Light half of the dial split — three steps of the one sage ladder. */
   --nura-dial-1: var(--nura-step-2);
   --nura-dial-2: var(--nura-step-3);
   --nura-dial-3: var(--nura-step-4);
-  --nura-dial-glow-rgb: 26, 24, 20;
-
-  --nura-pillar-resilience: var(--nura-data-primary);
-
-  /* A fine reading is not news. The gauge's centre word was the brightest
-     green on an otherwise graphite card — louder than the number it describes.
-     Ink for the calm states; amber and brick still escalate. */
-  --nura-status-calm: var(--nura-ink-strong);
+  --nura-dial-glow-rgb: var(--nura-sage-rgb);
 
   --nura-ramp-hr-1: var(--nura-step-1);
   --nura-ramp-hr-2: var(--nura-step-2);
@@ -908,14 +855,10 @@
   --nura-meter-bp-stage1-hi: var(--nura-track-neutral-strong);
   --nura-meter-bp-stage2: var(--nura-track-neutral-strong);
 
-  /* Area fill under a line: one flat band of the series colour. 6% of a
-     charcoal line is a soft grey wash that reads as "under the line" without
-     competing with it; the old 8% was tuned for a mid-tone sage and is too
-     heavy under ink. */
-  --nura-area-a30: 0.06;
-  --nura-area-a28: 0.06;
-  --nura-area-a26: 0.06;
-  --nura-area-a0: 0.06;
+  --nura-area-a30: 0.08;
+  --nura-area-a28: 0.08;
+  --nura-area-a26: 0.08;
+  --nura-area-a0: 0.08;
   --nura-accent-text: var(--nura-text-primary);     /* 17.4:1 */
   --nura-accent-label: var(--nura-text-secondary);  /*  7.2:1 */
   --nura-text-strong: #000000;
@@ -945,18 +888,18 @@
      What remains is the two genuinely shared names, which keep a light-safe
      step of their own, plus the light-only viz gold. */
   --nura-teal: var(--nura-data-primary);                 /*  5.3:1 */
-  --nura-teal-rgb: 42, 42, 44;
+  --nura-teal-rgb: 95, 122, 110;
   /* The one -rgb literal the dark column carries that light cannot inherit:
      dark's is a bright ladder step, which on white would be a wash of nothing. */
-  --nura-heart-hi-rgb: 138, 133, 126;
-  --nura-teal-mid: var(--nura-graphite-400);
-  --nura-teal-mid-rgb: 138, 133, 126;
-  --nura-teal-deep: var(--nura-graphite-600);
+  --nura-heart-hi-rgb: 125, 150, 138;
+  --nura-teal-mid: var(--nura-sage-400);
+  --nura-teal-mid-rgb: 125, 150, 138;
+  --nura-teal-deep: var(--nura-sage-600);
   --nura-amber: var(--nura-data-primary);                /*  5.5:1 */
-  --nura-amber-rgb: 42, 42, 44;
-  --nura-amber-2: var(--nura-graphite-600);
-  --nura-amber-2-rgb: 42, 42, 44;
-  --nura-amber-deep: var(--nura-graphite-600);
+  --nura-amber-rgb: 95, 122, 110;
+  --nura-amber-2: var(--nura-sage-600);
+  --nura-amber-2-rgb: 67, 96, 79;
+  --nura-amber-deep: var(--nura-sage-600);
   --nura-viz-gold: var(--nura-data-primary);             /*  5.5:1 */
 
   /* Ramp endpoints — kept dark-to-light in the same direction as the dark
@@ -967,10 +910,8 @@
   --nura-bar-dim-top: var(--nura-track-neutral-strong);
   --nura-bar-dim-bot: var(--nura-track-neutral);
   --nura-bar-under: var(--nura-data-muted);   /* 3.99:1 on #ffffff */
-  /* A marker drawn ON TOP of a filled bar/ring. The fill used to be a mid
-     sage, so a near-black marker read against it; the fill is charcoal now and
-     a dark marker would vanish into it. It inverts to white, like the tick. */
-  --nura-marker: #ffffff;
+  /* On white cards the accent bars are dark, so the marker/tick invert. */
+  --nura-marker: #1a1a1a;
   --nura-tick-on-accent: rgba(255, 255, 255, 0.7);
   --nura-knob: #ffffff;
   --nura-knob-shadow: 0 1px 2px rgba(26, 24, 20, 0.28), 0 0 0 0.5px rgba(26, 24, 20, 0.10);
@@ -1014,7 +955,7 @@
      (Dark keeps its twelve hand-tuned near-black washes — see the dark
      column. There the tint is a few percent off black and reads as depth,
      not as colour.) */
-  --nura-wash-neutral: radial-gradient(130% 80% at 50% -8%, #f1efeb 0%, #f4f2ed 34%, var(--nura-bg) 72%);
+  --nura-wash-neutral: radial-gradient(130% 80% at 50% -8%, #eef2ef 0%, #f2f4f1 34%, var(--nura-bg) 72%);
   --nura-wash-sleep: var(--nura-wash-neutral);
   --nura-wash-rhr: var(--nura-wash-neutral);
   --nura-wash-hrv: var(--nura-wash-neutral);
@@ -1078,6 +1019,13 @@
   --nura-ember-lo: var(--nura-metric-activity);
   --nura-orange-hi: var(--nura-metric-activity);
   --nura-orange-mid: var(--nura-metric-activity);
+
+  /* Introduced when the charts went graphite; kept, because the split is still
+     the right shape — dark must be able to disagree with light about these.
+     With sage back as the data colour they simply point at the data token and
+     the status trio again. */
+  --nura-pillar-resilience: var(--nura-data-primary);
+  --nura-status-calm: var(--nura-status-good);
 }
 
 @theme inline {
@@ -1237,12 +1185,44 @@ html, body {
   box-shadow: 0 0 0 2px var(--nura-card), 0 0 0 3px rgba(26, 24, 20, 0.22) !important;
 }
 
+/* ── Meters: thin track, one soft marker ──────────────────────────────────
+   Body Temp, Resting HR, Cardio Fitness, Blood Oxygen and Blood Pressure all
+   draw the same thing — a full-width ramp of the metric colour with a hard
+   3–4px bar dropped on it. On near-black that ramp is a lit scale and the bar
+   is a crisp readout. On white it is a heavy coloured slab with a black tick,
+   and the slab is the loudest thing on the card even though the only datum is
+   WHERE the marker sits.
+
+   Light keeps the geometry and changes the emphasis: the track recedes to a
+   warm grey rule, and the marker becomes a soft sage dot. The ramp carried no
+   information the marker position did not already carry.
+   ─────────────────────────────────────────────────────────────────────── */
+[data-theme="light"] .nura-meter-track {
+  background: var(--nura-track-neutral) !important;
+}
+
+[data-theme="light"] .nura-meter-dot {
+  top: 50% !important;
+  bottom: auto !important;
+  width: 12px !important;
+  height: 12px !important;
+  border-radius: 999px !important;
+  background: var(--nura-series) !important;
+  transform: translate(-50%, -50%) !important;
+  box-shadow: 0 0 0 2.5px var(--nura-card) !important;
+}
+
+/* Zone ticks sitting ON the old filled ramp were white so they could show
+   through it. Against a grey track they need to be grey. */
+[data-theme="light"] .nura-meter-tick {
+  background: var(--nura-gauge-tick) !important;
+}
+
 [data-theme="light"] .nura-area-grad stop {
   /* Area fills under a line fade from a bright stop to transparent, which
-     blooms on white. Flatten to an even 6% wash of the series colour — 6 and
-     not 8 because the series is charcoal now, and the same alpha of ink is a
-     markedly heavier band than it was of a mid-tone sage. */
-  stop-opacity: 0.06 !important;
+     blooms on white. Flatten to an even 8% wash of the series colour — a soft
+     sage tint that reads as "under the line" without competing with it. */
+  stop-opacity: 0.08 !important;
 }
 
 [data-theme="light"] .nura-flat {

@@ -33,11 +33,11 @@ export default function RestingHrZoneBar({
   return (
     <div style={{ width: "100%" }}>
       <div style={{ position: "relative", height: 12 }}>
-        <div style={{ position: "absolute", inset: 0, borderRadius: 999, background: ramp }} />
+        <div className="nura-meter-track" style={{ position: "absolute", inset: 0, borderRadius: 999, background: ramp }} />
         {/* Current-value marker. A hairline ring in the card colour separates it
             from the fill it sits on — the old version used a coloured glow,
             which the light theme then had to switch off again. */}
-        <div className="nura-marker-ring" style={{
+        <div className="nura-marker-ring nura-meter-dot" style={{
           position: "absolute", top: -4, bottom: -4, left: `${pos}%`, transform: "translateX(-50%)",
           width: 3, borderRadius: 2, background: "var(--nura-marker)",
           boxShadow: "0 0 0 1.5px var(--nura-card)",

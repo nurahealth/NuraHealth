@@ -121,3 +121,36 @@ export function useThemeToken(name: string, darkFallback: string): string {
     [readable, theme, storeHydrated, name, darkFallback],
   );
 }
+
+/* ───────────────────────────────────────────────────────────────────────────
+   "Should I draw the LIGHT form?"
+
+   The graphite/sage passes could live entirely in the stylesheet because they
+   only changed colour. This one changes SHAPE — bar counts, arc-vs-ticks,
+   stroke weights, cap geometry — and a stylesheet cannot rewrite an SVG. Dark
+   is frozen, so the components have to be able to ask which form to draw.
+
+   It rides the same two signals as useThemeTokens rather than inventing a
+   third: the store's theme, and the CSS-readable probe above. getServerSnapshot
+   is false everywhere, so SSR and the hydration render both emit the DARK form
+   and the markup matches; the light form lands on the same tick the light
+   tokens do, so shape and colour never disagree with each other.
+
+   Read it once at the top of a component and branch on it. Do NOT use it to
+   pick colours — those still come from tokens, so that a future theme gets
+   them for free.
+   ─────────────────────────────────────────────────────────────────────── */
+export function useIsLightForm(): boolean {
+  const theme = useThemeStore((s) => s.theme);
+  const storeHydrated = useThemeStore((s) => s.hydrated);
+  const readable = useTokensReadable();
+  // Read the DOM rather than the store alone: the pre-paint script in
+  // app/layout.tsx sets data-theme before React exists, so on a light cold load
+  // this is correct as soon as the probe flips — one tick earlier than
+  // hydrate() lands, which is the difference between one frame of the wrong
+  // chart and several.
+  return useMemo(() => {
+    if (!readable || typeof document === "undefined") return false;
+    return document.documentElement.getAttribute("data-theme") === "light";
+  }, [readable, theme, storeHydrated]);
+}

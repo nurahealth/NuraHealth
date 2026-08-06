@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useIsLightForm } from "@/lib/themeTokens";
 import type { MetricPaint } from "@/lib/metricColors";
 import { usePrefersReducedMotion } from "@/components/dashboard/chartTheme";
 
@@ -38,6 +39,7 @@ export default function ActiveEnergyRing({
   // Geometry — a 270° arc with the gap centered at the bottom.
   const pad = Math.round(stroke * 1.3);
   const box = size + pad * 2;
+  const lightForm = useIsLightForm();
   const r = (size - stroke) / 2;
   const c = box / 2;
   const circ = 2 * Math.PI * r;
@@ -92,7 +94,11 @@ export default function ActiveEnergyRing({
       >
         {/* faint full 270° track */}
         <circle
-          cx={c} cy={c} r={r} fill="none" stroke={color.alpha(0.16)}
+          cx={c} cy={c} r={r} fill="none"
+          // Track: a tint of the series in dark (it has to glow faintly off the
+          // near-black); a soft warm grey in light, so the ring reads as "fill
+          // against empty" rather than "dark sage against pale sage".
+          stroke={lightForm ? "var(--nura-track-neutral)" : color.alpha(0.16)}
           strokeWidth={stroke} strokeLinecap="round" strokeDasharray={`${arcLen} ${circ}`}
         />
         {/* the fill — solid, loading up to goal progress */}

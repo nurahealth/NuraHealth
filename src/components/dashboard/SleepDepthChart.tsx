@@ -1,6 +1,6 @@
 import type { ReactElement } from "react";
 import type { SleepDepthChartData } from "@/lib/dashboardData";
-import { useThemeTokens } from "@/lib/themeTokens";
+import { useThemeTokens, useIsLightForm } from "@/lib/themeTokens";
 import { useAccents } from "@/lib/accents";
 
 // Sleep card's bespoke overnight chart (mirrors design-reference/
@@ -15,7 +15,7 @@ import { useAccents } from "@/lib/accents";
 // The stage colours come from --nura-stage-*, and the two themes answer that
 // differently on purpose: DARK is the brand's original four hues (gold awake,
 // sage light, teal REM, blue deep), LIGHT is four monotone steps of the
-// graphite ramp, lightest awake to near-black deep. Depth is a single ordered
+// sage ramp, lightest awake to deepest deep. Depth is a single ordered
 // quantity, so on white it reads as one ramp getting darker; on near-black the
 // original palette is the look the brand shipped with. See globals.css.
 //
@@ -24,7 +24,7 @@ import { useAccents } from "@/lib/accents";
 // is barely a mark at all, and the ordered ramp now carries the distinction
 // that the lightening was there to prop up.
 
-import { MONO } from "@/components/dashboard/chartTheme";
+import { MONO, bucketAverage, roundedTopBar } from "@/components/dashboard/chartTheme";
 
 const SANS = "var(--font-inter), system-ui, sans-serif";
 
@@ -49,14 +49,21 @@ function bandStage(d: number): Stage {
 export default function SleepDepthChart({ data }: { data: SleepDepthChartData }) {
   const STAGE_HEX = useThemeTokens(STAGE_TOKENS);
   const acc = useAccents();
-  const { depth, stages, axisLabels } = data;
+  const lightForm = useIsLightForm();
+  const { depth: rawDepth, stages, axisLabels } = data;
+
+  // A night sampled every few minutes is ~90 bars. On near-black that is the
+  // hypnogram texture the card was designed around; on white it is a barcode.
+  // Light averages the night into 18 blocks — still the shape of the night,
+  // but each block is a stretch you could name.
+  const depth = lightForm ? bucketAverage(rawDepth) : rawDepth;
 
   // Geometry mirrors the reference SVG (viewBox 0 0 356 124).
   const W = 356, H = 124, top = 10, bot = 92;
   const plotH = bot - top;
   const n = depth.length;
   const slot = W / n;
-  const bw = Math.min(slot * 0.62, 7);
+  const bw = lightForm ? Math.max(6, slot - 3) : Math.min(slot * 0.62, 7);
   const yOf = (d: number) => bot - d * plotH;
 
   const bars: ReactElement[] = depth.map((d, i) => {
@@ -64,20 +71,24 @@ export default function SleepDepthChart({ data }: { data: SleepDepthChartData })
     const yy = yOf(d);
     const h = bot - yy;
     return (
-      <rect
-        key={i} x={x.toFixed(1)} y={yy.toFixed(1)} width={bw.toFixed(1)}
-        height={h.toFixed(1)} rx={Math.min(bw / 2, h / 2).toFixed(1)}
-        fill={STAGE_HEX[bandStage(d)]}
-        // Only the deepest band blooms — it is the peak of the night and the
-        // glow is what made it read as one on near-black. Dark-only: the light
-        // flattening layer switches every inline drop-shadow off.
-        style={bandStage(d) === "deep" ? { filter: `drop-shadow(0 0 1.5px ${STAGE_HEX.deep})` } : undefined}
-      />
+      lightForm ? (
+        <path key={i} d={roundedTopBar(x, yy, bw, h, 4)} fill={STAGE_HEX[bandStage(d)]} />
+      ) : (
+        <rect
+          key={i} x={x.toFixed(1)} y={yy.toFixed(1)} width={bw.toFixed(1)}
+          height={h.toFixed(1)} rx={Math.min(bw / 2, h / 2).toFixed(1)}
+          fill={STAGE_HEX[bandStage(d)]}
+          // Only the deepest band blooms — it is the peak of the night and the
+          // glow is what made it read as one on near-black. Dark-only: the light
+          // flattening layer switches every inline drop-shadow off.
+          style={bandStage(d) === "deep" ? { filter: `drop-shadow(0 0 1.5px ${STAGE_HEX.deep})` } : undefined}
+        />
+      )
     );
   });
 
   // Three faint horizontal gridlines for structure.
-  const gridlines = [0.25, 0.5, 0.75].map((f, i) => (
+  const gridlines = (lightForm ? [0.5] : [0.25, 0.5, 0.75]).map((f, i) => (
     <line key={`g${i}`} x1={0} x2={W} y1={top + plotH * f} y2={top + plotH * f} stroke="var(--nura-hairline)" strokeWidth={1} />
   ));
 

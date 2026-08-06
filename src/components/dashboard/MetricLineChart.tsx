@@ -5,10 +5,11 @@ import type { MetricPaint } from "@/lib/metricColors";
 import {
   ALPHA, ENTER_CLASS, MARKER, PAD, STROKE,
   BaselineBand, BaselineLine, ChartLegend, ChartTooltip, Marker, XAxis, YAxis,
-  fitTicks, linePath, niceScale, smoothPath,
+  fitTicks, linePath, niceScale, smoothPath, thinLabels,
   useMeasuredWidth, useTweenedSeries,
   type LegendItem,
 } from "@/components/dashboard/chartTheme";
+import { useIsLightForm } from "@/lib/themeTokens";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // MetricLineChart — the single-series line/area treatment.
@@ -99,6 +100,7 @@ export default function MetricLineChart({
   continuous = true,
   ariaLabel,
 }: MetricLineChartProps) {
+  const lightForm = useIsLightForm();
   const rawId = useId();
   const uid = rawId.replace(/[^a-zA-Z0-9]/g, "");
   const [hover, setHover] = useState<number | null>(null);
@@ -141,10 +143,11 @@ export default function MetricLineChart({
     return {
       yLo: dLo,
       yHi: dHi,
-      gridTicks: fitTicks(raw, plotH, dLo, dHi),
+      // Three gridlines maximum in light — see the same note in MetricChart.
+      gridTicks: lightForm ? thinLabels(fitTicks(raw, plotH, dLo, dHi), 3) : fitTicks(raw, plotH, dLo, dHi),
       fmtTick: tickFormat ?? ((v: number) => v.toFixed(nice.decimals)),
     };
-  }, [data, baseline, band, lo, hi, ticks, tickFormat, plotH]);
+  }, [data, baseline, band, lo, hi, ticks, tickFormat, plotH, lightForm]);
 
   // Nothing to lay out until the container has been measured. Reserving the
   // full height here keeps the card from reflowing when the chart appears.
@@ -215,13 +218,16 @@ export default function MetricLineChart({
         <path d={area} fill={`url(#fill${uid})`} />
         <path
           d={path} fill="none" stroke={color.hex}
-          strokeWidth={STROKE.series} strokeLinecap="round" strokeLinejoin="round"
+          // 2.5px in light: a 2px stroke that was confident against near-black
+          // reads thin and tentative on white at the same size.
+          strokeWidth={lightForm ? 2.5 : STROKE.series}
+          strokeLinecap="round" strokeLinejoin="round"
         />
 
         {/* Markers. Every point when the series is sparse enough that each one
             is a real reading worth hitting; otherwise only the latest, so a
             dense curve stays a curve instead of a bead necklace. */}
-        {sparse
+        {sparse && !lightForm
           ? pts.map(([cx, cy], i) => <Marker key={i} cx={cx} cy={cy} color={color.hex} />)
           : <Marker cx={last[0]} cy={last[1]} color={color.hex} r={MARKER.rLatest} />}
 
@@ -236,7 +242,7 @@ export default function MetricLineChart({
           </>
         )}
 
-        {xLabels && <XAxis labels={xLabels} plotLeft={plotL} plotRight={plotR} y={H - 6} />}
+        {xLabels && <XAxis labels={lightForm ? thinLabels(xLabels, 3) : xLabels} plotLeft={plotL} plotRight={plotR} y={H - 6} />}
       </svg>
 
       {active && (

@@ -4,7 +4,7 @@ import { useId, useState, type ReactElement } from "react";
 import { useRouter } from "next/navigation";
 import { getOverallHealth, type HealthPillar, type HealthTrend } from "@/lib/dashboardData";
 import { hex, lerp, light } from "@/components/dashboard/ActiveEnergyTodayChart";
-import { useThemeTokens } from "@/lib/themeTokens";
+import { useThemeTokens, useIsLightForm } from "@/lib/themeTokens";
 import { useAccents } from "@/lib/accents";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -311,6 +311,7 @@ export default function OverallHealthCard() {
 function HealthRing({ d, selected, onSelect }: { d: ReturnType<typeof getOverallHealth>; selected: string | null; onSelect: (k: string) => void }) {
   const tk = useThemeTokens(RING_TOKENS);
   const acc = useAccents();
+  const lightForm = useIsLightForm();
   // Health-Score ring ramp: sage → teal → blue, resolved from the theme.
   const RAMP: [number, string][] = [[0, tk.ringLo], [0.45, tk.ringMid], [1, tk.ringHi]];
   const rawId = useId();
@@ -323,8 +324,13 @@ function HealthRing({ d, selected, onSelect }: { d: ReturnType<typeof getOverall
   // Depth rings.
   const depth: ReactElement[] = [
     <circle key="core" className="nura-halo" cx={cx} cy={cy} r={118} fill={`url(#${uid}-core)`} />,
-    <circle key="r100" cx={cx} cy={cy} r={100} fill="none" stroke={`rgba(${tk.inkRgb},0.045)`} />,
-    <circle key="r110" cx={cx} cy={cy} r={110} fill="none" stroke={`rgba(${tk.inkRgb},0.03)`} />,
+    // Two hairline depth rings at r=100/110. They sit just outside light's arc
+    // and read as a stray outline beside it; in dark they are the field the
+    // filaments fade into.
+    ...(lightForm ? [] : [
+      <circle key="r100" cx={cx} cy={cy} r={100} fill="none" stroke={`rgba(${tk.inkRgb},0.045)`} />,
+      <circle key="r110" cx={cx} cy={cy} r={110} fill="none" stroke={`rgba(${tk.inkRgb},0.03)`} />,
+    ]),
   ];
 
   // Rotating dotted outer ring.
@@ -352,7 +358,14 @@ function HealthRing({ d, selected, onSelect }: { d: ReturnType<typeof getOverall
   }
 
   // Progress arc + pulsing head.
-  const pr = 60, circ = 2 * Math.PI * pr, vis = circ * frac0;
+  //
+  // Light makes this THE mark: one smooth arc at 11px on a light track, swept
+  // out to r=94 so it reads as the dial rather than as a hoop inside a field of
+  // filaments. Dark keeps the 3.2px arc at r=60, where the filaments around it
+  // are the hero and the arc is the precise edge on top of them.
+  const pr = lightForm ? 94 : 60;
+  const arcW = lightForm ? 11 : 3.2;
+  const circ = 2 * Math.PI * pr, vis = circ * frac0;
   const headA = ((-90 + 360 * frac0) * Math.PI) / 180;
   const hx = cx + pr * Math.cos(headA), hy = cy + pr * Math.sin(headA);
 
@@ -374,11 +387,14 @@ function HealthRing({ d, selected, onSelect }: { d: ReturnType<typeof getOverall
 
       {depth}
 
-      {/* Rotating dotted ring */}
-      <g>
-        {odots}
-        <animateTransform attributeName="transform" type="rotate" from={`0 ${cx} ${cy}`} to={`360 ${cx} ${cy}`} dur="90s" repeatCount="indefinite" />
-      </g>
+      {/* Rotating dotted ring — dark only. 72 orbiting dots outside a thick
+          light arc is exactly the density this pass exists to remove. */}
+      {!lightForm && (
+        <g>
+          {odots}
+          <animateTransform attributeName="transform" type="rotate" from={`0 ${cx} ${cy}`} to={`360 ${cx} ${cy}`} dur="90s" repeatCount="indefinite" />
+        </g>
+      )}
 
       {/* Energy filaments */}
       {/* Bloom is a dark-mode device — light on near-black. It is authored
@@ -386,14 +402,39 @@ function HealthRing({ d, selected, onSelect }: { d: ReturnType<typeof getOverall
           flattening layer in globals.css already switches every inline
           drop-shadow off (`[data-theme="light"] [style*="drop-shadow"]`), so
           this restores dark's glow without putting a smudge on white. */}
-      <g style={{ filter: `drop-shadow(0 0 5px rgba(${tk.tealRgb},0.28))` }}>{filaments}</g>
+      {/* In light the filaments stay, but only as texture: at 22% they give the
+          dial a woven centre to sit in without competing with the arc. They are
+          the reason the middle does not read as a hole. */}
+      <g
+        style={{ filter: `drop-shadow(0 0 5px rgba(${tk.tealRgb},0.28))` }}
+        opacity={lightForm ? 0.22 : 1}
+      >
+        {filaments}
+      </g>
 
       {/* Progress arc + pulsing head */}
-      <circle cx={cx} cy={cy} r={pr} fill="none" stroke={`rgba(${tk.inkRgb},0.06)`} strokeWidth={3} />
-      <circle cx={cx} cy={cy} r={pr} fill="none" stroke={`url(#${uid}-parc)`} strokeWidth={3.2} strokeLinecap="round" strokeDasharray={`${vis.toFixed(1)} ${circ.toFixed(1)}`} transform={`rotate(-90 ${cx} ${cy})`} style={{ filter: `drop-shadow(0 0 5px rgba(${tk.tealRgb},0.55))` }} opacity={sel ? 0.5 : 1} />
-      <circle cx={hx.toFixed(1)} cy={hy.toFixed(1)} r={3.4} fill={tk.ringHead} style={{ filter: `drop-shadow(0 0 7px ${tk.teal})` }}>
-        <animate attributeName="opacity" values="1;0.45;1" dur="2.6s" repeatCount="indefinite" />
-      </circle>
+      <circle
+        cx={cx} cy={cy} r={pr} fill="none"
+        stroke={lightForm ? "var(--nura-track-neutral)" : `rgba(${tk.inkRgb},0.06)`}
+        strokeWidth={arcW}
+      />
+      <circle
+        cx={cx} cy={cy} r={pr} fill="none"
+        stroke={lightForm ? tk.ringMid : `url(#${uid}-parc)`}
+        strokeWidth={arcW} strokeLinecap="round"
+        strokeDasharray={`${vis.toFixed(1)} ${circ.toFixed(1)}`}
+        transform={`rotate(-90 ${cx} ${cy})`}
+        style={{ filter: `drop-shadow(0 0 5px rgba(${tk.tealRgb},0.55))` }}
+        opacity={sel ? 0.5 : 1}
+      />
+      {/* The pulsing head is dark's terminus marker. A rounded cap on an 11px
+          stroke already terminates the arc, and a blinking dot on a calm light
+          card is noise. */}
+      {!lightForm && (
+        <circle cx={hx.toFixed(1)} cy={hy.toFixed(1)} r={3.4} fill={tk.ringHead} style={{ filter: `drop-shadow(0 0 7px ${tk.teal})` }}>
+          <animate attributeName="opacity" values="1;0.45;1" dur="2.6s" repeatCount="indefinite" />
+        </circle>
+      )}
 
       {/* Center number */}
       {selPillar ? (
@@ -420,8 +461,17 @@ function HealthRing({ d, selected, onSelect }: { d: ReturnType<typeof getOverall
         return (
           <g key={p.key} style={{ cursor: "pointer" }} onClick={() => onSelect(p.key)}>
             <line x1={(cx + 64 * ca).toFixed(1)} y1={(cy + 64 * sa).toFixed(1)} x2={(cx + (big ? 86 : 82) * ca).toFixed(1)} y2={(cy + (big ? 86 : 82) * sa).toFixed(1)} stroke={acc[p.color]} strokeWidth={big ? 3 : 2.2} strokeLinecap="round" opacity={Number((0.85 * o).toFixed(2))} />
-            <line x1={(cx + 92 * ca).toFixed(1)} y1={(cy + 92 * sa).toFixed(1)} x2={(cx + 110 * ca).toFixed(1)} y2={(cy + 110 * sa).toFixed(1)} stroke={acc[p.color]} strokeWidth={1.3} opacity={Number((0.45 * o).toFixed(2))} />
-            <circle cx={(cx + 92 * ca).toFixed(1)} cy={(cy + 92 * sa).toFixed(1)} r={big ? 3.4 : 2.4} fill={acc[p.color]} opacity={o} style={{ filter: `drop-shadow(0 0 ${big ? 7 : 4}px ${acc[p.color]})` }} />
+            {/* Connector + dot ride at r=92, which is exactly where light's
+                thick arc now sits — and they are decoration either way: the
+                score and its label are already printed at the end of the spoke,
+                and the pillar list beside the dial repeats both. Dark keeps
+                them; light drops them and lets the arc own that band. */}
+            {!lightForm && (
+              <>
+                <line x1={(cx + 92 * ca).toFixed(1)} y1={(cy + 92 * sa).toFixed(1)} x2={(cx + 110 * ca).toFixed(1)} y2={(cy + 110 * sa).toFixed(1)} stroke={acc[p.color]} strokeWidth={1.3} opacity={Number((0.45 * o).toFixed(2))} />
+                <circle cx={(cx + 92 * ca).toFixed(1)} cy={(cy + 92 * sa).toFixed(1)} r={big ? 3.4 : 2.4} fill={acc[p.color]} opacity={o} style={{ filter: `drop-shadow(0 0 ${big ? 7 : 4}px ${acc[p.color]})` }} />
+              </>
+            )}
             <text x={lx.toFixed(1)} y={vy.toFixed(1)} textAnchor={anchor} fontFamily={SANS} fontSize={17.5} fontWeight={700} className="nura-datum-ink" style={{ fill: acc[p.color] }} opacity={o}>
               {p.score}<tspan fontSize="9" dx="3" dy="-5" fill={tCol(p.trend, tk)}>{tArrow(p.trend)}</tspan>
             </text>

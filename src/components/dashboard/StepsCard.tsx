@@ -3,7 +3,8 @@
 import { getStepsDetail, SOURCE_LABEL, type DashboardMetric, type StepsWeekDay } from "@/lib/dashboardData";
 import { useMetricPaint, type MetricPaint } from "@/lib/metricColors";
 
-import { MONO } from "@/components/dashboard/chartTheme";
+import { MONO, roundedTopBar } from "@/components/dashboard/chartTheme";
+import { useIsLightForm } from "@/lib/themeTokens";
 
 const SANS = "var(--font-inter), system-ui, sans-serif";
 const TEXT = "var(--nura-text-primary)";
@@ -42,6 +43,7 @@ const fmtK = (v: number) => `${(v / 1000).toFixed(1)}k`;
 // reserved right-side gutter so it's never covered. Today's bar is outlined and
 // its weekday label is bold cream.
 function WeeklyBars({ week, goal, paint }: { week: StepsWeekDay[]; goal: number; paint: MetricPaint }) {
+  const lightForm = useIsLightForm();
   const W = 320, H = 158;
   const L = 8;
   const gutter = 50;             // reserved right space for the goal label
@@ -73,18 +75,24 @@ function WeeklyBars({ week, goal, paint }: { week: StepsWeekDay[]; goal: number;
       {/* Dashed goal line — spans only the bar area */}
       <line x1={L} y1={goalY.toFixed(1)} x2={plotR} y2={goalY.toFixed(1)} stroke="var(--nura-text-tertiary)" strokeWidth={1} strokeDasharray="4 4" opacity={0.6} />
 
-      {/* Bars — flat fills, no gradient and no blur */}
+      {/* Bars — flat fills, no gradient and no blur. Light rounds only the
+          tops, so the row sits on the axis instead of floating above it. */}
       {bars.map((b, i) => (
-        <rect
-          key={i}
-          x={b.x.toFixed(1)} y={b.topY.toFixed(1)} width={barW.toFixed(1)} height={Math.max(1, b.h).toFixed(1)}
-          rx={3}
-          fill={b.hit ? paint.hex : MISS_FILL}
-        />
+        lightForm ? (
+          <path key={i} d={roundedTopBar(b.x, b.topY, barW, Math.max(1, b.h), 4)} fill={b.hit ? paint.hex : MISS_FILL} />
+        ) : (
+          <rect
+            key={i}
+            x={b.x.toFixed(1)} y={b.topY.toFixed(1)} width={barW.toFixed(1)} height={Math.max(1, b.h).toFixed(1)}
+            rx={3}
+            fill={b.hit ? paint.hex : MISS_FILL}
+          />
+        )
       ))}
 
-      {/* Today's outline — crisp cream stroke on top (no glow) */}
-      {bars.filter((b) => b.isToday).map((b, i) => (
+      {/* Today's outline — crisp cream stroke on top (no glow). Light does not
+          need it: today is the only bar carrying a number. */}
+      {bars.filter((b) => b.isToday && !lightForm).map((b, i) => (
         <rect
           key={`t${i}`}
           x={b.x.toFixed(1)} y={b.topY.toFixed(1)} width={barW.toFixed(1)} height={Math.max(1, b.h).toFixed(1)}
@@ -92,8 +100,11 @@ function WeeklyBars({ week, goal, paint }: { week: StepsWeekDay[]; goal: number;
         />
       ))}
 
-      {/* Value labels above each bar — soft cream, centered, non-overlapping */}
-      {bars.map((b, i) => (
+      {/* Value labels above each bar. Light prints ONE — today's. Seven
+          numbers over seven bars restates the chart in digits: the bar heights
+          already rank the week, and the exact figure only matters for the day
+          you are looking at. */}
+      {bars.filter((b) => !lightForm || b.isToday).map((b, i) => (
         <text
           key={`v${i}`}
           x={b.cx.toFixed(1)} y={(b.topY - 6).toFixed(1)} textAnchor="middle"

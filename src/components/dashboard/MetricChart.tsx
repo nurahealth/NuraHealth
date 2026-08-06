@@ -7,7 +7,9 @@ import {
   ENTER_CLASS, MONO, PAD, STROKE, TYPE,
   ChartTooltip, XAxis, YAxis,
   fitTicks, smoothPath, useMeasuredWidth,
+  bucketAverage, roundedTopBar, thinLabels,
 } from "@/components/dashboard/chartTheme";
+import { useIsLightForm } from "@/lib/themeTokens";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // MetricChart — the shared intraday bar treatment. Most metric cards render it.
@@ -72,9 +74,18 @@ export default function MetricChart({
   /** Draw a "value · PEAK · time" readout over the tallest bar (Steps opts in). */
   showPeak?: boolean;
 }) {
-  const { readings, baseline, floor, ceiling, gridlines } = data;
+  const { readings: rawReadings, baseline, floor, ceiling, gridlines } = data;
   const { ref, width: W } = useMeasuredWidth<HTMLDivElement>();
   const [hover, setHover] = useState<number | null>(null);
+  const lightForm = useIsLightForm();
+
+  // Light draws a different chart, not a recoloured one: the same day averaged
+  // down to at most 18 buckets. A 96-sample intraday series at 1px per bar is
+  // texture on white; 18 bars at ~10px each are readings you can point at.
+  const readings = useMemo(
+    () => (lightForm ? bucketAverage(rawReadings) : rawReadings),
+    [lightForm, rawReadings],
+  );
 
   const H = height;
   const plotL = PAD.left;
@@ -88,8 +99,13 @@ export default function MetricChart({
   const yOf = (v: number) => plotB - norm(v) * plotH;
 
   const ticks = useMemo(
-    () => fitTicks(gridlines, plotH, floor, ceiling),
-    [gridlines, plotH, floor, ceiling],
+    () => {
+      const t = fitTicks(gridlines, plotH, floor, ceiling);
+      // Three gridlines is enough to read a value off a bar chart; the fourth
+      // and fifth are furniture. Light only — dark's axis is unchanged.
+      return lightForm ? thinLabels(t, 3) : t;
+    },
+    [gridlines, plotH, floor, ceiling, lightForm],
   );
 
   // Reserve the full height while measuring so the card cannot reflow.
@@ -97,7 +113,12 @@ export default function MetricChart({
 
   const n = readings.length;
   const slot = (plotR - plotL) / n;
-  const bw = Math.min(slot * 0.62, 5);
+  // Dark keeps its hairline bars. Light takes most of the slot and never goes
+  // below 6px, so a bar is a shape rather than a stroke; the 3px it gives back
+  // is the gap, which is what makes the count legible.
+  const bw = lightForm
+    ? Math.max(6, slot - 3)
+    : Math.min(slot * 0.62, 5);
 
   // Dashed average curve from the coarse baseline series.
   const m = baseline.length;
@@ -152,14 +173,22 @@ export default function MetricChart({
           const t = norm(v);
           const glowR = (2 + t * 5).toFixed(1);
           const glowA = (0.3 + t * 0.45).toFixed(2);
-          return (
+          const dim = hover != null && hover !== i;
+          return lightForm ? (
+            <path
+              key={i}
+              d={roundedTopBar(barX(i), plotB - h, bw, h, 4)}
+              fill={color.hex}
+              opacity={dim ? 0.45 : 1}
+            />
+          ) : (
             <rect
               key={i}
               x={barX(i).toFixed(2)} y={(plotB - h).toFixed(2)}
               width={bw.toFixed(2)} height={h.toFixed(2)}
               rx={Math.min(bw / 2, h / 2).toFixed(2)}
               fill={color.hex}
-              opacity={hover != null && hover !== i ? 0.55 : 1}
+              opacity={dim ? 0.55 : 1}
               style={{ filter: `drop-shadow(0 0 ${glowR}px rgba(${color.rgb},${glowA}))` }}
             />
           );
@@ -167,7 +196,10 @@ export default function MetricChart({
 
         {/* Dashed average curve. Neutral for the same reason as a baseline: it
             is a reference, not a second series. */}
-        {curve && (
+        {/* One data layer in light. The dashed mean over 18 bars is a second
+            series competing with the first, and the bars already carry the
+            shape it was tracing. */}
+        {curve && !lightForm && (
           <path
             d={curve} fill="none" stroke="var(--nura-text-tertiary)"
             strokeWidth={STROKE.baseline} strokeDasharray="4 5"
@@ -175,7 +207,7 @@ export default function MetricChart({
           />
         )}
 
-        {showPeak && (
+        {showPeak && !lightForm && (
           <text
             x={Math.max(46, Math.min(plotR - 46, barX(peakIdx) + bw / 2)).toFixed(2)}
             y={Math.max(plotT - 4, yOf(readings[peakIdx]) - 9).toFixed(2)}
@@ -199,7 +231,7 @@ export default function MetricChart({
         )}
 
         <XAxis
-          labels={["12a", "6a", "12p", "6p", "now"]}
+          labels={lightForm ? ["12a", "12p", "now"] : ["12a", "6a", "12p", "6p", "now"]}
           plotLeft={plotL} plotRight={plotR} y={H - 6}
         />
       </svg>

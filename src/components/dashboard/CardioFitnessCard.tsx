@@ -45,8 +45,8 @@ export default function CardioFitnessCard({ metric, onClick }: { metric: Dashboa
     >
       {/* Classification zone bar */}
       <div>
-        <div style={{ position: "relative", height: 14, borderRadius: 7, background: zoneRamp }}>
-          <div className="nura-marker-ring" style={{ position: "absolute", top: -5, left: `${pos.toFixed(1)}%`, width: 3, height: 24, background: "var(--nura-marker)", borderRadius: 2, transform: "translateX(-50%)", boxShadow: "0 0 0 1.5px var(--nura-card)" }} />
+        <div className="nura-meter-track" style={{ position: "relative", height: 14, borderRadius: 7, background: zoneRamp }}>
+          <div className="nura-marker-ring nura-meter-dot" style={{ position: "absolute", top: -5, left: `${pos.toFixed(1)}%`, width: 3, height: 24, background: "var(--nura-marker)", borderRadius: 2, transform: "translateX(-50%)", boxShadow: "0 0 0 1.5px var(--nura-card)" }} />
         </div>
         <div style={{ display: "flex", justifyContent: "space-between", marginTop: 9 }}>
           {d.zoneLabels.map((z, i) => (

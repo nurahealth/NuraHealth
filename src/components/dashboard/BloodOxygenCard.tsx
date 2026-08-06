@@ -61,10 +61,10 @@ export default function BloodOxygenCard({ metric, onClick }: { metric: Dashboard
         {/* Range bar — dim 90–95, stronger 95–100, marker at the reading */}
         <div style={{ width: "100%" }}>
           <div style={{ position: "relative", height: 7 }}>
-            <div style={{ position: "absolute", inset: 0, borderRadius: 999, background: paint.alpha(0.16) }} />
+            <div className="nura-meter-track" style={{ position: "absolute", inset: 0, borderRadius: 999, background: paint.alpha(0.16) }} />
             <div style={{ position: "absolute", top: 0, bottom: 0, left: "50%", right: 0, borderRadius: "0 999px 999px 0", background: paint.alpha(0.55) }} />
-            <div style={{ position: "absolute", top: -1, left: "50%", transform: "translateX(-50%)", width: 1.5, height: 9, borderRadius: 1, background: "var(--nura-tick-on-accent)" }} />
-            <div className="nura-marker-ring" style={{ position: "absolute", top: "50%", left: `${markPct.toFixed(1)}%`, transform: "translate(-50%,-50%)", width: 4, height: 15, borderRadius: 2.5, background: paint.hex, boxShadow: `0 0 0 2.5px ${CARD}` }} />
+            <div className="nura-meter-tick" style={{ position: "absolute", top: -1, left: "50%", transform: "translateX(-50%)", width: 1.5, height: 9, borderRadius: 1, background: "var(--nura-tick-on-accent)" }} />
+            <div className="nura-marker-ring nura-meter-dot" style={{ position: "absolute", top: "50%", left: `${markPct.toFixed(1)}%`, transform: "translate(-50%,-50%)", width: 4, height: 15, borderRadius: 2.5, background: paint.hex, boxShadow: `0 0 0 2.5px ${CARD}` }} />
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6, fontFamily: SANS, fontSize: 10, color: TEXT_TER }}>
             <span>90</span><span>95</span><span>100</span>
