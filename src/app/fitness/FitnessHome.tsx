@@ -81,7 +81,7 @@ export default function FitnessHome({ profile, onEdit }: {
       </div>
 
       {/* Summary card */}
-      <div style={{
+      <div className="nura-card" style={{
         background: 'var(--nura-surface)', border: `1px solid ${BORDER}`,
         borderRadius: 18, padding: 20, marginBottom: 30,
       }}>

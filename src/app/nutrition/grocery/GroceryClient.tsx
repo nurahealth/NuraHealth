@@ -243,12 +243,12 @@ export default function GroceryClient({ items: initial, planItems, tableReady, u
   const banner = (
     <>
       {!tableReady && (
-        <div style={{ ...card, padding: "11px 14px", borderColor: "var(--nura-tint-warn-border)", background: "var(--nura-tint-warn)", fontFamily: SANS, fontSize: 12.5, color: "var(--nura-good)", lineHeight: 1.5 }}>
+        <div className="nura-card" style={{ ...card, padding: "11px 14px", borderColor: "var(--nura-tint-warn-border)", background: "var(--nura-tint-warn)", fontFamily: SANS, fontSize: 12.5, color: "var(--nura-good)", lineHeight: 1.5 }}>
           Run the new migration (<code>20260619000003_grocery_items.sql</code>) to enable saving your grocery list.
         </div>
       )}
-      {error && <div style={{ ...card, padding: "11px 14px", borderColor: "var(--nura-tint-danger-border)", background: "var(--nura-tint-danger)", fontFamily: SANS, fontSize: 13, color: DANGER }}>{error}</div>}
-      {info && <div style={{ ...card, padding: "11px 14px", borderColor: `rgba(${SAGE_RGB},0.4)`, background: `rgba(${SAGE_RGB},0.08)`, fontFamily: SANS, fontSize: 13, color: "var(--nura-accent-text)" }}>{info}</div>}
+      {error && <div className="nura-card" style={{ ...card, padding: "11px 14px", borderColor: "var(--nura-tint-danger-border)", background: "var(--nura-tint-danger)", fontFamily: SANS, fontSize: 13, color: DANGER }}>{error}</div>}
+      {info && <div className="nura-card" style={{ ...card, padding: "11px 14px", borderColor: `rgba(${SAGE_RGB},0.4)`, background: `rgba(${SAGE_RGB},0.08)`, fontFamily: SANS, fontSize: 13, color: "var(--nura-accent-text)" }}>{info}</div>}
     </>
   );
 
@@ -292,7 +292,7 @@ export default function GroceryClient({ items: initial, planItems, tableReady, u
       {actionRow}
 
       {total === 0 ? (
-        <div style={{ ...card, padding: "40px 24px", textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
+        <div className="nura-card" style={{ ...card, padding: "40px 24px", textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
           <div style={{ width: 52, height: 52, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", background: `rgba(${SAGE_RGB},0.12)`, border: `0.5px solid rgba(${SAGE_RGB},0.28)` }}>
             <ShoppingBasket size={22} color={SAGE} />
           </div>

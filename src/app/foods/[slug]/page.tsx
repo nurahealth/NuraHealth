@@ -158,7 +158,7 @@ export default async function FoodDetailPage({
 
         {/* Supports + compounds */}
         {(supports.length > 0 || compounds.length > 0) && (
-          <section style={{ ...card, padding: "16px 18px", display: "flex", flexDirection: "column", gap: 16 }}>
+          <section className="nura-card" style={{ ...card, padding: "16px 18px", display: "flex", flexDirection: "column", gap: 16 }}>
             {supports.length > 0 && (
               <div>
                 <div style={{ fontFamily: SANS, fontSize: 10, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--nura-accent-label)", marginBottom: 10 }}>Supports</div>
@@ -180,7 +180,7 @@ export default async function FoodDetailPage({
             <h2 style={heading}>What it does in your cells</h2>
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {explainer.map((b, i) => (
-                <div key={i} style={{ ...card, padding: "16px 18px", borderLeft: `3px solid rgba(${SAGE_RGB},0.5)` }}>
+                <div className="nura-card nura-accent-edge" key={i} style={{ ...card, padding: "16px 18px", borderLeft: `3px solid rgba(${SAGE_RGB},0.5)` }}>
                   {b.heading && (
                     <div style={{ fontFamily: SANS, fontSize: 15, fontWeight: 600, color: TEXT, marginBottom: 6, letterSpacing: "-0.01em" }}>{b.heading}</div>
                   )}
@@ -199,7 +199,7 @@ export default async function FoodDetailPage({
             <h2 style={heading}>Get the most from it</h2>
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {howTo.map((s, i) => (
-                <div key={i} style={{ ...card, padding: "14px 16px", display: "flex", gap: 13 }}>
+                <div className="nura-card" key={i} style={{ ...card, padding: "14px 16px", display: "flex", gap: 13 }}>
                   <span style={{ flexShrink: 0, width: 26, height: 26, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", background: `rgba(${SAGE_RGB},0.14)`, border: `0.5px solid rgba(${SAGE_RGB},0.3)`, fontFamily: SANS, fontSize: 12.5, fontWeight: 600, color: "var(--nura-accent-text)" }}>
                     {s.n ?? i + 1}
                   </span>

@@ -384,7 +384,7 @@ function Step7Done({ state, animKey }: { state: FitState; animKey: number }) {
       </p>
 
       {state.equipment.length > 0 && (
-        <div style={{
+        <div className="nura-card" style={{
           width: '100%', background: 'var(--nura-surface)', border: `1px solid ${BORDER}`,
           borderRadius: 16, padding: '20px', marginBottom: 24, textAlign: 'left',
         }}>

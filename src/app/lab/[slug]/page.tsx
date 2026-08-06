@@ -232,7 +232,7 @@ export default async function LabProductPage({ params }: { params: Promise<{ slu
       <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
 
         {/* ── Header card ─────────────────────────────────────────────────── */}
-        <div style={{ ...card, padding: 18 }}>
+        <div className="nura-card" style={{ ...card, padding: 18 }}>
           <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
             {/* Image — generous padding so the bottle sits centered with whitespace around it */}
             <div style={{ position: "relative", width: 300, maxWidth: "100%", aspectRatio: "1 / 1", flexShrink: 0, borderRadius: 14, overflow: "hidden", background: `rgba(${FG_RGB},0.04)`, border: `0.5px solid ${BORDER}` }}>
@@ -344,7 +344,7 @@ export default async function LabProductPage({ params }: { params: Promise<{ slu
           <CollapsibleSection title="Contaminants">
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {contaminants.map((m, i) => (
-                <div key={`${m.name}-${i}`} style={{ ...card, padding: "14px 16px", borderLeft: `3px solid ${RED}` }}>
+                <div className="nura-card nura-accent-edge" key={`${m.name}-${i}`} style={{ ...card, padding: "14px 16px", borderLeft: `3px solid ${RED}`, ["--nura-edge" as string]: RED } as React.CSSProperties}>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                       <span style={{ fontFamily: SANS, fontSize: 14, fontWeight: 600, color: TEXT }}>{m.name}</span>
@@ -372,7 +372,7 @@ export default async function LabProductPage({ params }: { params: Promise<{ slu
               {nutrients.map((m, i) => {
                 const flagged = (m.risk_count ?? 0) > 0;
                 return (
-                  <div key={`${m.name}-${i}`} style={{ ...card, padding: "14px 16px", borderLeft: `3px solid ${flagged ? AMBER : `rgba(${SAGE_RGB},0.5)`}` }}>
+                  <div className="nura-card nura-accent-edge" key={`${m.name}-${i}`} style={{ ...card, padding: "14px 16px", borderLeft: `3px solid ${flagged ? AMBER : `rgba(${SAGE_RGB},0.5)`}`, ["--nura-edge" as string]: flagged ? AMBER : `rgba(${SAGE_RGB},0.5)` } as React.CSSProperties}>
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                         <span style={{ fontFamily: SANS, fontSize: 14, fontWeight: 600, color: TEXT }}>{m.name}</span>
@@ -399,7 +399,7 @@ export default async function LabProductPage({ params }: { params: Promise<{ slu
           <CollapsibleSection title="Details">
             <div className="lab-props-grid">
               {propEntries.map(([k, v]) => (
-                <div key={k} style={{ ...card, padding: "12px 14px", height: "100%" }}>
+                <div className="nura-card" key={k} style={{ ...card, padding: "12px 14px", height: "100%" }}>
                   <Eyebrow color={TEXT_TER}>{k}</Eyebrow>
                   <div style={{ marginTop: 5, fontFamily: SANS, fontSize: 14, color: TEXT, lineHeight: 1.5, wordBreak: "break-word" }}>{v}</div>
                 </div>

@@ -742,7 +742,19 @@
   --nura-ink-muted: #5a5750;            /*  7.2:1 */
   --nura-ink-faint: #6e6b63;            /*  5.3:1 on white, 4.5:1 on the darkest tint */
   --nura-fg-rgb: 26, 26, 26;
-  --nura-bg-tint-rgb: 90, 120, 100;
+  /* Warm ink, not sage.
+     138 call sites across the app write surfaces and hairlines as
+     `rgba(var(--nura-bg-tint-rgb), α)` at 2–10% — the fitness screens alone
+     account for ~60. In dark the token is the cream ink and that expression is
+     the lit inset it was drawn for. In light it was a SAGE, so every one of
+     those surfaces came out faintly green and every hairline came out a green
+     -grey. Individually invisible; sixty of them on one screen is a page that
+     looks slightly mildewed, and it is the single biggest reason the light
+     theme read as tinted rather than neutral.
+     Sage is a functional accent in light — buttons, active nav, fills — not an
+     undertone for the furniture. This is the warm ink the borders and shadows
+     already use, so tints, hairlines and shade finally agree. */
+  --nura-bg-tint-rgb: 26, 24, 20;
 
   /* ── Lines ──────────────────────────────────────────────────────────── */
   --nura-border: rgba(26, 24, 20, 0.10);
@@ -1232,7 +1244,12 @@ html, body {
    This is the opt-in that puts it back, so the accent survives the sweep
    without the sweep having to know about it in advance. */
 [data-theme="light"] .nura-accent-edge {
-  border-left: 2px solid var(--nura-sage) !important;
+  /* Sage by default; a card whose edge MEANS something (a flagged lab marker
+     in brick, an out-of-range bloodwork row in amber) sets --nura-edge inline
+     and keeps its own colour. Without the variable this class would repaint
+     every warning edge in the app the brand accent, which is worse than the
+     shorthand clobbering it in the first place. */
+  border-left: 2px solid var(--nura-edge, var(--nura-sage)) !important;
 }
 
 /* Clears a translucent GRADIENT fill (a background-image), which the card rule
@@ -1420,6 +1437,30 @@ html, body {
   box-shadow:
     0 -1px 2px rgba(26, 24, 20, 0.04),
     0 -16px 48px -12px rgba(26, 24, 20, 0.18) !important;
+}
+
+/* A pill/bar that floats OVER the page — the fitness bottom nav, a toolbar.
+   The third and last glass surface. It was translucent white already but cast
+   no shadow at all, so on a light page it read as a shape lying flat on the
+   canvas rather than hovering above it: the one element on screen that most
+   needs to look detached had the least elevation of anything. */
+[data-theme="light"] .nura-floating {
+  background: rgba(255, 255, 255, 0.82) !important;
+  backdrop-filter: blur(20px) saturate(1.6) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(1.6) !important;
+  border: 1px solid rgba(26, 24, 20, 0.07) !important;
+  border-radius: var(--nura-radius-card) !important;
+  box-shadow:
+    0 1px 2px rgba(26, 24, 20, 0.05),
+    0 12px 32px -10px rgba(26, 24, 20, 0.18) !important;
+}
+
+/* Tinted panels keep their fill but join the radius family — a 22px accent
+   card beside a 16px white one is the same mismatch whether or not they share
+   a colour. */
+[data-theme="light"] .nura-flat,
+[data-theme="light"] .nura-flat-accent {
+  border-radius: var(--nura-radius-card) !important;
 }
 
 [data-theme="light"] .nura-appbar {

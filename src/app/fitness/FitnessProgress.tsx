@@ -251,7 +251,7 @@ function CenteredModal({ title, onClose, maxWidth = 420, children }: {
         .nura-modal-scroll::-webkit-scrollbar-thumb { background: rgba(var(--nura-sage-rgb),.35); border-radius: 999px; }
         .nura-modal-scroll::-webkit-scrollbar-thumb:hover { background: rgba(var(--nura-sage-rgb),.55); }
       `}</style>
-      <div onClick={(e) => e.stopPropagation()} style={{
+      <div className="nura-card" onClick={(e) => e.stopPropagation()} style={{
         width: '100%', maxWidth, maxHeight: '86vh', display: 'flex', flexDirection: 'column', boxSizing: 'border-box',
         background: 'var(--nura-card)', borderRadius: 22, overflow: 'hidden',
         border: `1px solid ${LINE}`, padding: '18px 0', fontFamily: FONT,
@@ -378,7 +378,7 @@ function AddPhotoModal({ onClose, onSaved }: { onClose: () => void; onSaved: () 
           {/* photo area — portrait (3:4) frame; preview when chosen, else a
               dashed placeholder. The Fill/Fit toggle sits in the top-right when a
               photo is loaded and controls how it sits in the frame. */}
-          <div style={{
+          <div className="nura-card" style={{
             position: 'relative', width: '100%', boxSizing: 'border-box', aspectRatio: PHOTO_ASPECT, overflow: 'hidden',
             borderRadius: 16, background: SURF, border: `1px ${preview ? 'solid' : 'dashed'} ${LINE}`,
             display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, color: MUT,
@@ -607,11 +607,11 @@ function ExerciseStrengthModal({ name, unit, points, pr, onClose }: {
       )}
       <div style={{ fontSize: 11, letterSpacing: '.05em', color: MUT, marginBottom: 8 }}>WEIGHT OVER TIME</div>
       {points.length >= 2 ? (
-        <div style={{ background: SURF, border: `1px solid ${LINE}`, borderRadius: 18, padding: '16px 14px' }}>
+        <div className="nura-card" style={{ background: SURF, border: `1px solid ${LINE}`, borderRadius: 18, padding: '16px 14px' }}>
           <WeightTrendChart points={points} unit={unit} />
         </div>
       ) : (
-        <div style={{ textAlign: 'center', background: SURF, border: `1px dashed ${LINE}`, borderRadius: 18, padding: '26px 20px' }}>
+        <div className="nura-card" style={{ textAlign: 'center', background: SURF, border: `1px dashed ${LINE}`, borderRadius: 18, padding: '26px 20px' }}>
           <div style={{ fontSize: 13, color: MUT, lineHeight: 1.5 }}>Log this exercise on another day to see a trend.</div>
         </div>
       )}
@@ -894,7 +894,7 @@ export default function FitnessProgress() {
     fontFamily: FONT, color: TEXT,
   };
   const tile = (label: string, value: string) => (
-    <div style={{ background: SURF, border: `1px solid ${LINE}`, borderRadius: 14, padding: '12px 14px' }}>
+    <div className="nura-card" style={{ background: SURF, border: `1px solid ${LINE}`, borderRadius: 14, padding: '12px 14px' }}>
       <div style={{ fontSize: 10, letterSpacing: '.05em', color: MUT, marginBottom: 5 }}>{label}</div>
       <div style={{ fontSize: 18, fontWeight: 700, fontFamily: MONO }}>{value}</div>
     </div>
@@ -965,7 +965,7 @@ export default function FitnessProgress() {
           {secHead('Body')}
           <div style={{ marginBottom: 30 }}>
             {/* current weight + change + log button */}
-            <div style={{
+            <div className="nura-card" style={{
               display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
               background: SURF, border: `1px solid ${LINE}`, borderRadius: 18, padding: 18, marginBottom: 12,
             }}>
@@ -992,11 +992,11 @@ export default function FitnessProgress() {
 
             {/* trend chart, or first-weigh-in prompt when there's nothing to plot */}
             {body.chartPoints.length >= 2 ? (
-              <div style={{ background: SURF, border: `1px solid ${LINE}`, borderRadius: 18, padding: '16px 14px' }}>
+              <div className="nura-card" style={{ background: SURF, border: `1px solid ${LINE}`, borderRadius: 18, padding: '16px 14px' }}>
                 <WeightTrendChart points={body.chartPoints} unit={body.unit} />
               </div>
             ) : (
-              <div style={{
+              <div className="nura-card" style={{
                 textAlign: 'center', background: SURF, border: `1px dashed ${LINE}`, borderRadius: 18, padding: '26px 20px',
               }}>
                 <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>Log your first weigh-in</div>
@@ -1009,7 +1009,7 @@ export default function FitnessProgress() {
           {secHead('Progress Photos')}
           <div style={{ marginBottom: 30 }}>
             {photos.length === 0 ? (
-              <button type="button" onClick={() => setAddPhotoOpen(true)} style={{
+              <button className="nura-card" type="button" onClick={() => setAddPhotoOpen(true)} style={{
                 appearance: 'none', cursor: 'pointer', width: '100%', textAlign: 'center',
                 background: SURF, border: `1px dashed ${LINE}`, borderRadius: 18, padding: '26px 20px', color: TEXT,
               }}>
@@ -1020,7 +1020,7 @@ export default function FitnessProgress() {
             ) : (
               <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 4, scrollbarWidth: 'none' }}>
                 {/* + Add photo tile */}
-                <button type="button" onClick={() => setAddPhotoOpen(true)} style={{
+                <button className="nura-card" type="button" onClick={() => setAddPhotoOpen(true)} style={{
                   appearance: 'none', cursor: 'pointer', flex: '0 0 auto', width: 96, aspectRatio: '3 / 4',
                   display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6,
                   background: SURF, border: `1px dashed ${LINE}`, borderRadius: 14, color: MUT, padding: 0,
@@ -1073,7 +1073,7 @@ export default function FitnessProgress() {
           {secHead('Milestones')}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 30 }}>
             {milestones.map((b) => (
-              <div key={b.id} style={{
+              <div className="nura-card" key={b.id} style={{
                 display: 'flex', flexDirection: 'column', gap: 9,
                 background: SURF, borderRadius: 14, padding: 13,
                 border: `1px solid ${b.unlocked ? 'rgba(var(--nura-sage-rgb),.35)' : LINE}`,
@@ -1117,7 +1117,7 @@ export default function FitnessProgress() {
           {/* strength & PRs */}
           {secHead('Strength')}
           {!strength ? (
-            <div style={{
+            <div className="nura-card" style={{
               textAlign: 'center', background: SURF, border: `1px dashed ${LINE}`, borderRadius: 18, padding: '26px 20px', marginBottom: 30,
             }}>
               <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>No lifts logged yet</div>
@@ -1127,7 +1127,7 @@ export default function FitnessProgress() {
             <div style={{ marginBottom: 30 }}>
               {/* recent PRs — heaviest set per exercise, newest first, tap for trend */}
               <div style={{ fontSize: 11, letterSpacing: '.05em', color: MUT, marginBottom: 10 }}>RECENT PRs</div>
-              <div style={{ background: SURF, border: `1px solid ${LINE}`, borderRadius: 18, overflow: 'hidden', marginBottom: 18 }}>
+              <div className="nura-card" style={{ background: SURF, border: `1px solid ${LINE}`, borderRadius: 18, overflow: 'hidden', marginBottom: 18 }}>
                 {strength.prs.slice(0, 6).map((pr, i) => (
                   <button key={pr.exId} type="button" onClick={() => setStrengthEx(pr.exId)} style={{
                     appearance: 'none', cursor: 'pointer', width: '100%', textAlign: 'left', background: 'transparent',
@@ -1150,7 +1150,7 @@ export default function FitnessProgress() {
 
               {/* weekly volume — Σ weight×reps over the last 8 weeks */}
               <div style={{ fontSize: 11, letterSpacing: '.05em', color: MUT, marginBottom: 10 }}>WEEKLY VOLUME · LAST {VOL_WEEKS} WEEKS</div>
-              <div style={{ background: SURF, border: `1px solid ${LINE}`, borderRadius: 18, padding: '16px 14px' }}>
+              <div className="nura-card" style={{ background: SURF, border: `1px solid ${LINE}`, borderRadius: 18, padding: '16px 14px' }}>
                 <VolumeBars weeks={strength.weeklyVolume} />
               </div>
             </div>
@@ -1181,7 +1181,7 @@ export default function FitnessProgress() {
       </div>
 
       {/* bottom nav — same block as the dashboard, Progress active */}
-      <div style={{
+      <div className="nura-floating" style={{
         position: 'fixed', bottom: 16,
           // Centre on the content area, not the viewport: at lg the body is inset
           // by the docked rail but a fixed element does not inherit that.

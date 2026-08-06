@@ -158,7 +158,7 @@ export default function ExerciseDetail({ exerciseId, sets, reps, rest_seconds, o
     fontFamily: FONT, color: TEXT,
   };
   const tile = (label: string, value: string) => (
-    <div style={{ background: SURF, border: `1px solid ${LINE}`, borderRadius: 14, padding: '12px 14px' }}>
+    <div className="nura-card" style={{ background: SURF, border: `1px solid ${LINE}`, borderRadius: 14, padding: '12px 14px' }}>
       <div style={{ fontSize: 10, letterSpacing: '.05em', color: MUT, marginBottom: 5 }}>{label}</div>
       <div style={{ fontSize: 15, fontWeight: 700 }}>{value}</div>
     </div>

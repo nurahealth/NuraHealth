@@ -167,7 +167,7 @@ export default function NutritionHome({
       )}
 
       {/* Summary card */}
-      <section style={{ ...card, padding: "20px 20px 18px" }}>
+      <section className="nura-card" style={{ ...card, padding: "20px 20px 18px" }}>
         <div style={{ display: "flex", gap: 18, alignItems: "center" }}>
           <div style={{ flexShrink: 0 }}>
             <ScoreRing score={summary.onPlanPct} size={66} />
@@ -249,7 +249,7 @@ export default function NutritionHome({
             ))}
           </div>
         ) : (
-          <div style={{ ...card, padding: "18px 18px", textAlign: "center" }}>
+          <div className="nura-card" style={{ ...card, padding: "18px 18px", textAlign: "center" }}>
             <p style={{ fontFamily: SANS, fontSize: 13.5, color: TEXT_SEC, margin: 0, lineHeight: 1.5 }}>
               No meals planned for today yet. Use <strong style={{ color: TEXT }}>Customize meals</strong> to build a plan around your markers.
             </p>

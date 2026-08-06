@@ -295,7 +295,7 @@ function DaySheet({ date, workout, done, onClose }: {
       padding: 16, background: 'rgba(0,0,0,.5)', backdropFilter: 'blur(2px)',
       opacity: visible ? 1 : 0, transition: 'opacity 200ms ease',
     }}>
-      <div onClick={(e) => e.stopPropagation()} style={{
+      <div className="nura-card" onClick={(e) => e.stopPropagation()} style={{
         width: '100%', maxWidth: 420, maxHeight: '80vh', display: 'flex', flexDirection: 'column',
         background: 'var(--nura-card)', borderRadius: 22, overflow: 'hidden',
         border: `1px solid rgba(var(--nura-bg-tint-rgb),.09)`, padding: '18px 16px',

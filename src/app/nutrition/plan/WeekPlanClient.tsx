@@ -186,7 +186,7 @@ export default function WeekPlanClient({ days, totalPlanned, candidates, prefs, 
   );
 
   const errorBar = error ? (
-    <div style={{ ...card, padding: "11px 14px", borderColor: "var(--nura-tint-danger-border)", background: "var(--nura-tint-danger)", fontFamily: SANS, fontSize: 13, color: "var(--nura-danger)" }}>{error}</div>
+    <div className="nura-card" style={{ ...card, padding: "11px 14px", borderColor: "var(--nura-tint-danger-border)", background: "var(--nura-tint-danger)", fontFamily: SANS, fontSize: 13, color: "var(--nura-danger)" }}>{error}</div>
   ) : null;
 
   // ── Empty state ─────────────────────────────────────────────────────────────
@@ -195,7 +195,7 @@ export default function WeekPlanClient({ days, totalPlanned, candidates, prefs, 
       <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
         {Back}
         {errorBar}
-        <div style={{ ...card, padding: "44px 24px", textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: 14 }}>
+        <div className="nura-card" style={{ ...card, padding: "44px 24px", textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: 14 }}>
           <div style={{ width: 52, height: 52, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", background: `rgba(${SAGE_RGB},0.12)`, border: `0.5px solid rgba(${SAGE_RGB},0.28)` }}>
             <CalendarDays size={22} color={SAGE} />
           </div>
@@ -233,7 +233,7 @@ export default function WeekPlanClient({ days, totalPlanned, candidates, prefs, 
 
       {/* Day cards */}
       {days.map((day) => (
-        <section key={day.date} style={{ ...card, padding: "14px 16px", borderColor: day.isToday ? `rgba(${SAGE_RGB},0.4)` : BORDER }}>
+        <section className="nura-card" key={day.date} style={{ ...card, padding: "14px 16px", borderColor: day.isToday ? `rgba(${SAGE_RGB},0.4)` : BORDER }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
             <span style={{ fontFamily: SANS, fontSize: 14.5, fontWeight: 600, color: TEXT }}>{day.weekday}</span>
             <span style={{ fontFamily: SANS, fontSize: 12.5, color: TEXT_TER }}>{day.dateLabel}</span>

@@ -189,7 +189,7 @@ function AddSheet({ workout, catalog, onPick, onClose, busy }: {
       padding: 16, background: 'rgba(0,0,0,.5)', backdropFilter: 'blur(2px)',
       opacity: visible ? 1 : 0, transition: 'opacity 200ms ease',
     }}>
-      <div onClick={(e) => e.stopPropagation()} style={{
+      <div className="nura-card" onClick={(e) => e.stopPropagation()} style={{
         width: '100%', maxWidth: 420, maxHeight: '80vh', display: 'flex', flexDirection: 'column',
         background: 'var(--nura-card)', borderRadius: 22, overflow: 'hidden',
         border: `1px solid ${LINE}`, padding: '18px 16px', fontFamily: FONT,
@@ -587,7 +587,7 @@ const app: React.CSSProperties = { width: '100%', maxWidth: 'var(--fit-frame, 44
 
             {/* MONTH */}
             {view === 'month' && (
-              <div style={{ background: SURF, border: `1px solid ${LINE}`, borderRadius: 18, padding: 16, marginBottom: 22 }}>
+              <div className="nura-card" style={{ background: SURF, border: `1px solid ${LINE}`, borderRadius: 18, padding: 16, marginBottom: 22 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
                   <span style={{ fontSize: 15, fontWeight: 700 }}>{cursor.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</span>
                   <span style={{ color: MUT, fontSize: 13, display: 'flex', gap: 14 }}>
@@ -691,7 +691,7 @@ const app: React.CSSProperties = { width: '100%', maxWidth: 'var(--fit-frame, 44
 
             {/* SIMPLE EDIT */}
             {training && (
-              <div style={{ background: SURF, border: `1px solid ${LINE}`, borderRadius: 18, padding: '6px 16px 14px', marginBottom: 22 }}>
+              <div className="nura-card" style={{ background: SURF, border: `1px solid ${LINE}`, borderRadius: 18, padding: '6px 16px 14px', marginBottom: 22 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 0 6px' }}>
                   <span style={{ fontSize: 13, letterSpacing: '.04em', color: MUT }}>{editEyebrow}</span>
                   <span style={{ fontSize: 13, letterSpacing: '.04em', color: "var(--nura-accent-text)" }}>{savingCount > 0 ? 'saving…' : 'auto-saves'}</span>
@@ -775,7 +775,7 @@ const app: React.CSSProperties = { width: '100%', maxWidth: 'var(--fit-frame, 44
             {summaries.map((p) => {
               const pct = programProgress(p.created_at);
               return (
-                <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 14, background: SURF, border: `1px solid ${LINE}`, borderRadius: 16, padding: 14, marginBottom: 10 }}>
+                <div className="nura-card" key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 14, background: SURF, border: `1px solid ${LINE}`, borderRadius: 16, padding: 14, marginBottom: 10 }}>
                   <div style={{ width: 46, height: 46, borderRadius: 12, background: 'linear-gradient(135deg,rgba(var(--nura-sage-rgb),.25),rgba(var(--nura-sage-rgb),.06))', border: '1px solid rgba(var(--nura-sage-rgb),.2)', flexShrink: 0 }} />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 14.5, fontWeight: 700 }}>{programName(p)}</div>
@@ -791,7 +791,7 @@ const app: React.CSSProperties = { width: '100%', maxWidth: 'var(--fit-frame, 44
         )}
 
         {/* bottom nav */}
-        <div style={{
+        <div className="nura-floating" style={{
           position: 'fixed', bottom: 16,
           // Centre on the content area, not the viewport: at lg the body is inset
           // by the docked rail but a fixed element does not inherit that.

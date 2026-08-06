@@ -210,7 +210,7 @@ export default async function RecipeDetailPage({
 
         {/* What this bowl works on (system tags) */}
         {systemTags.length > 0 && (
-          <section style={{ ...card, padding: "16px 18px" }}>
+          <section className="nura-card" style={{ ...card, padding: "16px 18px" }}>
             <div style={{ fontFamily: SANS, fontSize: 10, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--nura-accent-label)", marginBottom: 10 }}>
               What this bowl works on
             </div>
@@ -228,7 +228,7 @@ export default async function RecipeDetailPage({
         <section>
           <h2 style={heading}>Ingredients</h2>
           {ingredients.length === 0 ? (
-            <div style={{ ...card, padding: "16px 18px", fontFamily: SANS, fontSize: 13.5, color: TEXT_TER }}>
+            <div className="nura-card" style={{ ...card, padding: "16px 18px", fontFamily: SANS, fontSize: 13.5, color: TEXT_TER }}>
               Ingredients for this recipe are coming soon.
             </div>
           ) : (
@@ -249,13 +249,13 @@ export default async function RecipeDetailPage({
         <section>
           <h2 style={heading}>Method</h2>
           {steps.length === 0 ? (
-            <div style={{ ...card, padding: "16px 18px", fontFamily: SANS, fontSize: 13.5, color: TEXT_TER }}>
+            <div className="nura-card" style={{ ...card, padding: "16px 18px", fontFamily: SANS, fontSize: 13.5, color: TEXT_TER }}>
               Step-by-step method is coming soon.
             </div>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {steps.map((s, i) => (
-                <div key={i} style={{ ...card, padding: "14px 16px", display: "flex", gap: 13 }}>
+                <div className="nura-card" key={i} style={{ ...card, padding: "14px 16px", display: "flex", gap: 13 }}>
                   <span style={{ flexShrink: 0, width: 26, height: 26, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", background: `rgba(${SAGE_RGB},0.14)`, border: `0.5px solid rgba(${SAGE_RGB},0.3)`, fontFamily: SANS, fontSize: 12.5, fontWeight: 600, color: "var(--nura-accent-text)" }}>
                     {s.n ?? i + 1}
                   </span>

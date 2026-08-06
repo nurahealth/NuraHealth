@@ -90,7 +90,7 @@ function Segmented({ options, value, onChange }: { options: string[]; value: str
   const idx = Math.max(0, options.indexOf(value));
   const w = 100 / options.length;
   return (
-    <div style={{
+    <div className="nura-card" style={{
       position: 'relative', display: 'flex', borderRadius: 14, padding: 4,
       background: SURFACE, border: `1px solid rgba(var(--nura-bg-tint-rgb),0.10)`, boxShadow: SURFACE_SHADOW,
     }}>
