@@ -300,13 +300,55 @@ const DIAL = { arcR: 118, arcW: 13, haloW: 18, tickInner: 86, tickOuter: 93, tic
 /** 124.5 is the arc's outer edge in spec units; 108 is where it may land here. */
 const DIAL_S = 108 / (DIAL.arcR + DIAL.arcW / 2);
 
+/* ── The label ring ──────────────────────────────────────────────────────────
+   The six pillars sit on one circle about the SAME centre as the dial, 60°
+   apart, Recovery at 12 o'clock and then clockwise.
+
+   They cannot all sit at one anchor radius, though, and that was the bug. Each
+   pillar is a two-line block — score over label — and the anchor is a text
+   baseline, not the block's edge. At the top and bottom the block sticks
+   straight back at the ring, so it eats HALF_H of clearance; on the flanks it
+   is anchored at its inner edge and eats almost none. With one radius for all
+   six, Activity ended up 103px from centre while Heart sat at 115 — the ring
+   looked off-centre because the labels around it were not a circle.
+
+   So: solve each anchor radius from the clearance we actually want. For a
+   block whose nearest point must land at R_IN,
+       (R·ca)² + (R·|sa| − HALF_H)² = R_IN²
+   which, since ca² + sa² = 1, reduces to
+       R = HALF_H·|sa| + √(R_IN² − HALF_H²·(1 − sa²))
+   Top and bottom get R_IN + HALF_H, the flanks a little less, and every block
+   ends up exactly R_IN from the middle. */
+const LABEL_HALF_H = 14.9;   // measured half-height of the score+label block
+const LABEL_BASELINE_OFF = 1.8; // block centre sits this far above the baseline
+const LABEL_R_IN = 118;      // clearance every pillar keeps from the centre
+
+function labelRadius(sa: number): number {
+  const s2 = Math.abs(sa);
+  return LABEL_HALF_H * s2 + Math.sqrt(LABEL_R_IN ** 2 - LABEL_HALF_H ** 2 * (1 - s2 * s2));
+}
+
+/* Box. Symmetric about the centre on all four sides so the ring is dead centre
+   and the blur has the same room everywhere. Height is driven by the tallest
+   thing in the composition — the top and bottom pillar blocks at
+   LABEL_R_IN + 2·HALF_H — plus a small even pad. */
+const DIAL_W = 390;
+const DIAL_H = Math.round((LABEL_R_IN + LABEL_HALF_H * 2 + 7) * 2);
+
+/* Baselines for the centre stack, measured so the BLOCK — number plus label —
+   is centred on the dial's centre rather than the number's baseline sitting
+   there. Text is centred on its cap height, not its em box, so this cannot be
+   derived from the font size alone. */
+const CENTRE_SCORE_Y = 15;   // 54px score + 9.5px label
+const CENTRE_SEL_Y = 1;      // the smaller stack shown when a pillar is picked
+
 function HealthRing({ d, selected, onSelect }: { d: ReturnType<typeof getOverallHealth>; selected: string | null; onSelect: (k: string) => void }) {
   const tk = useThemeTokens(RING_TOKENS);
   const acc = useAccents();
   const lightForm = useIsLightForm();
   const rawId = useId();
   const uid = `oh-${rawId.replace(/[^a-zA-Z0-9]/g, "")}`;
-  const cx = 195, cy = 184;
+  const cx = DIAL_W / 2, cy = DIAL_H / 2;
   const frac0 = Math.max(0, Math.min(1, d.score / 100));
   const sel = selected;
   const selPillar = sel ? d.pillars.find((p) => p.key === sel) : null;
@@ -372,7 +414,7 @@ function HealthRing({ d, selected, onSelect }: { d: ReturnType<typeof getOverall
   };
 
   return (
-    <svg viewBox="0 0 390 372" style={{ width: "100%", height: "auto", display: "block", overflow: "visible" }}>
+    <svg viewBox={`0 0 ${DIAL_W} ${DIAL_H}`} style={{ width: "100%", height: "auto", display: "block", overflow: "visible" }}>
       <defs>
         <linearGradient id={`${uid}-arc`} x1="0" y1="1" x2="1" y2="0">
           <stop offset="0%" stopColor="var(--nura-dial-arc-from)" />
@@ -426,13 +468,13 @@ function HealthRing({ d, selected, onSelect }: { d: ReturnType<typeof getOverall
       {/* 7 — centre */}
       {selPillar ? (
         <>
-          <text x={cx} y={cy - 2} textAnchor="middle" fontFamily={SANS} fontSize={32} fontWeight={700} className="nura-datum-ink" style={{ fill: acc[selPillar.color] }}>{selPillar.score}</text>
-          <text x={cx} y={cy + 18} textAnchor="middle" fontFamily={SANS} fontSize={9} fontWeight={700} letterSpacing="1.4" fill={`rgba(${tk.inkRgb},0.5)`}>{selPillar.label.toUpperCase()}</text>
+          <text x={cx} y={cy + CENTRE_SEL_Y} textAnchor="middle" fontFamily={SANS} fontSize={32} fontWeight={700} className="nura-datum-ink" style={{ fill: acc[selPillar.color] }}>{selPillar.score}</text>
+          <text x={cx} y={cy + CENTRE_SEL_Y + 20} textAnchor="middle" fontFamily={SANS} fontSize={9} fontWeight={700} letterSpacing="1.4" fill={`rgba(${tk.inkRgb},0.5)`}>{selPillar.label.toUpperCase()}</text>
         </>
       ) : (
         <>
-          <text x={cx} y={cy + 5} textAnchor="middle" fontFamily={MONO} fontSize={54} fontWeight={700} letterSpacing="-2" fill="var(--nura-dial-score)">{d.score}</text>
-          <text x={cx} y={cy + 27} textAnchor="middle" fontFamily={SANS} fontSize={9.5} fontWeight={600} letterSpacing="3.2" fill="var(--nura-dial-label)">HEALTH SCORE</text>
+          <text x={cx} y={cy + CENTRE_SCORE_Y} textAnchor="middle" fontFamily={MONO} fontSize={54} fontWeight={700} letterSpacing="-2" fill="var(--nura-dial-score)">{d.score}</text>
+          <text x={cx} y={cy + CENTRE_SCORE_Y + 22} textAnchor="middle" fontFamily={SANS} fontSize={9.5} fontWeight={600} letterSpacing="3.2" fill="var(--nura-dial-label)">HEALTH SCORE</text>
         </>
       )}
 
@@ -443,9 +485,13 @@ function HealthRing({ d, selected, onSelect }: { d: ReturnType<typeof getOverall
         const a = (p.ang * Math.PI) / 180, ca = Math.cos(a), sa = Math.sin(a);
         const on = !sel || sel === p.key;
         const o = on ? 1 : 0.25;
-        const lx = cx + 120 * ca, ly = cy + 120 * sa;
+        const R = labelRadius(sa);
+        const lx = cx + R * ca;
         const anchor = Math.abs(ca) < 0.2 ? "middle" : ca > 0 ? "start" : "end";
-        const vy = sa < -0.2 ? ly - 3 : ly;
+        // Baseline, derived so the BLOCK — not the baseline — is centred on the
+        // ring. The old code nudged only the top label up by 3px, which is what
+        // left a gap above and crowded the bottom one.
+        const vy = cy + R * sa + LABEL_BASELINE_OFF;
         return (
           <g key={p.key} style={{ cursor: "pointer" }} onClick={() => onSelect(p.key)}>
             <text x={lx.toFixed(1)} y={vy.toFixed(1)} textAnchor={anchor} fontFamily={SANS} fontSize={17.5} fontWeight={700} className="nura-datum-ink" style={{ fill: acc[p.color] }} opacity={o}>
