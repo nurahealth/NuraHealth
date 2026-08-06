@@ -273,7 +273,9 @@ export default function BodyTempDetailPage() {
         </GlassCard>
 
         {/* NŪRA insight */}
-        <div className="bt-reveal" style={{ animationDelay: ".42s", marginTop: 16, padding: "18px 20px", borderRadius: 18, border: `1px solid rgba(${TEAL_RGB},0.2)`, background: `linear-gradient(135deg, rgba(${TEAL_RGB},0.09), rgba(var(--nura-sleep-deep-rgb),0.03))` }}>
+        {/* See the note on the same panel in dashboard/sleep/view.tsx — one
+            insight panel, one finish, across all twelve detail screens. */}
+        <div className="bt-reveal nura-card nura-accent-edge nura-unwash" style={{ animationDelay: ".42s", marginTop: 16, padding: "18px 20px", borderRadius: 18, border: `1px solid rgba(${TEAL_RGB},0.2)`, background: `linear-gradient(135deg, rgba(${TEAL_RGB},0.09), rgba(var(--nura-sleep-deep-rgb),0.03))` }}>
           <div style={{ fontSize: 11, letterSpacing: "1.4px", textTransform: "uppercase", color: TEAL, fontWeight: 600 }}>NŪRA insight</div>
           <p style={{ fontSize: 14.5, lineHeight: 1.55, marginTop: 8, color: `rgba(${INK},0.85)` }}>
             This isn&apos;t your actual body temperature — it&apos;s how far last night drifted from your own personal baseline. NŪRA reads your skin temperature overnight, when it&apos;s most stable, and compares it to the normal you&apos;ve built up over the past few weeks. <b style={{ color: TEXT, fontWeight: 700 }}>Normal</b> means you&apos;re sitting right where you usually do, and small swings of a few tenths of a degree from night to night are completely expected. The signal worth watching is a <i>sustained</i> rise of about <b style={{ color: TEXT, fontWeight: 700 }}>{fmtDeltaUnit(d.spike, unit)}</b> over several nights — that can show up a day or two before you feel ill, track the second half of a menstrual cycle, or simply follow alcohol, a late meal, or a warm room.

@@ -119,6 +119,7 @@ export default function CustomizeSheet({
       <div
         role="dialog"
         aria-modal="true"
+        className="nura-sheet"
         style={{
           position: "fixed", left: 0, right: 0, bottom: 0, zIndex: 81,
           margin: "0 auto", maxWidth: 480, width: "100%",
@@ -159,6 +160,7 @@ export default function CustomizeSheet({
             return (
               <div
                 key={m.id}
+                className="nura-row"
                 onClick={() => onToggle(m.id)}
                 style={{
                   display: "flex", alignItems: "center", gap: 12, padding: "12px 2px", cursor: "pointer",
@@ -182,6 +184,7 @@ export default function CustomizeSheet({
         {/* Done */}
         <button
           onClick={onClose}
+          className="nura-btn"
           style={{
             width: "100%", marginTop: 16, padding: "13px 0", borderRadius: 14, border: "none", cursor: "pointer",
             background: SAGE, color: "var(--nura-sage-bg-on)", fontFamily: SANS, fontSize: 14.5, fontWeight: 700, letterSpacing: "0.2px",

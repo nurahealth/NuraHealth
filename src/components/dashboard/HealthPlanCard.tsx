@@ -194,7 +194,7 @@ export default function HealthPlanCard() {
       </div>
 
       {/* Intro — soft sage-tinted box above the domain list */}
-      <div className="hp-dd hp-intro" style={{ margin: "14px 2px 4px", padding: "13px 15px", borderRadius: 14, background: "var(--nura-tint-accent)", border: "1px solid var(--nura-tint-accent-border)", fontSize: 12.5, lineHeight: 1.5, color: MUTED }} dangerouslySetInnerHTML={{ __html: INTRO_HTML }} />
+      <div className="hp-dd hp-intro nura-card-inner" style={{ margin: "14px 2px 4px", padding: "13px 15px", borderRadius: 14, background: "var(--nura-tint-accent)", border: "1px solid var(--nura-tint-accent-border)", fontSize: 12.5, lineHeight: 1.5, color: MUTED }} dangerouslySetInnerHTML={{ __html: INTRO_HTML }} />
 
       {/* Domain accordions */}
       <div>
@@ -202,7 +202,10 @@ export default function HealthPlanCard() {
           const isOpen = open.has(d.key);
           return (
             <div key={d.key} style={{ borderTop: "1px solid var(--nura-hairline)" }}>
-              <div onClick={() => toggle(d.key)} style={{ display: "flex", gap: 12, alignItems: "center", padding: "13px 2px", cursor: "pointer" }}>
+              {/* nura-row: in light these accordion headers had a pointer
+                  cursor and nothing else — no tint, no edge, no feedback until
+                  the panel opened. One shared row hover across the app. */}
+              <div className="nura-row" onClick={() => toggle(d.key)} style={{ display: "flex", gap: 12, alignItems: "center", padding: "13px 2px", cursor: "pointer" }}>
                 <div style={{ flex: "none", width: 34, height: 34, borderRadius: 11, display: "flex", alignItems: "center", justifyContent: "center", background: hexA(acc[d.color], 0.13), border: `1px solid ${hexA(acc[d.color], 0.26)}` }}>
                   <DomainIcon name={d.icon} color={acc[d.color]} />
                 </div>

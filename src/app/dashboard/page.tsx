@@ -165,7 +165,7 @@ export default function DashboardPage() {
 
       {/* 1 — Date eyebrow + greeting */}
       <div style={{ marginBottom: 22 }}>
-        <div style={{ ...EYEBROW, color: "var(--nura-accent-label)", marginBottom: 8 }}>
+        <div className="nura-label" style={{ ...EYEBROW, color: "var(--nura-accent-label)", marginBottom: 8 }}>
           Today · {dateLabel}
         </div>
         <h1 style={{
@@ -317,7 +317,7 @@ function MetricCard({ metric, onClick }: { metric: DashboardMetric; onClick: () 
 
   return (
     <div
-      className="dash-card"
+      className="dash-card nura-card"
       role="link"
       tabIndex={0}
       onClick={onClick}
@@ -328,15 +328,17 @@ function MetricCard({ metric, onClick }: { metric: DashboardMetric; onClick: () 
         minHeight: 248,
       }}
     >
-      {/* Top: name + source tag */}
+      {/* Top: name + source tag. Two eyebrows at the same weight read as two
+          titles; the label scale separates them by one step of size and two of
+          emphasis, so it reads "name, then provenance". */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-        <span style={{ ...EYEBROW, color: TEXT_SEC }}>{metric.name}</span>
-        <span style={{ ...EYEBROW, fontSize: 9, color: TEXT_TER }}>{SOURCE_LABEL[metric.source]}</span>
+        <span className="nura-label" style={{ ...EYEBROW, color: TEXT_SEC }}>{metric.name}</span>
+        <span className="nura-label-xs" style={{ ...EYEBROW, fontSize: 9, color: TEXT_TER }}>{SOURCE_LABEL[metric.source]}</span>
       </div>
 
       {/* Value + delta (Body Temp shows its value in the ring center instead) */}
       <div style={{ display: isBodyTemp ? "none" : "flex", alignItems: "baseline", gap: 8, marginTop: 12 }}>
-        <span style={{ fontFamily: SANS, fontSize: 30, fontWeight: 600, color: TEXT, lineHeight: 1, letterSpacing: "-0.02em" }}>
+        <span className="nura-stat" style={{ fontFamily: SANS, fontSize: 30, fontWeight: 600, color: TEXT, lineHeight: 1, letterSpacing: "-0.02em" }}>
           {display}
         </span>
         {showUnit && <span style={{ fontFamily: SANS, fontSize: 13, color: TEXT_SEC }}>{metric.unit}</span>}
@@ -436,11 +438,13 @@ function MetricCard({ metric, onClick }: { metric: DashboardMetric; onClick: () 
 // ── 5 · NŪRA insight card ───────────────────────────────────────────────────────
 function InsightCard({ text, ctaLabel, onCta }: { text: string; ctaLabel: string; onCta: () => void }) {
   return (
-    <div className="dash-insight" style={{
+    <div className="dash-insight nura-accent-edge" style={{
       marginTop: 16, borderRadius: 20, padding: 22,
       background: `linear-gradient(135deg, rgba(var(--nura-sage-rgb),0.06), transparent 60%), ${CARD}`,
       border: `0.5px solid ${BORDER}`, borderLeft: `2px solid ${SAGE}`,
     }}>
+      {/* No .nura-label here: this eyebrow is the wordmark, and its 2px
+          tracking is the brand's, not the label scale's. */}
       <div style={{ ...EYEBROW, color: "var(--nura-accent-label)", letterSpacing: "2px", marginBottom: 10 }}>NŪRA</div>
       <p style={{ fontFamily: SANS, fontSize: 14, color: TEXT, margin: 0, lineHeight: 1.65 }}>{text}</p>
       <button

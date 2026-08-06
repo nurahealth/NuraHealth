@@ -204,7 +204,7 @@ export default function SleepDetailPage() {
         {/* 3 · Headline tiles — 2×2 with status badges */}
         <div className="s-reveal" style={{ animationDelay: ".12s", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 18 }}>
           {d.subMetrics.map((sm) => (
-            <div key={sm.label} style={{ background: "var(--nura-glass)", border: "1px solid var(--nura-glass-line)", borderRadius: 16, padding: "14px 13px", boxShadow: "inset 0 1px 0 rgba(var(--nura-bg-tint-rgb),0.08)" }}>
+            <div key={sm.label} className="nura-card" style={{ background: "var(--nura-glass)", border: "1px solid var(--nura-glass-line)", borderRadius: 16, padding: "14px 13px", boxShadow: "inset 0 1px 0 rgba(var(--nura-bg-tint-rgb),0.08)" }}>
               <div style={{ fontSize: 10, letterSpacing: "0.9px", textTransform: "uppercase", color: FAINT, fontWeight: 600 }}>{sm.label}</div>
               <div style={{ fontSize: 20, fontWeight: 700, margin: "6px 0 10px", letterSpacing: "-0.5px" }}>
                 {sm.value}<small style={{ fontSize: 12, fontWeight: 600, color: MUTED, letterSpacing: 0 }}>{sm.unit}</small>
@@ -335,7 +335,7 @@ export default function SleepDetailPage() {
         {/* 8 · Vitals tiles */}
         <div className="s-reveal" style={{ animationDelay: ".5s", display: "flex", gap: 10, marginTop: 16 }}>
           {d.vitals.map((v) => (
-            <div key={v.label} style={{ flex: 1, background: "var(--nura-glass)", border: "1px solid var(--nura-glass-line)", borderRadius: 16, padding: "13px 12px", boxShadow: "inset 0 1px 0 rgba(var(--nura-bg-tint-rgb),0.08)" }}>
+            <div key={v.label} className="nura-card" style={{ flex: 1, background: "var(--nura-glass)", border: "1px solid var(--nura-glass-line)", borderRadius: 16, padding: "13px 12px", boxShadow: "inset 0 1px 0 rgba(var(--nura-bg-tint-rgb),0.08)" }}>
               <div style={{ fontSize: 10, letterSpacing: "0.8px", textTransform: "uppercase", color: FAINT, fontWeight: 600 }}>{v.label}</div>
               <div style={{ fontSize: 17, fontWeight: 700, marginTop: 5, letterSpacing: "-0.4px" }}>
                 {v.value}<small style={{ fontSize: 11, fontWeight: 600, color: MUTED, letterSpacing: 0 }}>{v.unit}</small>
@@ -345,7 +345,12 @@ export default function SleepDetailPage() {
         </div>
 
         {/* 9 · NŪRA insight — cool blue/teal treatment */}
-        <div className="s-reveal" style={{
+        {/* Eight of the twelve detail screens draw this panel as a white card
+            with a 3px accent bar down its left edge. Two — this one and body
+            temp — drew it as a tinted gradient box instead, which in light is
+            a pale green rectangle in a column of white cards. Same panel, so:
+            same card, same accent edge. Dark keeps the gradient. */}
+        <div className="s-reveal nura-card nura-accent-edge nura-unwash" style={{
           animationDelay: ".56s", marginTop: 16, padding: "18px 20px", borderRadius: 18,
           border: `1px solid rgba(${DEEP_RGB},0.22)`,
           background: `linear-gradient(135deg, rgba(${DEEP_RGB},0.10), rgba(${REM_RGB},0.03))` }}>

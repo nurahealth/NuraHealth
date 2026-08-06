@@ -1117,8 +1117,14 @@ html, body {
 
      Scoped to light, so dark keeps its warm gradient wash exactly. */
   background: var(--nura-card) !important;
-  border-color: rgba(26, 24, 20, 0.05) !important;
-  box-shadow: var(--nura-card-shadow-soft) !important;
+  border-color: var(--nura-hairline) !important;
+  /* Was a soft drop shadow of its own. That predates the single card
+     elevation: a shadowed panel inside a shadowed card is two heights on one
+     plane, which is precisely the tell this pass is removing. It is a NESTED
+     surface — hairline and inner radius, no elevation. The card it sits in is
+     already the thing that's lifted. */
+  border-radius: var(--nura-radius-inner) !important;
+  box-shadow: none !important;
 }
 
 [data-theme="light"] .dash-card {
@@ -1190,11 +1196,24 @@ html, body {
 [data-theme="light"] .fd-card,
 [data-theme="light"] .fit-tile,
 [data-theme="light"] .source-card,
-[data-theme="light"] .nut-row,
-[data-theme="light"] .mp-panel {
+[data-theme="light"] .nut-row {
+  /* NB: .mp-panel is deliberately NOT in this list. It reads like a card class
+     and is not one — it is the 100dvh scroll-snap column that each metric
+     detail screen renders inside. Giving it a radius clips its scrolling
+     content at the corners, and a border draws a box around the whole
+     viewport. */
   border-radius: var(--nura-radius-card) !important;
   border: 1px solid rgba(26, 24, 20, 0.05) !important;
   box-shadow: var(--nura-card-shadow) !important;
+  /* Clean white, and `background-color` rather than the shorthand so a card
+     that layers a real background-image keeps it.
+     This also closes a token-level leak. A lot of surfaces are authored as
+     `rgba(var(--nura-bg-tint-rgb), 0.04)` — in dark that is 4% cream on
+     near-black, which is exactly the lit inset it was drawn for. In light
+     --nura-bg-tint-rgb is a SAGE, so the same expression paints a faint green
+     wash on white, and a page of those reads as though the whole card column
+     has been left slightly damp. Cards are white. */
+  background-color: var(--nura-card) !important;
   /* Glass is chrome-only (see below). On an opaque white card the blur costs a
      compositing layer and buys nothing, and it silently makes the card a
      containing block for anything positioned inside it. */
@@ -1206,13 +1225,40 @@ html, body {
     border-color var(--nura-dur) var(--nura-ease) !important;
 }
 
+/* A card with a deliberate accent edge — the insight panel, a flagged lab
+   marker, an out-of-range bloodwork row. The card rule above normalises the
+   `border` SHORTHAND, which is what unifies the 0.5px hairlines, and a
+   shorthand necessarily overwrites a 2px sage left edge authored beside it.
+   This is the opt-in that puts it back, so the accent survives the sweep
+   without the sweep having to know about it in advance. */
+[data-theme="light"] .nura-accent-edge {
+  border-left: 2px solid var(--nura-sage) !important;
+}
+
+/* Clears a translucent GRADIENT fill (a background-image), which the card rule
+   above deliberately leaves alone — plenty of cards carry a real image, a
+   recipe photo above all, and a blanket `background-image: none` would wipe
+   them. This is the opt-in for the handful of panels whose "image" is actually
+   a 10%-tint wash drawn for near-black. */
+[data-theme="light"] .nura-unwash {
+  background-image: none !important;
+}
+
 /* Nested surfaces: a panel inside a card takes the inner radius and no shadow
    of its own. Two stacked elevations on one card is the thing that makes a
    light UI look like a bootstrap theme. */
 [data-theme="light"] .nura-card-inner {
   border-radius: var(--nura-radius-inner) !important;
-  border: 1px solid var(--nura-hairline) !important;
   box-shadow: none !important;
+}
+
+/* …and the variant for a nested panel that is WHITE on white, where the
+   hairline is the only thing separating it from the card behind it. Split from
+   the rule above because a nested panel that carries its own tint (an accent
+   callout, a warning box) already reads as separate, and forcing a grey border
+   onto it just draws a second edge inside a coloured one. */
+[data-theme="light"] .nura-card-inner-line {
+  border: 1px solid var(--nura-hairline) !important;
 }
 
 /* ── Hover ───────────────────────────────────────────────────────────────
@@ -1248,6 +1294,19 @@ html, body {
   transform: translateY(0);
   box-shadow: var(--nura-card-shadow) !important;
   transition-duration: var(--nura-dur-fast) !important;
+}
+
+/* Ghost controls that span a card's width — "Customize dashboard" and its
+   kind. They are not cards (no fill, no shadow) but they sit in the card
+   column, so they take the card radius or the column develops two corner
+   languages down its left edge. */
+[data-theme="light"] .dash-customize {
+  border-radius: var(--nura-radius-card) !important;
+  border: 1px solid var(--nura-border) !important;
+}
+[data-theme="light"] .dash-customize:hover {
+  background: var(--nura-row-hover) !important;
+  border-color: rgba(var(--nura-sage-rgb), 0.30) !important;
 }
 
 /* Rows — accordion headers, list items, settings lines. Not cards: they get a
@@ -1326,6 +1385,9 @@ html, body {
 }
 
 /* The filled sage button. Opt-in class so it can't catch a ghost or a link. */
+[data-theme="light"] .nura-btn {
+  border-radius: var(--nura-radius-control) !important;
+}
 [data-theme="light"] .nura-btn:hover:not(:disabled) {
   background: var(--nura-sage-hover) !important;
 }
@@ -1347,6 +1409,17 @@ html, body {
   backdrop-filter: blur(20px) saturate(1.6) !important;
   -webkit-backdrop-filter: blur(20px) saturate(1.6) !important;
   border-right: 1px solid rgba(26, 24, 20, 0.07) !important;
+}
+
+/* Bottom sheets and modals. Their lift is authored as a heavy near-black
+   shadow because it has to register against a near-black page; on warm paper
+   the same shadow is a bruise under the sheet. Same warm-ink recipe as the
+   cards, scaled up — a sheet IS higher than a card, so it keeps a bigger,
+   softer ambient rather than a darker one. */
+[data-theme="light"] .nura-sheet {
+  box-shadow:
+    0 -1px 2px rgba(26, 24, 20, 0.04),
+    0 -16px 48px -12px rgba(26, 24, 20, 0.18) !important;
 }
 
 [data-theme="light"] .nura-appbar {

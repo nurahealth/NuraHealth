@@ -207,7 +207,7 @@ export default function OverallHealthCard() {
               const open = selected === p.key;
               return (
                 <div key={p.key} style={{ borderTop: "1px solid var(--nura-hairline)" }}>
-                  <div className="oh-pill-head" onClick={() => togglePillar(p.key)} style={{ display: "flex", alignItems: "center", gap: 11, padding: "13px 2px", cursor: "pointer" }}>
+                  <div className="oh-pill-head nura-row" onClick={() => togglePillar(p.key)} style={{ display: "flex", alignItems: "center", gap: 11, padding: "13px 2px", cursor: "pointer" }}>
                     <span style={{ width: 9, height: 9, borderRadius: "50%", flex: "none", background: acc[p.color] }} />
                     <span className="oh-nm" style={{ fontSize: 14, fontWeight: 700, flex: 1, color: TEXT, transition: "color .15s" }}>{p.label}</span>
                     <span className="nura-datum-ink" style={{ fontSize: 15, fontWeight: 700, color: acc[p.color] }}>
