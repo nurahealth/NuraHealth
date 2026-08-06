@@ -386,10 +386,11 @@
      as the score climbs without turning the hero into a three-hue gradient on
      white. The glow that rides this arc is dark-only and is switched off by
      the light flattening layer, not by a branch in the component. */
-  --nura-dial-1: var(--nura-sage);
-  --nura-dial-2: var(--nura-teal);
-  --nura-dial-3: var(--nura-sleep-deep);
-  --nura-dial-glow-rgb: var(--nura-teal-rgb);
+  /* The pillar trend arrow's "up" colour. It used to borrow the old dial's
+     middle arc stop; that ramp died with the filament ring, so the colour it
+     was actually resolving to gets its own name. Same value, both columns —
+     the arrows are explicitly unchanged by the dial redesign. */
+  --nura-trend-up: var(--nura-teal);
 
   /* The Resilience pillar on the dial. It is the one pillar whose original
      colour IS the brand sage, so it was pointed straight at --nura-sage — and
@@ -397,6 +398,21 @@
      Left alone, light would paint it from the button accent rather than from
      the data colour — the same green by luck, not by system. Split, so each
      column names it deliberately. */
+  /* ── HALO DIAL ──────────────────────────────────────────────────────────
+     The Health Score instrument, and the only thing in the dark column this
+     pass touches. One design in two skins: the structure below is identical in
+     both, and each column only says what it is made of. */
+  --nura-dial-track: #1e2220;
+  --nura-dial-ticks: #242826;
+  --nura-dial-arc-from: #6f8a7c;
+  --nura-dial-arc-to: #c9d8cf;
+  --nura-dial-halo: #9bb0a5;
+  --nura-dial-edge: rgba(255, 255, 255, 0.35);
+  --nura-dial-dot-fill: #0d0d0e;
+  --nura-dial-dot-stroke: #6f8a7c;
+  --nura-dial-score: #ebe6d8;
+  --nura-dial-label: #7a7f7a;
+
   --nura-pillar-resilience: var(--nura-sage);
 
   /* The status WORD a gauge prints in its centre ("Normal", "Elevated") when
@@ -742,10 +758,7 @@
   --nura-hr-zone-4: var(--nura-step-4);
 
   /* Light half of the dial split — three steps of the one sage ladder. */
-  --nura-dial-1: var(--nura-step-2);
-  --nura-dial-2: var(--nura-step-3);
-  --nura-dial-3: var(--nura-step-4);
-  --nura-dial-glow-rgb: var(--nura-sage-rgb);
+  --nura-trend-up: var(--nura-step-3);
 
   --nura-ramp-hr-1: var(--nura-step-1);
   --nura-ramp-hr-2: var(--nura-step-2);
@@ -1062,6 +1075,18 @@
      the right shape — dark must be able to disagree with light about these.
      With sage back as the data colour they simply point at the data token and
      the status trio again. */
+  /* Halo dial — light skin. Same structure, see the dark column. */
+  --nura-dial-track: #e8ede9;
+  --nura-dial-ticks: #dfe7e1;
+  --nura-dial-arc-from: #3e5a4c;
+  --nura-dial-arc-to: #7d968a;
+  --nura-dial-halo: #7d968a;
+  --nura-dial-edge: rgba(255, 255, 255, 0.55);
+  --nura-dial-dot-fill: #ffffff;
+  --nura-dial-dot-stroke: #3e5a4c;
+  --nura-dial-score: #1a1a1a;
+  --nura-dial-label: #9a9e9a;
+
   --nura-pillar-resilience: var(--nura-data-primary);
   --nura-status-calm: var(--nura-status-good);
 }
@@ -1803,4 +1828,41 @@ html, body {
     padding-top: env(safe-area-inset-top);
     padding-bottom: env(safe-area-inset-bottom);
   }
+}
+
+/* ───────────────────────────────────────────────────────────────────────────
+   HALO DIAL — the mount sweep.
+
+   Declarative CSS rather than a rAF loop, for the same reason the chart
+   entrance is: browsers throttle requestAnimationFrame in background tabs and
+   occluded iframes, so a JS-driven sweep can leave the arc stranded at zero
+   until the tab is focused. A keyframe runs off the compositor and cannot be
+   starved. The target values arrive as custom properties set inline, which is
+   what lets one rule serve every score.
+
+   The cap dot rotates about the dial centre on the same curve, so the dot and
+   the arc's leading edge stay welded together for the whole sweep.
+   ─────────────────────────────────────────────────────────────────────── */
+@keyframes nura-dial-sweep {
+  from { stroke-dashoffset: var(--dial-c); }
+  to   { stroke-dashoffset: var(--dial-o); }
+}
+@keyframes nura-dial-cap {
+  from { transform: rotate(var(--dial-a)); }
+  to   { transform: rotate(0deg); }
+}
+
+.nura-dial-arc {
+  animation: nura-dial-sweep 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.nura-dial-cap {
+  animation: nura-dial-cap 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  transform-box: view-box;
+  transform-origin: var(--dial-ox) var(--dial-oy);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Both elements are authored at their final values, so switching the
+     animation off lands them exactly where the sweep would have ended. */
+  .nura-dial-arc, .nura-dial-cap { animation: none; }
 }

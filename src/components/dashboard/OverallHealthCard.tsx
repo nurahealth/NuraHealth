@@ -1,11 +1,11 @@
 "use client";
 
-import { useId, useState, type ReactElement } from "react";
+import { useId, useState, type CSSProperties, type ReactElement } from "react";
 import { useRouter } from "next/navigation";
 import { getOverallHealth, type HealthPillar, type HealthTrend } from "@/lib/dashboardData";
-import { hex, lerp, light } from "@/components/dashboard/ActiveEnergyTodayChart";
 import { useThemeTokens, useIsLightForm } from "@/lib/themeTokens";
 import { useAccents } from "@/lib/accents";
+import { MONO } from "@/components/dashboard/chartTheme";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Overall Health — the dashboard's top section: a single Health Score blended
@@ -18,7 +18,6 @@ const SERIF = "'Fraunces', Georgia, serif";
 const TEXT = "var(--nura-text-primary)";
 const MUTED = "var(--nura-ink-muted)";
 const FAINT = "var(--nura-ink-faint)";
-const SAGE = "var(--nura-sage)";
 const GOLD = "var(--nura-good)";
 
 // Colours this card needs as concrete values rather than var() references: the
@@ -30,47 +29,20 @@ const GOLD = "var(--nura-good)";
 // three steps of the shared ordered ramp, so the hero mark on the dashboard is
 // the same colour idea as every chart beneath it — magnitude as depth, one hue.
 const RING_TOKENS = {
-  // The three dial stops are a THEME-SPLIT token (see globals.css): dark
-  // resolves them to the original sage → teal → blue sweep, light to three
-  // steps of the sage ladder. The component asks for "the dial ramp" and the
-  // stylesheet decides what that means, which is the only way both columns
-  // can be right at once.
-  ringLo:    ["--nura-dial-1", "#9bb0a5"],
-  ringMid:   ["--nura-dial-2", "#5dccae"],
-  ringHi:    ["--nura-dial-3", "#5aa0e6"],
-  alert:     ["--nura-alert", "#e8745a"],
-  inkRgb:    ["--nura-fg-rgb", "235,230,216"],
-  tealRgb:   ["--nura-dial-glow-rgb", "93,204,174"],
-  teal:      ["--nura-dial-2", "#5dccae"],
-  scoreFrom: ["--nura-score-from", "#ffffff"],
-  scoreTo:   ["--nura-score-to", "#cfe0d6"],
-  ringHead:  ["--nura-ring-head", "#ffffff"],
+  // What survives the halo dial: the pillar text needs ink and the alert hue
+  // for its trend arrows. Everything the filament ring resolved — the three
+  // dial stops, the glow rgb, the score gradient, the ring head — went with
+  // it; the new dial reads --nura-dial-* straight from CSS, because it has no
+  // colour maths to do.
+  trendUp: ["--nura-trend-up", "#5dccae"],
+  alert:   ["--nura-alert", "#e8745a"],
+  inkRgb:  ["--nura-fg-rgb", "235,230,216"],
 } as const;
-
-// Defined locally (reusing the shared hex/lerp/light) so colorAt is guaranteed
-// available wherever the ring renders — a missing colorAt silently blanks it.
-function colorAtRgb(t: number, stops: [number, string][]): [number, number, number] {
-  const u = Math.max(0, Math.min(1, t));
-  for (let i = 0; i < stops.length - 1; i++) {
-    const [s0, c0] = stops[i];
-    const [s1, c1] = stops[i + 1];
-    if (u >= s0 && u <= s1) {
-      const k = (u - s0) / ((s1 - s0) || 1);
-      const A = hex(c0), B = hex(c1);
-      return [lerp(A[0], B[0], k), lerp(A[1], B[1], k), lerp(A[2], B[2], k)];
-    }
-  }
-  return hex(stops[stops.length - 1][1]);
-}
-const rgb = ([r, g, b]: [number, number, number]) => `rgb(${r},${g},${b})`;
-function colorAt(t: number, stops: [number, string][]): string {
-  return rgb(colorAtRgb(t, stops));
-}
 
 const tArrow = (t: HealthTrend) => (t === "up" ? "▲" : t === "down" ? "▼" : "–");
 type RingTokens = Record<keyof typeof RING_TOKENS, string>;
 const tCol = (t: HealthTrend, tk: RingTokens) =>
-  t === "up" ? tk.ringMid : t === "down" ? tk.alert : `rgba(${tk.inkRgb},0.4)`;
+  t === "up" ? tk.trendUp : t === "down" ? tk.alert : `rgba(${tk.inkRgb},0.4)`;
 
 const Chevron = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={FAINT} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6" /></svg>
@@ -302,146 +274,156 @@ export default function OverallHealthCard() {
   );
 }
 
-// ── Hero ring ─────────────────────────────────────────────────────────────────
-// Energy filaments (bright up to score%, dimmed after) under faint depth rings, a
-// slowly rotating dotted outer ring, a crisp gradient progress arc with a pulsing
-// white head, a radial glow core, the centered Health Score, and six pillar
-// spokes (notch · connector · glowing dot · value + trend · label). Selecting a
-// pillar dims the ring + other pillars and shows that pillar's score in the center.
+// ── Hero ring — the HALO dial ────────────────────────────────────────────────
+//
+// ONE DESIGN, TWO SKINS. Everything below is structural and identical in both
+// themes; the only thing that differs is which colours the tokens resolve to.
+// That is deliberate and it is what the previous tick-ring dial could not do:
+// its shimmer was built out of 168 per-filament colour interpolations, so the
+// two themes were drawing genuinely different instruments.
+//
+// Layer order, back to front — the halo has to sit UNDER the track, or the
+// blur washes over the very arc it is supposed to be lighting:
+//   1  halo      blurred copy of the score arc, wider stroke
+//   2  track     full circle
+//   3  ticks     72 short marks, purely textural
+//   4  arc       the score, 12 o'clock clockwise
+//   5  edge      a hairline highlight just inside the arc
+//   6  cap       a dot punched out of the card at the arc's end
+//   7  centre    score + label
+//
+// GEOMETRY is specified against a 300x300 box and scaled by DIAL_S to fit
+// inside the pillar labels, which sit at r=120 in this component's own
+// coordinate space and must not move. Scaling here rather than resizing the
+// viewBox is what keeps those labels pinned.
+const DIAL = { arcR: 118, arcW: 13, haloW: 18, tickInner: 86, tickOuter: 93, tickW: 1.6, edgeR: 114, edgeW: 1.6, capR: 4.5, capW: 2.5 } as const;
+/** 124.5 is the arc's outer edge in spec units; 108 is where it may land here. */
+const DIAL_S = 108 / (DIAL.arcR + DIAL.arcW / 2);
+
 function HealthRing({ d, selected, onSelect }: { d: ReturnType<typeof getOverallHealth>; selected: string | null; onSelect: (k: string) => void }) {
   const tk = useThemeTokens(RING_TOKENS);
   const acc = useAccents();
   const lightForm = useIsLightForm();
-  // Health-Score ring ramp: sage → teal → blue, resolved from the theme.
-  const RAMP: [number, string][] = [[0, tk.ringLo], [0.45, tk.ringMid], [1, tk.ringHi]];
   const rawId = useId();
   const uid = `oh-${rawId.replace(/[^a-zA-Z0-9]/g, "")}`;
   const cx = 195, cy = 184;
-  const frac0 = d.score / 100;
+  const frac0 = Math.max(0, Math.min(1, d.score / 100));
   const sel = selected;
   const selPillar = sel ? d.pillars.find((p) => p.key === sel) : null;
 
-  // Depth rings.
-  const depth: ReactElement[] = [
-    <circle key="core" className="nura-halo" cx={cx} cy={cy} r={118} fill={`url(#${uid}-core)`} />,
-    <circle key="r100" cx={cx} cy={cy} r={100} fill="none" stroke={`rgba(${tk.inkRgb},0.045)`} />,
-    <circle key="r110" cx={cx} cy={cy} r={110} fill="none" stroke={`rgba(${tk.inkRgb},0.03)`} />,
-  ];
+  const s = DIAL_S;
+  const arcR = DIAL.arcR * s;
+  const arcW = DIAL.arcW * s;
+  const circ = 2 * Math.PI * arcR;
+  const offset = circ * (1 - frac0);
 
-  // Rotating dotted outer ring.
-  const odots: ReactElement[] = [];
+  // Blur is the one value that cannot come from a token: stdDeviation is an
+  // SVG attribute, and an attribute will not resolve var().
+  const blur = lightForm ? 7 * s : 5 * s;
+  const haloOpacity = lightForm ? 0.32 : 0.45;
+
+  // 72 textural ticks. Not data — they give the empty centre something to be.
+  const ticks: ReactElement[] = [];
   for (let i = 0; i < 72; i++) {
-    const a = (i / 72) * 2 * Math.PI;
-    odots.push(<circle key={i} cx={(cx + 114 * Math.cos(a)).toFixed(1)} cy={(cy + 114 * Math.sin(a)).toFixed(1)} r={i % 6 === 0 ? 1.1 : 0.7} fill={`rgba(${tk.inkRgb},0.16)`} />);
+    const a = (i / 72) * 2 * Math.PI - Math.PI / 2;
+    const ca = Math.cos(a), sa = Math.sin(a);
+    ticks.push(
+      <line
+        key={i}
+        x1={(cx + DIAL.tickInner * s * ca).toFixed(2)} y1={(cy + DIAL.tickInner * s * sa).toFixed(2)}
+        x2={(cx + DIAL.tickOuter * s * ca).toFixed(2)} y2={(cy + DIAL.tickOuter * s * sa).toFixed(2)}
+        stroke="var(--nura-dial-ticks)" strokeWidth={DIAL.tickW * s} strokeLinecap="round"
+      />,
+    );
   }
 
-  // Energy filaments.
-  const N = 168;
-  const filaments: ReactElement[] = [];
-  for (let i = 0; i < N; i++) {
-    const frac = i / N, a = frac * 2 * Math.PI - Math.PI / 2;
-    const seed = (Math.sin(i * 0.5) * 0.5 + 0.5) * 0.55 + (Math.sin(i * 1.7 + 1) * 0.5 + 0.5) * 0.45;
-    const inner = 66, outer = inner + 4 + seed * 12, bright = frac <= frac0;
-    // Dark interpolates each filament along the sage → teal → blue ramp and
-    // varies its opacity by seed, which is what gives the ring its shimmer.
-    // Light gives the same pillars the flat three-tone reading: filled ones are
-    // the emphasis tone, the unfilled remainder is the quiet one — so the ring
-    // states the score by how far the deep band runs, not by brightness.
-    // Identical geometry in both themes — same 168 pillars, same lengths, same
-    // tip dots. Dark interpolates each along the sage → teal → blue ramp and
-    // varies opacity by seed (that shimmer is the dark dial). Light states it
-    // flatly instead: filled pillars run the deep gradient, the rest are the
-    // faint tone, so the score reads as how far the dark band travels.
-    const col = lightForm
-      ? (bright ? `url(#${uid}-tick)` : "var(--nura-sage-faint)")
-      : (bright ? colorAt(frac / frac0, RAMP) : `rgba(${tk.inkRgb},0.10)`);
-    const op = lightForm ? 1 : (bright ? 0.32 + seed * 0.55 : 0.5);
-    const sw = lightForm ? (bright ? 2.6 : 2.2) : 1.8;
-    const x1 = cx + inner * Math.cos(a), y1 = cy + inner * Math.sin(a);
-    const x2 = cx + outer * Math.cos(a), y2 = cy + outer * Math.sin(a);
-    filaments.push(<line key={`f${i}`} x1={x1.toFixed(1)} y1={y1.toFixed(1)} x2={x2.toFixed(1)} y2={y2.toFixed(1)} stroke={col} strokeWidth={sw} strokeLinecap="round" opacity={Number((sel ? op * 0.5 : op).toFixed(2))} />);
-    if (bright && seed > 0.82 && !sel) {
-      filaments.push(<circle key={`s${i}`} cx={x2.toFixed(1)} cy={y2.toFixed(1)} r={lightForm ? 1.15 : 1.3} fill={lightForm ? "#8fa89b" : rgb(light(colorAtRgb(frac / frac0, RAMP), 0.45))} opacity={0.9} />);
-    }
-  }
+  // The inner-edge highlight, inset a touch at both ends so it reads as light
+  // catching the arc rather than as a second, thinner arc.
+  const edgeR = DIAL.edgeR * s;
+  const a0 = -Math.PI / 2 + 0.06;
+  const a1 = -Math.PI / 2 + frac0 * 2 * Math.PI - 0.06;
+  const edgePath = a1 <= a0 ? "" : [
+    `M ${(cx + edgeR * Math.cos(a0)).toFixed(2)} ${(cy + edgeR * Math.sin(a0)).toFixed(2)}`,
+    `A ${edgeR.toFixed(2)} ${edgeR.toFixed(2)} 0 ${a1 - a0 > Math.PI ? 1 : 0} 1`,
+    `${(cx + edgeR * Math.cos(a1)).toFixed(2)} ${(cy + edgeR * Math.sin(a1)).toFixed(2)}`,
+  ].join(" ");
 
-  // Progress arc + pulsing head.
-  //
-  // Light makes this THE mark: one smooth arc at 11px on a light track, swept
-  // out to r=94 so it reads as the dial rather than as a hoop inside a field of
-  // filaments. Dark keeps the 3.2px arc at r=60, where the filaments around it
-  // are the hero and the arc is the precise edge on top of them.
-  // Same radius in both themes; light thickens the stroke slightly per the
-  // approved values and swaps the gradient for a flat deep sage.
-  const pr = 60;
-  const arcW = lightForm ? 4.5 : 3.2;
-  const circ = 2 * Math.PI * pr, vis = circ * frac0;
-  const headA = ((-90 + 360 * frac0) * Math.PI) / 180;
-  const hx = cx + pr * Math.cos(headA), hy = cy + pr * Math.sin(headA);
+  // End cap. Authored at its final angle; the sweep rotates it back to zero.
+  const capA = -Math.PI / 2 + frac0 * 2 * Math.PI;
+  const capX = cx + arcR * Math.cos(capA);
+  const capY = cy + arcR * Math.sin(capA);
+
+  const sweepVars = {
+    "--dial-c": `${circ.toFixed(2)}`,
+    "--dial-o": `${offset.toFixed(2)}`,
+  } as CSSProperties;
+  const capVars = {
+    "--dial-a": `${(-frac0 * 360).toFixed(2)}deg`,
+    "--dial-ox": `${cx}px`,
+    "--dial-oy": `${cy}px`,
+  } as CSSProperties;
+
+  const arcGeom = {
+    cx, cy, r: arcR, fill: "none" as const,
+    strokeDasharray: circ.toFixed(2),
+    strokeDashoffset: offset.toFixed(2),
+    strokeLinecap: "round" as const,
+    transform: `rotate(-90 ${cx} ${cy})`,
+  };
 
   return (
-    <svg viewBox="0 0 390 372" style={{ width: "100%", height: "auto", display: "block" }}>
+    <svg viewBox="0 0 390 372" style={{ width: "100%", height: "auto", display: "block", overflow: "visible" }}>
       <defs>
-        <radialGradient id={`${uid}-core`} cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor={`rgba(${tk.tealRgb},0.22)`} />
-          <stop offset="60%" stopColor={`rgba(${tk.tealRgb},0.06)`} />
-          <stop offset="100%" stopColor={`rgba(${tk.tealRgb},0)`} />
-        </radialGradient>
-        <linearGradient id={`${uid}-parc`} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor={tk.ringLo} /><stop offset="55%" stopColor={tk.ringMid} /><stop offset="100%" stopColor={tk.ringHi} />
+        <linearGradient id={`${uid}-arc`} x1="0" y1="1" x2="1" y2="0">
+          <stop offset="0%" stopColor="var(--nura-dial-arc-from)" />
+          <stop offset="100%" stopColor="var(--nura-dial-arc-to)" />
         </linearGradient>
-        {/* Filled tick pillars, light: the approved deep ramp along the pillar
-            so each one reads lit from the outside in. */}
-        <linearGradient id={`${uid}-tick`} x1="0" y1="1" x2="0" y2="0">
-          <stop offset="0%" stopColor="#46604f" />
-          <stop offset="100%" stopColor="#6f8a7c" />
-        </linearGradient>
-        <linearGradient id={`${uid}-num`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={tk.scoreFrom} /><stop offset="100%" stopColor={tk.scoreTo} />
-        </linearGradient>
+        {/* Generous region: the default -10%/+10% clips a 7px blur on a ring
+            this size, which shows up as the halo being sliced off at 390px. */}
+        <filter id={`${uid}-halo`} x="-30%" y="-30%" width="160%" height="160%">
+          <feGaussianBlur stdDeviation={blur.toFixed(2)} />
+        </filter>
       </defs>
 
-      {depth}
-
-      {/* Rotating dotted ring */}
-      <g>
-        {odots}
-        <animateTransform attributeName="transform" type="rotate" from={`0 ${cx} ${cy}`} to={`360 ${cx} ${cy}`} dur="90s" repeatCount="indefinite" />
-      </g>
-
-      {/* Energy filaments */}
-      {/* Bloom is a dark-mode device — light on near-black. It is authored
-          inline here rather than branched on theme because the light-mode
-          flattening layer in globals.css already switches every inline
-          drop-shadow off (`[data-theme="light"] [style*="drop-shadow"]`), so
-          this restores dark's glow without putting a smudge on white. */}
-      {/* In light the filaments stay, but only as texture: at 22% they give the
-          dial a woven centre to sit in without competing with the arc. They are
-          the reason the middle does not read as a hole. */}
-      <g style={{ filter: `drop-shadow(0 0 5px rgba(${tk.tealRgb},0.28))` }}>
-        {filaments}
-      </g>
-
-      {/* Progress arc + pulsing head */}
+      {/* 1 — halo, beneath everything */}
       <circle
-        cx={cx} cy={cy} r={pr} fill="none"
-        stroke={lightForm ? "var(--nura-chart-track)" : `rgba(${tk.inkRgb},0.06)`}
-        strokeWidth={arcW}
+        {...arcGeom} className="nura-dial-arc" style={sweepVars}
+        stroke="var(--nura-dial-halo)" strokeWidth={DIAL.haloW * s}
+        opacity={sel ? haloOpacity * 0.5 : haloOpacity}
+        filter={`url(#${uid}-halo)`}
       />
+
+      {/* 2 — track */}
+      <circle cx={cx} cy={cy} r={arcR} fill="none" stroke="var(--nura-dial-track)" strokeWidth={arcW} />
+
+      {/* 3 — tick texture */}
+      <g opacity={sel ? 0.5 : 1}>{ticks}</g>
+
+      {/* 4 — the score arc */}
       <circle
-        cx={cx} cy={cy} r={pr} fill="none"
-        stroke={lightForm ? "var(--nura-sage-deep)" : `url(#${uid}-parc)`}
-        strokeWidth={arcW} strokeLinecap="round"
-        strokeDasharray={`${vis.toFixed(1)} ${circ.toFixed(1)}`}
-        transform={`rotate(-90 ${cx} ${cy})`}
-        style={{ filter: `drop-shadow(0 0 5px rgba(${tk.tealRgb},0.55))` }}
+        {...arcGeom} className="nura-dial-arc" style={sweepVars}
+        stroke={`url(#${uid}-arc)`} strokeWidth={arcW}
         opacity={sel ? 0.5 : 1}
       />
-      <circle cx={hx.toFixed(1)} cy={hy.toFixed(1)} r={3.4} fill={lightForm ? "var(--nura-sage-deep)" : tk.ringHead} style={{ filter: `drop-shadow(0 0 7px ${tk.teal})` }}>
-        <animate attributeName="opacity" values="1;0.45;1" dur="2.6s" repeatCount="indefinite" />
-      </circle>
 
-      {/* Center number */}
+      {/* 5 — inner-edge highlight */}
+      {edgePath && (
+        <path
+          d={edgePath} fill="none" stroke="var(--nura-dial-edge)"
+          strokeWidth={DIAL.edgeW * s} strokeLinecap="round"
+          opacity={sel ? 0.5 : 1}
+        />
+      )}
+
+      {/* 6 — end cap */}
+      <circle
+        className="nura-dial-cap" style={capVars}
+        cx={capX.toFixed(2)} cy={capY.toFixed(2)} r={DIAL.capR * s}
+        fill="var(--nura-dial-dot-fill)" stroke="var(--nura-dial-dot-stroke)" strokeWidth={DIAL.capW * s}
+        opacity={sel ? 0.5 : 1}
+      />
+
+      {/* 7 — centre */}
       {selPillar ? (
         <>
           <text x={cx} y={cy - 2} textAnchor="middle" fontFamily={SANS} fontSize={32} fontWeight={700} className="nura-datum-ink" style={{ fill: acc[selPillar.color] }}>{selPillar.score}</text>
@@ -449,25 +431,23 @@ function HealthRing({ d, selected, onSelect }: { d: ReturnType<typeof getOverall
         </>
       ) : (
         <>
-          <text x={cx} y={cy + 5} textAnchor="middle" fontFamily={SANS} fontSize={54} fontWeight={700} fill={`url(#${uid}-num)`} style={{ filter: `drop-shadow(0 0 20px rgba(${tk.tealRgb},0.4))` }}>{d.score}</text>
-          <text x={cx} y={cy + 27} textAnchor="middle" fontFamily={SANS} fontSize={9} fontWeight={700} letterSpacing="1.8" fill={`rgba(${tk.inkRgb},0.45)`}>HEALTH SCORE</text>
+          <text x={cx} y={cy + 5} textAnchor="middle" fontFamily={MONO} fontSize={54} fontWeight={700} letterSpacing="-2" fill="var(--nura-dial-score)">{d.score}</text>
+          <text x={cx} y={cy + 27} textAnchor="middle" fontFamily={SANS} fontSize={9.5} fontWeight={600} letterSpacing="3.2" fill="var(--nura-dial-label)">HEALTH SCORE</text>
         </>
       )}
 
-      {/* Pillar spokes */}
+      {/* Pillar labels — unchanged position and styling. The spokes, connector
+          lines and dots that used to join them to the ring belonged to the old
+          instrument and went with it; the numbers and labels did not move. */}
       {d.pillars.map((p: HealthPillar) => {
         const a = (p.ang * Math.PI) / 180, ca = Math.cos(a), sa = Math.sin(a);
         const on = !sel || sel === p.key;
         const o = on ? 1 : 0.25;
-        const big = sel === p.key;
         const lx = cx + 120 * ca, ly = cy + 120 * sa;
         const anchor = Math.abs(ca) < 0.2 ? "middle" : ca > 0 ? "start" : "end";
         const vy = sa < -0.2 ? ly - 3 : ly;
         return (
           <g key={p.key} style={{ cursor: "pointer" }} onClick={() => onSelect(p.key)}>
-            <line x1={(cx + 64 * ca).toFixed(1)} y1={(cy + 64 * sa).toFixed(1)} x2={(cx + (big ? 86 : 82) * ca).toFixed(1)} y2={(cy + (big ? 86 : 82) * sa).toFixed(1)} stroke={acc[p.color]} strokeWidth={big ? 3 : 2.2} strokeLinecap="round" opacity={Number((0.85 * o).toFixed(2))} />
-            <line x1={(cx + 92 * ca).toFixed(1)} y1={(cy + 92 * sa).toFixed(1)} x2={(cx + 110 * ca).toFixed(1)} y2={(cy + 110 * sa).toFixed(1)} stroke={lightForm ? "rgba(125,150,138,0.5)" : acc[p.color]} strokeWidth={lightForm ? 1.2 : 1.3} opacity={lightForm ? o : Number((0.45 * o).toFixed(2))} />
-            <circle cx={(cx + 92 * ca).toFixed(1)} cy={(cy + 92 * sa).toFixed(1)} r={lightForm ? 3 : (big ? 3.4 : 2.4)} fill={lightForm ? "var(--nura-sage-mid)" : acc[p.color]} opacity={o} style={{ filter: `drop-shadow(0 0 ${big ? 7 : 4}px ${acc[p.color]})` }} />
             <text x={lx.toFixed(1)} y={vy.toFixed(1)} textAnchor={anchor} fontFamily={SANS} fontSize={17.5} fontWeight={700} className="nura-datum-ink" style={{ fill: acc[p.color] }} opacity={o}>
               {p.score}<tspan fontSize="9" dx="3" dy="-5" fill={tCol(p.trend, tk)}>{tArrow(p.trend)}</tspan>
             </text>
