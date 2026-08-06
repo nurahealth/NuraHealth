@@ -22,6 +22,8 @@ import { useThemeTokens } from "@/lib/themeTokens";
 // moment the stylesheet is up (see lib/themeTokens.ts).
 export const ACCENTS = {
   "--nura-sage": ["--nura-sage", "#9bb0a5"],
+  // Dial pillar — sage in dark, ink in light. See globals.css.
+  "--nura-pillar-resilience": ["--nura-pillar-resilience", "#9bb0a5"],
   // The one-series card-chart colour. See the note beside it in globals.css.
   "--nura-series": ["--nura-series", "#9bb0a5"],
   "--nura-teal": ["--nura-teal", "#5dccae"],

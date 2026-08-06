@@ -28,6 +28,9 @@ import ThemeToggle from "@/components/ThemeToggle";
 // ── Palette (1:1 with ExerciseDetail.tsx — the fitness detail screens) ────────
 const BG = 'var(--nura-bg)';
 const SAGE = 'var(--nura-sage)';
+// Data marks (volume bars, the progress ring) take the series token instead:
+// identical to SAGE in dark, charcoal in light. Buttons keep SAGE.
+const SERIES = 'var(--nura-series)';
 const TEXT = 'var(--nura-text-primary)';
 const MUT = 'var(--nura-text-secondary)';
 const SURF = 'rgba(var(--nura-bg-tint-rgb),.045)';
@@ -576,7 +579,7 @@ function VolumeBars({ weeks }: { weeks: { key: string; date: string; value: numb
           return (
             <div key={w.key} title={`${fmtDay(w.date)} · ${Math.round(w.value).toLocaleString()}`}
               style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', height: '100%' }}>
-              <div style={{ height: h, borderRadius: 4, background: w.value > 0 ? SAGE : 'rgba(var(--nura-bg-tint-rgb),.08)', transition: 'height .4s ease' }} />
+              <div style={{ height: h, borderRadius: 4, background: w.value > 0 ? SERIES : 'rgba(var(--nura-bg-tint-rgb),.08)', transition: 'height .4s ease' }} />
             </div>
           );
         })}
@@ -935,7 +938,7 @@ export default function FitnessProgress() {
               <svg width="110" height="110" viewBox="0 0 110 110">
                 <circle cx="55" cy="55" r={R} fill="none" stroke={LINE} strokeWidth={STROKE} />
                 <circle
-                  cx="55" cy="55" r={R} fill="none" stroke={SAGE} strokeWidth={STROKE} strokeLinecap="round"
+                  cx="55" cy="55" r={R} fill="none" stroke={SERIES} strokeWidth={STROKE} strokeLinecap="round"
                   strokeDasharray={CIRC} strokeDashoffset={CIRC * (1 - pct)} transform="rotate(-90 55 55)"
                   style={{ transition: 'stroke-dashoffset .5s ease' }}
                 />

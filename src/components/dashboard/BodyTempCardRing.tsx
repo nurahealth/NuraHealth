@@ -43,7 +43,9 @@ export default function BodyTempCardRing({
 
   const within = devC >= normalRange[0] && devC <= normalRange[1];
   const status = within ? "Normal" : devC > normalRange[1] ? "Elevated" : "Cool";
-  const statusColor = within ? "var(--nura-status-good)" : "var(--nura-status-warn)";
+  // "Normal" is a calm state and reads as ink in light; dark is unchanged
+  // (--nura-status-calm resolves to nothing there, so the word inherits).
+  const statusColor = within ? "var(--nura-status-calm)" : "var(--nura-status-warn)";
 
   // Shortened center sub-line — "0.4°F below" (no "baseline") so it doesn't crowd
   // the smaller ring; "Right at baseline" at zero deviation.

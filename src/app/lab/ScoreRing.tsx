@@ -10,7 +10,8 @@ const SANS = "var(--font-inter), system-ui, sans-serif";
 const MONO = "'JetBrains Mono', ui-monospace, monospace";
 const FG_RGB = "var(--nura-fg-rgb)";
 
-const SAGE = "var(--nura-sage)"; // >= 80
+const SAGE = "var(--nura-series)"; // >= 80 — data mark, so the series token
+// (#9bb0a5 in dark, identical to --nura-sage; charcoal in light).
 const AMBER = "var(--nura-watch)";         // 60–79
 const RED = "var(--nura-danger)";           // < 60
 

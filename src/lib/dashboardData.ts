@@ -1368,7 +1368,7 @@ const OVERALL_HEALTH: OverallHealth = {
       measures: "The quantity and quality of your sleep.",
       builtFrom: "Total sleep, deep & REM time, efficiency, timing.",
       reading: "Strong — restorative sleep is doing much of the heavy lifting in your recovery." },
-    { key: "resilience", label: "Resilience", score: 84, trend: "up", color: "--nura-sage", ang: 210,
+    { key: "resilience", label: "Resilience", score: 84, trend: "up", color: "--nura-pillar-resilience", ang: 210,
       measures: "Your capacity to handle stress over time.",
       builtFrom: "HRV trend, sleep consistency, recovery patterns.",
       reading: "Robust — you're adapting well to your current load." },

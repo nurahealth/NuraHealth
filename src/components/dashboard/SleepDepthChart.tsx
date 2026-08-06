@@ -12,10 +12,12 @@ import { useAccents } from "@/lib/accents";
 //  • three hairline gridlines for structure
 //  • the stage-duration legend row beneath
 //
-// The four stages are four steps of ONE hue (the sleep indigo), because depth
-// is a single ordered quantity — see the note beside --nura-stage-* in
-// globals.css. Previously they were four unrelated hues, which made the
-// hypnogram a rainbow and gave "Awake" a status gold it had not earned.
+// The stage colours come from --nura-stage-*, and the two themes answer that
+// differently on purpose: DARK is the brand's original four hues (gold awake,
+// sage light, teal REM, blue deep), LIGHT is four monotone steps of the
+// graphite ramp, lightest awake to near-black deep. Depth is a single ordered
+// quantity, so on white it reads as one ramp getting darker; on near-black the
+// original palette is the look the brand shipped with. See globals.css.
 //
 // The per-bar vertical gradient and the glow on the deep bars are gone: a
 // gradient that fades each bar to 18% at its base means the bottom of the chart
@@ -28,10 +30,10 @@ const SANS = "var(--font-inter), system-ui, sans-serif";
 
 // Stage palette — resolved to concrete hex for SVG fills. See lib/themeTokens.
 const STAGE_TOKENS = {
-  deep:  ["--nura-stage-deep", "#bacdc1"],
-  rem:   ["--nura-stage-rem", "#9bb0a5"],
-  light: ["--nura-stage-light", "#869a8e"],
-  awake: ["--nura-stage-awake", "#6d8175"],
+  deep:  ["--nura-stage-deep", "#5aa0e6"],
+  rem:   ["--nura-stage-rem", "#5dccae"],
+  light: ["--nura-stage-light", "#9bb0a5"],
+  awake: ["--nura-stage-awake", "#d3a253"],
 } as const;
 
 type Stage = keyof typeof STAGE_TOKENS;

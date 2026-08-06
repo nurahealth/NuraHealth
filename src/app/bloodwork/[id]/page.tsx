@@ -29,7 +29,8 @@ const TEXT_SEC = "var(--nura-text-secondary)";
 const TEXT_TER = "var(--nura-text-tertiary)";
 const BORDER = "var(--nura-border)";
 const SURFACE = "var(--nura-surface)";
-const SAGE = "var(--nura-sage)";
+const SAGE = "var(--nura-series)";   // data marks: donut arc, status edge
+const SAGE_UI = "var(--nura-sage)";  // interactive: the active range pill
 // The score trend is DATA, so it takes the data colour rather than the brand
 // accent. Identical today; the point is that the viz ramp can move without
 // dragging buttons and nav along with it. See the note in globals.css.
@@ -181,8 +182,11 @@ function TrendChart({ points: allPoints }: { points: ScoreTrendPoint[] }) {
         <SectionLabel>Health score trend</SectionLabel>
         {hasEnough && (
           <div style={{ fontFamily: SANS, fontSize: 13, color: TEXT_SEC, lineHeight: 1.4 }}>
-            <span style={{ color: deltaColor, fontWeight: 500 }}>
-              {deltaSign} {delta === 0 ? "stable" : `${delta > 0 ? "+" : ""}${delta} points`}
+            {/* The glyph carries the direction and keeps its colour; the
+                number is data and goes ink in light (see .nura-trend-ink). */}
+            <span className="nura-trend-ink" style={{ color: deltaColor, fontWeight: 500 }}>
+              <span style={{ color: deltaColor }}>{deltaSign}</span>{" "}
+              {delta === 0 ? "stable" : `${delta > 0 ? "+" : ""}${delta} points`}
             </span>
             {first.date && (
               <span style={{ color: TEXT_TER }}>
@@ -206,7 +210,7 @@ function TrendChart({ points: allPoints }: { points: ScoreTrendPoint[] }) {
               onMouseLeave={(e) => { if (!active) e.currentTarget.style.color = TEXT_TER; }}
               style={{
                 padding: "6px 12px", borderRadius: 9999,
-                background: active ? SAGE : "transparent",
+                background: active ? SAGE_UI : "transparent",
                 color: active ? SAGE_ON : TEXT_TER,
                 border: `0.5px solid ${active ? "transparent" : BORDER}`,
                 fontFamily: SANS, fontSize: 12, fontWeight: active ? 500 : 400,
