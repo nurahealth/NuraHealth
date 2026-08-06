@@ -354,7 +354,7 @@ export default function SettingsPage() {
 // ── Components ────────────────────────────────────────────────────────────────
 function Card({ children }: { children: React.ReactNode }) {
   return (
-    <div style={{
+    <div className="nura-card" style={{
       background: SURFACE, border: `0.5px solid ${BORDER}`, borderRadius: 14,
       padding: 20, marginBottom: 14,
     }}>
@@ -365,7 +365,7 @@ function Card({ children }: { children: React.ReactNode }) {
 
 function CardLabel({ children }: { children: React.ReactNode }) {
   return (
-    <div style={{
+    <div className="nura-label" style={{
       fontFamily: SANS, fontSize: 10, fontWeight: 600, letterSpacing: "1.5px",
       color: "var(--nura-accent-label)", textTransform: "uppercase", marginBottom: 14,
     }}>
@@ -410,7 +410,7 @@ function ThemeSegmented({ value, onChange }: { value: "dark" | "light"; onChange
   const pct = (idx / options.length) * 100;
   const w = 100 / options.length;
   return (
-    <div style={{
+    <div className="nura-seg" style={{
       position: "relative", display: "flex",
       background: SURFACE, border: `1px solid ${BORDER}`,
       borderRadius: 12, overflow: "hidden",

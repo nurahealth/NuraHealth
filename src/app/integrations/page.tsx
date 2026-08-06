@@ -134,7 +134,7 @@ export default function IntegrationsPage() {
       </div>
 
       {/* FEATURED CARD */}
-      <div style={{
+      <div className="nura-card" style={{
         background: SURFACE, border: `0.5px solid ${BORDER}`, borderRadius: 16,
         padding: 24, marginBottom: 32,
       }}>

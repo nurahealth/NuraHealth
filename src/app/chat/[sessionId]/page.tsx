@@ -509,7 +509,7 @@ export default function ChatSessionPage({ params }: { params: Promise<{ sessionI
         borderTop: `0.5px solid ${BORDER}`,
       }}>
         <div style={{ maxWidth: "var(--nura-measure-chat)", margin: "0 auto" }}>
-          <div style={{
+          <div className="nura-radius" style={{
             display: "flex", alignItems: "center", gap: 2,
             background: focused ? "var(--nura-surface-elevated)" : SURFACE,
             border: `0.5px solid ${focused ? `rgba(var(--nura-sage-rgb),0.5)` : "rgba(var(--nura-bg-tint-rgb),0.12)"}`,
@@ -532,7 +532,7 @@ export default function ChatSessionPage({ params }: { params: Promise<{ sessionI
               <Paperclip />
             </button>
 
-            <input
+            <input className="nura-bare"
               value={value}
               onChange={e => setValue(e.target.value)}
               onFocus={() => setFocused(true)}

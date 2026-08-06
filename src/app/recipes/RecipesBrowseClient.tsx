@@ -267,7 +267,7 @@ export default function RecipesBrowseClient({
         }}
       >
         <Search size={16} color={TEXT_TER} style={{ flexShrink: 0 }} />
-        <input
+        <input className="nura-bare"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search recipes or ingredients…"

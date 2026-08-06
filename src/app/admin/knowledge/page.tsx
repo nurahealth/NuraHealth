@@ -1025,7 +1025,7 @@ export default function AdminKnowledgePage() {
         <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
           <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 8, padding: "0 12px", background: SURFACE, border: `0.5px solid ${BORDER}`, borderRadius: 12 }}>
             <Search size={13} color="var(--nura-text-tertiary)" />
-            <input
+            <input className="nura-bare"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search sources..."

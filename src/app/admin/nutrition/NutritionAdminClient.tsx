@@ -328,7 +328,7 @@ function TagInput({ value, onChange, placeholder }: { value: string[]; onChange:
           <button type="button" onClick={() => onChange(value.filter((x) => x !== t))} style={{ background: "none", border: "none", cursor: "pointer", color: SAGE, display: "flex", padding: 0 }}><X size={11} /></button>
         </span>
       ))}
-      <input
+      <input className="nura-bare"
         value={draft}
         onChange={(e) => setDraft(e.target.value)}
         onKeyDown={(e) => { if (e.key === "Enter" || e.key === ",") { e.preventDefault(); add(draft); } else if (e.key === "Backspace" && !draft && value.length) onChange(value.slice(0, -1)); }}

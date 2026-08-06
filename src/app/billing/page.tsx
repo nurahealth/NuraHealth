@@ -451,7 +451,7 @@ export default function BillingPage() {
 function Card({ children, highlight }: { children: React.ReactNode; highlight?: "danger" }) {
   const borderColor = highlight === "danger" ? `rgba(var(--nura-danger-rgb),0.5)` : BORDER;
   return (
-    <div style={{
+    <div className="nura-card" style={{
       background: SURFACE, border: `0.5px solid ${borderColor}`, borderRadius: 14,
       padding: 20, marginBottom: 14,
     }}>
@@ -473,7 +473,7 @@ function CardLabel({ children }: { children: React.ReactNode }) {
 
 function CardSkeleton() {
   return (
-    <div style={{
+    <div className="nura-card" style={{
       background: SURFACE, border: `0.5px solid ${BORDER}`, borderRadius: 14,
       padding: 20, marginBottom: 14, position: "relative", overflow: "hidden",
     }}>
@@ -631,7 +631,7 @@ function TrialBanner({ days, endDate }: { days: number; endDate: string | null }
 
 function EmptyState({ onUpgrade }: { onUpgrade: () => void }) {
   return (
-    <div style={{
+    <div className="nura-card" style={{
       background: SURFACE, border: `0.5px solid ${BORDER}`, borderRadius: 14,
       padding: 40, textAlign: "center",
     }}>

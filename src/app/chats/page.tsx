@@ -104,7 +104,7 @@ export default function ChatsListPage() {
         )}
 
         {sessions && sessions.length === 0 && (
-          <div style={{
+          <div className="nura-card" style={{
             padding: "32px 20px", textAlign: "center", borderRadius: 14,
             background: SURFACE, border: `0.5px solid ${BORDER}`, color: TEXT_SEC, fontSize: 13,
           }}>

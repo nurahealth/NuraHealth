@@ -173,7 +173,7 @@ export default function SavedPage() {
       {loading ? (
         <div style={{ padding: "48px 0", textAlign: "center", color: TEXT_TER, fontSize: 13 }}>Loading…</div>
       ) : isEmpty ? (
-        <div style={{
+        <div className="nura-card" style={{
           padding: "48px 24px", textAlign: "center", borderRadius: 14,
           background: SURFACE, border: `0.5px dashed ${BORDER}`,
         }}>
@@ -207,7 +207,7 @@ export default function SavedPage() {
             const isDeleting = deletingId === item.id;
 
             return (
-              <div
+              <div className="nura-card"
                 key={item.id}
                 onClick={() => !isExpanded && setExpandedId(item.id)}
                 style={{

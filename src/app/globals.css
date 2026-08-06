@@ -1388,6 +1388,16 @@ html, body {
   opacity: 1;
 }
 
+/* Segmented controls. The track is authored as --nura-surface, which in light
+   is #ffffff — so a two-up segment inside a white card was white on white and
+   the UNSELECTED half read as empty space rather than as the other option. The
+   track needs to be the recessed thing the selected pill sits on top of. */
+[data-theme="light"] .nura-seg {
+  background: var(--nura-tint-neutral) !important;
+  border: 1px solid var(--nura-hairline) !important;
+  border-radius: var(--nura-radius-control) !important;
+}
+
 /* Buttons that don't set their own transition get the shared one. No
    `!important` on purpose — a component with a considered transition of its
    own keeps it; this only fills the silence. */

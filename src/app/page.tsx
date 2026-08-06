@@ -400,7 +400,7 @@ export default function Home() {
 
         {/* Composer pill */}
         <div style={{ display: "flex", flexDirection: "column", gap: 8, width: "100%" }}>
-          <div style={{
+          <div className="nura-radius" style={{
             display: "flex", alignItems: "center", gap: 2,
             background: focused ? "var(--nura-surface-elevated)" : SURFACE,
             border: `0.5px solid ${focused ? `rgba(var(--nura-sage-rgb),0.5)` : "rgba(var(--nura-bg-tint-rgb),0.12)"}`,
@@ -426,7 +426,7 @@ export default function Home() {
             </button>
 
             <div style={{ flex: 1, position: "relative" }}>
-              <input
+              <input className="nura-bare"
                 ref={inputRef}
                 value={value}
                 onChange={e => setValue(e.target.value)}
