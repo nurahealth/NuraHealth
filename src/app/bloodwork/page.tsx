@@ -317,6 +317,9 @@ function BloodworkPageInner() {
         onDragLeave={() => setDragging(false)}
         onDrop={handleDrop}
         onClick={() => !isUploading && fileInputRef.current?.click()}
+        // Radius only — a dropzone is card-shaped but deliberately not
+        // card-surfaced; the dashed sage edge IS the affordance.
+        className="nura-radius"
         style={{
           border: `1.5px dashed ${dragging ? SAGE : `rgba(var(--nura-sage-rgb),0.35)`}`,
           background: dragging ? `rgba(var(--nura-sage-rgb),0.08)` : `rgba(var(--nura-sage-rgb),0.04)`,
@@ -407,7 +410,7 @@ function BloodworkPageInner() {
 
       {/* LATEST INSIGHT */}
       {latestPanel?.insight && (
-        <div style={{
+        <div className="nura-card nura-accent-edge" style={{
           padding: "16px 18px", marginBottom: 22, borderRadius: 14,
           background: SURFACE, border: `0.5px solid ${BORDER}`, borderLeft: `2px solid ${SAGE}`,
         }}>
@@ -445,7 +448,7 @@ function BloodworkPageInner() {
             const clickable = p.status === "analyzed";
 
             return (
-              <div
+              <div className="nura-card"
                 key={p.id}
                 onClick={() => clickable && router.push(`/bloodwork/${p.id}`)}
                 style={{
@@ -624,7 +627,7 @@ function DeleteModal({ onCancel, onConfirm, deleting }: { onCancel: () => void; 
       background: "rgba(0,0,0,0.6)", backdropFilter: "blur(6px)",
       display: "flex", alignItems: "center", justifyContent: "center", padding: 20,
     }}>
-      <div onClick={(e) => e.stopPropagation()} style={{
+      <div onClick={(e) => e.stopPropagation()} className="nura-modal-lift" style={{
         background: "var(--nura-bg)", border: `1px solid rgba(var(--nura-danger-rgb),0.4)`,
         borderRadius: 14, padding: "22px 20px", maxWidth: 320, width: "100%",
       }}>

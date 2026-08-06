@@ -353,7 +353,7 @@ function ItemModal({ mode, initial, onClose, onSave }: { mode: "add" | "edit"; i
 
   return (
     <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 90, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
-      <div onClick={(e) => e.stopPropagation()} style={{ width: "100%", maxWidth: 420, background: "var(--nura-bg)", borderRadius: 22, border: `0.5px solid var(--nura-border-strong)`, padding: "18px 18px 20px" }}>
+      <div onClick={(e) => e.stopPropagation()} className="nura-modal-lift" style={{ width: "100%", maxWidth: 420, background: "var(--nura-bg)", borderRadius: 22, border: `0.5px solid var(--nura-border-strong)`, padding: "18px 18px 20px" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
           <span style={{ fontFamily: SANS, fontSize: 18, fontWeight: 600, color: TEXT }}>{mode === "edit" ? "Edit item" : "Add item"}</span>
           <button onClick={onClose} style={{ width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center", background: SURFACE, border: `0.5px solid ${BORDER}`, borderRadius: 8, color: TEXT_SEC, cursor: "pointer" }}><X size={13} /></button>

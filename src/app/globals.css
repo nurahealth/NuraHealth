@@ -1463,6 +1463,29 @@ html, body {
   border-radius: var(--nura-radius-card) !important;
 }
 
+/* "Join the radius family, keep your own finish." For surfaces that are
+   card-SHAPED but deliberately not card-SURFACED — a dashed upload dropzone,
+   a bordered empty state. Radius is the only thing they need to share. */
+[data-theme="light"] .nura-radius {
+  border-radius: var(--nura-radius-card) !important;
+}
+
+/* A centred modal. Same family as .nura-sheet, shadow cast evenly rather than
+   upward, and a step above it: this one has a scrim behind it, so it can
+   afford to sit higher without the shadow reading as dirt. */
+[data-theme="light"] .nura-modal-lift {
+  border-radius: var(--nura-radius-card) !important;
+  /* Several modals paint themselves --nura-bg. In dark that is the near-black
+     page and the scrim behind it is darker still, so the dialog reads as
+     lifted. In light --nura-bg is the paper canvas, so a dialog floating over
+     a dimmed copy of the same paper had nothing to separate it. It is a
+     surface above the page, so it takes the surface colour. */
+  background: var(--nura-modal) !important;
+  box-shadow:
+    0 1px 2px rgba(26, 24, 20, 0.06),
+    0 24px 64px -16px rgba(26, 24, 20, 0.28) !important;
+}
+
 [data-theme="light"] .nura-appbar {
   background: rgba(255, 255, 255, 0.72) !important;
   backdrop-filter: blur(20px) saturate(1.6) !important;

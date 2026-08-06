@@ -482,11 +482,14 @@ function BiomarkerCard({ b, history, isFirst }: { b: Biomarker; history: Biomark
   }
 
   return (
-    <div style={{
+    // --nura-edge, not the class default: this edge is the biomarker's status
+    // colour and carries the whole "in range / out of range" reading.
+    <div className="nura-card nura-accent-edge" style={{
       padding: "14px 16px", borderRadius: 14, marginBottom: 10,
       background: SURFACE, border: `0.5px solid ${BORDER}`,
       borderLeft: `2px solid ${sc}`,
-    }}>
+      ["--nura-edge" as string]: sc,
+    } as React.CSSProperties}>
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 6, gap: 12 }}>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontFamily: SANS, fontSize: 13, fontWeight: 500, color: TEXT, marginBottom: 2 }}>{b.name}</div>
@@ -723,7 +726,7 @@ export default function BloodworkDetailPage({ params }: { params: Promise<{ id: 
 
       {/* Score */}
       {panelScore && panelScore.total > 0 && (
-        <div style={{
+        <div className="nura-card" style={{
           background: SURFACE, border: `0.5px solid ${BORDER}`, borderRadius: 14,
           padding: 20, marginBottom: 16,
           display: "flex", gap: 18, alignItems: "center", flexWrap: "wrap" as const,
@@ -739,7 +742,7 @@ export default function BloodworkDetailPage({ params }: { params: Promise<{ id: 
 
       {/* Trend */}
       {trendPoints.length >= 2 && (
-        <div style={{
+        <div className="nura-card" style={{
           background: SURFACE, border: `0.5px solid ${BORDER}`, borderRadius: 14,
           padding: 18, marginBottom: 16,
         }}>
@@ -749,7 +752,7 @@ export default function BloodworkDetailPage({ params }: { params: Promise<{ id: 
 
       {/* Action plan */}
       {actionItems.length > 0 && (
-        <div style={{
+        <div className="nura-card" style={{
           background: SURFACE, border: `0.5px solid ${BORDER}`, borderRadius: 14,
           padding: 18, marginBottom: 16,
         }}>
@@ -847,7 +850,7 @@ export default function BloodworkDetailPage({ params }: { params: Promise<{ id: 
 
       {/* Panel insight (if no action items) */}
       {panel.insight && actionItems.length === 0 && (
-        <div style={{
+        <div className="nura-card nura-accent-edge" style={{
           background: SURFACE, border: `0.5px solid ${BORDER}`, borderRadius: 14,
           padding: 18, marginBottom: 16,
           borderLeft: `2px solid ${SAGE}`,
@@ -927,7 +930,7 @@ export default function BloodworkDetailPage({ params }: { params: Promise<{ id: 
           position: "fixed", inset: 0, zIndex: 200, background: "rgba(0,0,0,0.6)",
           backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20,
         }}>
-          <div onClick={(e) => e.stopPropagation()} style={{
+          <div onClick={(e) => e.stopPropagation()} className="nura-modal-lift" style={{
             background: "var(--nura-bg)", border: `1px solid rgba(var(--nura-danger-rgb),0.4)`,
             borderRadius: 14, padding: "22px 20px", maxWidth: 320, width: "100%",
           }}>

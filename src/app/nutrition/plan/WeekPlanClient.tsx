@@ -312,7 +312,7 @@ export default function WeekPlanClient({ days, totalPlanned, candidates, prefs, 
       {/* Swap / add picker */}
       {picker && (
         <div onClick={() => busySlot === null && setPicker(null)} style={{ position: "fixed", inset: 0, zIndex: 90, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
-          <div onClick={(e) => e.stopPropagation()} style={{ width: "100%", maxWidth: 430, maxHeight: "82dvh", overflowY: "auto", background: "var(--nura-bg)", borderRadius: 22, border: `0.5px solid ${BORDER}`, padding: "12px 16px 18px" }}>
+          <div onClick={(e) => e.stopPropagation()} className="nura-modal-lift" style={{ width: "100%", maxWidth: 430, maxHeight: "82dvh", overflowY: "auto", background: "var(--nura-bg)", borderRadius: 22, border: `0.5px solid ${BORDER}`, padding: "12px 16px 18px" }}>
             <div style={{ display: "flex", justifyContent: "center", padding: "2px 0 10px" }}>
               <span style={{ width: 40, height: 4, borderRadius: 999, background: "rgba(var(--nura-bg-tint-rgb),0.22)" }} />
             </div>

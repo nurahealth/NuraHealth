@@ -1144,7 +1144,7 @@ function StackCard({
   };
 
   return (
-    <div
+    <div className="nura-card"
       onClick={onEdit}
       onMouseEnter={(e) => { e.currentTarget.style.borderColor = TEXT_TER; }}
       onMouseLeave={(e) => { e.currentTarget.style.borderColor = BORDER; }}
@@ -1524,7 +1524,7 @@ function ScheduleCard({
 }) {
   const nameColor = checked ? TEXT_TER : TEXT;
   return (
-    <div
+    <div className="nura-card"
       onClick={onEdit}
       onMouseEnter={(e) => { e.currentTarget.style.borderColor = TEXT_TER; }}
       onMouseLeave={(e) => { e.currentTarget.style.borderColor = BORDER; }}
@@ -1911,7 +1911,7 @@ const DAY_LETTERS = ["M", "T", "W", "T", "F", "S", "S"] as const;
 function WeeklyComplianceCard({ stats }: { stats: Stats | null }) {
   if (!stats) {
     return (
-      <div style={{
+      <div className="nura-card" style={{
         position: "relative", overflow: "hidden",
         borderRadius: 18, background: SURFACE,
         border: `0.5px solid ${BORDER}`,
@@ -1931,7 +1931,7 @@ function WeeklyComplianceCard({ stats }: { stats: Stats | null }) {
   const { compliance_pct, days } = stats;
 
   return (
-    <div style={{
+    <div className="nura-card" style={{
       borderRadius: 18, background: SURFACE,
       border: `0.5px solid ${BORDER}`,
       padding: "18px 18px 16px", marginBottom: 22,
@@ -2031,7 +2031,7 @@ function Skeleton() {
     <div>
       <style>{`@keyframes nura-sk { 0%{transform:translateX(-100%);} 100%{transform:translateX(200%);} }`}</style>
       {Array.from({ length: 4 }).map((_, i) => (
-        <div key={i} style={{
+        <div className="nura-card" key={i} style={{
           position: "relative", overflow: "hidden",
           height: 76, borderRadius: 14, background: SURFACE,
           border: `0.5px solid ${BORDER}`, marginBottom: 12,
@@ -2748,7 +2748,7 @@ function ScanningScreen({
         padding: "8px 22px 24px",
       }}>
         {photoDataUrl && (
-          <div style={{
+          <div className="nura-card" style={{
             width: "100%", maxWidth: 280, aspectRatio: "4 / 5",
             borderRadius: 16, overflow: "hidden",
             background: SURFACE, border: `0.5px solid ${BORDER}`,
@@ -2830,7 +2830,7 @@ function ConfirmScanScreen({
         width: "100%", boxSizing: "border-box",
       }}>
         {photoDataUrl && (
-          <div style={{
+          <div className="nura-card" style={{
             position: "relative",
             width: 96, height: 96, borderRadius: 14, overflow: "hidden",
             background: SURFACE, border: `0.5px solid ${BORDER}`,
@@ -3033,7 +3033,7 @@ function ScanErrorScreen({
         textAlign: "center",
       }}>
         {photoDataUrl && (
-          <div style={{
+          <div className="nura-card" style={{
             width: 88, height: 88, borderRadius: 14, overflow: "hidden",
             background: SURFACE, border: `0.5px solid ${BORDER}`,
             marginBottom: 22, opacity: 0.6,
@@ -3173,7 +3173,7 @@ function BarcodeReadingScreen({
         textAlign: "center",
       }}>
         {photoDataUrl && (
-          <div style={{
+          <div className="nura-card" style={{
             width: "100%", maxWidth: 240, aspectRatio: "4 / 5",
             borderRadius: 14, overflow: "hidden",
             background: SURFACE, border: `0.5px solid ${BORDER}`,
@@ -3430,7 +3430,7 @@ function BarcodeFallbackScreen({
     <FlowModal onClose={onCancel} ariaLabel={config.headerTitle}>
       <FlowHeaderWithBack title={config.headerTitle} onBack={onBack} />
       <div style={{ padding: "8px 22px 24px" }}>
-        <div style={{
+        <div className="nura-card" style={{
           padding: "18px 16px 16px",
           borderRadius: 14,
           background: SURFACE,
