@@ -131,6 +131,7 @@ function WeekView({ cursor, byDay, today, completedKeys, onPick }: {
         const done = completedKeys.has(localDateKey(date));
         return (
           <button
+            className="nura-radius-control"
             key={i}
             type="button"
             onClick={() => onPick(date)}

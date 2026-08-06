@@ -560,6 +560,7 @@ const app: React.CSSProperties = { width: '100%', maxWidth: 'var(--fit-frame, 44
                   const done = completedKeys.has(localDateKey(date));
                   return (
                     <div
+                      className="nura-radius-control"
                       key={i}
                       onClick={() => setSelected(date)}
                       style={{

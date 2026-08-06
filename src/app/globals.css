@@ -1411,14 +1411,19 @@ html, body {
               transform var(--nura-dur-fast) var(--nura-ease);
 }
 
-/* The filled sage button. Opt-in class so it can't catch a ghost or a link. */
-[data-theme="light"] .nura-btn {
+/* The filled sage button. Opt-in class so it can't catch a ghost or a link.
+   .nura-primary-btn is the name nine call sites already used for the same
+   thing, so it joins rather than being replaced. */
+[data-theme="light"] .nura-btn,
+[data-theme="light"] .nura-primary-btn {
   border-radius: var(--nura-radius-control) !important;
 }
-[data-theme="light"] .nura-btn:hover:not(:disabled) {
+[data-theme="light"] .nura-btn:hover:not(:disabled),
+[data-theme="light"] .nura-primary-btn:hover:not(:disabled) {
   background: var(--nura-sage-hover) !important;
 }
-[data-theme="light"] .nura-btn:active:not(:disabled) {
+[data-theme="light"] .nura-btn:active:not(:disabled),
+[data-theme="light"] .nura-primary-btn:active:not(:disabled) {
   transform: translateY(1px);
 }
 
@@ -1478,6 +1483,14 @@ html, body {
    a bordered empty state. Radius is the only thing they need to share. */
 [data-theme="light"] .nura-radius {
   border-radius: var(--nura-radius-card) !important;
+}
+
+/* The same, one step down, for things on the CONTROL ladder that had drifted to
+   14 — a primary CTA, a day cell in a picker strip. The whole radius system is
+   three values: 16 for a card, 10 for a control, 999 for a pill. 14 is none of
+   them, and it is the value everything lands on when nobody is choosing. */
+[data-theme="light"] .nura-radius-control {
+  border-radius: var(--nura-radius-control) !important;
 }
 
 /* A centred modal. Same family as .nura-sheet, shadow cast evenly rather than

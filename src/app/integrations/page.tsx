@@ -207,7 +207,11 @@ function ProviderCard({ provider, onClick }: { provider: Provider; onClick: () =
   const Icon = provider.Icon;
 
   return (
+    // A device tile IS a card and navigates, so it takes the card finish and
+    // the shared hover. It was missed by the sweep because its fill is a
+    // hover-swapped expression rather than the SURFACE constant.
     <button
+      className="nura-card nura-card-hover"
       onClick={onClick}
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}

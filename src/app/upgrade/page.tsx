@@ -141,6 +141,7 @@ export default function UpgradePage() {
 
         {/* Primary CTA — START FREE TRIAL */}
         <button
+          className="nura-btn"
           onClick={handleStartTrial}
           disabled={anyLoading}
           onMouseEnter={() => setHovCta(true)}
