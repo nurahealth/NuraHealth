@@ -37,7 +37,7 @@ export default function MetricCardShell({
 }) {
   return (
     <div
-      className="dash-card"
+      className="dash-card nura-card"
       role="link"
       tabIndex={0}
       onClick={onClick}
@@ -50,13 +50,13 @@ export default function MetricCardShell({
     >
       {/* Header — name + source tag */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-        <span style={{ ...EYEBROW, color: TEXT_SEC }}>{name}</span>
-        <span style={{ ...EYEBROW, fontSize: 9, color: TEXT_TER }}>{SOURCE_LABEL[source]}</span>
+        <span className="nura-label" style={{ ...EYEBROW, color: TEXT_SEC }}>{name}</span>
+        <span className="nura-label-xs" style={{ ...EYEBROW, fontSize: 9, color: TEXT_TER }}>{SOURCE_LABEL[source]}</span>
       </div>
 
       {/* Value + unit + trend */}
       <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginTop: 12 }}>
-        <span style={{ fontFamily: SANS, fontSize: 30, fontWeight: 600, color: TEXT, lineHeight: 1, letterSpacing: "-0.02em" }}>{value}</span>
+        <span className="nura-stat" style={{ fontFamily: SANS, fontSize: 30, fontWeight: 600, color: TEXT, lineHeight: 1, letterSpacing: "-0.02em" }}>{value}</span>
         {unit && <span style={{ fontFamily: SANS, fontSize: 13, color: TEXT_SEC }}>{unit}</span>}
         {trend && <span style={{ fontFamily: SANS, fontSize: 12, fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 3 }}>{trend}</span>}
       </div>

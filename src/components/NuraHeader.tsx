@@ -51,7 +51,10 @@ export default function NuraHeader({ rightAction, title }: Props) {
   const isDesktop = useIsDesktop();
 
   return (
-    <header style={{
+    // `nura-appbar` — one of the two surfaces allowed to be glass in light
+    // mode (the other is the rail). It sits above the scrolling main column,
+    // so the blur is doing real work rather than decorating a flat fill.
+    <header className="nura-appbar" style={{
       flexShrink: 0, position: "relative", zIndex: 3,
       display: "flex", alignItems: "center", justifyContent: "space-between",
       padding: "max(env(safe-area-inset-top), 8px) 22px 18px",

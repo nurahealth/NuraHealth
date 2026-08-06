@@ -25,7 +25,11 @@ export default function GlassCard({
 }) {
   return (
     <div
-      className={className}
+      // `nura-card` opts every glass surface into the one light-mode card
+      // finish — same radius, hairline and layered shadow as the dashboard
+      // grid, and the backdrop blur switched off (light keeps glass for
+      // floating chrome only). Dark keeps the frosted recipe below verbatim.
+      className={className ? `nura-card ${className}` : "nura-card"}
       onClick={onClick}
       onKeyDown={onKeyDown}
       role={role}

@@ -233,6 +233,11 @@ export default function AppSidebar() {
 
       {/* Panel */}
       <aside
+        // `nura-rail` — the docked rail floats over the page, so light gives it
+        // the one permitted glass treatment: translucent white + blur. It was
+        // painted at --nura-bg, which in light is the page colour exactly, so
+        // the rail and the canvas were the same sheet with a line drawn on it.
+        className="nura-rail"
         aria-hidden={!isOpen}
         style={{
           position: "fixed", top: 0, left: 0, bottom: 0, zIndex: 50,

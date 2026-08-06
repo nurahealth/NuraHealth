@@ -46,6 +46,32 @@
   --nura-card-lift: none;
   --nura-card-lift-hover: none;
 
+  /* ── Form + motion ──────────────────────────────────────────────────────
+     Radius, easing and focus as tokens rather than literals, so the "one
+     elevation language" rules further down have something to resolve against.
+
+     The dark column is deliberately INERT here: --nura-radius-card is 18px,
+     which is the radius the dark cards already author inline, and the light
+     column is the only place these values actually change anything. Nothing in
+     dark reads a token it wasn't already resolving to a moment ago.
+
+     The three radii are a family, not a scale: a card, something nested inside
+     a card, and a control. Everything round (chips, avatars, switches) stays
+     a pill and is not on this ladder. */
+  --nura-radius-card: 18px;
+  --nura-radius-inner: 12px;
+  --nura-radius-control: 10px;
+
+  /* One curve, two durations. 150ms for a colour/tint change the eye should
+     not notice arriving, 190ms for anything that also moves. */
+  --nura-ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --nura-dur-fast: 150ms;
+  --nura-dur: 190ms;
+
+  /* Row/list hover tint. In dark this is the existing --nura-surface value, so
+     the rows that already used it are unchanged. */
+  --nura-row-hover: rgba(235, 230, 216, 0.04);
+
   /* ── Ink ────────────────────────────────────────────────────────────── */
   --nura-text-primary: #ebe6d8;
   --nura-text-secondary: rgba(235, 230, 216, 0.55);
@@ -668,30 +694,45 @@
   /* No inset highlight on white; depth comes from a real ambient shadow. */
   --nura-card-highlight: rgba(255, 255, 255, 0);
   /* Layered, not single. One 3px shadow is a sticker outline — it says "there
-     is an edge here" and nothing about height. Three offsets say it: a tight
-     contact shadow that keeps the edge crisp, a mid ambient that gives the
-     card its body, and a wide low-alpha spread that seats it on the page.
-     Tinted with the warm ink (26,24,20) rather than pure black, so it reads
-     as shade on a warm canvas instead of grey haze. */
+     is an edge here" and nothing about height. Two offsets say it: a tight
+     contact shadow that keeps the edge crisp against the canvas, and a wide,
+     heavily-negative-spread ambient that gives the card its body without
+     painting a grey ring around it. Tinted with the warm ink (26,24,20)
+     rather than pure black, so it reads as shade on a warm canvas instead of
+     grey haze.
+     The previous recipe used three offsets with a mid layer at -3px spread;
+     that middle band is what made a dense grid look slightly sooty, because
+     every card's mid-shadow overlapped its neighbour's. Dropping to
+     contact + far ambient is the Linear/Stripe recipe and it survives density. */
   --nura-card-shadow:
     0 1px 2px rgba(26, 24, 20, 0.05),
-    0 4px 10px -3px rgba(26, 24, 20, 0.05),
-    0 14px 30px -12px rgba(26, 24, 20, 0.07);
+    0 8px 24px -10px rgba(26, 24, 20, 0.10);
   --nura-card-shadow-soft:
     0 1px 2px rgba(26, 24, 20, 0.04),
-    0 3px 8px -3px rgba(26, 24, 20, 0.04);
+    0 4px 12px -6px rgba(26, 24, 20, 0.06);
 
   /* Resting + hover elevation for class-driven cards. Hover moves the card up
      2px, so the shadow has to grow and soften by roughly the same amount or
      the card looks like it slid rather than lifted. */
   --nura-card-lift:
     0 1px 2px rgba(26, 24, 20, 0.05),
-    0 4px 10px -3px rgba(26, 24, 20, 0.05),
-    0 14px 30px -12px rgba(26, 24, 20, 0.07);
+    0 8px 24px -10px rgba(26, 24, 20, 0.10);
   --nura-card-lift-hover:
-    0 1px 2px rgba(26, 24, 20, 0.05),
-    0 8px 18px -5px rgba(26, 24, 20, 0.07),
-    0 24px 48px -16px rgba(26, 24, 20, 0.10);
+    0 1px 2px rgba(26, 24, 20, 0.06),
+    0 14px 34px -12px rgba(26, 24, 20, 0.14);
+
+  /* One radius, everywhere. 16 is the value the card grid, the nested panels
+     and the sheets all settle on; 18–22 read soft to the point of woolly at
+     card scale on white, and the app was carrying 8, 9, 10, 11, 12, 14, 16,
+     18, 20 and 22 simultaneously. */
+  --nura-radius-card: 16px;
+  --nura-radius-inner: 12px;
+  --nura-radius-control: 10px;
+
+  /* Row hover on white: the warm neutral tint, not a white-on-white no-op.
+     Several rows resolved their hover to --nura-surface, which IS #ffffff in
+     light — so hovering a row on a white card did nothing at all. */
+  --nura-row-hover: #f5f4f0;
 
   /* ── Ink — every value below passes AA on #ffffff ───────────────────── */
   --nura-text-primary: #1a1a1a;         /* 17.4:1 */
@@ -819,8 +860,18 @@
   --nura-tint-neutral: #f7f6f3;
   --nura-tint-neutral-border: #e9e7e1;
 
-  /* Page + elevated chrome — opaque, so nothing reads as see-through on white. */
-  --nura-page-gradient: #f5f3ee;
+  /* Page + elevated chrome.
+     The canvas is no longer one flat fill. A dead-flat page is the single
+     loudest tell that a light UI was themed rather than designed — the eye
+     reads an unbroken sheet and stops looking for depth, which then makes the
+     card shadows look like artefacts instead of elevation.
+     The gradient is deliberately below the threshold of "a gradient": 96.4%
+     luminance at the top to 94.0% at the foot, a 2.4% shift over the whole
+     viewport. You cannot point at it; you can tell when it's missing. Warm
+     throughout (R>G>B), so it stays ivory rather than drifting grey.
+     Fixed to the viewport by .nura-page below, so a long scroll doesn't run
+     the ramp over and over. */
+  --nura-page-gradient: linear-gradient(180deg, #f8f6f1 0%, #f5f3ee 50%, #f2f0ea 100%);
   --nura-elevated: rgba(255, 255, 255, 0.94);
   --nura-scrim-panel: rgba(245, 243, 238, 0.92);
   --nura-inset-dark: #f0eeea;
@@ -1047,18 +1098,10 @@ html, body {
    authored as inline styles on the components.
    ─────────────────────────────────────────────────────────────────────── */
 
-[data-theme="light"] .dash-card,
-[data-theme="light"] .oh-card,
-[data-theme="light"] .hp-card,
-[data-theme="light"] .dash-insight {
-  /* Two lines doing one job. Over near-black a card needs a visible edge to
-     exist at all, so the hairline carries the separation. On a warm page with
-     a layered shadow underneath, that same edge is redundant — the shadow has
-     already said where the card ends — and at 10% it reads as a drawn outline
-     rather than a printed one. Halving it leaves a border that defines the
-     corner radius without competing with the elevation. */
-  border-color: rgba(26, 24, 20, 0.05) !important;
-}
+/* The hairline these four cards used to set here is now part of the single
+   card rule in the ELEVATION SYSTEM section below, which owns radius, border,
+   shadow and transition together for every card class in the app. Two places
+   setting the same border is how the radii drifted in the first place. */
 
 [data-theme="light"] .oh-improve {
   /* "What to improve" is a content panel, not a warning, but it was painted
@@ -1086,6 +1129,315 @@ html, body {
      both; and since row height is driven by min-height, the extra vertical
      padding costs no layout at either size. */
   padding: 22px !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LIGHT-MODE ELEVATION SYSTEM
+
+   Everything below is the "one language" layer: one page, one card finish, one
+   radius, one hover, one focus ring, one control style. It is the same contract
+   as the flattening layer above it — scoped to [data-theme="light"] so dark is
+   frozen, `!important` because the properties it standardises are authored as
+   inline styles on ~140 components.
+
+   WHY A STYLESHEET AND NOT 140 EDITS. Every card in this app writes its own
+   borderRadius/boxShadow/border inline. Nine radii and four shadow recipes were
+   in play at once. Chasing that component-by-component means the next card
+   invents a tenth; a single layer keyed on the card classes means a card is
+   consistent by default and inconsistent only on purpose.
+
+   WHAT IT DELIBERATELY DOES NOT TOUCH
+   · colour of any chart mark — the sage ladder above is the whole system
+   · layout: no grid, flex, width, gap or margin property appears below
+   · dark: not one rule outside the [data-theme="light"] scope
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── The page ─────────────────────────────────────────────────────────────
+   .nura-page is the full-height wrapper each screen paints its canvas on.
+   Fixed attachment so the 2.4% ramp spans the VIEWPORT, not the document —
+   on a 4000px settings page a scrolling gradient would cycle light-to-dark
+   several times and read as banding. */
+[data-theme="light"] .nura-page {
+  background: var(--nura-page-gradient) !important;
+  background-attachment: fixed !important;
+}
+
+[data-theme="light"] body {
+  background: var(--nura-page-gradient);
+  background-attachment: fixed;
+}
+
+/* ── The card ─────────────────────────────────────────────────────────────
+   One finish for every content surface in the app. `.nura-card` is the hook
+   added to the shared shells (GlassCard, MetricCardShell); the rest are the
+   card classes the individual screens already had, adopted here so those
+   screens inherit the language without being rewritten.
+
+   The hairline is 1px at 5% rather than 0.5px at 10%: on a warm canvas with a
+   real shadow under it, the border's job is only to resolve the corner radius
+   crisply, and a half-pixel line at double the alpha renders as a grey seam on
+   non-integer DPR displays. */
+[data-theme="light"] .nura-card,
+[data-theme="light"] .dash-card,
+[data-theme="light"] .dash-insight,
+[data-theme="light"] .oh-card,
+[data-theme="light"] .hp-card,
+[data-theme="light"] .nt-card,
+[data-theme="light"] .rx-card,
+[data-theme="light"] .rx-tile,
+[data-theme="light"] .lab-card,
+[data-theme="light"] .lab-row,
+[data-theme="light"] .fd-card,
+[data-theme="light"] .fit-tile,
+[data-theme="light"] .source-card,
+[data-theme="light"] .nut-row,
+[data-theme="light"] .mp-panel {
+  border-radius: var(--nura-radius-card) !important;
+  border: 1px solid rgba(26, 24, 20, 0.05) !important;
+  box-shadow: var(--nura-card-shadow) !important;
+  /* Glass is chrome-only (see below). On an opaque white card the blur costs a
+     compositing layer and buys nothing, and it silently makes the card a
+     containing block for anything positioned inside it. */
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  transition:
+    box-shadow var(--nura-dur) var(--nura-ease),
+    transform var(--nura-dur) var(--nura-ease),
+    border-color var(--nura-dur) var(--nura-ease) !important;
+}
+
+/* Nested surfaces: a panel inside a card takes the inner radius and no shadow
+   of its own. Two stacked elevations on one card is the thing that makes a
+   light UI look like a bootstrap theme. */
+[data-theme="light"] .nura-card-inner {
+  border-radius: var(--nura-radius-inner) !important;
+  border: 1px solid var(--nura-hairline) !important;
+  box-shadow: none !important;
+}
+
+/* ── Hover ───────────────────────────────────────────────────────────────
+   One gesture: rise 2px, shadow grows and softens by the same amount, edge
+   picks up a hint of the accent. Only cards that actually go somewhere get it
+   — a hover that promises navigation and delivers nothing is worse than none.
+   `.nura-card-hover` is the opt-in; the listed classes are the screens that
+   already had a hover of their own and are being brought onto this one. */
+[data-theme="light"] .nura-card-hover:hover,
+[data-theme="light"] .dash-card:hover,
+[data-theme="light"] .rx-card:hover,
+[data-theme="light"] .rx-tile:hover,
+[data-theme="light"] .lab-card:hover,
+[data-theme="light"] .lab-row:hover,
+[data-theme="light"] .fd-card:hover,
+[data-theme="light"] .fit-tile:hover,
+[data-theme="light"] .source-card:hover,
+[data-theme="light"] .nut-row:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--nura-card-lift-hover) !important;
+  border-color: rgba(var(--nura-sage-rgb), 0.30) !important;
+}
+
+/* Press. A card that lifts on hover has to settle on click or the click feels
+   like it missed. Back to resting height, not below it. */
+[data-theme="light"] .nura-card-hover:active,
+[data-theme="light"] .dash-card:active,
+[data-theme="light"] .rx-card:active,
+[data-theme="light"] .rx-tile:active,
+[data-theme="light"] .lab-card:active,
+[data-theme="light"] .fd-card:active,
+[data-theme="light"] .fit-tile:active {
+  transform: translateY(0);
+  box-shadow: var(--nura-card-shadow) !important;
+  transition-duration: var(--nura-dur-fast) !important;
+}
+
+/* Rows — accordion headers, list items, settings lines. Not cards: they get a
+   background tint and nothing else, because a row that lifts inside a card
+   breaks the card's own plane. */
+[data-theme="light"] .nura-row {
+  border-radius: var(--nura-radius-inner) !important;
+  transition: background-color var(--nura-dur-fast) var(--nura-ease),
+              color var(--nura-dur-fast) var(--nura-ease) !important;
+}
+[data-theme="light"] .nura-row:hover {
+  background: var(--nura-row-hover) !important;
+}
+
+/* ── Focus ───────────────────────────────────────────────────────────────
+   Sage ring, 2px, offset so it traces the shape rather than sitting on it.
+   `!important` because a good third of the controls in this app set
+   `outline: none` inline and then draw nothing in its place. :focus-visible,
+   so it only ever appears for the keyboard. */
+[data-theme="light"] :focus-visible {
+  outline: 2px solid var(--nura-sage) !important;
+  outline-offset: 2px !important;
+}
+
+/* ── Controls ────────────────────────────────────────────────────────────
+   Text fields, selects and textareas share one resting state, one hover, one
+   focus. Radius is the control step; anything that wants to stay a pill (a
+   search field, a filter chip) opts out with .nura-pill.
+
+   Colour-, range- and check-type inputs are excluded: they are painted by the
+   platform and a border on them is a box drawn around a swatch. */
+[data-theme="light"] input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not(.nura-pill):not(.nura-bare),
+[data-theme="light"] textarea:not(.nura-bare),
+[data-theme="light"] select:not(.nura-bare) {
+  border-radius: var(--nura-radius-control) !important;
+  border: 1px solid var(--nura-border) !important;
+  background: var(--nura-card) !important;
+  color: var(--nura-text-primary) !important;
+  transition: border-color var(--nura-dur-fast) var(--nura-ease),
+              box-shadow var(--nura-dur-fast) var(--nura-ease) !important;
+}
+
+[data-theme="light"] input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not(.nura-bare):hover,
+[data-theme="light"] textarea:not(.nura-bare):hover,
+[data-theme="light"] select:not(.nura-bare):hover {
+  border-color: var(--nura-border-strong) !important;
+}
+
+/* Focus on a field is the one place the accent ring is a soft halo rather than
+   an outline: the field already has a border to thicken, so a 3px tinted
+   spread reads as the field waking up instead of a box around a box. */
+[data-theme="light"] input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not(.nura-bare):focus,
+[data-theme="light"] textarea:not(.nura-bare):focus,
+[data-theme="light"] select:not(.nura-bare):focus {
+  border-color: var(--nura-sage) !important;
+  box-shadow: 0 0 0 3px rgba(var(--nura-sage-rgb), 0.13) !important;
+  outline: none !important;
+}
+
+[data-theme="light"] ::placeholder {
+  color: var(--nura-ink-faint) !important;
+  opacity: 1;
+}
+
+/* Buttons that don't set their own transition get the shared one. No
+   `!important` on purpose — a component with a considered transition of its
+   own keeps it; this only fills the silence. */
+[data-theme="light"] button,
+[data-theme="light"] a,
+[data-theme="light"] [role="button"] {
+  transition: background-color var(--nura-dur-fast) var(--nura-ease),
+              border-color var(--nura-dur-fast) var(--nura-ease),
+              color var(--nura-dur-fast) var(--nura-ease),
+              box-shadow var(--nura-dur-fast) var(--nura-ease),
+              transform var(--nura-dur-fast) var(--nura-ease);
+}
+
+/* The filled sage button. Opt-in class so it can't catch a ghost or a link. */
+[data-theme="light"] .nura-btn:hover:not(:disabled) {
+  background: var(--nura-sage-hover) !important;
+}
+[data-theme="light"] .nura-btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+/* ── Chrome ──────────────────────────────────────────────────────────────
+   The ONLY glass in light mode. Both of these float over scrolling content, so
+   the blur is doing the job blur is for — telling you something is behind it.
+   Content cards are opaque (see the card rule above); this is the exception the
+   brief carves out, not a licence to reintroduce washes.
+
+   The rail sat at --nura-bg, i.e. exactly the page colour, so a docked sidebar
+   was distinguishable from the canvas only by its hairline. Translucent white
+   over the warm page lifts it a step without turning it into a card. */
+[data-theme="light"] .nura-rail {
+  background: rgba(255, 255, 255, 0.72) !important;
+  backdrop-filter: blur(20px) saturate(1.6) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(1.6) !important;
+  border-right: 1px solid rgba(26, 24, 20, 0.07) !important;
+}
+
+[data-theme="light"] .nura-appbar {
+  background: rgba(255, 255, 255, 0.72) !important;
+  backdrop-filter: blur(20px) saturate(1.6) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(1.6) !important;
+  border-bottom: 1px solid rgba(26, 24, 20, 0.07) !important;
+}
+
+/* ── Type ────────────────────────────────────────────────────────────────
+   The scale was compressed: a card title at 10–11px and its stat at 26–30px
+   with a 12–13px unit beside it, so title and caption were the same size and
+   the eye had to read to tell them apart. These three classes are the jumps —
+   label / title / stat — and the sweep applies them.
+
+   Tracking: small uppercase labels were carrying 1.5–1.6px (~0.15em) at 10px.
+   That is the mid-2010s dashboard look; at this size 0.07em is enough to stop
+   the caps colliding and reads as typography rather than as spacing. Narrower
+   than before, so it cannot overflow anything that fit at the old value. */
+[data-theme="light"] .nura-label {
+  font-size: 10.5px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.07em !important;
+  text-transform: uppercase !important;
+  color: var(--nura-ink-muted) !important;
+  line-height: 1.3 !important;
+}
+
+/* The quieter label — a source tag, a column head, an axis caption. One step
+   down in size and two in emphasis, same tracking, so a card header reads as
+   "name, then provenance" rather than as two competing eyebrows. */
+[data-theme="light"] .nura-label-xs {
+  font-size: 9.5px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.07em !important;
+  text-transform: uppercase !important;
+  color: var(--nura-ink-faint) !important;
+  line-height: 1.3 !important;
+}
+
+[data-theme="light"] .nura-title {
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.01em !important;
+  color: var(--nura-text-primary) !important;
+  line-height: 1.35 !important;
+}
+
+/* Stats are the loud end of the scale: ink, tight, and tabular so a value that
+   ticks doesn't shuffle the digits beside it. */
+[data-theme="light"] .nura-stat {
+  color: var(--nura-text-primary) !important;
+  letter-spacing: -0.02em !important;
+  font-variant-numeric: tabular-nums !important;
+  line-height: 1 !important;
+}
+
+/* Body copy. 1.55 rather than 1.4 — at 13–14px on white, tighter leading is
+   what makes a paragraph in a card look like a form field's help text. */
+[data-theme="light"] .nura-body {
+  line-height: 1.55 !important;
+  color: var(--nura-ink-strong) !important;
+}
+
+/* Scan-ability: labels recede, values carry. The pair below is the whole rule
+   of the sweep — muted label, ink value — expressed once. */
+[data-theme="light"] .nura-muted {
+  color: var(--nura-ink-muted) !important;
+}
+
+/* UI icons — one stroke weight. Scoped to an explicit class rather than `svg`,
+   because every chart in the app is an svg too and its stroke widths are the
+   data. */
+[data-theme="light"] .nura-icon {
+  stroke-width: 1.6 !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-theme="light"] .nura-card,
+  [data-theme="light"] .nura-card-hover:hover,
+  [data-theme="light"] .dash-card:hover,
+  [data-theme="light"] .rx-card:hover,
+  [data-theme="light"] .rx-tile:hover,
+  [data-theme="light"] .lab-card:hover,
+  [data-theme="light"] .fd-card:hover,
+  [data-theme="light"] .fit-tile:hover,
+  [data-theme="light"] .source-card:hover,
+  [data-theme="light"] .nut-row:hover {
+    transform: none !important;
+    transition: none !important;
+  }
 }
 
 /* ───────────────────────────────────────────────────────────────────────────

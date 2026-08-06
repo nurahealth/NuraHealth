@@ -41,7 +41,9 @@ export default function NuraPageShell({
   } as CSSProperties;
 
   return (
-    <div style={{
+    // `nura-page` is the canvas hook: in light it swaps this flat fill for the
+    // viewport-fixed page gradient (globals.css). Inert in dark.
+    <div className="nura-page" style={{
       minHeight: "100dvh", background: BG, color: TEXT,
       fontFamily: SANS, position: "relative", overflow: "hidden",
       display: "flex", flexDirection: "column",
