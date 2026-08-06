@@ -276,7 +276,7 @@ function ActiveWeekChart({ d }: { d: ActiveEnergyDetail }) {
         const y = yOf(day.value);
         const h = bot - y;
         return (
-          <g key={i} style={hit ? { } : undefined}>
+          <g key={i} style={hit ? { filter: `drop-shadow(0 0 6px rgba(${r},${g},${b},0.6))` } : undefined}>
             <rect
               x={x.toFixed(1)} y={y.toFixed(1)} width={barW.toFixed(1)} height={Math.max(h, 2).toFixed(1)}
               rx={Math.min(barW / 2, Math.max(h, 2) / 2).toFixed(1)} fill={`url(#${uid}-${i})`} opacity={hit ? 1 : 0.5}

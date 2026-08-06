@@ -370,8 +370,8 @@ function StepsPaceChart({ d }: { d: StepsDetail }) {
     <svg width="100%" height={150} viewBox={`0 0 ${W} 150`} preserveAspectRatio="none" style={{ display: "block" }}>
       <path d={gap} fill="rgba(var(--nura-orange-rgb),0.12)" />
       <path d={smooth(up)} fill="none" stroke="var(--nura-text-secondary)" strokeWidth={1.6} strokeDasharray="4 5" strokeLinecap="round" />
-      <path d={smooth(tp)} fill="none" strokeWidth={2.2} strokeLinecap="round" style={{ stroke: ORANGE }} />
-      <circle cx={tp[n - 1][0].toFixed(1)} cy={tp[n - 1][1].toFixed(1)} r={3.2} style={{ fill: ORANGE}} />
+      <path d={smooth(tp)} fill="none" strokeWidth={2.2} strokeLinecap="round" style={{ stroke: ORANGE, filter: "drop-shadow(0 0 4px rgba(var(--nura-orange-rgb),0.5))" }} />
+      <circle cx={tp[n - 1][0].toFixed(1)} cy={tp[n - 1][1].toFixed(1)} r={3.2} style={{ fill: ORANGE, filter: `drop-shadow(0 0 6px ${ORANGE})` }} />
     </svg>
   );
 }

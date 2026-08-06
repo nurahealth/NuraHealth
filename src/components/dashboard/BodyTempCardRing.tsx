@@ -88,7 +88,7 @@ export default function BodyTempCardRing({
 
       {/* Center overlay — status-led: status word on top, worded deviation beneath */}
       <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", pointerEvents: "none", padding: "0 24px", textAlign: "center" }}>
-        <div style={{ fontSize: 22, fontWeight: 700, color: statusColor, letterSpacing: "-0.3px" }}>{status}</div>
+        <div style={{ fontSize: 22, fontWeight: 700, color: statusColor, letterSpacing: "-0.3px", filter: `drop-shadow(0 0 16px ${statusColor}55)` }}>{status}</div>
         <div style={{ fontSize: 10.5, color: "var(--nura-text-secondary)", marginTop: 6, lineHeight: 1.3 }}>{subLine}</div>
       </div>
     </div>

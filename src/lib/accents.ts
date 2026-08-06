@@ -14,57 +14,56 @@ import { useThemeTokens } from "@/lib/themeTokens";
  * The value of each entry is the dark fallback, used during SSR and the first
  * client render. See lib/themeTokens.ts for the hydration contract.
  */
-// The dark column of the sage ladder — see globals.css. Every data accent
-// below now falls back to a step of it, because every data accent RESOLVES to
-// a step of it. Only the status trio keeps a hue of its own.
-const S400 = "#6d8175";
-const S500 = "#9bb0a5";
-const S600 = "#bacdc1";
-
+// These fallbacks are DARK values, and dark is the per-metric palette again —
+// violet respiratory, coral heart, cyan HRV, ember movement. They briefly all
+// pointed at steps of the sage ladder, which was correct only while dark had
+// been collapsed onto that ladder too. Light is unaffected either way: the
+// fallback is a first-paint value, and light resolves the live token the
+// moment the stylesheet is up (see lib/themeTokens.ts).
 export const ACCENTS = {
   "--nura-sage": ["--nura-sage", "#9bb0a5"],
   // The one-series card-chart colour. See the note beside it in globals.css.
-  "--nura-series": ["--nura-series", S500],
-  "--nura-teal": ["--nura-teal", S500],
-  "--nura-sleep-deep": ["--nura-sleep-deep", S500],
+  "--nura-series": ["--nura-series", "#9bb0a5"],
+  "--nura-teal": ["--nura-teal", "#5dccae"],
+  "--nura-sleep-deep": ["--nura-sleep-deep", "#5aa0e6"],
   "--nura-good": ["--nura-good", "#d3a253"],
   // Was the same gold as --nura-good, registered separately so light could
   // neutralise it without touching the status token. Post-collapse it is a
   // ladder step in both columns — the separation is what made that possible.
-  "--nura-viz-gold": ["--nura-viz-gold", S500],
-  "--nura-amber": ["--nura-amber", S500],
+  "--nura-viz-gold": ["--nura-viz-gold", "#d3a253"],
+  "--nura-amber": ["--nura-amber", "#e0a23e"],
   "--nura-alert": ["--nura-alert", "#e8745a"],
   "--nura-optimal": ["--nura-optimal", "#5fbf8c"],
-  "--nura-rose": ["--nura-rose", S500],
-  "--nura-heart": ["--nura-heart", S500],
-  "--nura-mauve": ["--nura-mauve", S500],
-  "--nura-violet": ["--nura-violet", S500],
-  "--nura-aqua": ["--nura-aqua", S500],
-  "--nura-ice": ["--nura-ice", S500],
-  "--nura-ember": ["--nura-ember", S500],
-  "--nura-gold-ring": ["--nura-gold-ring", S500],
-  "--nura-orange": ["--nura-orange", S500],
+  "--nura-rose": ["--nura-rose", "#f0a890"],
+  "--nura-heart": ["--nura-heart", "#e8615c"],
+  "--nura-mauve": ["--nura-mauve", "#a98fc4"],
+  "--nura-violet": ["--nura-violet", "#b9a0e6"],
+  "--nura-aqua": ["--nura-aqua", "#4fc4d6"],
+  "--nura-ice": ["--nura-ice", "#aebfcf"],
+  "--nura-ember": ["--nura-ember", "#e07a3c"],
+  "--nura-gold-ring": ["--nura-gold-ring", "#e8c266"],
+  "--nura-orange": ["--nura-orange", "#e3a263"],
   // The fixed metric map. Registered here so data-layer rows (the health
   // pillars, plan icons) can name a metric family directly instead of reaching
   // for whichever legacy hue happened to be nearest.
-  "--nura-metric-resp": ["--nura-metric-resp", S500],
-  "--nura-metric-heart": ["--nura-metric-heart", S500],
-  "--nura-metric-rhr": ["--nura-metric-rhr", S500],
-  "--nura-metric-sleep": ["--nura-metric-sleep", S500],
-  "--nura-metric-hrv": ["--nura-metric-hrv", S500],
-  "--nura-metric-activity": ["--nura-metric-activity", S500],
-  "--nura-metric-temp": ["--nura-metric-temp", S500],
-  "--nura-metric-oxygen": ["--nura-metric-oxygen", S500],
+  "--nura-metric-resp": ["--nura-metric-resp", "#b9a0e6"],
+  "--nura-metric-heart": ["--nura-metric-heart", "#e8615c"],
+  "--nura-metric-rhr": ["--nura-metric-rhr", "#f0a890"],
+  "--nura-metric-sleep": ["--nura-metric-sleep", "#5aa0e6"],
+  "--nura-metric-hrv": ["--nura-metric-hrv", "#4fc4d6"],
+  "--nura-metric-activity": ["--nura-metric-activity", "#e07a3c"],
+  "--nura-metric-temp": ["--nura-metric-temp", "#5dccae"],
+  "--nura-metric-oxygen": ["--nura-metric-oxygen", "#aebfcf"],
   // The shared ordered ramp — one hue, four steps, ascending in presence on
   // near-black. Sleep stages and the intensity zones both walk it.
-  "--nura-step-1": ["--nura-step-1", S400],
+  "--nura-step-1": ["--nura-step-1", "#6d8175"],
   "--nura-step-2": ["--nura-step-2", "#869a8e"],
-  "--nura-step-3": ["--nura-step-3", S500],
-  "--nura-step-4": ["--nura-step-4", S600],
-  "--nura-stage-awake": ["--nura-stage-awake", S400],
-  "--nura-stage-light": ["--nura-stage-light", "#869a8e"],
-  "--nura-stage-rem": ["--nura-stage-rem", S500],
-  "--nura-stage-deep": ["--nura-stage-deep", S600],
+  "--nura-step-3": ["--nura-step-3", "#9bb0a5"],
+  "--nura-step-4": ["--nura-step-4", "#bacdc1"],
+  "--nura-stage-awake": ["--nura-stage-awake", "#d3a253"],
+  "--nura-stage-light": ["--nura-stage-light", "#9bb0a5"],
+  "--nura-stage-rem": ["--nura-stage-rem", "#5dccae"],
+  "--nura-stage-deep": ["--nura-stage-deep", "#5aa0e6"],
 } as const;
 
 /** A `--nura-*` custom property usable as a data-viz accent. */

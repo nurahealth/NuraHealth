@@ -456,7 +456,7 @@ function Hypnogram({ seq }: { seq: ("D" | "R" | "L" | "A")[] }) {
           <rect
             key={i} x={x.toFixed(1)} y={y.toFixed(1)} width={bw.toFixed(1)} height={h.toFixed(1)}
             rx={rx.toFixed(1)} fill={`url(#${uid}-${i})`}
-            style={s === "D" ? { } : undefined}
+            style={s === "D" ? { filter: `drop-shadow(0 0 1.5px ${meta.color})` } : undefined}
           />
         );
       })}
@@ -557,7 +557,7 @@ function NightLineChart({
 
       {/* Gradient area fill (line color → transparent) + smooth line */}
       <path d={`${path} L ${pts[n - 1][0].toFixed(1)},${plotB} L ${pts[0][0].toFixed(1)},${plotB} Z`} fill={`url(#${uid}-fill)`} />
-      <path d={path} fill="none" stroke={stroke} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+      <path d={path} fill="none" stroke={stroke} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" style={{ filter: `drop-shadow(0 0 4px rgba(${glowRgb},0.45))` }} />
 
       {/* Dashed average line (its value lives in the header pill, not inline) */}
       <line x1={plotL} y1={avgY.toFixed(1)} x2={plotR} y2={avgY.toFixed(1)} stroke={`rgba(${INK},0.3)`} strokeWidth={1} strokeDasharray="4 5" />
@@ -572,7 +572,7 @@ function NightLineChart({
         const lx = Math.max(plotL + half, Math.min(plotR - half, mx));
         return (
           <g key={`m${i}`}>
-            <circle cx={mx.toFixed(1)} cy={my.toFixed(1)} r={2.8} fill={stroke} />
+            <circle cx={mx.toFixed(1)} cy={my.toFixed(1)} r={2.8} fill={stroke} style={{ filter: `drop-shadow(0 0 4px rgba(${glowRgb},0.7))` }} />
             <text x={lx.toFixed(1)} y={ly.toFixed(1)} textAnchor="middle" fontFamily={SANS} fontSize={9} fontWeight={600} fill={stroke}>{m.label}</text>
           </g>
         );

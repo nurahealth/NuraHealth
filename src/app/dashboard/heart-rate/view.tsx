@@ -125,7 +125,7 @@ function HeartRateRing({ bpm, liveLabel }: { bpm: number; liveLabel: string }) {
           stroke={`url(#${gid})`} strokeWidth={stroke} strokeLinecap="round"
           strokeDasharray={`${arcLen} ${circ}`} strokeDashoffset={shownOffset}
           style={{
-            
+            filter: `drop-shadow(0 0 7px rgba(${RING_GLOW},0.6))`,
             transition: reduced ? "none" : "stroke-dashoffset 1.3s cubic-bezier(.2,.7,.2,1)" }}
         />
       </svg>
@@ -144,7 +144,7 @@ function HeartRateRing({ bpm, liveLabel }: { bpm: number; liveLabel: string }) {
             className="hrr-trace" d={ECG_PATH}
             strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round"
             pathLength={100} strokeDasharray="16 100" strokeDashoffset={116}
-            style={{ stroke: RING_TO}}
+            style={{ stroke: RING_TO, filter: `drop-shadow(0 0 4px ${RING_TO})` }}
           />
         </svg>
 

@@ -130,7 +130,7 @@ function HrvRing({ hrv }: { hrv: number }) {
           stroke={`url(#${gid})`} strokeWidth={stroke} strokeLinecap="round"
           strokeDasharray={`${arcLen} ${circ}`} strokeDashoffset={shownOffset}
           style={{
-            
+            filter: `drop-shadow(0 0 7px rgba(${RING_GLOW},0.6))`,
             transition: reduced ? "none" : `stroke-dashoffset ${FILL_MS}ms cubic-bezier(.2,.7,.2,1)` }}
         />
       </svg>
@@ -347,10 +347,11 @@ function HrvZoneChart({ hrv }: { hrv: HrvTrendChart }) {
       <text x={L + 2} y={(yOf(average) - 4).toFixed(1)} fontSize={9} fill="var(--nura-ink-a45)" style={{ fontFamily: SANS }}>avg {average}</text>
 
       {/* Daily line + dots (aqua) */}
-      <polyline points={poly} fill="none" strokeWidth={2.6} strokeLinecap="round" strokeLinejoin="round" style={{ stroke: AQUA}} />
+      <polyline points={poly} fill="none" strokeWidth={2.6} strokeLinecap="round" strokeLinejoin="round" style={{ stroke: AQUA, filter: `drop-shadow(0 0 4px rgba(${AQUA_RGB},0.55))` }} />
       {pts.map((p, i) => (
         <circle
           key={i} cx={p.x.toFixed(1)} cy={p.y.toFixed(1)} r={i === last ? 4.4 : 3.4} fill={i === last ? AQUA_LIGHT : AQUA}
+          style={{ filter: i === last ? `drop-shadow(0 0 6px rgba(${AQUA_LIGHT_RGB},0.95))` : `drop-shadow(0 0 3px rgba(${AQUA_RGB},0.55))` }}
         />
       ))}
     </svg>

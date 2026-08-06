@@ -185,7 +185,7 @@ function IntradayBars({ series }: { series: IntradayChart["series"] }) {
   const bw = W / n;
   const max = Math.max(...series, 1);
   return (
-    <svg width="100%" height={90} viewBox={`0 0 ${W} 90`} preserveAspectRatio="none" style={{ marginTop: 12 }}>
+    <svg width="100%" height={90} viewBox={`0 0 ${W} 90`} preserveAspectRatio="none" style={{ marginTop: 12, filter: "drop-shadow(0 0 7px rgba(var(--nura-metric-activity-rgb),0.30))" }}>
       {series.map((v, i) => {
         const h = Math.max(2, (v / max) * maxH);
         return <rect key={i} x={(i * bw).toFixed(1)} y={(maxH + 4 - h).toFixed(1)} width={(bw - 1.1).toFixed(1)} height={h.toFixed(1)} rx="1.2" fill="var(--nura-metric-activity)" />;

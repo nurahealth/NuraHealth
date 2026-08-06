@@ -15,13 +15,13 @@ import { useThemeTokens } from "@/lib/themeTokens";
  * Adding a metric means adding a row; it does not mean picking a colour at a
  * component.
  *
- * WHAT THE MAP MEANS NOW. It used to hand out a hue per physiological family
- * — violet respiratory, indigo sleep, coral heart, amber movement. It hands
- * out one sage step to all of them. The map stays because the INDIRECTION is
- * the valuable part: every metric mark in the app still passes through one
- * table, so a future second step is a one-line change here rather than a
- * hunt through forty components. See the ladder note in globals.css for why
- * the hues went.
+ * WHAT THE MAP MEANS NOW. It is a hue per physiological family — violet
+ * respiratory, blue sleep, coral heart, ember movement — and the two themes
+ * disagree about it on purpose. DARK is that palette: it is the brand's
+ * original look and it is locked. LIGHT collapses the whole map onto one sage
+ * step, because five muted hues side by side on white read as mud rather than
+ * as a system. The token name is the same in both; only globals.css differs,
+ * which is the entire point of routing every mark through one table.
  *
  * Keys are the metric `id` from lib/dashboardData, which is also the route
  * slug, so a detail screen can look itself up by its own path segment.
@@ -30,24 +30,21 @@ import { useThemeTokens } from "@/lib/themeTokens";
  * server and the first client render both emit these, then the light values
  * land once the stylesheet is live. Never put a light value here.
  */
-const SAGE = "#9bb0a5";        // --nura-sage-500, the dark default mark
-const SAGE_HI = "#bacdc1";     // --nura-sage-600, the brightest dark step
-
 const MARK = {
-  "respiratory-rate": ["--nura-metric-resp", SAGE],
-  "heart-rate": ["--nura-metric-heart", SAGE],
-  "resting-hr": ["--nura-metric-rhr", SAGE],
-  "blood-pressure": ["--nura-metric-bp-sys", SAGE],
-  sleep: ["--nura-metric-sleep", SAGE],
-  hrv: ["--nura-metric-hrv", SAGE],
-  steps: ["--nura-metric-activity", SAGE],
-  exercise: ["--nura-metric-activity", SAGE],
-  "active-energy": ["--nura-metric-activity", SAGE],
-  distance: ["--nura-metric-activity", SAGE],
-  movement: ["--nura-metric-activity", SAGE],
-  "body-temperature": ["--nura-metric-temp", SAGE],
-  "blood-oxygen": ["--nura-metric-oxygen", SAGE],
-  "cardio-fitness": ["--nura-metric-oxygen", SAGE],
+  "respiratory-rate": ["--nura-metric-resp", "#b9a0e6"],
+  "heart-rate": ["--nura-metric-heart", "#e8615c"],
+  "resting-hr": ["--nura-metric-rhr", "#f0a890"],
+  "blood-pressure": ["--nura-metric-bp-sys", "#e8615c"],
+  sleep: ["--nura-metric-sleep", "#5aa0e6"],
+  hrv: ["--nura-metric-hrv", "#4fc4d6"],
+  steps: ["--nura-metric-activity", "#e07a3c"],
+  exercise: ["--nura-metric-activity", "#e07a3c"],
+  "active-energy": ["--nura-metric-activity", "#e07a3c"],
+  distance: ["--nura-metric-activity", "#e07a3c"],
+  movement: ["--nura-metric-activity", "#e07a3c"],
+  "body-temperature": ["--nura-metric-temp", "#5dccae"],
+  "blood-oxygen": ["--nura-metric-oxygen", "#aebfcf"],
+  "cardio-fitness": ["--nura-metric-oxygen", "#aebfcf"],
 } as const;
 
 /**
@@ -57,12 +54,12 @@ const MARK = {
  * on is a status reading, which the chip beside it makes.
  */
 const AUX = {
-  respHi: ["--nura-metric-resp-hi", SAGE_HI],
-  rhrHi: ["--nura-metric-rhr-hi", SAGE_HI],
-  bpDia: ["--nura-metric-bp-dia", "#d5e3da"],
-  tempWarm: ["--nura-metric-temp-warm", SAGE],
+  respHi: ["--nura-metric-resp-hi", "#d0c0f0"],
+  rhrHi: ["--nura-metric-rhr-hi", "#f2998f"],
+  bpDia: ["--nura-metric-bp-dia", "#f7cfc2"],
+  tempWarm: ["--nura-metric-temp-warm", "#e0a23e"],
   /** The fallback for a chart with no metric identity at all. */
-  series: ["--nura-series", SAGE],
+  series: ["--nura-series", "#9bb0a5"],
 } as const;
 
 export type MetricColorId = keyof typeof MARK;

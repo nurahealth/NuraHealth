@@ -126,13 +126,19 @@ export default function ActiveEnergyTodayChart({
 
         {/* Bars — flat, one colour, height carries the value */}
         {data.map((v, i) => {
-          const h = Math.max(normOf(v) * plotH, 2);
+          const norm = normOf(v);
+          const h = Math.max(norm * plotH, 2);
           const x = plotL + i * slot + (slot - bw) / 2;
           return (
             <rect
               key={i} x={x.toFixed(2)} y={(plotB - h).toFixed(2)}
               width={bw.toFixed(2)} height={h.toFixed(2)}
               rx={Math.min(bw / 2, h / 2).toFixed(2)} fill={color.hex}
+              // Only the taller half of the day blooms, scaled by height —
+              // dark's original treatment. Flattened wholesale in light.
+              style={norm > 0.5
+                ? { filter: `drop-shadow(0 0 ${(1.5 + norm * 4).toFixed(1)}px ${color.alpha(Number((0.2 + norm * 0.45).toFixed(2)))})` }
+                : undefined}
             />
           );
         })}

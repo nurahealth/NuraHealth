@@ -589,7 +589,7 @@ const SLEEP_DETAIL: SleepDetail = {
   stages: [
     // Awake is the shallowest STAGE, not an absence of one — it takes the
     // ramp's first step like the other three rather than a neutral ink wash.
-    { label: "Awake", color: "--nura-stage-awake", textColor: "var(--nura-sage-bg-on)", duration: "0h 58m", pct: 12 },
+    { label: "Awake", color: "rgba(var(--nura-fg-rgb),0.4)", textColor: "var(--nura-sage-bg-on)", duration: "0h 58m", pct: 12 },
     { label: "REM sleep", color: "--nura-stage-rem", textColor: "var(--nura-sage-bg-on)", duration: "2h 18m", pct: 28 },
     { label: "Light sleep", color: "--nura-stage-light", textColor: "var(--nura-sage-bg-on)", duration: "3h 46m", pct: 46 },
     { label: "Deep sleep", color: "--nura-stage-deep", textColor: "var(--nura-sage-bg-on)", duration: "1h 04m", pct: 13 },
@@ -914,10 +914,10 @@ const HEART_RATE_DETAIL: HeartRateDetail = {
   // read as a verdict — sitting still scored green and a cardio block scored
   // red. They now walk the shared ramp, so effort reads as depth of colour.
   zones: [
-    { name: "Peak", range: "150+ bpm", duration: "0h 18m", pct: 3, color: "var(--nura-step-4)" },
-    { name: "Cardio", range: "110–150", duration: "1h 42m", pct: 8, color: "var(--nura-step-3)" },
-    { name: "Fat burn", range: "70–110", duration: "5h 20m", pct: 22, color: "var(--nura-step-2)" },
-    { name: "Resting", range: "52–70", duration: "16h 10m", pct: 67, color: "var(--nura-step-1)" },
+    { name: "Peak", range: "150+ bpm", duration: "0h 18m", pct: 3, color: "var(--nura-hr-zone-4)" },
+    { name: "Cardio", range: "110–150", duration: "1h 42m", pct: 8, color: "var(--nura-hr-zone-3)" },
+    { name: "Fat burn", range: "70–110", duration: "5h 20m", pct: 22, color: "var(--nura-hr-zone-2)" },
+    { name: "Resting", range: "52–70", duration: "16h 10m", pct: 67, color: "var(--nura-hr-zone-1)" },
   ],
   insight:
     "You spent most of today at rest with one solid cardio block around midday. Your resting rate of 54 is low and steady — a good marker of cardiovascular fitness.",
@@ -1348,27 +1348,27 @@ const OVERALL_HEALTH: OverallHealth = {
   weeklyTrend: 3,
   status: "Thriving",
   pillars: [
-    { key: "recovery", label: "Recovery", score: 88, trend: "up", color: "--nura-metric-hrv", ang: -90,
+    { key: "recovery", label: "Recovery", score: 88, trend: "up", color: "--nura-teal", ang: -90,
       measures: "How well your nervous system has bounced back.",
       builtFrom: "Overnight HRV, resting & sleeping heart rate.",
       reading: "Strong — your body is well-prepared for stress and training today." },
-    { key: "heart", label: "Heart", score: 82, trend: "up", color: "--nura-metric-heart", ang: -30,
+    { key: "heart", label: "Heart", score: 82, trend: "up", color: "--nura-rose", ang: -30,
       measures: "Your cardiovascular health and efficiency.",
       builtFrom: "Resting & active heart rate, HRV, heart-rate recovery.",
       reading: "Solid — your heart is working efficiently. Keep regular aerobic work in your week." },
-    { key: "metabolic", label: "Metabolic", score: 79, trend: "flat", color: "--nura-metric-temp", ang: 30,
+    { key: "metabolic", label: "Metabolic", score: 79, trend: "flat", color: "--nura-amber", ang: 30,
       measures: "How your body manages energy and temperature.",
       builtFrom: "Body-temperature deviation, respiratory rate, recovery balance.",
       reading: "Good, with a little room. Steady night-to-night — no red flags." },
-    { key: "activity", label: "Activity", score: 74, trend: "down", color: "--nura-metric-activity", ang: 90,
+    { key: "activity", label: "Activity", score: 74, trend: "down", color: "--nura-viz-gold", ang: 90,
       measures: "Your daily movement and exercise load.",
       builtFrom: "Steps, active energy, workouts, sedentary time.",
       reading: "Your lowest pillar. More daily movement here lifts every other score." },
-    { key: "sleep", label: "Sleep", score: 86, trend: "up", color: "--nura-metric-sleep", ang: 150,
+    { key: "sleep", label: "Sleep", score: 86, trend: "up", color: "--nura-sleep-deep", ang: 150,
       measures: "The quantity and quality of your sleep.",
       builtFrom: "Total sleep, deep & REM time, efficiency, timing.",
       reading: "Strong — restorative sleep is doing much of the heavy lifting in your recovery." },
-    { key: "resilience", label: "Resilience", score: 84, trend: "up", color: "--nura-metric-oxygen", ang: 210,
+    { key: "resilience", label: "Resilience", score: 84, trend: "up", color: "--nura-sage", ang: 210,
       measures: "Your capacity to handle stress over time.",
       builtFrom: "HRV trend, sleep consistency, recovery patterns.",
       reading: "Robust — you're adapting well to your current load." },
@@ -1377,7 +1377,7 @@ const OVERALL_HEALTH: OverallHealth = {
   percentile: { value: "Top 18%", note: "for your age" },
   bestPillar: { label: "Recovery", note: "88 · strong" },
   plan: [
-    { icon: "move", color: "--nura-metric-activity", title: "Move more",
+    { icon: "move", color: "--nura-viz-gold", title: "Move more",
       summary: "Activity is your one lagging pillar at 74.",
       body: "Activity is your one lagging pillar at 74. A daily 20-minute walk and landing closer to 9k steps would lift your score faster than anything else." },
     { icon: "moon", color: "--nura-sleep-deep", title: "Lock a consistent bedtime",

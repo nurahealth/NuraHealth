@@ -161,43 +161,43 @@
      hundred-odd call sites that already ask the map by metric id working
      unchanged. The one place two values are still needed is blood pressure,
      which draws two series on one plot and separates them by STEP. */
-  --nura-metric-resp: var(--nura-data-primary);
-  --nura-metric-resp-rgb: 155, 176, 165;
-  --nura-metric-resp-hi: var(--nura-sage-600);
+  --nura-metric-resp: var(--nura-violet);
+  --nura-metric-resp-rgb: 185, 160, 230;
+  --nura-metric-resp-hi: #d0c0f0;
 
-  --nura-metric-heart: var(--nura-data-primary);
-  --nura-metric-heart-rgb: 155, 176, 165;
-  --nura-metric-rhr: var(--nura-data-primary);
-  --nura-metric-rhr-rgb: 155, 176, 165;
-  --nura-metric-rhr-hi: var(--nura-sage-600);
+  --nura-metric-heart: var(--nura-heart);
+  --nura-metric-heart-rgb: 232, 97, 92;
+  --nura-metric-rhr: var(--nura-rose);
+  --nura-metric-rhr-rgb: 240, 168, 144;
+  --nura-metric-rhr-hi: var(--nura-heart-hi);
   /* Blood pressure draws TWO series on one plot, so its pair needs real
      luminance separation (1.73:1 dark / 2.18:1 light) on top of the legend.
      Systolic is the upper line and takes the more emphatic step. */
-  --nura-metric-bp-sys: var(--nura-sage-500);   /*  7.8:1 — systolic */
-  --nura-metric-bp-sys-rgb: 155, 176, 165;
-  --nura-metric-bp-dia: #d5e3da;                /* 13.5:1 — diastolic */
-  --nura-metric-bp-dia-rgb: 213, 227, 218;
+  --nura-metric-bp-sys: var(--nura-heart);   /*  7.8:1 — systolic */
+  --nura-metric-bp-sys-rgb: 232, 97, 92;
+  --nura-metric-bp-dia: #f7cfc2;                /* 13.5:1 — diastolic */
+  --nura-metric-bp-dia-rgb: 247, 207, 194;
 
-  --nura-metric-sleep: var(--nura-data-primary);
-  --nura-metric-sleep-rgb: 155, 176, 165;
+  --nura-metric-sleep: var(--nura-sleep-deep);
+  --nura-metric-sleep-rgb: 90, 160, 230;
 
-  --nura-metric-hrv: var(--nura-data-primary);
-  --nura-metric-hrv-rgb: 155, 176, 165;
+  --nura-metric-hrv: var(--nura-aqua);
+  --nura-metric-hrv-rgb: 79, 196, 214;
 
-  --nura-metric-activity: var(--nura-data-primary);
-  --nura-metric-activity-rgb: 155, 176, 165;
+  --nura-metric-activity: var(--nura-ember);
+  --nura-metric-activity-rgb: 224, 122, 60;
 
   /* Body temp's cool/warm poles are gone as HUES. Polarity is a good/bad
      reading, and good/bad is the status chip's job — the arc only shows how
      far from baseline, so both poles are the one data colour and the middle
      is the quiet part of the scale. */
-  --nura-metric-temp: var(--nura-data-primary);
-  --nura-metric-temp-rgb: 155, 176, 165;
-  --nura-metric-temp-warm: var(--nura-data-primary);
-  --nura-metric-temp-warm-rgb: 155, 176, 165;
+  --nura-metric-temp: var(--nura-teal);
+  --nura-metric-temp-rgb: 93, 204, 174;
+  --nura-metric-temp-warm: var(--nura-amber);
+  --nura-metric-temp-warm-rgb: 224, 162, 62;
 
-  --nura-metric-oxygen: var(--nura-data-primary);
-  --nura-metric-oxygen-rgb: 155, 176, 165;
+  --nura-metric-oxygen: var(--nura-ice);
+  --nura-metric-oxygen-rgb: 174, 191, 207;
 
   /* The four tokens below were referenced by components but never defined, so
      they resolved to nothing and the marks they painted fell back to browser
@@ -253,20 +253,20 @@
      the scale still reads as a scale, light is one neutral track with a sage
      marker on it. A meter arc that runs green→amber→red is a verdict painted
      across a measurement, and the status chip beside it already says that. */
-  --nura-meter-cool: var(--nura-sage-300);
-  --nura-meter-teal: var(--nura-sage-400);
-  --nura-meter-calm: var(--nura-sage-400);
-  --nura-meter-warm: var(--nura-sage-500);
-  --nura-meter-gold: var(--nura-sage-500);
-  --nura-meter-hot: var(--nura-sage-600);
-  --nura-meter-gold-lo: var(--nura-sage-300);
-  --nura-meter-gold-mid: var(--nura-sage-400);
-  --nura-meter-gold-hi: var(--nura-sage-500);
-  --nura-meter-bp-normal: var(--nura-sage-300);
-  --nura-meter-bp-elevated: var(--nura-sage-400);
-  --nura-meter-bp-stage1: var(--nura-sage-400);
-  --nura-meter-bp-stage1-hi: var(--nura-sage-500);
-  --nura-meter-bp-stage2: var(--nura-sage-600);
+  --nura-meter-cool: #5aa0e6;
+  --nura-meter-teal: #5dccae;
+  --nura-meter-calm: #9bb0a5;
+  --nura-meter-warm: #e0a23e;
+  --nura-meter-gold: #d3a253;
+  --nura-meter-hot: #e8745a;
+  --nura-meter-gold-lo: #c99a34;
+  --nura-meter-gold-mid: #e8c266;
+  --nura-meter-gold-hi: #f7dd90;
+  --nura-meter-bp-normal: #6ea862;
+  --nura-meter-bp-elevated: #d9c45e;
+  --nura-meter-bp-stage1: #d99a55;
+  --nura-meter-bp-stage1-hi: #cf7a6a;
+  --nura-meter-bp-stage2: #c75f5f;
 
   --nura-area-a30: 0.30;
   --nura-area-a28: 0.28;
@@ -296,7 +296,7 @@
      wearing a status colour. It is a DATA accent, so both columns now resolve
      it through the ladder — the gold survives only as --nura-good, where it
      means something. */
-  --nura-viz-gold: var(--nura-data-primary);
+  --nura-viz-gold: #d3a253;
   --nura-alert: #e8745a;                /* coral — Alert */
   --nura-alert-rgb: 232, 116, 90;
   --nura-danger: #d4574d;
@@ -321,10 +321,10 @@
      brightest), which is the dark-mode reading of "light to dark": the deepest
      stage is the most emphatic mark. Light inverts it literally. Both
      directions are monotonic in luminance and every step clears 3:1. */
-  --nura-stage-awake: var(--nura-step-1);   /* shallowest */
-  --nura-stage-light: var(--nura-step-2);
-  --nura-stage-rem: var(--nura-step-3);
-  --nura-stage-deep: var(--nura-step-4);    /* deepest */
+  --nura-stage-awake: var(--nura-good);   /* shallowest */
+  --nura-stage-light: var(--nura-sage);
+  --nura-stage-rem: var(--nura-teal);
+  --nura-stage-deep: var(--nura-sleep-deep);    /* deepest */
 
   /* Gauge zones. Dark paints a cool->warm arc; light is one neutral track with
      a single sage marker, per rule 5 — the status chip says whether the value
@@ -340,14 +340,14 @@
   --nura-chip-alert-bg: rgba(232, 116, 90, 0.16);
   --nura-chip-border: transparent;
 
-  --nura-gauge-zone-1: var(--nura-step-1);
-  --nura-gauge-zone-2: var(--nura-step-2);
-  --nura-gauge-zone-3: var(--nura-step-3);
-  --nura-gauge-zone-4: var(--nura-step-4);
+  --nura-gauge-zone-1: var(--nura-sleep-deep);
+  --nura-gauge-zone-2: var(--nura-teal);
+  --nura-gauge-zone-3: var(--nura-good);
+  --nura-gauge-zone-4: var(--nura-alert);
   /* Pager dots are navigation, not status. Two of the per-metric accents are
      status tokens, which would put brick/green on a nav control in light. */
-  --nura-pager-heart: var(--nura-data-primary);
-  --nura-pager-rhr: var(--nura-data-primary);
+  --nura-pager-heart: var(--nura-alert);
+  --nura-pager-rhr: var(--nura-optimal);
 
   --nura-gauge-marker: var(--nura-text-primary);
   --nura-gauge-tick: rgba(235, 230, 216, 0.35);
@@ -364,15 +364,42 @@
      the ramp was rendering a verdict. They are now the one magnitude ramp;
      direction is carried by which end the value sits at, and the status chip
      carries whether that is good news. */
-  --nura-ramp-hr-1: var(--nura-step-1);
-  --nura-ramp-hr-2: var(--nura-step-2);
-  --nura-ramp-hr-3: var(--nura-step-4);
-  --nura-ramp-hi-1: var(--nura-step-1);
-  --nura-ramp-hi-2: var(--nura-step-2);
-  --nura-ramp-hi-3: var(--nura-step-4);
-  --nura-ramp-lo-1: var(--nura-step-1);
-  --nura-ramp-lo-2: var(--nura-step-2);
-  --nura-ramp-lo-3: var(--nura-step-4);
+  /* Heart-rate zone bar — Resting → Fat burn → Cardio → Peak.
+     A theme-SPLIT ramp, and the clearest example of why the two columns had to
+     stop sharing one. Dark's original bar is semantic: calm green at rest
+     climbing to brick at peak, which is the reading the brand shipped with and
+     which works because a saturated hue on near-black is a mark, not a
+     warning. Light cannot have it — four saturated hues on white is the
+     rainbow the light pass removed, and green/amber/red on a measurement is a
+     verdict painted over a number the status chip already judges.
+     So: dark gets its semantic ramp back, light keeps one sage ladder. Same
+     token at the call site; the columns disagree, on purpose. */
+  --nura-hr-zone-1: var(--nura-optimal);
+  --nura-hr-zone-2: var(--nura-good);
+  --nura-hr-zone-3: var(--nura-amber);
+  --nura-hr-zone-4: var(--nura-alert);
+
+  /* The Health Score dial's arc — the hero mark on the dashboard. Split for
+     the same reason as the zone bar. Dark sweeps sage → teal → blue, which is
+     the brand's original dial and reads as a lit filament on near-black. Light
+     walks three steps of the sage ladder instead, so the arc still gains depth
+     as the score climbs without turning the hero into a three-hue gradient on
+     white. The glow that rides this arc is dark-only and is switched off by
+     the light flattening layer, not by a branch in the component. */
+  --nura-dial-1: var(--nura-sage);
+  --nura-dial-2: var(--nura-teal);
+  --nura-dial-3: var(--nura-sleep-deep);
+  --nura-dial-glow-rgb: var(--nura-teal-rgb);
+
+  --nura-ramp-hr-1: var(--nura-teal);
+  --nura-ramp-hr-2: var(--nura-amber);
+  --nura-ramp-hr-3: var(--nura-alert);
+  --nura-ramp-hi-1: var(--nura-amber);
+  --nura-ramp-hi-2: var(--nura-sage);
+  --nura-ramp-hi-3: var(--nura-optimal);
+  --nura-ramp-lo-1: var(--nura-optimal);
+  --nura-ramp-lo-2: var(--nura-sage);
+  --nura-ramp-lo-3: var(--nura-amber);
 
   /* ── Data-viz ramp — now aliases onto the metric map ────────────────────
      These are the ORIGINAL per-metric hues, and the detail screens are full of
@@ -395,38 +422,38 @@
      their names for the call sites, and differ only by step. The -mid and
      -deep variants feed the aurora and card washes, which follow the brand
      hue rather than a leftover teal. */
-  --nura-teal: var(--nura-data-primary);  /* generic cool — see note above */
-  --nura-teal-rgb: 155, 176, 165;
-  --nura-teal-mid: #4e7a68;
-  --nura-teal-mid-rgb: 78, 122, 104;
-  --nura-teal-deep: #1f3a30;
-  --nura-amber: var(--nura-data-primary); /* generic warm — see note above */
-  --nura-amber-rgb: 155, 176, 165;
-  --nura-amber-2: var(--nura-sage-600);
-  --nura-amber-2-rgb: 186, 205, 193;
-  --nura-amber-deep: #2b4036;
+  --nura-teal: #5dccae;  /* generic cool — see note above */
+  --nura-teal-rgb: 93, 204, 174;
+  --nura-teal-mid: #2f9e83;
+  --nura-teal-mid-rgb: 47, 158, 131;
+  --nura-teal-deep: #15564a;
+  --nura-amber: #e0a23e; /* generic warm — see note above */
+  --nura-amber-rgb: 224, 162, 62;
+  --nura-amber-2: #c47f24;
+  --nura-amber-2-rgb: 196, 127, 36;
+  --nura-amber-deep: #7a4e12;
 
-  --nura-sleep-deep: var(--nura-metric-sleep);
-  --nura-sleep-deep-rgb: var(--nura-metric-sleep-rgb);
-  --nura-rose: var(--nura-metric-rhr);
-  --nura-rose-rgb: var(--nura-metric-rhr-rgb);
-  --nura-heart: var(--nura-metric-heart);
-  --nura-heart-rgb: var(--nura-metric-heart-rgb);
-  --nura-heart-hi: var(--nura-metric-rhr-hi);
-  --nura-heart-hi-rgb: 186, 205, 193;
-  --nura-violet: var(--nura-metric-resp);
-  --nura-violet-rgb: var(--nura-metric-resp-rgb);
-  --nura-mauve: var(--nura-metric-resp);
-  --nura-aqua: var(--nura-metric-hrv);
-  --nura-aqua-rgb: var(--nura-metric-hrv-rgb);
-  --nura-ice: var(--nura-metric-oxygen);
-  --nura-ice-rgb: var(--nura-metric-oxygen-rgb);
-  --nura-ember: var(--nura-metric-activity);
-  --nura-ember-rgb: var(--nura-metric-activity-rgb);
-  --nura-gold-ring: var(--nura-metric-oxygen);
-  --nura-gold-ring-rgb: var(--nura-metric-oxygen-rgb);
-  --nura-orange: var(--nura-metric-activity);
-  --nura-orange-rgb: var(--nura-metric-activity-rgb);
+  --nura-sleep-deep: #5aa0e6;
+  --nura-sleep-deep-rgb: 90, 160, 230;
+  --nura-rose: #f0a890;
+  --nura-rose-rgb: 240, 168, 144;
+  --nura-heart: #e8615c;
+  --nura-heart-rgb: 232, 97, 92;
+  --nura-heart-hi: #f2998f;
+  --nura-heart-hi-rgb: 242, 153, 143;
+  --nura-violet: #b9a0e6;
+  --nura-violet-rgb: 185, 160, 230;
+  --nura-mauve: #a98fc4;
+  --nura-aqua: #4fc4d6;
+  --nura-aqua-rgb: 79, 196, 214;
+  --nura-ice: #aebfcf;
+  --nura-ice-rgb: 174, 191, 207;
+  --nura-ember: #e07a3c;
+  --nura-ember-rgb: 224, 122, 60;
+  --nura-gold-ring: #e8c266;
+  --nura-gold-ring-rgb: 232, 194, 102;
+  --nura-orange: #e3a263;
+  --nura-orange-rgb: 227, 162, 99;
 
   /* Ramp endpoints — the light/deep ends of the card gradients and rings.
      These followed their families onto the map. They resolve to the family's
@@ -435,17 +462,17 @@
      from the base would only reintroduce the two-tone fills this pass removed.
      Aliasing them also means they inherit the light column's contrast, which
      the old literals (#f7dd90, #dbe6ef) could never have on white. */
-  --nura-gold-ring-lo: var(--nura-metric-oxygen);
-  --nura-gold-ring-hi: var(--nura-metric-oxygen);
-  --nura-aqua-hi: var(--nura-metric-hrv);
-  --nura-aqua-hi-rgb: var(--nura-metric-hrv-rgb);
-  --nura-ice-hi: var(--nura-metric-oxygen);
-  --nura-ice-hi-rgb: var(--nura-metric-oxygen-rgb);
-  --nura-ember-hi: var(--nura-metric-activity);
-  --nura-ember-hi-rgb: var(--nura-metric-activity-rgb);
-  --nura-ember-lo: var(--nura-metric-activity);
-  --nura-orange-hi: var(--nura-metric-activity);
-  --nura-orange-mid: var(--nura-metric-activity);
+  --nura-gold-ring-lo: #c99a34;
+  --nura-gold-ring-hi: #f7dd90;
+  --nura-aqua-hi: #7fdce8;
+  --nura-aqua-hi-rgb: 127, 220, 232;
+  --nura-ice-hi: #dbe6ef;
+  --nura-ice-hi-rgb: 219, 230, 239;
+  --nura-ember-hi: #f0a05a;
+  --nura-ember-hi-rgb: 240, 160, 90;
+  --nura-ember-lo: #c85e28;
+  --nura-orange-hi: #f3c795;
+  --nura-orange-mid: #f0bc84;
   /* Dimmed/inactive bars (e.g. days before today on the steps strip). */
   --nura-bar-dim-top: #615c53;
   --nura-bar-dim-bot: #403c36;
@@ -652,6 +679,20 @@
   --nura-gauge-tick: #cfcbc1;
   --nura-scale-end: var(--nura-track-neutral-strong);
   --nura-scale-mid: var(--nura-track-neutral);
+
+  /* The light half of the split described in the dark column: the heart-rate
+     zone bar walks the one sage ladder, so the bar says "how much" and the
+     status chip beside it keeps the job of saying whether that is good. */
+  --nura-hr-zone-1: var(--nura-step-1);
+  --nura-hr-zone-2: var(--nura-step-2);
+  --nura-hr-zone-3: var(--nura-step-3);
+  --nura-hr-zone-4: var(--nura-step-4);
+
+  /* Light half of the dial split — three steps of the one sage ladder. */
+  --nura-dial-1: var(--nura-step-2);
+  --nura-dial-2: var(--nura-step-3);
+  --nura-dial-3: var(--nura-step-4);
+  --nura-dial-glow-rgb: var(--nura-sage-rgb);
 
   --nura-ramp-hr-1: var(--nura-step-1);
   --nura-ramp-hr-2: var(--nura-step-2);
@@ -924,6 +965,45 @@
   --nura-record: var(--nura-status-alert);               /*  5.6:1 — #ff4c5c is only 3.3:1 on white */
   --nura-record-rgb: var(--nura-status-alert-rgb);
   --nura-accent-disabled: #8fa398;      /* solid, so the label stays readable */
+
+  /* ── Aliases pinned for light ────────────────────────────────────────────
+     These names resolve through the metric map, and the map is sage in light
+     — which is why they carried no light entry: the alias produced the right
+     answer on its own. Now that the DARK column has its per-metric hues back,
+     an unpinned alias would hand light whichever literal dark restored. Each
+     one is pinned here to the value it already resolved to, so the two columns
+     are independent: dark is the original palette, light stays one sage. */
+  --nura-sleep-deep: var(--nura-metric-sleep);
+  --nura-sleep-deep-rgb: var(--nura-metric-sleep-rgb);
+  --nura-rose: var(--nura-metric-rhr);
+  --nura-rose-rgb: var(--nura-metric-rhr-rgb);
+  --nura-heart: var(--nura-metric-heart);
+  --nura-heart-rgb: var(--nura-metric-heart-rgb);
+  --nura-heart-hi: var(--nura-metric-rhr-hi);
+  --nura-violet: var(--nura-metric-resp);
+  --nura-violet-rgb: var(--nura-metric-resp-rgb);
+  --nura-mauve: var(--nura-metric-resp);
+  --nura-aqua: var(--nura-metric-hrv);
+  --nura-aqua-rgb: var(--nura-metric-hrv-rgb);
+  --nura-ice: var(--nura-metric-oxygen);
+  --nura-ice-rgb: var(--nura-metric-oxygen-rgb);
+  --nura-ember: var(--nura-metric-activity);
+  --nura-ember-rgb: var(--nura-metric-activity-rgb);
+  --nura-gold-ring: var(--nura-metric-oxygen);
+  --nura-gold-ring-rgb: var(--nura-metric-oxygen-rgb);
+  --nura-orange: var(--nura-metric-activity);
+  --nura-orange-rgb: var(--nura-metric-activity-rgb);
+  --nura-gold-ring-lo: var(--nura-metric-oxygen);
+  --nura-gold-ring-hi: var(--nura-metric-oxygen);
+  --nura-aqua-hi: var(--nura-metric-hrv);
+  --nura-aqua-hi-rgb: var(--nura-metric-hrv-rgb);
+  --nura-ice-hi: var(--nura-metric-oxygen);
+  --nura-ice-hi-rgb: var(--nura-metric-oxygen-rgb);
+  --nura-ember-hi: var(--nura-metric-activity);
+  --nura-ember-hi-rgb: var(--nura-metric-activity-rgb);
+  --nura-ember-lo: var(--nura-metric-activity);
+  --nura-orange-hi: var(--nura-metric-activity);
+  --nura-orange-mid: var(--nura-metric-activity);
 }
 
 @theme inline {

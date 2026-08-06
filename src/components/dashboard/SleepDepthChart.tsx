@@ -66,6 +66,10 @@ export default function SleepDepthChart({ data }: { data: SleepDepthChartData })
         key={i} x={x.toFixed(1)} y={yy.toFixed(1)} width={bw.toFixed(1)}
         height={h.toFixed(1)} rx={Math.min(bw / 2, h / 2).toFixed(1)}
         fill={STAGE_HEX[bandStage(d)]}
+        // Only the deepest band blooms — it is the peak of the night and the
+        // glow is what made it read as one on near-black. Dark-only: the light
+        // flattening layer switches every inline drop-shadow off.
+        style={bandStage(d) === "deep" ? { filter: `drop-shadow(0 0 1.5px ${STAGE_HEX.deep})` } : undefined}
       />
     );
   });

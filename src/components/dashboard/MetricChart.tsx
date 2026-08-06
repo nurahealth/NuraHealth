@@ -33,12 +33,14 @@ import {
 //    difference nobody can see. Height was always the real encoding; the colour
 //    grading was decorative double-encoding.
 //
-// 2. NO GLOW. The old chart put a drop-shadow bloom on the high bars, and the
-//    Steps-only "highTech" mode added lit-glass gradients, per-bar coloured
-//    glow, a blurred orange hotspot and a glowing peak label. Bloom is a
-//    dark-mode device that reads as grime over white, which is why the light
-//    theme had to switch it all off again in a flattening layer. The peak
-//    readout survives — it is information — without the glow.
+// 2. GLOW IS DARK-ONLY. The bar bloom and the lit peak label are the brand's
+//    original dark treatment and they are back: on near-black a bloom reads as
+//    a mark emitting light, which is the whole look. It is authored inline and
+//    NOT branched on theme, because the light flattening layer in globals.css
+//    already switches every inline drop-shadow off — so light gets the flat
+//    marks it needs without this file knowing which theme it is in.
+//    (The Steps-only "highTech" lit-glass gradients and the blurred hotspot
+//    stay retired: those were a second, parallel chart style, not a glow.)
 //
 // 3. The axis moved into the SVG and into the right gutter, so the labels
 //    cannot sit on the gridlines and the x row lines up with every other chart.
@@ -145,6 +147,11 @@ export default function MetricChart({
         {/* Bars — one colour, height carries the value */}
         {readings.map((v, i) => {
           const h = Math.max(norm(v) * plotH, 2);
+          // Bloom scales with the bar, so a tall reading glows harder — the
+          // original dark treatment. Neutralised wholesale in light.
+          const t = norm(v);
+          const glowR = (2 + t * 5).toFixed(1);
+          const glowA = (0.3 + t * 0.45).toFixed(2);
           return (
             <rect
               key={i}
@@ -153,6 +160,7 @@ export default function MetricChart({
               rx={Math.min(bw / 2, h / 2).toFixed(2)}
               fill={color.hex}
               opacity={hover != null && hover !== i ? 0.55 : 1}
+              style={{ filter: `drop-shadow(0 0 ${glowR}px rgba(${color.rgb},${glowA}))` }}
             />
           );
         })}
@@ -176,6 +184,7 @@ export default function MetricChart({
               fill: "var(--nura-text-secondary)",
               paintOrder: "stroke", stroke: "var(--nura-card)",
               strokeWidth: 3.5, strokeLinejoin: "round",
+              filter: `drop-shadow(0 0 5px rgba(${color.rgb},0.6))`,
             }}
           >
             {`${Math.round(readings[peakIdx])} · PEAK · ${clockAt(peakIdx, n)}`}

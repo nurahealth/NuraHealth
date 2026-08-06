@@ -234,7 +234,7 @@ function ArcGauge({ value, lo, hi, unit }: { value: number; lo: number; hi: numb
           cx={c} cy={c} r={r} fill="none"
           stroke={`url(#${gid})`} strokeWidth={stroke} strokeLinecap="round"
           strokeDasharray={`${arcLen} ${circ}`} strokeDashoffset={shownOffset}
-          style={{  transition: trans }}
+          style={{ filter: `drop-shadow(0 0 4px rgba(${GOLD_RGB},0.5))`, transition: trans }}
         />
       </svg>
 

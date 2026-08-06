@@ -154,7 +154,7 @@ function RestingHrRing({ bpm }: { bpm: number }) {
           stroke={`url(#${gid})`} strokeWidth={stroke} strokeLinecap="round"
           strokeDasharray={`${arcLen} ${circ}`} strokeDashoffset={shownOffset}
           style={{
-            
+            filter: `drop-shadow(0 0 7px rgba(${RING_GLOW},0.6))`,
             transition: reduced ? "none" : `stroke-dashoffset ${FILL_MS}ms cubic-bezier(.2,.7,.2,1)` }}
         />
       </svg>
@@ -438,15 +438,15 @@ function TrendChart({
 
       {/* Area fill + rose line */}
       <path d={area} fill={`url(#${uid}-area)`} />
-      <path d={line} fill="none" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" style={{ stroke: RING_FROM}} />
+      <path d={line} fill="none" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" style={{ stroke: RING_FROM, filter: `drop-shadow(0 0 4px rgba(${RING_GLOW},0.55))` }} />
 
       {/* Lowest point — teal dot + label */}
-      <circle cx={lowX.toFixed(1)} cy={lowY.toFixed(1)} r={3.4} style={{ fill: TEAL}} />
+      <circle cx={lowX.toFixed(1)} cy={lowY.toFixed(1)} r={3.4} style={{ fill: TEAL, filter: `drop-shadow(0 0 6px rgba(${TEAL_RGB},0.9))` }} />
       <text x={lowX.toFixed(1)} y={(lowY + 15).toFixed(1)} textAnchor="middle" fontSize={9.5} fontWeight={700} style={{ fill: TEAL, fontFamily: SANS }}>{lowV} low</text>
 
       {/* Today — teal dot inside a faint halo ring */}
       <circle cx={todayX.toFixed(1)} cy={todayY.toFixed(1)} r={8} fill="none" stroke={`rgba(${RING_GLOW},0.35)`} strokeWidth={1.5} />
-      <circle cx={todayX.toFixed(1)} cy={todayY.toFixed(1)} r={3.6} style={{ fill: RING_TO}} />
+      <circle cx={todayX.toFixed(1)} cy={todayY.toFixed(1)} r={3.6} style={{ fill: RING_TO, filter: `drop-shadow(0 0 6px rgba(${RING_GLOW},0.95))` }} />
 
       {/* X-axis labels (in-SVG so they align with the gutter) */}
       {xLabels.map((lab, i) => {
@@ -503,7 +503,7 @@ function WeeklyAvgChart({ d }: { d: RestingHrDetail }) {
 
       {/* Soft fill + glowing rose line */}
       <path d={area} fill={`url(#${uid}-area)`} />
-      <path d={line} fill="none" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" style={{ stroke: ROSE}} />
+      <path d={line} fill="none" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" style={{ stroke: ROSE, filter: `drop-shadow(0 0 5px rgba(${ROSE_RGB},0.55))` }} />
 
       {/* Per-point dots, value above, week label below */}
       {vals.map((v, i) => {
@@ -513,7 +513,7 @@ function WeeklyAvgChart({ d }: { d: RestingHrDetail }) {
         return (
           <g key={i}>
             {best && <circle cx={x.toFixed(1)} cy={y.toFixed(1)} r={8} fill="none" stroke={`rgba(${TEAL_RGB},0.4)`} strokeWidth={1.5} />}
-            <circle cx={x.toFixed(1)} cy={y.toFixed(1)} r={4} fill={fill} />
+            <circle cx={x.toFixed(1)} cy={y.toFixed(1)} r={4} fill={fill} style={{ filter: `drop-shadow(0 0 5px ${best ? `rgba(${TEAL_RGB},0.9)` : `rgba(${ROSE_RGB},0.55)`})` }} />
             <text x={x.toFixed(1)} y={(y - 13).toFixed(1)} textAnchor="middle" fontSize={11} fontWeight={700} fill={best ? TEAL : "var(--nura-text-primary)"} style={{ fontFamily: SANS }}>{v}</text>
             <text x={x.toFixed(1)} y={(bot + 20).toFixed(1)} textAnchor="middle" fontSize={11} fontWeight={best ? 700 : 500} fill={best ? TEXT : FAINT} style={{ fontFamily: SANS }}>{labels[i]}</text>
           </g>

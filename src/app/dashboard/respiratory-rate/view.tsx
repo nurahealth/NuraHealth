@@ -277,7 +277,7 @@ function Gauge({ value, paint }: { value: number; paint: MetricPaint }) {
           cx={c} cy={c} r={r} fill="none"
           stroke={paint.hex} strokeWidth={stroke} strokeLinecap="round"
           strokeDasharray={`${arcLen} ${circ}`} strokeDashoffset={shownOffset}
-          style={{ transition: trans }}
+          style={{ filter: `drop-shadow(0 0 7px ${paint.alpha(0.55)})`, transition: trans }}
         />
       </svg>
 

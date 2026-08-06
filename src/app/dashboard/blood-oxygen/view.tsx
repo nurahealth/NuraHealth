@@ -247,7 +247,7 @@ function RingGauge({ spo2 }: { spo2: number }) {
           stroke={`url(#${gid})`} strokeWidth={stroke} strokeLinecap="round"
           strokeDasharray={`${arcLen} ${circ}`} strokeDashoffset={shownOffset}
           style={{
-            
+            filter: `drop-shadow(0 0 7px rgba(${ICE_RGB},0.5))`,
             transition: reduced ? "none" : "stroke-dashoffset 1400ms cubic-bezier(.2,.7,.2,1)" }}
         />
       </svg>

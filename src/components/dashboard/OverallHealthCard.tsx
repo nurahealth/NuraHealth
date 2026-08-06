@@ -30,12 +30,18 @@ const GOLD = "var(--nura-good)";
 // three steps of the shared ordered ramp, so the hero mark on the dashboard is
 // the same colour idea as every chart beneath it — magnitude as depth, one hue.
 const RING_TOKENS = {
-  ringLo:    ["--nura-step-2", "#869a8e"],
-  ringMid:   ["--nura-step-3", "#9bb0a5"],
-  ringHi:    ["--nura-step-4", "#bacdc1"],
+  // The three dial stops are a THEME-SPLIT token (see globals.css): dark
+  // resolves them to the original sage → teal → blue sweep, light to three
+  // steps of the sage ladder. The component asks for "the dial ramp" and the
+  // stylesheet decides what that means, which is the only way both columns
+  // can be right at once.
+  ringLo:    ["--nura-dial-1", "#9bb0a5"],
+  ringMid:   ["--nura-dial-2", "#5dccae"],
+  ringHi:    ["--nura-dial-3", "#5aa0e6"],
   alert:     ["--nura-alert", "#e8745a"],
   inkRgb:    ["--nura-fg-rgb", "235,230,216"],
-  ringRgb:   ["--nura-sage-rgb", "155,176,165"],
+  tealRgb:   ["--nura-dial-glow-rgb", "93,204,174"],
+  teal:      ["--nura-dial-2", "#5dccae"],
   scoreFrom: ["--nura-score-from", "#ffffff"],
   scoreTo:   ["--nura-score-to", "#cfe0d6"],
   ringHead:  ["--nura-ring-head", "#ffffff"],
@@ -354,9 +360,9 @@ function HealthRing({ d, selected, onSelect }: { d: ReturnType<typeof getOverall
     <svg viewBox="0 0 390 372" style={{ width: "100%", height: "auto", display: "block" }}>
       <defs>
         <radialGradient id={`${uid}-core`} cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor={`rgba(${tk.ringRgb},0.22)`} />
-          <stop offset="60%" stopColor={`rgba(${tk.ringRgb},0.06)`} />
-          <stop offset="100%" stopColor={`rgba(${tk.ringRgb},0)`} />
+          <stop offset="0%" stopColor={`rgba(${tk.tealRgb},0.22)`} />
+          <stop offset="60%" stopColor={`rgba(${tk.tealRgb},0.06)`} />
+          <stop offset="100%" stopColor={`rgba(${tk.tealRgb},0)`} />
         </radialGradient>
         <linearGradient id={`${uid}-parc`} x1="0" y1="0" x2="1" y2="1">
           <stop offset="0%" stopColor={tk.ringLo} /><stop offset="55%" stopColor={tk.ringMid} /><stop offset="100%" stopColor={tk.ringHi} />
@@ -375,12 +381,17 @@ function HealthRing({ d, selected, onSelect }: { d: ReturnType<typeof getOverall
       </g>
 
       {/* Energy filaments */}
-      <g>{filaments}</g>
+      {/* Bloom is a dark-mode device — light on near-black. It is authored
+          inline here rather than branched on theme because the light-mode
+          flattening layer in globals.css already switches every inline
+          drop-shadow off (`[data-theme="light"] [style*="drop-shadow"]`), so
+          this restores dark's glow without putting a smudge on white. */}
+      <g style={{ filter: `drop-shadow(0 0 5px rgba(${tk.tealRgb},0.28))` }}>{filaments}</g>
 
       {/* Progress arc + pulsing head */}
       <circle cx={cx} cy={cy} r={pr} fill="none" stroke={`rgba(${tk.inkRgb},0.06)`} strokeWidth={3} />
-      <circle cx={cx} cy={cy} r={pr} fill="none" stroke={`url(#${uid}-parc)`} strokeWidth={3.2} strokeLinecap="round" strokeDasharray={`${vis.toFixed(1)} ${circ.toFixed(1)}`} transform={`rotate(-90 ${cx} ${cy})`} opacity={sel ? 0.5 : 1} />
-      <circle cx={hx.toFixed(1)} cy={hy.toFixed(1)} r={3.4} fill={tk.ringHead}>
+      <circle cx={cx} cy={cy} r={pr} fill="none" stroke={`url(#${uid}-parc)`} strokeWidth={3.2} strokeLinecap="round" strokeDasharray={`${vis.toFixed(1)} ${circ.toFixed(1)}`} transform={`rotate(-90 ${cx} ${cy})`} style={{ filter: `drop-shadow(0 0 5px rgba(${tk.tealRgb},0.55))` }} opacity={sel ? 0.5 : 1} />
+      <circle cx={hx.toFixed(1)} cy={hy.toFixed(1)} r={3.4} fill={tk.ringHead} style={{ filter: `drop-shadow(0 0 7px ${tk.teal})` }}>
         <animate attributeName="opacity" values="1;0.45;1" dur="2.6s" repeatCount="indefinite" />
       </circle>
 
@@ -392,7 +403,7 @@ function HealthRing({ d, selected, onSelect }: { d: ReturnType<typeof getOverall
         </>
       ) : (
         <>
-          <text x={cx} y={cy + 5} textAnchor="middle" fontFamily={SANS} fontSize={54} fontWeight={700} fill={`url(#${uid}-num)`}>{d.score}</text>
+          <text x={cx} y={cy + 5} textAnchor="middle" fontFamily={SANS} fontSize={54} fontWeight={700} fill={`url(#${uid}-num)`} style={{ filter: `drop-shadow(0 0 20px rgba(${tk.tealRgb},0.4))` }}>{d.score}</text>
           <text x={cx} y={cy + 27} textAnchor="middle" fontFamily={SANS} fontSize={9} fontWeight={700} letterSpacing="1.8" fill={`rgba(${tk.inkRgb},0.45)`}>HEALTH SCORE</text>
         </>
       )}
@@ -410,7 +421,7 @@ function HealthRing({ d, selected, onSelect }: { d: ReturnType<typeof getOverall
           <g key={p.key} style={{ cursor: "pointer" }} onClick={() => onSelect(p.key)}>
             <line x1={(cx + 64 * ca).toFixed(1)} y1={(cy + 64 * sa).toFixed(1)} x2={(cx + (big ? 86 : 82) * ca).toFixed(1)} y2={(cy + (big ? 86 : 82) * sa).toFixed(1)} stroke={acc[p.color]} strokeWidth={big ? 3 : 2.2} strokeLinecap="round" opacity={Number((0.85 * o).toFixed(2))} />
             <line x1={(cx + 92 * ca).toFixed(1)} y1={(cy + 92 * sa).toFixed(1)} x2={(cx + 110 * ca).toFixed(1)} y2={(cy + 110 * sa).toFixed(1)} stroke={acc[p.color]} strokeWidth={1.3} opacity={Number((0.45 * o).toFixed(2))} />
-            <circle cx={(cx + 92 * ca).toFixed(1)} cy={(cy + 92 * sa).toFixed(1)} r={big ? 3.4 : 2.4} fill={acc[p.color]} opacity={o} />
+            <circle cx={(cx + 92 * ca).toFixed(1)} cy={(cy + 92 * sa).toFixed(1)} r={big ? 3.4 : 2.4} fill={acc[p.color]} opacity={o} style={{ filter: `drop-shadow(0 0 ${big ? 7 : 4}px ${acc[p.color]})` }} />
             <text x={lx.toFixed(1)} y={vy.toFixed(1)} textAnchor={anchor} fontFamily={SANS} fontSize={17.5} fontWeight={700} className="nura-datum-ink" style={{ fill: acc[p.color] }} opacity={o}>
               {p.score}<tspan fontSize="9" dx="3" dy="-5" fill={tCol(p.trend, tk)}>{tArrow(p.trend)}</tspan>
             </text>
