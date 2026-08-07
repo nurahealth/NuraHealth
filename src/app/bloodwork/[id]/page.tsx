@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, use } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
+import { useIsLightForm } from "@/lib/themeTokens";
 import type { User } from "@supabase/supabase-js";
 import { addSupplement } from "@/lib/supplements";
 import { saveItem } from "@/lib/saved";
@@ -141,6 +142,7 @@ function smoothPath(pts: Array<{ x: number; y: number }>): string {
 function TrendChart({ points: allPoints }: { points: ScoreTrendPoint[] }) {
   const [range, setRange] = useState<TrendRange>("All");
   const [hoverIdx, setHoverIdx] = useState<number | null>(null);
+  const lightForm = useIsLightForm();
 
   const points = filterByRange(allPoints, range);
   const hasEnough = points.length >= 2;
@@ -241,9 +243,27 @@ function TrendChart({ points: allPoints }: { points: ScoreTrendPoint[] }) {
               <defs>
                 {/* Matches the app's area fill: ground for the line, never its
                     own shape. 0.3 read as a filled block under the curve. */}
-                <linearGradient id="trend-fill-d" className="nura-area-grad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor={SERIES} stopOpacity="0.13" />
-                  <stop offset="100%" stopColor={SERIES} stopOpacity="0.015" />
+                {/* Light opts OUT of .nura-area-grad — that class exists to
+                    flatten dark's bloom-y fill to one even band, and this
+                    gradient is already the flat sage fade the light line charts
+                    use. Being flattened would kill the fade. */}
+                <linearGradient
+                  id="trend-fill-d"
+                  className={lightForm ? undefined : "nura-area-grad"}
+                  x1="0" y1="0" x2="0" y2="1"
+                >
+                  <stop
+                    offset="0%"
+                    style={lightForm ? { stopColor: "var(--nura-sage-mid)" } : undefined}
+                    stopColor={lightForm ? undefined : SERIES}
+                    stopOpacity={lightForm ? 0.1 : 0.13}
+                  />
+                  <stop
+                    offset="100%"
+                    style={lightForm ? { stopColor: "var(--nura-sage-mid)" } : undefined}
+                    stopColor={lightForm ? undefined : SERIES}
+                    stopOpacity={lightForm ? 0 : 0.015}
+                  />
                 </linearGradient>
               </defs>
 
@@ -264,6 +284,9 @@ function TrendChart({ points: allPoints }: { points: ScoreTrendPoint[] }) {
                 <path
                   d={linePath}
                   fill="none" stroke={SERIES} strokeWidth={2}
+                  // The system's deepest step in light — a line is one thin
+                  // mark carrying the whole series. No aura on the stroke.
+                  style={lightForm ? { stroke: "var(--nura-chart-stroke)" } : undefined}
                   strokeLinejoin="round" strokeLinecap="round"
                   vectorEffect="non-scaling-stroke"
                 />

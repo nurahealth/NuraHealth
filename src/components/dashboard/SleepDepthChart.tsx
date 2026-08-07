@@ -24,7 +24,7 @@ import { useAccents } from "@/lib/accents";
 // is barely a mark at all, and the ordered ramp now carries the distinction
 // that the lightening was there to prop up.
 
-import { MONO, roundedTopBar, SageBarDefs, sageFill, BarTopEdge, type SageTone } from "@/components/dashboard/chartTheme";
+import { MONO, roundedTopBar, SageBarDefs, sageFill, BarTopEdge, AuraDefs, BarAura, type SageTone } from "@/components/dashboard/chartTheme";
 
 const SANS = "var(--font-inter), system-ui, sans-serif";
 
@@ -95,6 +95,18 @@ export default function SleepDepthChart({ data }: { data: SleepDepthChartData })
     );
   });
 
+  // Aura pass — deep sleep only. It is the peak of the night, and lighting it
+  // is the light-mode answer to the bloom the deep band carries in dark.
+  // Its own layer under the bars, so a soft edge never laps a neighbour.
+  const auras: ReactElement[] = lightForm
+    ? depth.flatMap((d, i) => {
+        if (LIGHT_STAGE_TONE[bandStage(d)] !== "deep") return [];
+        const x = i * slot + (slot - bw) / 2;
+        const yy = yOf(d);
+        return [<BarAura key={`a${i}`} uid={uid} x={x} y={yy} w={bw} h={bot - yy} r={2} />];
+      })
+    : [];
+
   // Three faint horizontal gridlines for structure.
   const gridlines = [0.25, 0.5, 0.75].map((f, i) => (
     <line key={`g${i}`} x1={0} x2={W} y1={top + plotH * f} y2={top + plotH * f} stroke="var(--nura-hairline)" strokeWidth={1} />
@@ -103,8 +115,9 @@ export default function SleepDepthChart({ data }: { data: SleepDepthChartData })
   return (
     <div>
       <svg width="100%" height={H} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" style={{ display: "block", overflow: "visible" }}>
-        {lightForm && <defs><SageBarDefs uid={uid} /></defs>}
+        {lightForm && <defs><SageBarDefs uid={uid} /><AuraDefs uid={uid} /></defs>}
         {gridlines}
+        {auras}
         {bars}
       </svg>
 

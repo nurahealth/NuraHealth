@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import NuraPlexus from '@/components/NuraPlexus';
 import FitnessBackButton from './FitnessBackButton';
 import MetricLineChart from '@/components/dashboard/MetricLineChart';
+import { useIsLightForm } from '@/lib/themeTokens';
 import { useMetricPaint } from '@/lib/metricColors';
 import {
   addProgressPhoto,
@@ -566,6 +567,18 @@ function VolumeBars({ weeks }: { weeks: { key: string; date: string; value: numb
   const anyVol = weeks.some((w) => w.value > 0);
   const latest = weeks[weeks.length - 1]?.value ?? 0;
   const FAINT = 'var(--nura-text-tertiary)';
+  // Light draws the shared three-tone bars: the newest week is the emphasis
+  // (deep, with an aura), earlier weeks are body, and a week with no training
+  // is mist. Same geometry — only the paint differs. Dark keeps SERIES.
+  const lightForm = useIsLightForm();
+  const lastIdx = weeks.length - 1;
+  const barPaint = (value: number, i: number): string => {
+    if (!lightForm) return value > 0 ? SERIES : 'rgba(var(--nura-bg-tint-rgb),.08)';
+    if (value <= 0) return 'var(--nura-sage-mist)';
+    return i === lastIdx
+      ? 'linear-gradient(180deg,var(--nura-sage-deep-top),var(--nura-sage-deep-base))'
+      : 'linear-gradient(180deg,var(--nura-sage-mid-top),var(--nura-sage-mid-base))';
+  };
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}>
@@ -574,12 +587,18 @@ function VolumeBars({ weeks }: { weeks: { key: string; date: string; value: numb
         </span>
       </div>
       <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6, height: 92 }}>
-        {weeks.map((w) => {
+        {weeks.map((w, i) => {
           const h = anyVol ? Math.max(3, Math.round((w.value / max) * 92)) : 3;
           return (
             <div key={w.key} title={`${fmtDay(w.date)} · ${Math.round(w.value).toLocaleString()}`}
               style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', height: '100%' }}>
-              <div style={{ height: h, borderRadius: 4, background: w.value > 0 ? SERIES : 'rgba(var(--nura-bg-tint-rgb),.08)', transition: 'height .4s ease' }} />
+              <div style={{
+                height: h, borderRadius: 4, background: barPaint(w.value, i), transition: 'height .4s ease',
+                // Aura on the newest week only — the one bar this chart points at.
+                boxShadow: lightForm && w.value > 0 && i === lastIdx
+                  ? '0 0 6px 0.8px rgba(125, 150, 138, 0.4)'
+                  : undefined,
+              }} />
             </div>
           );
         })}
@@ -610,7 +629,7 @@ function ExerciseStrengthModal({ name, unit, points, pr, onClose }: {
       )}
       <div style={{ fontSize: 11, letterSpacing: '.05em', color: MUT, marginBottom: 8 }}>WEIGHT OVER TIME</div>
       {points.length >= 2 ? (
-        <div className="nura-card" style={{ background: SURF, border: `1px solid ${LINE}`, borderRadius: 18, padding: '16px 14px' }}>
+        <div className="nura-card nura-chart-card" style={{ background: SURF, border: `1px solid ${LINE}`, borderRadius: 18, padding: '16px 14px' }}>
           <WeightTrendChart points={points} unit={unit} />
         </div>
       ) : (
@@ -995,7 +1014,7 @@ export default function FitnessProgress() {
 
             {/* trend chart, or first-weigh-in prompt when there's nothing to plot */}
             {body.chartPoints.length >= 2 ? (
-              <div className="nura-card" style={{ background: SURF, border: `1px solid ${LINE}`, borderRadius: 18, padding: '16px 14px' }}>
+              <div className="nura-card nura-chart-card" style={{ background: SURF, border: `1px solid ${LINE}`, borderRadius: 18, padding: '16px 14px' }}>
                 <WeightTrendChart points={body.chartPoints} unit={body.unit} />
               </div>
             ) : (
@@ -1153,7 +1172,7 @@ export default function FitnessProgress() {
 
               {/* weekly volume — Σ weight×reps over the last 8 weeks */}
               <div style={{ fontSize: 11, letterSpacing: '.05em', color: MUT, marginBottom: 10 }}>WEEKLY VOLUME · LAST {VOL_WEEKS} WEEKS</div>
-              <div className="nura-card" style={{ background: SURF, border: `1px solid ${LINE}`, borderRadius: 18, padding: '16px 14px' }}>
+              <div className="nura-card nura-chart-card" style={{ background: SURF, border: `1px solid ${LINE}`, borderRadius: 18, padding: '16px 14px' }}>
                 <VolumeBars weeks={strength.weeklyVolume} />
               </div>
             </div>

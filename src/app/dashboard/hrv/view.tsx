@@ -2,7 +2,10 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { usePrefersReducedMotion } from "@/components/dashboard/chartTheme";
+import {
+  AURA, LightRingBase, LightRingEdge, ringArcFill, usePrefersReducedMotion,
+} from "@/components/dashboard/chartTheme";
+import { useIsLightForm } from "@/lib/themeTokens";
 import { getMetric, getRecoveryDetail, type HrvTrendChart, type RecoveryDriver } from "@/lib/dashboardData";
 import AuroraBackground from "@/components/dashboard/AuroraBackground";
 import GlassCard from "@/components/dashboard/GlassCard";
@@ -64,7 +67,10 @@ function HrvRing({ hrv }: { hrv: number }) {
   // Geometry — a 270° arc with the gap centered at the bottom (mirrors RadialGauge).
   const size = 236;
   const stroke = 13;
-  const pad = 16; // breathing room so the glow isn't clipped
+  // Breathing room for dark's glow and for light's aura falloff. The SVG is
+  // offset back by `pad`, so the ring itself does not move either way.
+  const pad = 16 + Math.ceil(AURA.blurRing * 2);
+  const lightForm = useIsLightForm();
   const box = size + pad * 2;
   const r = (size - stroke) / 2;
   const c = box / 2;
@@ -119,20 +125,35 @@ function HrvRing({ hrv }: { hrv: number }) {
             <stop offset="1"  style={{ stopColor: RING_TO }}/>
           </linearGradient>
         </defs>
+        {/* Light: the shared ring treatment — gradient, aura and empty track. */}
+        {lightForm && (
+          <LightRingBase
+            uid={gid} cx={c} cy={c} r={r} stroke={stroke}
+            arcLen={arcLen} circ={circ} offset={shownOffset}
+            transition={reduced ? undefined : `stroke-dashoffset ${FILL_MS}ms cubic-bezier(.2,.7,.2,1)`}
+          />
+        )}
+
         {/* faint full 270° track */}
-        <circle
-          cx={c} cy={c} r={r} fill="none" stroke={`rgba(${RING_GLOW},0.14)`}
-          strokeWidth={stroke} strokeLinecap="round" strokeDasharray={`${arcLen} ${circ}`}
-        />
+        {!lightForm && (
+          <circle
+            cx={c} cy={c} r={r} fill="none" stroke={`rgba(${RING_GLOW},0.14)`}
+            strokeWidth={stroke} strokeLinecap="round" strokeDasharray={`${arcLen} ${circ}`}
+          />
+        )}
         {/* aqua-teal gradient fill — loads up to the reading strength */}
         <circle
           cx={c} cy={c} r={r} fill="none"
-          stroke={`url(#${gid})`} strokeWidth={stroke} strokeLinecap="round"
+          stroke={lightForm ? ringArcFill(gid) : `url(#${gid})`} strokeWidth={stroke} strokeLinecap="round"
           strokeDasharray={`${arcLen} ${circ}`} strokeDashoffset={shownOffset}
           style={{
             filter: `drop-shadow(0 0 7px rgba(${RING_GLOW},0.6))`,
             transition: reduced ? "none" : `stroke-dashoffset ${FILL_MS}ms cubic-bezier(.2,.7,.2,1)` }}
         />
+
+        {lightForm && (
+          <LightRingEdge cx={c} cy={c} r={r} stroke={stroke} sweep={(arc * Math.PI / 180) * frac} />
+        )}
       </svg>
 
       {/* centered content — count-up number + muted label */}

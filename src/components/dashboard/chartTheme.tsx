@@ -673,3 +673,200 @@ export function BarTopEdge({ x, y, w, r = 2 }: { x: number; y: number; w: number
 export function brighter(tone: SageTone): SageTone {
   return tone === "mid" ? "deep" : tone === "faint" ? "mid" : "deep";
 }
+
+/* ───────────────────────────────────────────────────────────────────────────
+   THE LUMINOUS AURA — light rendering only, identical geometry to dark.
+
+   A soft, blurred copy of a mark, drawn BENEATH it in the mark's own hue.
+
+   WHY THIS AND NOT A GLOW. Dark's bloom is a drop-shadow ON the mark: on
+   near-black that reads as a mark emitting light, and it is the brand. The
+   same filter over white has nowhere to bloom to — it lands as grey haze
+   around the mark and dirties it, which is why the light flattening layer in
+   globals.css switches every inline drop-shadow off. The aura inverts the
+   relationship: it sits UNDER the mark and slightly proud of it, so the mark
+   reads as resting on light rather than leaking it. Nothing is drawn over the
+   data, so nothing gets muddied.
+
+   WHY ONLY ON EMPHASIS. The aura is a way of saying "this one". Applied to
+   every mark it stops being a signal and becomes a texture — the chart looks
+   soft-focus and the eye has nowhere to land. So it goes on goal-hit bars,
+   peaks, the latest readings, ring fills and the latest point of a line, and
+   on nothing else. Standard mid-tone bars and mist bars stay flat.
+
+   The numbers are SVG attributes (stdDeviation, stroke-width) and an
+   attribute will not resolve var(), so they live here as constants while the
+   colour stays a token.
+   ─────────────────────────────────────────────────────────────────────── */
+
+export const AURA = {
+  /** Gaussian σ under a bar. */
+  blurBar: 3,
+  /** Under a ring or arc — a bigger mark wants a wider falloff to read soft. */
+  blurRing: 4.5,
+  opacity: 0.4,
+  /** Total px a bar's aura outgrows its bar by. */
+  barGrow: 1.6,
+  /** A ring aura's stroke, as a multiple of the arc's own width. */
+  ringScale: 1.6,
+  /** Radians trimmed off each end of a ring's inner-edge highlight. */
+  edgeInset: 0.06,
+  /** The inner-edge highlight's own stroke width. */
+  edgeWidth: 1.2,
+} as const;
+
+/**
+ * The two blur filters an aura needs. Drop once inside a chart's <defs>,
+ * alongside SageBarDefs.
+ *
+ * The filter region is generous on purpose: the default -10%/+10% clips a
+ * gaussian at roughly 1σ, which shows up as an aura with visibly straight
+ * sides. These give the full ~3σ falloff room to land.
+ */
+export function AuraDefs({ uid }: { uid: string }) {
+  return (
+    <>
+      <filter id={`${uid}-aura-bar`} x="-70%" y="-70%" width="240%" height="240%">
+        <feGaussianBlur stdDeviation={AURA.blurBar} />
+      </filter>
+      <filter id={`${uid}-aura-ring`} x="-40%" y="-40%" width="180%" height="180%">
+        <feGaussianBlur stdDeviation={AURA.blurRing} />
+      </filter>
+    </>
+  );
+}
+
+/**
+ * A bar's aura: the same rounded-top shape, grown by AURA.barGrow.
+ *
+ * It grows sideways symmetrically but UPWARD only — the extra height is added
+ * at the cap and the foot stays pinned to the axis. Growing both ways would
+ * push a soft sage edge below the baseline, which reads as the bar column
+ * sitting in fog rather than standing on a line.
+ *
+ * Render these as their own pass BEFORE the bars, not interleaved: drawn per
+ * bar, a wide aura laps over the neighbour that was drawn before it.
+ */
+export function BarAura({
+  uid, x, y, w, h, r = 2,
+}: { uid: string; x: number; y: number; w: number; h: number; r?: number }) {
+  const g = AURA.barGrow;
+  return (
+    <path
+      data-decor="bar-aura"
+      d={roundedTopBar(x - g / 2, y - g, w + g, h + g, r + g / 2)}
+      fill="var(--nura-chart-aura)"
+      opacity={AURA.opacity}
+      filter={`url(#${uid}-aura-bar)`}
+    />
+  );
+}
+
+/**
+ * Paint props for a ring's aura — a wider, blurred copy of the arc stroke.
+ * Spread onto a <circle> that already carries the arc's geometry (radius,
+ * dash array, dash offset and its transition), so the aura sweeps with the
+ * fill instead of appearing under a ring that is still filling.
+ */
+export function ringAuraPaint(uid: string, arcWidth: number) {
+  return {
+    stroke: "var(--nura-chart-aura)",
+    strokeWidth: arcWidth * AURA.ringScale,
+    opacity: AURA.opacity,
+    filter: `url(#${uid}-aura-ring)`,
+  } as const;
+}
+
+/* ── The light ring, assembled ───────────────────────────────────────────────
+   Every ring in the app is hand-rolled around its own animation state, so
+   these are the LAYERS rather than a whole ring: drop LightRingBase before the
+   existing fill circle, point that fill at ringArcFill(uid), and drop
+   LightRingEdge after it. Nine rings then share one treatment instead of nine
+   near-copies drifting apart, and each keeps the sweep and count-up it had.
+
+   Render order matters — the aura has to sit UNDER the track, or the blur
+   washes over the very arc it is lighting.
+   ────────────────────────────────────────────────────────────────────────── */
+
+/** The gradient a light ring's fill should use. Pair with LightRingBase. */
+export function ringArcFill(uid: string): string {
+  return `url(#${uid}-arc)`;
+}
+
+export function LightRingBase({
+  uid, cx, cy, r, stroke, arcLen, circ, offset, transition,
+}: {
+  uid: string; cx: number; cy: number; r: number; stroke: number;
+  arcLen: number; circ: number; offset: number; transition?: string;
+}) {
+  return (
+    <>
+      <defs>
+        <AuraDefs uid={uid} />
+        {/* Deep at the start of the sweep, pale at its end, so a ring reads as
+            one lit object rather than a stroke of flat colour. */}
+        <linearGradient id={`${uid}-arc`} x1="0" y1="1" x2="1" y2="0">
+          <stop offset="0%" stopColor="var(--nura-ring-arc-from)" />
+          <stop offset="100%" stopColor="var(--nura-ring-arc-to)" />
+        </linearGradient>
+      </defs>
+
+      {/* Aura — carries the fill's dash geometry and transition so it sweeps
+          WITH the arc rather than sitting under a ring that has not filled. */}
+      <circle
+        data-decor="ring-aura"
+        cx={cx} cy={cy} r={r} fill="none" strokeLinecap="round"
+        strokeDasharray={`${arcLen} ${circ}`} strokeDashoffset={offset}
+        {...ringAuraPaint(uid, stroke)}
+        style={transition ? { transition } : undefined}
+      />
+
+      {/* Empty track */}
+      <circle
+        cx={cx} cy={cy} r={r} fill="none" stroke="var(--nura-chart-track)"
+        strokeWidth={stroke} strokeLinecap="round"
+        strokeDasharray={`${arcLen} ${circ}`}
+      />
+    </>
+  );
+}
+
+/** The hairline highlight just inside a filled arc. Render AFTER the fill. */
+export function LightRingEdge({
+  cx, cy, r, stroke, sweep, from = 0,
+}: { cx: number; cy: number; r: number; stroke: number; sweep: number; from?: number }) {
+  const d = arcEdgePath(cx, cy, r - stroke / 2 + AURA.edgeWidth, from, sweep);
+  if (!d) return null;
+  return (
+    <path
+      data-decor="ring-edge" d={d} fill="none"
+      stroke="var(--nura-ring-edge)" strokeWidth={AURA.edgeWidth} strokeLinecap="round"
+    />
+  );
+}
+
+/**
+ * The inner-edge highlight path for a filled arc — a hairline just inside the
+ * stroke, trimmed at both ends so it reads as light catching the ring rather
+ * than as a second, thinner ring.
+ *
+ * Authored as an explicit path at the arc's resting angle rather than as a
+ * dashed circle: a dash pattern is measured from the path origin, so insetting
+ * the LEADING end of a partially-filled arc is not expressible in one — the
+ * inset is swallowed by the dash offset as soon as the ring is less than full.
+ *
+ * `from` is where the sweep starts in the ring's own (pre-rotation) frame;
+ * `sweep` is how far it runs, both in radians, clockwise.
+ */
+export function arcEdgePath(
+  cx: number, cy: number, r: number, from: number, sweep: number,
+): string {
+  const a0 = from + AURA.edgeInset;
+  const a1 = from + sweep - AURA.edgeInset;
+  if (a1 <= a0) return "";
+  return [
+    `M ${(cx + r * Math.cos(a0)).toFixed(2)} ${(cy + r * Math.sin(a0)).toFixed(2)}`,
+    `A ${r.toFixed(2)} ${r.toFixed(2)} 0 ${a1 - a0 > Math.PI ? 1 : 0} 1`,
+    `${(cx + r * Math.cos(a1)).toFixed(2)} ${(cy + r * Math.sin(a1)).toFixed(2)}`,
+  ].join(" ");
+}

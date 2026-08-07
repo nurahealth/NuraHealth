@@ -1,11 +1,14 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getRespiratoryDetail, SOURCE_LABEL, type RespiratoryDetail } from "@/lib/dashboardData";
 import MetricEducation, { type MetricEducationItem } from "@/components/dashboard/MetricEducation";
 import MetricLineChart from "@/components/dashboard/MetricLineChart";
-import { usePrefersReducedMotion } from "@/components/dashboard/chartTheme";
+import {
+  AURA, LightRingBase, LightRingEdge, ringArcFill, usePrefersReducedMotion,
+} from "@/components/dashboard/chartTheme";
+import { useIsLightForm } from "@/lib/themeTokens";
 import { useMetricPaint, type MetricPaint } from "@/lib/metricColors";
 
 const SURFACE = "var(--nura-surface)";
@@ -220,9 +223,14 @@ function StripCell({ v, k, first }: { v: string; k: string; first?: boolean }) {
 // The gradient and the drop-shadow bloom are gone, along with the numeral's
 // coloured text-shadow — see the note on the HRV ring.
 function Gauge({ value, paint }: { value: number; paint: MetricPaint }) {
+  const lightForm = useIsLightForm();
+  const rawUid = useId();
+  const ringUid = `rr-ring-${rawUid.replace(/[^a-zA-Z0-9]/g, "")}`;
   const size = 204;
   const stroke = 13;
-  const pad = 18; // room for the glow
+  // Room for dark's glow and for light's aura falloff. The SVG is offset back
+  // by `pad`, so the ring itself does not move either way.
+  const pad = 18 + Math.ceil(AURA.blurRing * 2);
   const box = size + pad * 2;
   const r = (size - stroke) / 2;
   const c = box / 2;
@@ -270,15 +278,30 @@ function Gauge({ value, paint }: { value: number; paint: MetricPaint }) {
         width={box} height={box} viewBox={`0 0 ${box} ${box}`}
         style={{ position: "absolute", top: -pad, left: -pad, transform: `rotate(${rotation}deg)`, overflow: "visible", pointerEvents: "none" }}
       >
+        {/* Light: the shared ring treatment — gradient, aura and empty track. */}
+        {lightForm && (
+          <LightRingBase
+            uid={ringUid} cx={c} cy={c} r={r} stroke={stroke}
+            arcLen={arcLen} circ={circ} offset={shownOffset}
+            transition={reduced ? undefined : "stroke-dashoffset 1400ms cubic-bezier(.2,.7,.2,1)"}
+          />
+        )}
+
         {/* faint full 270° track */}
-        <circle cx={c} cy={c} r={r} fill="none" stroke={paint.alpha(0.16)} strokeWidth={stroke} strokeLinecap="round" strokeDasharray={`${arcLen} ${circ}`} />
+        {!lightForm && (
+          <circle cx={c} cy={c} r={r} fill="none" stroke={paint.alpha(0.16)} strokeWidth={stroke} strokeLinecap="round" strokeDasharray={`${arcLen} ${circ}`} />
+        )}
         {/* the fill — solid, loading up to the value */}
         <circle
           cx={c} cy={c} r={r} fill="none"
-          stroke={paint.hex} strokeWidth={stroke} strokeLinecap="round"
+          stroke={lightForm ? ringArcFill(ringUid) : paint.hex} strokeWidth={stroke} strokeLinecap="round"
           strokeDasharray={`${arcLen} ${circ}`} strokeDashoffset={shownOffset}
           style={{ filter: `drop-shadow(0 0 7px ${paint.alpha(0.55)})`, transition: trans }}
         />
+
+        {lightForm && (
+          <LightRingEdge cx={c} cy={c} r={r} stroke={stroke} sweep={(arc * Math.PI / 180) * frac} />
+        )}
       </svg>
 
       {/* centered content — counting value + unit + label */}

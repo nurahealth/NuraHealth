@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { useIsLightForm } from "@/lib/themeTokens";
 import type { MetricPaint } from "@/lib/metricColors";
-import { usePrefersReducedMotion } from "@/components/dashboard/chartTheme";
+import {
+  AURA, LightRingBase, LightRingEdge, ringArcFill, usePrefersReducedMotion,
+} from "@/components/dashboard/chartTheme";
 
 // ── Animated goal ring ────────────────────────────────────────────────────────
 // A 270° arc (gap at bottom-center): a faint track + a solid fill in the
@@ -36,10 +38,14 @@ export default function ActiveEnergyRing({
   /** Optional muted line shown inside the ring, beneath the number (e.g. "of 750 goal"). */
   innerLabel?: string;
 }) {
-  // Geometry — a 270° arc with the gap centered at the bottom.
-  const pad = Math.round(stroke * 1.3);
+  // Geometry — a 270° arc with the gap centered at the bottom. The pad also has
+  // to clear the aura's ~3σ falloff, or the soft edge is sliced at the card;
+  // the SVG is offset back by it, so the ring itself does not move.
+  const pad = Math.round(stroke * 1.3) + Math.ceil(AURA.blurRing * 2);
   const box = size + pad * 2;
   const lightForm = useIsLightForm();
+  const rawUid = useId();
+  const uid = `ae-${rawUid.replace(/[^a-zA-Z0-9]/g, "")}`;
   const r = (size - stroke) / 2;
   const c = box / 2;
   const circ = 2 * Math.PI * r;
@@ -92,22 +98,35 @@ export default function ActiveEnergyRing({
         width={box} height={box} viewBox={`0 0 ${box} ${box}`}
         style={{ position: "absolute", top: -pad, left: -pad, transform: `rotate(${rotation}deg)`, overflow: "visible", pointerEvents: "none" }}
       >
+        {/* Light: gradient def + aura + the shared empty track. Dark keeps the
+            faint tint of its own series below — it has to glow off near-black,
+            where a flat neutral track would read as a grey ring. */}
+        {lightForm && (
+          <LightRingBase
+            uid={uid} cx={c} cy={c} r={r} stroke={stroke}
+            arcLen={arcLen} circ={circ} offset={shownOffset}
+            transition={reduced ? undefined : `stroke-dashoffset ${fillMs}ms cubic-bezier(.2,.7,.2,1)`}
+          />
+        )}
+
         {/* faint full 270° track */}
-        <circle
-          cx={c} cy={c} r={r} fill="none"
-          // Track: a tint of the series in dark (it has to glow faintly off the
-          // near-black); a soft warm grey in light, so the ring reads as "fill
-          // against empty" rather than "dark sage against pale sage".
-          stroke={lightForm ? "var(--nura-chart-track)" : color.alpha(0.16)}
-          strokeWidth={stroke} strokeLinecap="round" strokeDasharray={`${arcLen} ${circ}`}
-        />
+        {!lightForm && (
+          <circle
+            cx={c} cy={c} r={r} fill="none" stroke={color.alpha(0.16)}
+            strokeWidth={stroke} strokeLinecap="round" strokeDasharray={`${arcLen} ${circ}`}
+          />
+        )}
         {/* the fill — solid, loading up to goal progress */}
         <circle
           cx={c} cy={c} r={r} fill="none"
-          stroke={lightForm ? "var(--nura-sage-deep)" : color.hex} strokeWidth={stroke} strokeLinecap="round"
+          stroke={lightForm ? ringArcFill(uid) : color.hex} strokeWidth={stroke} strokeLinecap="round"
           strokeDasharray={`${arcLen} ${circ}`} strokeDashoffset={shownOffset}
           style={{ filter: `drop-shadow(0 0 7px rgba(${color.rgb},0.6))`, transition: reduced ? "none" : `stroke-dashoffset ${fillMs}ms cubic-bezier(.2,.7,.2,1)` }}
         />
+
+        {lightForm && (
+          <LightRingEdge cx={c} cy={c} r={r} stroke={stroke} sweep={(arc * Math.PI / 180) * frac} />
+        )}
       </svg>
 
       {/* dead-center overlay — number + inline "kcal", optional inner label beneath */}

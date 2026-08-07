@@ -2,7 +2,10 @@
 
 import { useEffect, useId, useState } from "react";
 import { useRouter } from "next/navigation";
-import { usePrefersReducedMotion } from "@/components/dashboard/chartTheme";
+import {
+  AURA, LightRingBase, LightRingEdge, ringArcFill, usePrefersReducedMotion,
+} from "@/components/dashboard/chartTheme";
+import { useIsLightForm } from "@/lib/themeTokens";
 import { getHeartRateDetail, getMetric } from "@/lib/dashboardData";
 import AuroraBackground from "@/components/dashboard/AuroraBackground";
 import GlassCard from "@/components/dashboard/GlassCard";
@@ -55,7 +58,10 @@ function HeartRateRing({ bpm, liveLabel }: { bpm: number; liveLabel: string }) {
   // Geometry — mirrors RadialGauge: a 270° arc with the gap centered at bottom.
   const size = 236;
   const stroke = 13;
-  const pad = 16; // breathing room so the glow isn't clipped
+  // Breathing room for dark's glow and for light's aura falloff. The SVG is
+  // offset back by `pad`, so the ring itself does not move either way.
+  const pad = 16 + Math.ceil(AURA.blurRing * 2);
+  const lightForm = useIsLightForm();
   const box = size + pad * 2;
   const r = (size - stroke) / 2;
   const c = box / 2;
@@ -114,20 +120,36 @@ function HeartRateRing({ bpm, liveLabel }: { bpm: number; liveLabel: string }) {
             <stop offset="1"  style={{ stopColor: RING_TO }}/>
           </linearGradient>
         </defs>
+        {/* Light: the shared ring treatment — its own gradient under the same
+            id, an aura sweeping with the fill, and the neutral empty track. */}
+        {lightForm && (
+          <LightRingBase
+            uid={gid} cx={c} cy={c} r={r} stroke={stroke}
+            arcLen={arcLen} circ={circ} offset={shownOffset}
+            transition={reduced ? undefined : "stroke-dashoffset 1.3s cubic-bezier(.2,.7,.2,1)"}
+          />
+        )}
+
         {/* faint full 270° track */}
-        <circle
-          cx={c} cy={c} r={r} fill="none" stroke={`rgba(${RING_GLOW},0.14)`}
-          strokeWidth={stroke} strokeLinecap="round" strokeDasharray={`${arcLen} ${circ}`}
-        />
+        {!lightForm && (
+          <circle
+            cx={c} cy={c} r={r} fill="none" stroke={`rgba(${RING_GLOW},0.14)`}
+            strokeWidth={stroke} strokeLinecap="round" strokeDasharray={`${arcLen} ${circ}`}
+          />
+        )}
         {/* red gradient fill — loads up to the current bpm */}
         <circle
           cx={c} cy={c} r={r} fill="none"
-          stroke={`url(#${gid})`} strokeWidth={stroke} strokeLinecap="round"
+          stroke={lightForm ? ringArcFill(gid) : `url(#${gid})`} strokeWidth={stroke} strokeLinecap="round"
           strokeDasharray={`${arcLen} ${circ}`} strokeDashoffset={shownOffset}
           style={{
             filter: `drop-shadow(0 0 7px rgba(${RING_GLOW},0.6))`,
             transition: reduced ? "none" : "stroke-dashoffset 1.3s cubic-bezier(.2,.7,.2,1)" }}
         />
+
+        {lightForm && (
+          <LightRingEdge cx={c} cy={c} r={r} stroke={stroke} sweep={(arc * Math.PI / 180) * frac} />
+        )}
       </svg>
 
       {/* centered content */}

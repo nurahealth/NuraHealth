@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
+import { useIsLightForm } from "@/lib/themeTokens";
+import { AURA, LightRingBase, LightRingEdge, ringArcFill } from "@/components/dashboard/chartTheme";
 
 // Animated radial score gauge: a gradient arc that sweeps in on mount plus a
 // count-up number in the center. Reused by every metric detail hero.
@@ -47,12 +49,16 @@ export default function RadialGauge({
 }: Props) {
   const rawId = useId();
   const gid = `gauge-${rawId.replace(/[^a-zA-Z0-9]/g, "")}`;
+  // Light collapses every per-metric gradient onto the one ring arc: the fixed
+  // colour map already decided that a metric is not a hue, and a page of
+  // differently-coloured heroes on white reads as a palette, not a system.
+  const lightForm = useIsLightForm();
 
   // Pad the SVG canvas around the ring so the round stroke cap is never clipped
   // inside the viewport instead of being clipped to a square. The ring keeps
   // its original radius/position; the SVG is offset back by `pad` so the gauge
-  // looks identical — only the glow has room to breathe.
-  const pad = 16;
+  // looks identical — only the glow (dark) or aura (light) has room to breathe.
+  const pad = 16 + Math.ceil(AURA.blurRing * 2);
   const box = size + pad * 2;
   const r = (size - stroke) / 2;
   const c = box / 2;
@@ -105,20 +111,44 @@ export default function RadialGauge({
         width={box} height={box} viewBox={`0 0 ${box} ${box}`}
         style={{ position: "absolute", top: -pad, left: -pad, transform: `rotate(${rotation}deg)`, overflow: "visible", pointerEvents: "none" }}
       >
-        <defs>
-          <linearGradient id={gid} x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stopColor={gradientFrom} />
-            {gradientMid && <stop offset="0.5" stopColor={gradientMid} />}
-            <stop offset="1" stopColor={gradientTo} />
-          </linearGradient>
-        </defs>
-        <circle cx={c} cy={c} r={r} fill="none" stroke="rgba(var(--nura-bg-tint-rgb),0.08)" strokeWidth={stroke} strokeDasharray={`${arcLen} ${circ}`} />
+        {!lightForm && (
+          <defs>
+            <linearGradient id={gid} x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stopColor={gradientFrom} />
+              {gradientMid && <stop offset="0.5" stopColor={gradientMid} />}
+              <stop offset="1" stopColor={gradientTo} />
+            </linearGradient>
+          </defs>
+        )}
+
+        {/* Light supplies its own gradient under this id, so the fill below
+            resolves to the shared ring arc without knowing which theme it is
+            in — and every caller's per-metric gradient is simply not read. */}
+        {lightForm && (
+          <LightRingBase
+            uid={gid} cx={c} cy={c} r={r} stroke={stroke}
+            arcLen={arcLen} circ={circ} offset={offset}
+            transition={reduced ? undefined : "stroke-dashoffset 1.4s cubic-bezier(.2,.7,.2,1)"}
+          />
+        )}
+
+        {!lightForm && (
+          <circle
+            cx={c} cy={c} r={r} fill="none" stroke="rgba(var(--nura-bg-tint-rgb),0.08)"
+            strokeWidth={stroke} strokeDasharray={`${arcLen} ${circ}`}
+          />
+        )}
         <circle
           cx={c} cy={c} r={r} fill="none"
-          stroke={`url(#${gid})`} strokeWidth={stroke} strokeLinecap="round"
+          stroke={lightForm ? ringArcFill(gid) : `url(#${gid})`}
+          strokeWidth={stroke} strokeLinecap="round"
           strokeDasharray={`${arcLen} ${circ}`} strokeDashoffset={offset}
           style={{ filter: `drop-shadow(0 0 7px rgba(${glowRgb},0.65))`, transition: reduced ? "none" : "stroke-dashoffset 1.4s cubic-bezier(.2,.7,.2,1)" }}
         />
+
+        {lightForm && (
+          <LightRingEdge cx={c} cy={c} r={r} stroke={stroke} sweep={(arc * Math.PI / 180) * pct} />
+        )}
       </svg>
       <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
         <span style={{

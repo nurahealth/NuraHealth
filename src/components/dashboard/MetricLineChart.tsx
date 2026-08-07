@@ -3,8 +3,8 @@
 import { useId, useMemo, useState } from "react";
 import type { MetricPaint } from "@/lib/metricColors";
 import {
-  ALPHA, ENTER_CLASS, MARKER, PAD, STROKE,
-  BaselineBand, BaselineLine, ChartLegend, ChartTooltip, Marker, XAxis, YAxis,
+  ALPHA, AURA, ENTER_CLASS, MARKER, PAD, STROKE,
+  AuraDefs, BaselineBand, BaselineLine, ChartLegend, ChartTooltip, Marker, XAxis, YAxis,
   fitTicks, linePath, niceScale, smoothPath,
   useMeasuredWidth, useTweenedSeries,
   type LegendItem,
@@ -188,6 +188,7 @@ export default function MetricLineChart({
         onMouseLeave={() => setHover(null)}
       >
         <defs>
+          {lightForm && <AuraDefs uid={uid} />}
           {/* Two stops, both low. An area fill is ground for the line to sit on;
               the moment it is bright enough to read as its own shape it is
               competing with the thing it is supposed to support. */}
@@ -234,22 +235,32 @@ export default function MetricLineChart({
         <path d={area} fill={`url(#fill${uid})`} />
         <path
           d={path} fill="none" stroke={color.hex}
-          // 2.5px in light: a 2px stroke that was confident against near-black
-          // reads thin and tentative on white at the same size.
           // Same 2px weight as dark (STROKE.series); light only swaps the hue.
-          style={lightForm ? { stroke: "var(--nura-sage-deep)" } : undefined}
+          // The stroke itself carries NO aura: a lit line is a line that has
+          // been smudged, and the fade underneath is already its ground.
+          style={lightForm ? { stroke: "var(--nura-chart-stroke)" } : undefined}
           strokeWidth={STROKE.series}
           strokeLinecap="round" strokeLinejoin="round"
         />
 
+        {/* The latest point is the reading the card is quoting, so it is the one
+            mark on this chart that earns an aura — a small one, under the dot,
+            never under the line. */}
+        {lightForm && (
+          <circle
+            data-decor="dot-aura"
+            cx={last[0]} cy={last[1]} r={MARKER.rLatest + AURA.barGrow / 2}
+            fill="var(--nura-chart-aura)" opacity={AURA.opacity}
+            filter={`url(#${uid}-aura-bar)`}
+          />
+        )}
+
         {/* Markers. Every point when the series is sparse enough that each one
             is a real reading worth hitting; otherwise only the latest, so a
             dense curve stays a curve instead of a bead necklace. */}
-        {/* The latest point is the reading the card is quoting, so it takes
-            the emphasis tone alongside the stroke. */}
         {sparse
-          ? pts.map(([cx, cy], i) => <Marker key={i} cx={cx} cy={cy} color={lightForm ? "var(--nura-sage-deep)" : color.hex} />)
-          : <Marker cx={last[0]} cy={last[1]} color={lightForm ? "var(--nura-sage-deep)" : color.hex} r={MARKER.rLatest} />}
+          ? pts.map(([cx, cy], i) => <Marker key={i} cx={cx} cy={cy} color={lightForm ? "var(--nura-chart-stroke)" : color.hex} />)
+          : <Marker cx={last[0]} cy={last[1]} color={lightForm ? "var(--nura-chart-stroke)" : color.hex} r={MARKER.rLatest} />}
 
         {/* Hover crosshair, drawn above the line but below the markers' ring */}
         {active && (
@@ -258,7 +269,7 @@ export default function MetricLineChart({
               x1={active.x} y1={plotT} x2={active.x} y2={plotB}
               strokeWidth={STROKE.crosshair} stroke="var(--nura-border-strong)"
             />
-            <Marker cx={active.x} cy={active.y} color={lightForm ? "var(--nura-sage-deep)" : color.hex} />
+            <Marker cx={active.x} cy={active.y} color={lightForm ? "var(--nura-chart-stroke)" : color.hex} />
           </>
         )}
 

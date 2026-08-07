@@ -8,6 +8,7 @@ import {
   ChartTooltip, XAxis, YAxis,
   fitTicks, smoothPath, useMeasuredWidth,
   roundedTopBar, SageBarDefs, sageFill, barTones, brighter, BarTopEdge,
+  AuraDefs, BarAura,
 } from "@/components/dashboard/chartTheme";
 import { useIsLightForm } from "@/lib/themeTokens";
 
@@ -140,7 +141,7 @@ export default function MetricChart({
         onMouseMove={onMove}
         onMouseLeave={() => setHover(null)}
       >
-        {lightForm && <defs><SageBarDefs uid={uid} /></defs>}
+        {lightForm && <defs><SageBarDefs uid={uid} /><AuraDefs uid={uid} /></defs>}
 
         {/* Overnight window. Neutral ink, not the metric colour: it annotates
             WHEN, so tinting it with the series would read as more data. */}
@@ -153,6 +154,23 @@ export default function MetricChart({
           ticks={ticks} yAt={yOf} plotLeft={plotL} plotRight={plotR}
           format={(v) => String(v)}
         />
+
+        {/* Aura pass. Its own layer under ALL the bars rather than one aura per
+            bar inline: these bars sit ~2px apart, so an aura drawn beside its
+            bar would lap over whichever neighbour was painted before it and
+            leave a soft edge across a flat mark. `deep` is exactly the
+            emphasis set the rule names — the top ~18% of readings plus the
+            latest two (see barTones). */}
+        {lightForm && readings.map((v, i) => {
+          if (tones[i] !== "deep") return null;
+          const h = Math.max(norm(v) * plotH, 2);
+          const dim = hover != null && hover !== i;
+          return (
+            <g key={`a${i}`} opacity={dim ? 0.62 : 1}>
+              <BarAura uid={uid} x={barX(i)} y={plotB - h} w={bw} h={h} r={2} />
+            </g>
+          );
+        })}
 
         {/* Bars — one colour, height carries the value */}
         {readings.map((v, i) => {

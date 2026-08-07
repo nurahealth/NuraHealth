@@ -65,9 +65,14 @@ export default function BodyTempCardRing({
           </linearGradient>
         </defs>
 
-        {/* Faint full track */}
+        {/* Faint full track. In light this is the empty ring every gauge sits
+            on, so it takes the shared neutral rather than an ink hairline.
+            --nura-chart-track is a LIGHT-ONLY token, so the fallback is what
+            dark keeps rendering — byte-identical, no theme hook needed here.
+            The zone track over it is structure, not a fill, so it takes no
+            aura; its brown came from the scale tokens and is fixed at source. */}
         <circle
-          cx={CX} cy={CY} r={R} fill="none" stroke="var(--nura-hairline-strong)" strokeWidth={9}
+          cx={CX} cy={CY} r={R} fill="none" stroke="var(--nura-chart-track, var(--nura-hairline-strong))" strokeWidth={9}
           strokeLinecap="round" strokeDasharray={`${vis.toFixed(1)} ${circ.toFixed(1)}`}
           transform={`rotate(${START} ${CX} ${CY})`}
         />
@@ -83,9 +88,15 @@ export default function BodyTempCardRing({
         {/* Current-reading marker */}
         <circle cx={m.x.toFixed(1)} cy={m.y.toFixed(1)} r={8} fill="var(--nura-card)" stroke="var(--nura-hairline-strong)" strokeWidth={1} />
         <circle cx={m.x.toFixed(1)} cy={m.y.toFixed(1)} r={4.5} fill="var(--nura-gauge-marker)" />
-        {/* End-of-scale hints — centered, below + outboard of the lower arc ends */}
-        <text x={52} y={164} textAnchor="middle" fontFamily="Inter, sans-serif" fontSize={10.5} letterSpacing="0.8" fill="var(--nura-gauge-tick)" fontWeight={600}>COOL</text>
-        <text x={144} y={164} textAnchor="middle" fontFamily="Inter, sans-serif" fontSize={10.5} letterSpacing="0.8" fill="var(--nura-gauge-tick)" fontWeight={600}>WARM</text>
+        {/* End-of-scale hints — centered, below + outboard of the lower arc ends.
+            These are TEXT reading the gauge's MARK colour, which is a scale
+            value with no contrast obligation: once the light de-emphasis family
+            moved to sage mist they fell to ~1.3:1 on white. A label is prose,
+            not a mark, so light gives them their own token. It is defined only
+            in the light column, so dark falls through to exactly the value it
+            has always used. */}
+        <text x={52} y={164} textAnchor="middle" fontFamily="Inter, sans-serif" fontSize={10.5} letterSpacing="0.8" fill="var(--nura-gauge-label, var(--nura-gauge-tick))" fontWeight={600}>COOL</text>
+        <text x={144} y={164} textAnchor="middle" fontFamily="Inter, sans-serif" fontSize={10.5} letterSpacing="0.8" fill="var(--nura-gauge-label, var(--nura-gauge-tick))" fontWeight={600}>WARM</text>
       </svg>
 
       {/* Center overlay — status-led: status word on top, worded deviation beneath */}

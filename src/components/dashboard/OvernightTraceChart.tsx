@@ -2,6 +2,7 @@
 
 import { useId } from "react";
 import { smooth, hexA, light } from "@/components/dashboard/cardChartHelpers";
+import { useIsLightForm } from "@/lib/themeTokens";
 
 // Overnight % / rate trace across the 11p–7a sleep window — a smooth line with a
 // soft area fill, an optional shaded normal-range band, an optional dashed
@@ -26,6 +27,12 @@ export default function OvernightTraceChart({
 }) {
   const rawId = useId();
   const uid = rawId.replace(/[^a-zA-Z0-9]/g, "");
+  // Dark runs a three-stop gradient ALONG the line (it reads as the trace being
+  // lit from the middle on near-black). On white the same gradient makes the
+  // line fade in and out of legibility across the night, so light draws one
+  // flat stroke at the system's deepest step and lets the fade underneath do
+  // the work. No aura on the stroke: a lit line is a smudged line.
+  const lightForm = useIsLightForm();
 
   const n = data.length;
   const xAt = (i: number) => padL + (i / (n - 1)) * (W - padL - padR);
@@ -43,8 +50,17 @@ export default function OvernightTraceChart({
           <stop offset="1" stopColor={light(color, 0.25)} />
         </linearGradient>
         <linearGradient id={`ar${uid}`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor={hexA(color, 0.28)} />
-          <stop offset="1" stopColor={hexA(color, 0)} />
+          {lightForm ? (
+            <>
+              <stop offset="0" style={{ stopColor: "var(--nura-sage-mid)" }} stopOpacity={0.1} />
+              <stop offset="1" style={{ stopColor: "var(--nura-sage-mid)" }} stopOpacity={0} />
+            </>
+          ) : (
+            <>
+              <stop offset="0" stopColor={hexA(color, 0.28)} />
+              <stop offset="1" stopColor={hexA(color, 0)} />
+            </>
+          )}
         </linearGradient>
       </defs>
 
@@ -70,7 +86,12 @@ export default function OvernightTraceChart({
       )}
 
       <path d={area} fill={`url(#ar${uid})`} />
-      <path d={line} fill="none" stroke={`url(#ln${uid})`} strokeWidth={2.4} strokeLinecap="round" />
+      <path
+        d={line} fill="none"
+        stroke={`url(#ln${uid})`}
+        style={lightForm ? { stroke: "var(--nura-chart-stroke)" } : undefined}
+        strokeWidth={2.4} strokeLinecap="round"
+      />
 
       {/* X-axis time labels */}
       {axisLabels.map((l, k) => {

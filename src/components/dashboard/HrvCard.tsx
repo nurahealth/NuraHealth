@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { useIsLightForm } from "@/lib/themeTokens";
 import { SOURCE_LABEL, type DashboardMetric } from "@/lib/dashboardData";
 import { useMetricPaint, type MetricPaint } from "@/lib/metricColors";
-import { usePrefersReducedMotion } from "@/components/dashboard/chartTheme";
+import {
+  AURA, LightRingBase, LightRingEdge, ringArcFill, usePrefersReducedMotion,
+} from "@/components/dashboard/chartTheme";
 
 const SANS = "var(--font-inter), system-ui, sans-serif";
 const TEXT = "var(--nura-text-primary)";
@@ -34,9 +36,14 @@ const FILL_MS = 1300;
 function HrvMiniRing({ hrv, paint }: { hrv: number; paint: MetricPaint }) {
   const size = 114;
   const stroke = 9;
-  const pad = 12; // breathing room so the glow isn't clipped
+  // Breathing room for the aura's ~3σ falloff as well as the round cap. The
+  // SVG is offset back by `pad`, so the ring keeps its exact position and only
+  // the soft edge gains room — without this the aura is sliced at the card.
+  const pad = Math.round(stroke * 1.3) + Math.ceil(AURA.blurRing * 2);
   const box = size + pad * 2;
   const lightForm = useIsLightForm();
+  const rawUid = useId();
+  const uid = `hrv-${rawUid.replace(/[^a-zA-Z0-9]/g, "")}`;
   const r = (size - stroke) / 2;
   const c = box / 2;
   const circ = 2 * Math.PI * r;
@@ -85,19 +92,34 @@ function HrvMiniRing({ hrv, paint }: { hrv: number; paint: MetricPaint }) {
         width={box} height={box} viewBox={`0 0 ${box} ${box}`}
         style={{ position: "absolute", top: -pad, left: -pad, transform: `rotate(${rotation}deg)`, overflow: "visible", pointerEvents: "none" }}
       >
+        {/* Light: gradient def + aura + the shared empty track, all beneath the
+            fill. Dark keeps its own faint tinted track below. */}
+        {lightForm && (
+          <LightRingBase
+            uid={uid} cx={c} cy={c} r={r} stroke={stroke}
+            arcLen={arcLen} circ={circ} offset={shownOffset}
+            transition={reduced ? undefined : `stroke-dashoffset ${FILL_MS}ms cubic-bezier(.2,.7,.2,1)`}
+          />
+        )}
+
         {/* faint full 270° track */}
-        <circle
-          cx={c} cy={c} r={r} fill="none"
-          stroke={lightForm ? "var(--nura-chart-track)" : paint.alpha(0.16)}
-          strokeWidth={stroke} strokeLinecap="round" strokeDasharray={`${arcLen} ${circ}`}
-        />
+        {!lightForm && (
+          <circle
+            cx={c} cy={c} r={r} fill="none" stroke={paint.alpha(0.16)}
+            strokeWidth={stroke} strokeLinecap="round" strokeDasharray={`${arcLen} ${circ}`}
+          />
+        )}
         {/* the fill — solid, in the metric's colour */}
         <circle
           cx={c} cy={c} r={r} fill="none"
-          stroke={lightForm ? "var(--nura-sage-deep)" : paint.hex} strokeWidth={stroke} strokeLinecap="round"
+          stroke={lightForm ? ringArcFill(uid) : paint.hex} strokeWidth={stroke} strokeLinecap="round"
           strokeDasharray={`${arcLen} ${circ}`} strokeDashoffset={shownOffset}
           style={{ filter: `drop-shadow(0 0 5px rgba(${paint.rgb},0.6))`, transition: reduced ? "none" : `stroke-dashoffset ${FILL_MS}ms cubic-bezier(.2,.7,.2,1)` }}
         />
+
+        {lightForm && (
+          <LightRingEdge cx={c} cy={c} r={r} stroke={stroke} sweep={(arc * Math.PI / 180) * frac} />
+        )}
       </svg>
 
       {/* centered content — dead-center in the ring; value + a smaller "ms" inline */}

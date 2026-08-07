@@ -2,7 +2,10 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { usePrefersReducedMotion } from "@/components/dashboard/chartTheme";
+import {
+  AURA, LightRingBase, LightRingEdge, ringArcFill, usePrefersReducedMotion,
+} from "@/components/dashboard/chartTheme";
+import { useIsLightForm } from "@/lib/themeTokens";
 import { getCardioFitnessDetail } from "@/lib/dashboardData";
 import { hexA, smooth } from "@/components/dashboard/cardChartHelpers";
 import MetricEducation, { type MetricEducationItem } from "@/components/dashboard/MetricEducation";
@@ -164,8 +167,10 @@ function ArcGauge({ value, lo, hi, unit }: { value: number; lo: number; hi: numb
 
   const size = 204;
   const stroke = 14;
-  const pad = 22;
+  // Room for dark's blurred halo layer and for light's aura falloff.
+  const pad = 22 + Math.ceil(AURA.blurRing * 2);
   const box = size + pad * 2;
+  const lightForm = useIsLightForm();
   const r = (size - stroke) / 2;
   const c = box / 2;
   const circ = 2 * Math.PI * r;
@@ -220,8 +225,22 @@ function ArcGauge({ value, lo, hi, unit }: { value: number; lo: number; hi: numb
             <stop offset="1"  style={{ stopColor: RING_HI }}/>
           </linearGradient>
         </defs>
+        {/* Light: the shared ring treatment — gradient, aura and empty track.
+            Dark's own glow layer below is a .nura-halo, which the light
+            flattening layer already hides, so the aura is the only soft layer
+            light ever draws here. */}
+        {lightForm && (
+          <LightRingBase
+            uid={gid} cx={c} cy={c} r={r} stroke={stroke}
+            arcLen={arcLen} circ={circ} offset={shownOffset}
+            transition={reduced ? undefined : "stroke-dashoffset 1500ms cubic-bezier(.2,.7,.2,1)"}
+          />
+        )}
+
         {/* faint warm-gold track */}
-        <circle cx={c} cy={c} r={r} fill="none" stroke="rgba(var(--nura-gold-ring-rgb),0.15)" strokeWidth={stroke} strokeLinecap="round" strokeDasharray={`${arcLen} ${circ}`} />
+        {!lightForm && (
+          <circle cx={c} cy={c} r={r} fill="none" stroke="rgba(var(--nura-gold-ring-rgb),0.15)" strokeWidth={stroke} strokeLinecap="round" strokeDasharray={`${arcLen} ${circ}`} />
+        )}
         {/* glow layer — a blurred copy of the fill behind it */}
         <circle className="nura-halo"
           cx={c} cy={c} r={r} fill="none"
@@ -232,10 +251,14 @@ function ArcGauge({ value, lo, hi, unit }: { value: number; lo: number; hi: numb
         {/* crisp gold fill on top */}
         <circle
           cx={c} cy={c} r={r} fill="none"
-          stroke={`url(#${gid})`} strokeWidth={stroke} strokeLinecap="round"
+          stroke={lightForm ? ringArcFill(gid) : `url(#${gid})`} strokeWidth={stroke} strokeLinecap="round"
           strokeDasharray={`${arcLen} ${circ}`} strokeDashoffset={shownOffset}
           style={{ filter: `drop-shadow(0 0 4px rgba(${GOLD_RGB},0.5))`, transition: trans }}
         />
+
+        {lightForm && (
+          <LightRingEdge cx={c} cy={c} r={r} stroke={stroke} sweep={(arc * Math.PI / 180) * frac} />
+        )}
       </svg>
 
       {/* centered content — counting number + unit + label */}

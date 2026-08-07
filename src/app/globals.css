@@ -637,20 +637,62 @@
      base than a straight tint would give, and that is what stops a column of
      bars looking like plastic. */
   --nura-sage-deep: #4e6a5c;             /* 5.93:1 */
-  --nura-sage-deep-base: #46604f;
+  --nura-sage-deep-base: #35523f;
   --nura-sage-deep-top: #5d7b6b;
   --nura-sage-mid: #7d968a;              /* 3.18:1 */
   --nura-sage-mid-base: #71897c;
   --nura-sage-mid-top: #8aa093;
-  --nura-sage-faint: #e2e9e4;
-  --nura-sage-faint-base: #dde5df;
-  --nura-sage-faint-top: #e7ede8;
 
-  /* Empty track under any fill — ring, gauge, meter, dial arc. */
+  /* ── SAGE MIST — the one de-emphasis value ──────────────────────────────
+     Everything quiet in a light chart is this: under-goal bars, the low tone
+     of the three-tone ramp, gauge zones, meter fills, unfilled scale steps.
+
+     It replaces the warm grey that used to do that job (#847f74 as a mark,
+     #e7e5df / #dcd9d1 as structure). Warm grey is a defensible neutral on its
+     own, but it is not neutral NEXT TO SAGE: put a warm grey bar beside a sage
+     one and the grey picks up the complement and reads brown. A cool grey
+     carrying a trace of the same hue recedes without changing temperature,
+     which is what "quiet" is supposed to mean. */
+  --nura-sage-mist: #dfe5e0;
+  --nura-sage-faint: var(--nura-sage-mist);
+  --nura-sage-faint-base: var(--nura-sage-mist);
+  --nura-sage-faint-top: var(--nura-sage-mist);
+
+  /* Empty track under any fill — ring, gauge, meter, dial arc. Deliberately
+     NOT the mist: a track is absence of data and sits one step quieter than a
+     mark that happens to be low. */
   --nura-chart-track: #e8ede9;
-  /* The lit top edge on a bar. White at 38% rather than a lighter sage: a
+  /* The lit top edge on a bar. White at 45% rather than a lighter sage: a
      tint of the tone reads as a lighter bar, white reads as light ON the bar. */
-  --nura-bar-edge: rgba(255, 255, 255, 0.38);
+  --nura-bar-edge: rgba(255, 255, 255, 0.45);
+
+  /* ── THE LUMINOUS AURA ──────────────────────────────────────────────────
+     A blurred, slightly enlarged copy of a mark, drawn BENEATH it. Light on
+     white cannot bloom — a glow over a bright surface is just a grey smudge,
+     which is why the flattening layer switches every dark-mode drop-shadow
+     off. An aura is the inverse move: it sits under the mark, in the mark's
+     own hue, so the mark looks like it is resting on light rather than
+     emitting it. That is the difference between this and a glow, and it is
+     why it is authored as an SVG layer rather than a filter on the mark.
+
+     EMPHASIS ONLY. Goal-hit bars, peaks, the latest readings, ring fills and
+     the latest point on a line. A standard mid-tone bar and a mist bar get
+     none — if everything is lit, nothing is. */
+  --nura-chart-aura: #7d968a;
+
+  /* ── RINGS ──────────────────────────────────────────────────────────────
+     One arc gradient for every ring and gauge, deep at the start of the sweep
+     to pale at its end, so a full ring reads as a single lit object rather
+     than as a stroke of flat colour. */
+  --nura-ring-arc-from: #2f4a39;
+  --nura-ring-arc-to: #86a292;
+  /* Hairline highlight just inside the arc, inset from both ends so it reads
+     as light catching the ring rather than as a second, thinner ring. */
+  --nura-ring-edge: rgba(255, 255, 255, 0.6);
+
+  /* Line-chart stroke. The deepest step in the system — a line is one thin
+     mark carrying the whole series, so it takes the strongest value. */
+  --nura-chart-stroke: #35523f;
   /* Reference/average overlays. Ink, not sage — they annotate the data, they
      are not more of it. */
   --nura-chart-reference: rgba(20, 24, 21, 0.10);
@@ -667,10 +709,12 @@
   --nura-step-3: #5a7367;     /* 5.1 */
   --nura-step-4: #43604f;     /* 6.9  deepest — Deep sleep / peak effort */
 
-  /* 3 — de-emphasis. Track is decorative; the mark variant clears 3:1. */
-  --nura-track-neutral: #e7e5df;
-  --nura-track-neutral-strong: #dcd9d1;
-  --nura-data-muted: #847f74;  /* 4.0  under-goal bars, still a real mark */
+  /* 3 — de-emphasis. All three resolve into the sage-mist family above: the
+     warm-grey column is what read brown beside a sage mark. `-strong` keeps
+     the one step of separation the meters and gauge zones are built on. */
+  --nura-track-neutral: var(--nura-chart-track);
+  --nura-track-neutral-strong: var(--nura-sage-mist);
+  --nura-data-muted: var(--nura-sage-mist);  /* under-goal bars */
 
 
   /* ── FIXED METRIC COLOUR MAP — light column ─────────────────────────────
@@ -745,7 +789,11 @@
   --nura-pager-rhr: var(--nura-data-primary);
 
   --nura-gauge-marker: var(--nura-data-primary);
-  --nura-gauge-tick: #cfcbc1;
+  --nura-gauge-tick: var(--nura-sage-mist);
+  /* A gauge's end-of-scale WORDS ("COOL" / "WARM"), as opposed to its tick
+     marks. Light-only, so dark keeps reading --nura-gauge-tick as it always
+     has. Text has a contrast floor that a scale mark does not. */
+  --nura-gauge-label: var(--nura-text-tertiary);
   --nura-scale-end: var(--nura-track-neutral-strong);
   --nura-scale-mid: var(--nura-track-neutral);
 
@@ -817,6 +865,17 @@
   --nura-card-shadow-soft:
     0 1px 2px rgba(26, 24, 20, 0.04),
     0 4px 12px -6px rgba(26, 24, 20, 0.06);
+
+  /* A CHART card, specifically. The generic card shadow is ink-tinted, which
+     is right for a surface holding text. Under a chart the same shadow reads
+     as a grey ledge beneath a sage drawing — the card and its contents look
+     like two unrelated materials. Tinting the ambient layer with the chart's
+     own sage (125,150,138) puts the card in the same light as the marks on it,
+     and is the surface half of the same idea as the aura above. Kept off
+     text-only cards, which have no sage to agree with. */
+  --nura-chart-card-shadow:
+    0 1px 2px rgba(20, 24, 21, 0.04),
+    0 10px 28px rgba(125, 150, 138, 0.16);
 
   /* Resting + hover elevation for class-driven cards. Hover moves the card up
      2px, so the shadow has to grow and soften by roughly the same amount or
@@ -1281,9 +1340,12 @@ html, body {
 }
 
 /* Zone ticks sitting ON the old filled ramp were white so they could show
-   through it. Against a grey track they need to be grey. */
+   through it. They divide the track, so they have to differ FROM it: the meter
+   track is now sage mist, and a mist tick on a mist track is no tick at all.
+   One step lighter — the same neutral an empty ring uses — reads as a division
+   without becoming a mark of its own. */
 [data-theme="light"] .nura-meter-tick {
-  background: var(--nura-gauge-tick) !important;
+  background: var(--nura-chart-track) !important;
 }
 
 [data-theme="light"] .nura-area-grad stop {
@@ -1439,6 +1501,31 @@ html, body {
     box-shadow var(--nura-dur) var(--nura-ease),
     transform var(--nura-dur) var(--nura-ease),
     border-color var(--nura-dur) var(--nura-ease) !important;
+}
+
+/* ── Chart cards ──────────────────────────────────────────────────────────
+   The surfaces that hold a chart take the sage-tinted ambient shadow instead
+   of the ink one, so the card sits in the same light as the marks drawn on
+   it. `.dash-card` is every dashboard metric tile, `.oh-card` the Health
+   Score, `.block` the chart panels on the expanded metric screens (that class
+   appears in exactly two detail views and nowhere else in the app), and
+   `.nura-chart-card` is the opt-in hook for anything else that holds a chart.
+   Deliberately not applied to `.nura-card` at large:
+   a text card has no sage to agree with, and a page of tinted shadows under
+   prose reads as a green cast rather than as a system. */
+[data-theme="light"] .dash-card,
+[data-theme="light"] .oh-card,
+[data-theme="light"] .block,
+[data-theme="light"] .nura-chart-card {
+  box-shadow: var(--nura-chart-card-shadow) !important;
+}
+
+/* Press settles back to the chart card's own resting shadow, not the ink one
+   — otherwise the tint blinks off under the finger. */
+[data-theme="light"] .dash-card:active,
+[data-theme="light"] .oh-card:active,
+[data-theme="light"] .nura-chart-card:active {
+  box-shadow: var(--nura-chart-card-shadow) !important;
 }
 
 /* A card with a deliberate accent edge — the insight panel, a flagged lab

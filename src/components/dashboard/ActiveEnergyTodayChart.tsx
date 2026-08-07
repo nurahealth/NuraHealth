@@ -2,10 +2,13 @@
 
 import type { ActiveEnergyDetail } from "@/lib/dashboardData";
 import type { MetricPaint } from "@/lib/metricColors";
+import { useId, useMemo } from "react";
 import {
   ENTER_CLASS, MONO, PAD, STROKE, TYPE,
   XAxis, YAxis, fitTicks, useMeasuredWidth,
+  AuraDefs, BarAura, BarTopEdge, SageBarDefs, barTones, roundedTopBar, sageFill,
 } from "@/components/dashboard/chartTheme";
+import { useIsLightForm } from "@/lib/themeTokens";
 
 // Shared "Active Energy — Today" intraday chart, rendered by BOTH the Active
 // Energy detail page and the dashboard Active Energy card.
@@ -84,6 +87,13 @@ export default function ActiveEnergyTodayChart({
   height?: number;
 }) {
   const { ref, width: W } = useMeasuredWidth<HTMLDivElement>();
+  // Same three-tone treatment as every other bar chart — this one was still
+  // drawing flat metric-hex bars in light, which is the one card in the sweep
+  // that did not look like the rest of the system.
+  const lightForm = useIsLightForm();
+  const rawUid = useId();
+  const uid = `ae-today-${rawUid.replace(/[^a-zA-Z0-9]/g, "")}`;
+  const tones = useMemo(() => barTones(d.todayHourly), [d.todayHourly]);
 
   const H = height;
   const plotL = PAD.left;
@@ -122,14 +132,31 @@ export default function ActiveEnergyTodayChart({
         width={W} height={H} viewBox={`0 0 ${W} ${H}`}
         className={ENTER_CLASS} style={{ display: "block" }}
       >
+        {lightForm && <defs><SageBarDefs uid={uid} /><AuraDefs uid={uid} /></defs>}
+
         <YAxis ticks={ticks} yAt={yOf} plotLeft={plotL} plotRight={plotR} format={(v) => String(v)} />
+
+        {/* Aura pass — its own layer under ALL the bars, so a soft edge never
+            laps the neighbour drawn before it. `deep` is the emphasis set: the
+            top ~18% of the day plus the latest hours. */}
+        {lightForm && data.map((v, i) => {
+          if (tones[i] !== "deep") return null;
+          const h = Math.max(normOf(v) * plotH, 2);
+          const x = plotL + i * slot + (slot - bw) / 2;
+          return <BarAura key={`a${i}`} uid={uid} x={x} y={plotB - h} w={bw} h={h} r={2} />;
+        })}
 
         {/* Bars — flat, one colour, height carries the value */}
         {data.map((v, i) => {
           const norm = normOf(v);
           const h = Math.max(norm * plotH, 2);
           const x = plotL + i * slot + (slot - bw) / 2;
-          return (
+          return lightForm ? (
+            <g key={i}>
+              <path d={roundedTopBar(x, plotB - h, bw, h, 2)} fill={sageFill(uid, tones[i])} />
+              {tones[i] !== "faint" && <BarTopEdge x={x} y={plotB - h} w={bw} r={2} />}
+            </g>
+          ) : (
             <rect
               key={i} x={x.toFixed(2)} y={(plotB - h).toFixed(2)}
               width={bw.toFixed(2)} height={h.toFixed(2)}
@@ -146,9 +173,11 @@ export default function ActiveEnergyTodayChart({
         {/* Dashed average curve — neutral, because it is a reference */}
         {curve && (
           <path
-            d={curve} fill="none" stroke="var(--nura-text-tertiary)"
-            strokeWidth={STROKE.baseline} strokeDasharray="4 5"
-            strokeLinecap="round" opacity={0.55}
+            d={curve} fill="none"
+            stroke={lightForm ? "var(--nura-chart-reference)" : "var(--nura-text-tertiary)"}
+            strokeWidth={lightForm ? 1 : STROKE.baseline}
+            strokeDasharray={lightForm ? "3 4" : "4 5"}
+            strokeLinecap="round" opacity={lightForm ? 1 : 0.55}
           />
         )}
 

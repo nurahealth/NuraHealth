@@ -2,7 +2,10 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { usePrefersReducedMotion } from "@/components/dashboard/chartTheme";
+import {
+  AURA, LightRingBase, LightRingEdge, ringArcFill, usePrefersReducedMotion,
+} from "@/components/dashboard/chartTheme";
+import { useIsLightForm } from "@/lib/themeTokens";
 import { getBloodOxygenDetail, SOURCE_LABEL, type BloodOxygenDetail } from "@/lib/dashboardData";
 import { spo2Status, type SpO2Status } from "@/lib/bloodOxygen";
 import BloodOxygenTrends from "@/components/BloodOxygenTrends";
@@ -183,8 +186,11 @@ function RingGauge({ spo2 }: { spo2: number }) {
 
   const size = 204;
   const stroke = 13;
-  const pad = 16; // room so the glow isn't clipped
+  // Room for dark's glow and for light's aura falloff — the SVG is offset back
+  // by `pad`, so the ring itself does not move either way.
+  const pad = 16 + Math.ceil(AURA.blurRing * 2);
   const box = size + pad * 2;
+  const lightForm = useIsLightForm();
   const r = (size - stroke) / 2;
   const c = box / 2;
   const circ = 2 * Math.PI * r;
@@ -236,20 +242,37 @@ function RingGauge({ spo2 }: { spo2: number }) {
             <stop offset="1"  style={{ stopColor: ICE_LIGHT }}/>
           </linearGradient>
         </defs>
+        {/* Light: the shared ring treatment — its own gradient under the same
+            id, an aura sweeping with the fill, and the neutral empty track. The
+            ice/platinum identity is dark's and stays dark's. */}
+        {lightForm && (
+          <LightRingBase
+            uid={gid} cx={c} cy={c} r={r} stroke={stroke}
+            arcLen={arcLen} circ={circ} offset={shownOffset}
+            transition={reduced ? undefined : "stroke-dashoffset 1400ms cubic-bezier(.2,.7,.2,1)"}
+          />
+        )}
+
         {/* faint full 270° track */}
-        <circle
-          cx={c} cy={c} r={r} fill="none" stroke={`rgba(${ICE_RGB},0.14)`}
-          strokeWidth={stroke} strokeLinecap="round" strokeDasharray={`${arcLen} ${circ}`}
-        />
+        {!lightForm && (
+          <circle
+            cx={c} cy={c} r={r} fill="none" stroke={`rgba(${ICE_RGB},0.14)`}
+            strokeWidth={stroke} strokeLinecap="round" strokeDasharray={`${arcLen} ${circ}`}
+          />
+        )}
         {/* platinum gradient fill — loads up to the value */}
         <circle
           cx={c} cy={c} r={r} fill="none"
-          stroke={`url(#${gid})`} strokeWidth={stroke} strokeLinecap="round"
+          stroke={lightForm ? ringArcFill(gid) : `url(#${gid})`} strokeWidth={stroke} strokeLinecap="round"
           strokeDasharray={`${arcLen} ${circ}`} strokeDashoffset={shownOffset}
           style={{
             filter: `drop-shadow(0 0 7px rgba(${ICE_RGB},0.5))`,
             transition: reduced ? "none" : "stroke-dashoffset 1400ms cubic-bezier(.2,.7,.2,1)" }}
         />
+
+        {lightForm && (
+          <LightRingEdge cx={c} cy={c} r={r} stroke={stroke} sweep={(arc * Math.PI / 180) * frac} />
+        )}
       </svg>
 
       {/* centered content — counting % + "overnight average" beneath */}

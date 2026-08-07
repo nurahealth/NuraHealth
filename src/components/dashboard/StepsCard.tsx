@@ -5,7 +5,7 @@ import { useId } from "react";
 import { getStepsDetail, SOURCE_LABEL, type DashboardMetric, type StepsWeekDay } from "@/lib/dashboardData";
 import { useMetricPaint, type MetricPaint } from "@/lib/metricColors";
 
-import { MONO, roundedTopBar, SageBarDefs, sageFill, BarTopEdge } from "@/components/dashboard/chartTheme";
+import { MONO, roundedTopBar, SageBarDefs, sageFill, BarTopEdge, AuraDefs, BarAura } from "@/components/dashboard/chartTheme";
 import { useIsLightForm } from "@/lib/themeTokens";
 
 const SANS = "var(--font-inter), system-ui, sans-serif";
@@ -20,8 +20,9 @@ const EYEBROW: React.CSSProperties = {
 };
 
 // A day that hit goal is drawn in the movement amber; a day that fell short is
-// drawn in the neutral de-emphasis track. Two states, one hue plus grey — the
-// bar's own colour never encodes anything else.
+// drawn in the de-emphasis tone — sage mist in light, so an under-goal day
+// recedes without turning brown beside the days that hit. Two states, one hue
+// plus its quiet step; the bar's colour never encodes anything else.
 const HIT_LABEL = "Hit";
 const MISS_FILL = "var(--nura-bar-under)";
 
@@ -76,7 +77,7 @@ function WeeklyBars({ week, goal, paint }: { week: StepsWeekDay[]; goal: number;
 
   return (
     <svg width="100%" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" style={{ display: "block", overflow: "visible" }}>
-      {lightForm && <defs><SageBarDefs uid={uid} /></defs>}
+      {lightForm && <defs><SageBarDefs uid={uid} /><AuraDefs uid={uid} /></defs>}
 
       {/* Dashed goal line — spans only the bar area */}
       <line
@@ -84,6 +85,13 @@ function WeeklyBars({ week, goal, paint }: { week: StepsWeekDay[]; goal: number;
         stroke={lightForm ? "var(--nura-chart-reference)" : "var(--nura-text-tertiary)"}
         strokeWidth={1} strokeDasharray={lightForm ? "3 4" : "4 4"} opacity={lightForm ? 1 : 0.6}
       />
+
+      {/* Aura pass — under every bar, so a wide soft edge never laps the
+          neighbour drawn before it. Hitting the goal IS the emphasis on this
+          chart, so that is exactly what gets lit. */}
+      {lightForm && bars.filter((b) => b.hit).map((b, i) => (
+        <BarAura key={`a${i}`} uid={uid} x={b.x} y={b.topY} w={barW} h={Math.max(1, b.h)} r={2} />
+      ))}
 
       {/* Bars — flat fills, no gradient and no blur. Light rounds only the
           tops, so the row sits on the axis instead of floating above it. */}
