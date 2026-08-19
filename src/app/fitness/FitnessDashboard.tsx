@@ -9,9 +9,10 @@ import { MUSCLE_GROUPS, CARDIO_GROUP, inGroup } from './muscleGroups';
 import {
   loadActiveProgram, loadCatalog, loadProgramSummaries,
   updateExerciseFields, swapExerciseRow, removeExerciseRow, addExerciseRow, reorderExerciseRows,
-  loadCompletions, logWorkoutCompletion, localDateKey,
+  loadCompletions, logWorkoutCompletion, saveWorkoutLog, localDateKey,
   type CatalogEx, type Program, type ProgramSummary, type WEx, type Workout, type WorkoutCompletion,
 } from './planData';
+import { getBufferedSets, clearBufferedSets } from './sessionSets';
 import ThemeToggle from "@/components/ThemeToggle";
 
 // ── Palette (ported verbatim from design-reference/fitness-dashboard.html) ────
@@ -358,23 +359,48 @@ export default function FitnessDashboard() {
     setSession({ workoutId: selWorkout.id, dateKey: selectedKey, startedAt: Date.now() });
   }, [selWorkout, selectedKey]);
 
-  // Finish → INSERT a completion (date + which workout + duration when we have it).
+  // Finish → flush the sets logged during the session (workout_logs parent, then
+  // one set_logs row per set), then INSERT the completion the calendar reads.
+  // Sets go first so a failure there leaves nothing half-written and the user can
+  // simply tap Finish again; a workout with no logged sets skips straight to the
+  // completion.
   const finishWorkout = useCallback(async () => {
     if (!selWorkout) return;
     setLogging(true); setCompleteErr(null);
     const startedAt = sessionActiveHere ? session!.startedAt : null;
     const durationSeconds = startedAt ? Math.max(1, Math.round((Date.now() - startedAt) / 1000)) : null;
-    const res = await logWorkoutCompletion({ programWorkoutId: selWorkout.id, durationSeconds });
+    const completedAt = new Date().toISOString();
+
+    const pending = getBufferedSets();
+    if (pending.length > 0) {
+      const logRes = await saveWorkoutLog({
+        programId: program?.id ?? null,
+        workoutId: selWorkout.id,
+        title: selWorkout.title ?? selWorkout.focus ?? null,
+        completedAt,
+        durationSeconds,
+        sets: pending,
+      });
+      if (!logRes.ok) {
+        // Buffer is intentionally left intact so Finish can be retried.
+        console.error('[fitness] finishWorkout: saving sets failed', logRes.error);
+        setLogging(false);
+        setCompleteErr("Couldn't save your workout — try again");
+        return;
+      }
+      clearBufferedSets();
+    }
+
+    const res = await logWorkoutCompletion({ programWorkoutId: selWorkout.id, completedAt, durationSeconds });
     setLogging(false);
     if (!res.ok) {
-      setCompleteErr(res.needsMigration
-        ? 'Logging needs a quick database migration — run it to start recording completions.'
-        : (res.error || 'Could not save your completion. Please try again.'));
+      console.error('[fitness] finishWorkout: saving the completion failed', res.error);
+      setCompleteErr("Couldn't save your workout — try again");
       return;
     }
     setSession(null);
     await reloadCompletions();
-  }, [selWorkout, sessionActiveHere, session, reloadCompletions]);
+  }, [selWorkout, sessionActiveHere, session, program, reloadCompletions]);
 
   const runWrite = useCallback(async (fn: () => Promise<string | null>) => {
     setSavingCount((n) => n + 1);

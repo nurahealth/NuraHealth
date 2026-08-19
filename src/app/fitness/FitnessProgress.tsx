@@ -866,8 +866,8 @@ export default function FitnessProgress() {
         weight: best.weight ?? 0,
         reps: best.reps ?? 0,
         unit: best.unit,
-        achievedOn: best.performed_on,
-        isRecent: new Date(`${best.performed_on}T00:00:00`) >= weekAgo,
+        achievedOn: best.day_key,
+        isRecent: new Date(`${best.day_key}T00:00:00`) >= weekAgo,
       };
     });
     // Newest PR first, then heaviest.
@@ -877,7 +877,7 @@ export default function FitnessProgress() {
     const volByWeek = new Map<string, number>();
     for (const s of withWeight) {
       if (s.reps == null) continue;
-      const wk = localDateKey(startOfWeek(new Date(`${s.performed_on}T00:00:00`)));
+      const wk = localDateKey(startOfWeek(new Date(`${s.day_key}T00:00:00`)));
       volByWeek.set(wk, (volByWeek.get(wk) ?? 0) + (s.weight ?? 0) * s.reps);
     }
     const wk0 = startOfWeek(today);
@@ -892,7 +892,7 @@ export default function FitnessProgress() {
       const perDay = new Map<string, number>();
       for (const s of byEx.get(exId) ?? []) {
         if (s.weight == null) continue;
-        perDay.set(s.performed_on, Math.max(perDay.get(s.performed_on) ?? 0, s.weight));
+        perDay.set(s.day_key, Math.max(perDay.get(s.day_key) ?? 0, s.weight));
       }
       return [...perDay.entries()].sort((a, z) => (a[0] < z[0] ? -1 : 1)).map(([date, value]) => ({ date, value }));
     };

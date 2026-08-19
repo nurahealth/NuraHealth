@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { loadExercise, logSets, type ExerciseFull } from './planData';
+import { loadExercise, type ExerciseFull } from './planData';
+import { bufferSets, type PendingSet } from './sessionSets';
 import ExerciseMedia, { CLIP_BG, isVideo } from './ExerciseMedia';
 import FitnessBackButton from './FitnessBackButton';
 
@@ -70,7 +71,6 @@ export default function ExerciseDetail({ exerciseId, sets, reps, rest_seconds, o
   }, [reps]);
   const [weights, setWeights] = useState<string[]>(() => Array(setCount).fill(''));
   const [repsIn, setRepsIn] = useState<string[]>(() => Array(setCount).fill(''));
-  const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState<string | null>(null);
   const [saveErr, setSaveErr] = useState<string | null>(null);
   // Demo source preference: MoveKit clip → self-hosted WorkoutX gif → placeholder.
@@ -121,27 +121,23 @@ export default function ExerciseDetail({ exerciseId, sets, reps, rest_seconds, o
 
   const toggle = (i: number) => setDone((d) => d.map((v, j) => (j === i ? !v : v)));
 
-  // Persist every set that has a weight entered (reps fall back to the plan's
-  // low end). Marks saved sets done and shows a confirmation.
-  const saveSets = async () => {
-    const payload = Array.from({ length: setCount }, (_, i) => {
+  // Hold every set that has a weight entered (reps fall back to the plan's low
+  // end). These are buffered for the workout in progress — set_logs rows can't
+  // exist before their workout_logs parent, so "Finish workout" writes them.
+  const saveSets = () => {
+    const payload: PendingSet[] = Array.from({ length: setCount }, (_, i) => {
       const w = parseFloat(weights[i]);
       const r = parseInt(repsIn[i] || defaultReps, 10);
-      return Number.isFinite(w) && w > 0 ? { setIndex: i + 1, weight: w, reps: Number.isFinite(r) ? r : 0 } : null;
-    }).filter((s): s is { setIndex: number; weight: number; reps: number } => s !== null);
+      return Number.isFinite(w) && w > 0
+        ? { exerciseId, setNumber: i + 1, weight: w, reps: Number.isFinite(r) ? r : 0 }
+        : null;
+    }).filter((s): s is PendingSet => s !== null);
 
     if (payload.length === 0) { setSaveErr('Enter a weight on at least one set.'); return; }
-    setSaving(true); setSaveErr(null); setSaveMsg(null);
-    const res = await logSets({ exerciseId, sets: payload });
-    setSaving(false);
-    if (!res.ok) {
-      setSaveErr(res.needsMigration
-        ? 'Strength logging needs a quick database migration — run it to start tracking.'
-        : (res.error || 'Could not save. Please try again.'));
-      return;
-    }
+    setSaveErr(null);
+    bufferSets(exerciseId, payload);
     setDone((d) => d.map((v, i) => (Number.isFinite(parseFloat(weights[i])) && parseFloat(weights[i]) > 0 ? true : v)));
-    setSaveMsg(`Logged ${res.count} set${res.count === 1 ? '' : 's'} ✓`);
+    setSaveMsg(`${payload.length} set${payload.length === 1 ? '' : 's'} ready ✓ — they save when you finish the workout.`);
   };
 
   // ── Section styles (1:1 with the reference CSS) ─────────────────────────────
@@ -229,7 +225,7 @@ export default function ExerciseDetail({ exerciseId, sets, reps, rest_seconds, o
         {/* your sets — log weight × reps per set */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '0 0 6px' }}>
           {secHead('Your sets', { margin: 0 })}
-          <div style={{ fontSize: 11, color: "var(--nura-accent-text)" }}>log weight × reps</div>
+          <div style={{ fontSize: 11, color: "var(--nura-accent-text)" }}>saves when you finish</div>
         </div>
         {Array.from({ length: setCount }, (_, i) => {
           const inp: React.CSSProperties = {
@@ -271,13 +267,13 @@ export default function ExerciseDetail({ exerciseId, sets, reps, rest_seconds, o
         {/* log sets — primary action for the set logging, centered & full-width
             within the padded column (matches the modal primary buttons), never
             flush against the screen edge. */}
-        <button className="nura-lift" type="button" onClick={saveSets} disabled={saving} style={{
+        <button className="nura-lift" type="button" onClick={saveSets} style={{
           display: 'block', width: '100%', margin: '18px 0 34px',
           background: SAGE, color: BG, border: 'none', borderRadius: 14,
-          padding: 16, fontSize: 15, fontWeight: 700, cursor: saving ? 'default' : 'pointer',
-          opacity: saving ? 0.7 : 1, boxShadow: '0 8px 24px rgba(var(--nura-sage-rgb),.28)',
+          padding: 16, fontSize: 15, fontWeight: 700, cursor: 'pointer',
+          opacity: 1, boxShadow: '0 8px 24px rgba(var(--nura-sage-rgb),.28)',
         }}>
-          {saving ? 'Saving…' : 'Log sets'}
+          Log sets
         </button>
 
         {/* how to — step-by-step reference at the bottom */}

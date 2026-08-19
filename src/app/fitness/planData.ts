@@ -238,16 +238,9 @@ export function localDateKey(d: Date): string {
   return `${y}-${m}-${day}`;
 }
 
-// PostgREST raises PGRST205 (and Postgres 42P01) until the migration has been
-// applied. Treat that as "no completions yet" so the app degrades cleanly.
-function isMissingTable(err: { code?: string; message?: string } | null): boolean {
-  if (!err) return false;
-  if (err.code === 'PGRST205' || err.code === '42P01') return true;
-  return /workout_completions/.test(err.message ?? '') && /(schema cache|does not exist)/i.test(err.message ?? '');
-}
-
-// All completions for the signed-in user (RLS scopes to owner). Returns [] when
-// the table isn't there yet, so the calendar simply shows nothing "done".
+// All completions for the signed-in user (RLS scopes to owner). A read failure
+// is logged in full and treated as "nothing done yet" so the calendar renders,
+// but the real cause is never swallowed silently.
 export async function loadCompletions(): Promise<WorkoutCompletion[]> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return [];
@@ -256,28 +249,33 @@ export async function loadCompletions(): Promise<WorkoutCompletion[]> {
     .select('id, program_workout_id, completed_at, duration_seconds')
     .eq('user_id', user.id)
     .order('completed_at', { ascending: false });
-  if (error) return []; // missing table or any read error → treat as no completions
+  if (error) {
+    console.error('[fitness] loadCompletions failed', error);
+    return [];
+  }
   return (data as WorkoutCompletion[] | null) ?? [];
 }
 
-export type LogCompletionResult = { ok: true } | { ok: false; needsMigration: boolean; error: string };
+export type LogCompletionResult = { ok: true } | { ok: false; error: string };
 
-// Record one completed workout. `needsMigration` is true when the only problem
-// is that the table hasn't been created yet (so the UI can prompt for the SQL).
+// Record one completed workout. This is what the calendar reads — keep it.
 export async function logWorkoutCompletion(args: {
   programWorkoutId: string;
   completedAt?: string;            // defaults to now
   durationSeconds?: number | null;
 }): Promise<LogCompletionResult> {
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { ok: false, needsMigration: false, error: 'Not signed in.' };
+  if (!user) return { ok: false, error: 'Not signed in.' };
   const { error } = await supabase.from('workout_completions').insert({
     user_id: user.id,
     program_workout_id: args.programWorkoutId,
     completed_at: args.completedAt ?? new Date().toISOString(),
     duration_seconds: args.durationSeconds ?? null,
   });
-  if (error) return { ok: false, needsMigration: isMissingTable(error), error: error.message };
+  if (error) {
+    console.error('[fitness] workout_completions insert failed', error);
+    return { ok: false, error: error.message };
+  }
   return { ok: true };
 }
 
@@ -470,87 +468,122 @@ export async function updatePhotoFit(id: string, fit: PhotoFit): Promise<void> {
 }
 
 // ── Strength / set logging ───────────────────────────────────────────────────
-// One row per performed set (set_logs). Captures weight + reps per set, the
-// exercise, the date, and an optional link to the workout_completions session.
+// Two tables, parent → child:
+//   workout_logs — one row per finished workout (totals + duration)
+//   set_logs     — one row per performed set, log_id → workout_logs.id (NOT NULL)
+// Because log_id is required, sets are buffered client-side while the workout is
+// in progress (see sessionSets.ts) and written here on "Finish workout".
+// Columns below are the LIVE schema. set_logs.exercise_id is TEXT — never cast.
 
 export type SetLog = {
   id: string;
+  log_id: string;
   exercise_id: string;
-  exercise_name: string | null;   // embedded from exercises
-  completion_id: string | null;
-  performed_on: string;           // 'YYYY-MM-DD'
-  set_index: number;
+  exercise_name: string | null;   // resolved from `exercises` in a second query
+  day_key: string;                // 'YYYY-MM-DD', derived locally from created_at
+  set_number: number;             // 1-based
   weight: number | null;
   reps: number | null;
-  unit: string;
+  unit: string;                   // set_logs has no unit column — always 'lb'
   created_at: string;
 };
 
-// Missing-table guard — degrade cleanly until the set_logs migration is applied
-// so the Strength section shows its empty prompt instead of erroring.
-function isMissingSetLogsTable(err: { code?: string; message?: string } | null): boolean {
-  if (!err) return false;
-  if (err.code === 'PGRST205' || err.code === '42P01') return true;
-  return /set_logs/.test(err.message ?? '') && /(schema cache|does not exist)/i.test(err.message ?? '');
-}
-
-// All performed sets for the signed-in user, oldest → newest, with exercise name.
-// Returns [] when the table isn't there yet.
+// All performed sets for the signed-in user, oldest → newest, with the exercise
+// name resolved separately (set_logs.exercise_id is TEXT with no PostgREST
+// relationship to `exercises`, so it can't be embedded in the select).
 export async function loadSetLogs(): Promise<SetLog[]> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return [];
   const { data, error } = await supabase
     .from('set_logs')
-    .select('id, exercise_id, completion_id, performed_on, set_index, weight, reps, unit, created_at, exercise:exercises(name)')
+    .select('id, log_id, exercise_id, set_number, weight, reps, completed, created_at')
     .eq('user_id', user.id)
-    .order('performed_on', { ascending: true })
     .order('created_at', { ascending: true });
-  if (error) return [];
-  return ((data as Record<string, unknown>[] | null) ?? []).map((r) => {
-    const exRaw = r.exercise as { name?: string } | { name?: string }[] | null;
-    const ex = Array.isArray(exRaw) ? exRaw[0] : exRaw;
+  if (error) {
+    // Never let a failed read masquerade as "No lifts logged yet".
+    console.error('[fitness] loadSetLogs failed', error);
+    return [];
+  }
+  const rows = (data as Record<string, unknown>[] | null) ?? [];
+  if (rows.length === 0) return [];
+
+  // Exercise names in one extra round-trip; a failure here only costs labels.
+  const ids = [...new Set(rows.map((r) => r.exercise_id as string).filter(Boolean))];
+  const names = new Map<string, string>();
+  if (ids.length > 0) {
+    const { data: exRows, error: exErr } = await supabase.from('exercises').select('id, name').in('id', ids);
+    if (exErr) console.error('[fitness] loadSetLogs exercise-name lookup failed', exErr);
+    for (const e of (exRows as { id: string; name: string }[] | null) ?? []) names.set(e.id, e.name);
+  }
+
+  return rows.map((r) => {
+    const createdAt = r.created_at as string;
     return {
       id: r.id as string,
+      log_id: r.log_id as string,
       exercise_id: r.exercise_id as string,
-      exercise_name: ex?.name ?? null,
-      completion_id: (r.completion_id as string | null) ?? null,
-      performed_on: r.performed_on as string,
-      set_index: (r.set_index as number) ?? 1,
+      exercise_name: names.get(r.exercise_id as string) ?? null,
+      day_key: localDateKey(new Date(createdAt)),
+      set_number: (r.set_number as number) ?? 1,
       weight: (r.weight as number | null) ?? null,
       reps: (r.reps as number | null) ?? null,
-      unit: (r.unit as string) ?? 'lb',
-      created_at: r.created_at as string,
+      unit: 'lb',
+      created_at: createdAt,
     };
   });
 }
 
-export type LogSetsResult = { ok: true; count: number } | { ok: false; needsMigration: boolean; error: string };
+export type SaveWorkoutLogResult = { ok: true; setCount: number } | { ok: false; error: string };
 
-// Persist a batch of performed sets for one exercise (RLS scopes to owner).
-// `completionId` links them to a tracked session when there is one; otherwise
-// null (standalone per-exercise logging). `performedOn` defaults to today.
-export async function logSets(args: {
-  exerciseId: string;
-  sets: { setIndex: number; weight: number; reps: number }[];
-  unit?: string;
-  completionId?: string | null;
-  performedOn?: string;
-}): Promise<LogSetsResult> {
+// Flush one finished workout: insert the workout_logs parent, take its id, then
+// insert every buffered set as a set_logs child. Callers skip this entirely when
+// no sets were logged — the workout_completions row stands on its own.
+export async function saveWorkoutLog(args: {
+  programId: string | null;
+  workoutId: string;
+  title: string | null;
+  completedAt?: string;                  // defaults to now
+  durationSeconds?: number | null;
+  sets: { exerciseId: string; setNumber: number; weight: number; reps: number }[];
+}): Promise<SaveWorkoutLogResult> {
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { ok: false, needsMigration: false, error: 'Not signed in.' };
-  if (args.sets.length === 0) return { ok: true, count: 0 };
+  if (!user) return { ok: false, error: 'Not signed in.' };
+  if (args.sets.length === 0) return { ok: true, setCount: 0 };
+
+  const totalVolume = args.sets.reduce((sum, s) => sum + s.weight * s.reps, 0);
+
+  const { data: logRow, error: logErr } = await supabase
+    .from('workout_logs')
+    .insert({
+      user_id: user.id,
+      program_id: args.programId,
+      workout_id: args.workoutId,
+      title: args.title,
+      completed_at: args.completedAt ?? new Date().toISOString(),
+      duration_seconds: args.durationSeconds ?? null,
+      total_sets: args.sets.length,
+      total_volume: totalVolume,
+    })
+    .select('id')
+    .single();
+  if (logErr || !logRow) {
+    console.error('[fitness] workout_logs insert failed', logErr);
+    return { ok: false, error: logErr?.message ?? 'Could not create the workout log.' };
+  }
 
   const rows = args.sets.map((s) => ({
+    log_id: (logRow as { id: string }).id,
     user_id: user.id,
-    exercise_id: args.exerciseId,
-    completion_id: args.completionId ?? null,
-    performed_on: args.performedOn || undefined,   // DB defaults to current_date
-    set_index: s.setIndex,
-    weight: s.weight,
+    exercise_id: s.exerciseId,     // TEXT column — pass through as-is
+    set_number: s.setNumber,
     reps: s.reps,
-    unit: args.unit ?? 'lb',
+    weight: s.weight,
+    completed: true,
   }));
-  const { error } = await supabase.from('set_logs').insert(rows);
-  if (error) return { ok: false, needsMigration: isMissingSetLogsTable(error), error: error.message };
-  return { ok: true, count: rows.length };
+  const { error: setErr } = await supabase.from('set_logs').insert(rows);
+  if (setErr) {
+    console.error('[fitness] set_logs insert failed', setErr, rows);
+    return { ok: false, error: setErr.message };
+  }
+  return { ok: true, setCount: rows.length };
 }
