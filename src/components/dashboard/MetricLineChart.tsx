@@ -5,7 +5,7 @@ import type { MetricPaint } from "@/lib/metricColors";
 import {
   ALPHA, AURA, ENTER_CLASS, MARKER, PAD, STROKE,
   AuraDefs, BaselineBand, BaselineLine, ChartLegend, ChartTooltip, Marker, XAxis, YAxis,
-  fitTicks, linePath, niceScale, smoothPath,
+  fitTicks, linePath, niceScale, quadPath, smoothPath,
   useMeasuredWidth, useTweenedSeries,
   type LegendItem,
 } from "@/components/dashboard/chartTheme";
@@ -45,10 +45,12 @@ export interface MetricLineChartProps {
   color: MetricPaint;
   /** Unit shown in the tooltip, e.g. "br/min". */
   unit?: string;
-  /** Dashed reference line (personal baseline, average, goal), or null. */
+  /**
+   * Dashed reference line (personal baseline, average, goal), or null. It is
+   * drawn as a RULE only — its value belongs in the card's chrome, never on
+   * the plot. See BaselineLine / BaselineChip in chartTheme.
+   */
   baseline?: number | null;
-  /** Word after the baseline value in its label. */
-  baselineLabel?: string;
   /** Shaded normal/baseline RANGE [lo, hi] — one flat band. */
   band?: [number, number] | null;
   /** Legend text for the band. Only shown when a legend is warranted. */
@@ -76,6 +78,26 @@ export interface MetricLineChartProps {
    * data invents values that were never measured.
    */
   continuous?: boolean;
+  /**
+   * How a continuous series is curved. "interpolate" (default) is Catmull-Rom
+   * through every sample. "approximate" is midpoint-quadratic, for a dense
+   * low-amplitude trace where interpolation turns sampling noise into spikes.
+   * Ignored when `continuous` is false. See quadPath in chartTheme.
+   */
+  smoothing?: "interpolate" | "approximate";
+  /**
+   * Draw the y tick labels and their gridlines. Turn OFF on a card whose range
+   * is stated in its chrome — the labels are then a second, quieter copy of
+   * information the chip already gives, sitting in the plot's right gutter and
+   * squeezing the drawing. The detail screen keeps them.
+   */
+  showYAxis?: boolean;
+  /** Series stroke width. Defaults to the shared STROKE.series. */
+  strokeWidth?: number;
+  /** Top stop of the area fade, in light. Defaults to the shared 0.10. */
+  areaAlpha?: number;
+  /** Radius of the latest-point dot. Defaults to the shared MARKER.rLatest. */
+  dotRadius?: number;
   /** Sentence describing the series for screen readers. */
   ariaLabel?: string;
 }
@@ -85,7 +107,6 @@ export default function MetricLineChart({
   color,
   unit,
   baseline = null,
-  baselineLabel = "baseline",
   band = null,
   bandLabel = "baseline range",
   seriesLabel,
@@ -98,6 +119,11 @@ export default function MetricLineChart({
   tickFormat,
   height = 168,
   continuous = true,
+  smoothing = "interpolate",
+  showYAxis = true,
+  strokeWidth = STROKE.series,
+  areaAlpha = 0.1,
+  dotRadius = MARKER.rLatest,
   ariaLabel,
 }: MetricLineChartProps) {
   const lightForm = useIsLightForm();
@@ -156,7 +182,9 @@ export default function MetricLineChart({
   const yAt = (v: number) => plotT + (1 - (v - yLo) / (yHi - yLo || 1)) * plotH;
 
   const pts: [number, number][] = series.map((v, i) => [xAt(i), yAt(v)]);
-  const path = continuous ? smoothPath(pts) : linePath(pts);
+  const path = !continuous
+    ? linePath(pts)
+    : smoothing === "approximate" ? quadPath(pts) : smoothPath(pts);
   const area = `${path}L${pts[n - 1][0].toFixed(2)},${plotB}L${pts[0][0].toFixed(2)},${plotB}Z`;
 
   const last = pts[n - 1];
@@ -205,7 +233,7 @@ export default function MetricLineChart({
               offset="0"
               style={lightForm ? { stopColor: "var(--nura-sage-mid)" } : undefined}
               stopColor={lightForm ? undefined : color.hex}
-              stopOpacity={lightForm ? 0.1 : ALPHA.areaTop}
+              stopOpacity={lightForm ? areaAlpha : ALPHA.areaTop}
             />
             <stop
               offset="1"
@@ -223,23 +251,24 @@ export default function MetricLineChart({
           />
         )}
 
-        <YAxis ticks={gridTicks} yAt={yAt} plotLeft={plotL} plotRight={plotR} format={fmtTick} />
+        {showYAxis && (
+          <YAxis ticks={gridTicks} yAt={yAt} plotLeft={plotL} plotRight={plotR} format={fmtTick} />
+        )}
 
+        {/* A RULE, not a label — the value lives in the card's chrome. */}
         {baseline != null && (
-          <BaselineLine
-            x1={plotL} x2={plotR} y={yAt(baseline)}
-            value={format(baseline)} suffix={baselineLabel}
-          />
+          <BaselineLine x1={plotL} x2={plotR} y={yAt(baseline)} />
         )}
 
         <path d={area} fill={`url(#fill${uid})`} />
         <path
           d={path} fill="none" stroke={color.hex}
-          // Same 2px weight as dark (STROKE.series); light only swaps the hue.
+          // Light only swaps the hue; the weight is the same in both themes,
+          // because weight is geometry and geometry is shared.
           // The stroke itself carries NO aura: a lit line is a line that has
           // been smudged, and the fade underneath is already its ground.
           style={lightForm ? { stroke: "var(--nura-chart-stroke)" } : undefined}
-          strokeWidth={STROKE.series}
+          strokeWidth={strokeWidth}
           strokeLinecap="round" strokeLinejoin="round"
         />
 
@@ -249,7 +278,7 @@ export default function MetricLineChart({
         {lightForm && (
           <circle
             data-decor="dot-aura"
-            cx={last[0]} cy={last[1]} r={MARKER.rLatest + AURA.barGrow / 2}
+            cx={last[0]} cy={last[1]} r={dotRadius + AURA.barGrow / 2}
             fill="var(--nura-chart-aura)" opacity={AURA.opacity}
             filter={`url(#${uid}-aura-bar)`}
           />
@@ -259,8 +288,8 @@ export default function MetricLineChart({
             is a real reading worth hitting; otherwise only the latest, so a
             dense curve stays a curve instead of a bead necklace. */}
         {sparse
-          ? pts.map(([cx, cy], i) => <Marker key={i} cx={cx} cy={cy} color={lightForm ? "var(--nura-chart-stroke)" : color.hex} />)
-          : <Marker cx={last[0]} cy={last[1]} color={lightForm ? "var(--nura-chart-stroke)" : color.hex} r={MARKER.rLatest} />}
+          ? pts.map(([cx, cy], i) => <Marker key={i} cx={cx} cy={cy} color={lightForm ? "var(--nura-chart-stroke)" : color.hex} r={dotRadius} />)
+          : <Marker cx={last[0]} cy={last[1]} color={lightForm ? "var(--nura-chart-stroke)" : color.hex} r={dotRadius} />}
 
         {/* Hover crosshair, drawn above the line but below the markers' ring */}
         {active && (

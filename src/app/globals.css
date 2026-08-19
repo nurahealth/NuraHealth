@@ -696,6 +696,16 @@
   /* Reference/average overlays. Ink, not sage — they annotate the data, they
      are not more of it. */
   --nura-chart-reference: rgba(20, 24, 21, 0.10);
+  /* The dashed baseline RULE. A cool grey with a trace of the chart's sage, so
+     it reads as a reference belonging to this chart rather than as a stray
+     hairline. Light-only: dark keeps the tertiary ink it has always used. */
+  --nura-baseline-rule: #b7c2ba;
+
+  /* A QUIET chip — the baseline/range readout above a chart. Distinct from the
+     status chips: those carry a judgement and a sage wash, this one carries
+     two numbers and must not compete with the mark it annotates. */
+  --nura-chip-quiet-bg: #f2f5f2;
+  --nura-chip-quiet-border: rgba(20, 24, 21, 0.07);
 
   /* 1 — every single-series chart mark */
   --nura-series: var(--nura-data-primary);   /*  4.7:1 on #ffffff */

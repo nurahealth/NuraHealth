@@ -22,13 +22,20 @@ const EYEBROW: React.CSSProperties = {
 };
 
 export default function MetricCardShell({
-  name, source, value, unit, trend, children, caption, pillLabel, pillColor, onClick,
+  name, source, value, unit, trend, meta, children, caption, pillLabel, pillColor, onClick,
 }: {
   name: string;
   source: SourceId;
   value: ReactNode;
   unit?: string;
   trend?: ReactNode;
+  /**
+   * Reference values that belong to the chart but must not be drawn ON it —
+   * a baseline/range chip, a legend. Sits between the stat row and the viz, so
+   * it reads as a caption for the chart it precedes. Optional: a card with
+   * nothing to declare renders exactly as before.
+   */
+  meta?: ReactNode;
   children: ReactNode;
   caption: ReactNode;
   pillLabel: string;
@@ -61,8 +68,11 @@ export default function MetricCardShell({
         {trend && <span style={{ fontFamily: SANS, fontSize: 12, fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 3 }}>{trend}</span>}
       </div>
 
+      {/* Chart chrome — the reference values, above the plot rather than in it */}
+      {meta && <div style={{ marginTop: 10 }}>{meta}</div>}
+
       {/* Visualization */}
-      <div style={{ marginTop: 14, marginBottom: 14, flex: 1 }}>{children}</div>
+      <div style={{ marginTop: meta ? 10 : 14, marginBottom: 14, flex: 1 }}>{children}</div>
 
       {/* Footer — caption + accent status pill */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginTop: "auto" }}>

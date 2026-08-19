@@ -40,6 +40,14 @@ export const STROKE = {
   grid: 1,
   /** The dashed baseline reference. */
   baseline: 1,
+  /**
+   * The dashed baseline RULE, now that it carries no label. At 1px with a
+   * "3 4" dash it read as a faint scratch competing with the gridlines; with
+   * the value gone from the plot the rule is the only thing pointing at the
+   * reference, so it earns a weight you can actually follow across the card.
+   * Same in both themes — this is geometry, and geometry is shared.
+   */
+  baselineRule: 1.6,
   /** The ring around a data marker, in the card colour, so it clears the line. */
   markerRing: 2,
   /** Hover crosshair. */
@@ -199,6 +207,40 @@ export function linePath(pts: [number, number][]): string {
   return pts.map((p, i) => `${i ? "L" : "M"}${p[0].toFixed(2)},${p[1].toFixed(2)}`).join("");
 }
 
+/**
+ * Quadratic smoothing: each reading becomes a control point, and the curve runs
+ * through the MIDPOINTS between them.
+ *
+ * The difference from smoothPath matters on a dense, low-amplitude trace like a
+ * night of respiratory readings. Catmull-Rom is interpolating — it passes
+ * through every sample and derives its tangents from the neighbours, so a
+ * one-sample blip becomes a little overshoot on both sides of itself, and
+ * thirty-two samples of ±0.4 br/min come out looking spiky and agitated.
+ * Midpoint-quadratic is approximating: the samples pull the curve without
+ * forcing it through, so noise reads as gentle undulation instead of alarm.
+ *
+ * Same data, same domain, same point count — only the rendering is calmer.
+ * Use it where the quantity is continuous and the sampling is arbitrary; use
+ * smoothPath where each point is a reading someone is entitled to find on the
+ * line, and linePath where a curve would invent values outright.
+ */
+export function quadPath(pts: [number, number][]): string {
+  if (pts.length < 3) return linePath(pts);
+  const f = (n: number) => n.toFixed(2);
+  let d = `M${f(pts[0][0])},${f(pts[0][1])}`;
+  for (let i = 1; i < pts.length - 1; i++) {
+    const [cx, cy] = pts[i];
+    const [nx, ny] = pts[i + 1];
+    d += ` Q${f(cx)},${f(cy)} ${f((cx + nx) / 2)},${f((cy + ny) / 2)}`;
+  }
+  // Land exactly on the final reading — the latest point carries the dot and
+  // the card's quoted value, so it is the one sample that must not be averaged.
+  const last = pts[pts.length - 1];
+  const prev = pts[pts.length - 2];
+  d += ` Q${f(prev[0])},${f(prev[1])} ${f(last[0])},${f(last[1])}`;
+  return d;
+}
+
 // ── Hooks ────────────────────────────────────────────────────────────────────
 
 /**
@@ -332,55 +374,86 @@ export function BaselineBand({
 }
 
 /**
- * A dashed reference line with a small label.
+ * The dashed reference line. A LINE ONLY — no text ever enters the plot.
+ *
+ * It used to carry its value as a label sitting on the rule, knocked out of the
+ * card colour. Two things were wrong with that. The knockout width was
+ * ESTIMATED from the glyph count rather than measured, so it was never quite
+ * the size of the text it was hiding; and more fundamentally, a horizontal
+ * reference sits at the middle of a series that oscillates around it, which is
+ * precisely where the data spends most of its time. The line ran straight
+ * through "14.3 baseline" on a typical night. There is no position inside the
+ * plot that is reliably empty, because the plot is where the data is.
+ *
+ * So the value moved OUT, into a chip above the chart (see BaselineChip). The
+ * rule keeps its job — showing where the reference sits — and gives up the job
+ * it was bad at.
  *
  * Deliberately NOT the series colour: a baseline is a reference, not a second
  * series, and tinting it with the metric makes the eye read two lines of equal
- * standing. The label carries a halo in the card colour (stroke first, fill on
- * top) because the series can run straight through it — cheaper and sharper
- * than a backing rect, and it needs no measured text width.
+ * standing. Weight and dash are the same in both themes; only the colour
+ * differs, and dark keeps the value it has always had via the fallback.
  */
 export function BaselineLine({
-  x1, x2, y, value, suffix,
-}: { x1: number; x2: number; y: number; value?: string; suffix?: string }) {
-  // Width of the knockout, estimated from the glyph count rather than measured.
-  // A per-glyph halo (paint-order: stroke) leaves the inter-word space
-  // uncovered, so a dash shows through the middle of the label; a solid plate
-  // in the card colour does not. Mono figures run ~0.62em and the sans suffix
-  // ~0.5em, which is close enough that any error is card-on-card and invisible.
-  const fs = TYPE.baselineLabel;
-  const plate = value
-    ? 3 + value.length * fs * 0.62 + (suffix ? 4 + suffix.length * fs * 0.5 : 0)
-    : 0;
-
+  x1, x2, y,
+}: { x1: number; x2: number; y: number }) {
   return (
-    <>
-      <line
-        x1={x1} y1={y} x2={x2} y2={y}
-        strokeWidth={STROKE.baseline} strokeDasharray="3 4" opacity={0.6}
-        stroke="var(--nura-text-tertiary)"
-      />
-      {value && (
-        // Centred ON its own line, not floating above it. Placed above, the
-        // label had to live in the gap between two gridlines and collided with
-        // whichever one was nearest. Sitting on the line it reads as an
-        // interruption in the reference — which is what it is — and it cannot
-        // crowd a gridline because it never enters the gap.
-        <>
-          <rect
-            x={x1} y={y - fs / 2 - 2} width={plate} height={fs + 4}
-            fill="var(--nura-card)"
-          />
-          <text
-            x={x1 + 2} y={y + fs / 3} fontSize={fs}
-            style={{ fill: "var(--nura-text-tertiary)" }}
-          >
-            <tspan fontFamily={MONO}>{value}</tspan>
-            {suffix && <tspan fontFamily={SANS} dx="3.5">{suffix}</tspan>}
-          </text>
-        </>
-      )}
-    </>
+    <line
+      x1={x1} y1={y} x2={x2} y2={y}
+      strokeWidth={STROKE.baselineRule} strokeDasharray="5 5"
+      stroke="var(--nura-baseline-rule, var(--nura-text-tertiary))"
+      opacity={0.6}
+    />
+  );
+}
+
+/**
+ * The baseline/range chip — the reference values, in the card's chrome.
+ *
+ * This is the other half of BaselineLine's fix: the plot shows WHERE the
+ * reference is, the chip says WHAT it is. Rendered as HTML above the chart
+ * rather than as SVG inside it, so it can never be crossed by a mark, and so
+ * it gets the app's real type and border tokens.
+ *
+ * The dash glyph is the legend: it ties the words to the rule in the plot
+ * without needing the word "dashed" anywhere.
+ */
+export function BaselineChip({
+  baseline, range, format = (v: number) => v.toFixed(1),
+}: {
+  baseline: number;
+  range?: [number, number] | null;
+  format?: (v: number) => string;
+}) {
+  return (
+    <div
+      style={{
+        display: "inline-flex", alignItems: "center", gap: 7,
+        padding: "3px 9px", borderRadius: 999,
+        background: "var(--nura-chip-quiet-bg, rgba(var(--nura-bg-tint-rgb),0.06))",
+        border: "1px solid var(--nura-chip-quiet-border, rgba(var(--nura-bg-tint-rgb),0.10))",
+        fontFamily: SANS, fontSize: 10.5, color: "var(--nura-text-secondary)",
+        whiteSpace: "nowrap",
+      }}
+    >
+      {/* 12px of the same dash the plot draws — same colour, same rhythm. */}
+      <svg width="12" height="2" viewBox="0 0 12 2" aria-hidden style={{ flexShrink: 0, overflow: "visible" }}>
+        <line
+          x1="0" y1="1" x2="12" y2="1"
+          strokeWidth={STROKE.baselineRule} strokeDasharray="5 5"
+          stroke="var(--nura-baseline-rule, var(--nura-text-tertiary))"
+        />
+      </svg>
+      <span>
+        baseline <span style={{ fontFamily: MONO }}>{format(baseline)}</span>
+        {range && (
+          <>
+            {" · range "}
+            <span style={{ fontFamily: MONO }}>{format(range[0])}–{format(range[1])}</span>
+          </>
+        )}
+      </span>
+    </div>
   );
 }
 
