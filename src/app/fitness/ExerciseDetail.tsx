@@ -165,7 +165,7 @@ export default function ExerciseDetail({ exerciseId, sets, reps, rest_seconds, o
 
   return (
     <div style={wrap}>
-      <div style={{ width: '100%', maxWidth: 'var(--fit-detail, 440px)', paddingBottom: 40 }}>
+      <div style={{ width: '100%', maxWidth: 'var(--fit-detail, 440px)', paddingBottom: 96 }}>
 
         {/* back — the ONE header for this screen (dashboard header is covered by
             the opaque overlay behind us) */}
