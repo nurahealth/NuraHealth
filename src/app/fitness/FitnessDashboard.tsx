@@ -702,9 +702,6 @@ const app: React.CSSProperties = { width: '100%', maxWidth: 'var(--fit-frame, 44
                         Start workout
                       </button>
                     )}
-                    <button type="button" aria-label="Edit" style={{ width: 48, height: 48, borderRadius: 13, background: 'var(--nura-inset-dark)', border: '1px solid rgba(var(--nura-bg-tint-rgb),.14)', color: TEXT, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z" /></svg>
-                    </button>
                   </div>
                   {sessionActiveHere && !logging && (
                     <div style={{ fontSize: 11.5, color: MUT, marginTop: 9 }}>Workout in progress — tap Finish when you&apos;re done to log it.</div>
