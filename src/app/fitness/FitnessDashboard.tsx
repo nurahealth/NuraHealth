@@ -759,8 +759,6 @@ const app: React.CSSProperties = { width: '100%', maxWidth: 'var(--fit-frame, 44
                         <span style={{ display: 'block', fontSize: 14, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{we.exercise?.name ?? 'Exercise'}</span>
                         <span style={{ display: 'block', fontSize: 11, color: MUT, marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{muscleLabel(we.exercise)}</span>
                       </span>
-                      {/* Visible affordance: this row opens the exercise page. */}
-                      <span aria-hidden="true" style={{ marginLeft: 'auto', padding: '0 10px 0 8px', color: 'var(--nura-ink-faint)', fontSize: 14, lineHeight: 1, flexShrink: 0 }}>›</span>
                     </button>
                     {/* Sets steppers — their own controls. */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
