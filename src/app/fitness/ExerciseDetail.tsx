@@ -142,18 +142,21 @@ export default function ExerciseDetail({ exerciseId, sets, reps, rest_seconds, o
   // end). These are buffered for the workout in progress — set_logs rows can't
   // exist before their workout_logs parent, so "Finish workout" writes them.
   const saveSets = () => {
+    // Weight is optional — bodyweight/stretch sets log at 0 lb. Every row logs
+    // with its weight (or 0) and its reps (or the plan's low end).
     const payload: PendingSet[] = Array.from({ length: setCount }, (_, i) => {
       const w = parseFloat(weights[i]);
       const r = parseInt(repsIn[i] || defaultReps, 10);
-      return Number.isFinite(w) && w > 0
-        ? { exerciseId, setNumber: i + 1, weight: w, reps: Number.isFinite(r) ? r : 0 }
-        : null;
-    }).filter((s): s is PendingSet => s !== null);
+      return {
+        exerciseId, setNumber: i + 1,
+        weight: Number.isFinite(w) && w > 0 ? w : 0,
+        reps: Number.isFinite(r) ? r : 0,
+      };
+    });
 
-    if (payload.length === 0) { setSaveErr('Enter a weight on at least one set.'); return; }
     setSaveErr(null);
     bufferSets(exerciseId, payload);
-    setDone((d) => d.map((v, i) => (Number.isFinite(parseFloat(weights[i])) && parseFloat(weights[i]) > 0 ? true : v)));
+    setDone(Array(setCount).fill(true));
     setSaveMsg(`${payload.length} set${payload.length === 1 ? '' : 's'} ready ✓ — they save when you finish the workout.`);
   };
 
