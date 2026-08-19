@@ -271,7 +271,7 @@ export default function PlanSettings() {
           color: `var(--nura-ink-muted)`, background: SURFACE, border: `1px solid rgba(var(--nura-bg-tint-rgb),0.12)`,
           transition: 'color 160ms ease, border-color 160ms ease',
         }}>
-          <ChevronLeft /> Plan
+          <ChevronLeft /> Back
         </button>
 
         <div style={{

@@ -720,6 +720,9 @@ const app: React.CSSProperties = { width: '100%', maxWidth: 'var(--fit-frame, 44
                   <span style={{ fontSize: 13, letterSpacing: '.04em', color: MUT }}>{editEyebrow}</span>
                   <span style={{ fontSize: 13, letterSpacing: '.04em', color: "var(--nura-accent-text)" }}>{savingCount > 0 ? 'saving…' : 'auto-saves'}</span>
                 </div>
+                <div style={{ fontSize: 11.5, color: MUT, marginTop: 6 }}>
+                  Tap an exercise to log your sets and see how to do it.
+                </div>
                 {selWorkout!.exercises.map((we, i) => (
                   <div
                     key={we.id}
@@ -756,6 +759,8 @@ const app: React.CSSProperties = { width: '100%', maxWidth: 'var(--fit-frame, 44
                         <span style={{ display: 'block', fontSize: 14, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{we.exercise?.name ?? 'Exercise'}</span>
                         <span style={{ display: 'block', fontSize: 11, color: MUT, marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{muscleLabel(we.exercise)}</span>
                       </span>
+                      {/* Visible affordance: this row opens the exercise page. */}
+                      <span aria-hidden="true" style={{ marginLeft: 'auto', paddingLeft: 8, color: 'var(--nura-accent-text)', fontSize: 16, lineHeight: 1, flexShrink: 0 }}>›</span>
                     </button>
                     {/* Sets steppers — their own controls. */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
