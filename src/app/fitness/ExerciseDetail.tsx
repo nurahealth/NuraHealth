@@ -61,16 +61,18 @@ export default function ExerciseDetail({ exerciseId, sets, reps, rest_seconds, o
   const [ex, setEx] = useState<ExerciseFull | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const setCount = Math.max(1, sets ?? 3);
-  const [done, setDone] = useState<boolean[]>(() => Array(setCount).fill(false));
+  const plannedCount = Math.max(1, sets ?? 3);
+  // The user can add/remove rows freely; the plan only seeds the starting count.
+  const [setCount, setSetCount] = useState(plannedCount);
+  const [done, setDone] = useState<boolean[]>(() => Array(plannedCount).fill(false));
   // Per-set performed weight + reps (strings while editing). Reps default to the
   // low end of the prescribed range so the user usually just types the weight.
   const defaultReps = useMemo(() => {
     const m = (reps ?? '').match(/\d+/);
     return m ? m[0] : '';
   }, [reps]);
-  const [weights, setWeights] = useState<string[]>(() => Array(setCount).fill(''));
-  const [repsIn, setRepsIn] = useState<string[]>(() => Array(setCount).fill(''));
+  const [weights, setWeights] = useState<string[]>(() => Array(plannedCount).fill(''));
+  const [repsIn, setRepsIn] = useState<string[]>(() => Array(plannedCount).fill(''));
   const [saveMsg, setSaveMsg] = useState<string | null>(null);
   const [saveErr, setSaveErr] = useState<string | null>(null);
   // Demo source preference: MoveKit clip → self-hosted WorkoutX gif → placeholder.
@@ -90,11 +92,26 @@ export default function ExerciseDetail({ exerciseId, sets, reps, rest_seconds, o
 
   // Keep the set checklist + input arrays in sync with the set count.
   useEffect(() => {
-    setDone(Array(setCount).fill(false));
-    setWeights(Array(setCount).fill(''));
-    setRepsIn(Array(setCount).fill(''));
+    setSetCount(plannedCount);
+    setDone(Array(plannedCount).fill(false));
+    setWeights(Array(plannedCount).fill(''));
+    setRepsIn(Array(plannedCount).fill(''));
     setSaveMsg(null); setSaveErr(null);
-  }, [setCount]);
+  }, [plannedCount]);
+
+  // Add/remove set rows in place — same freedom as the workout editor.
+  const addSet = () => {
+    setSetCount((n) => n + 1);
+    setDone((d) => [...d, false]);
+    setWeights((w) => [...w, '']);
+    setRepsIn((r) => [...r, '']);
+  };
+  const removeSet = (i: number) => {
+    setSetCount((n) => Math.max(1, n - 1));
+    setDone((d) => (d.length > 1 ? d.filter((_, j) => j !== i) : d));
+    setWeights((w) => (w.length > 1 ? w.filter((_, j) => j !== i) : w));
+    setRepsIn((r) => (r.length > 1 ? r.filter((_, j) => j !== i) : r));
+  };
 
   const primary = ex?.target_muscles ?? [];
   const secondary = ex?.secondary_muscles ?? [];
@@ -242,8 +259,8 @@ export default function ExerciseDetail({ exerciseId, sets, reps, rest_seconds, o
                 <input value={weights[i] ?? ''} onChange={(e) => setWeights((w) => w.map((v, j) => (j === i ? e.target.value : v)))}
                   inputMode="decimal" placeholder="lb" aria-label={`Set ${i + 1} weight`} style={inp} />
                 <span style={{ fontFamily: MONO, fontSize: 13, color: MUT }}>×</span>
-                <input value={repsIn[i] ?? ''} onChange={(e) => setRepsIn((r) => r.map((v, j) => (j === i ? e.target.value : v)))}
-                  inputMode="numeric" placeholder={defaultReps || 'reps'} aria-label={`Set ${i + 1} reps`} style={inp} />
+                <input value={(repsIn[i] ?? '') || defaultReps} onChange={(e) => setRepsIn((r) => r.map((v, j) => (j === i ? e.target.value : v)))}
+                  inputMode="numeric" placeholder="reps" aria-label={`Set ${i + 1} reps`} style={inp} />
               </div>
               <div
                 onClick={() => toggle(i)}
@@ -257,9 +274,17 @@ export default function ExerciseDetail({ exerciseId, sets, reps, rest_seconds, o
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={BG} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
                 )}
               </div>
+              {setCount > 1 && (
+                <button type="button" aria-label={`Remove set ${i + 1}`} onClick={() => removeSet(i)}
+                  style={{ width: 26, height: 26, borderRadius: 8, border: '1px solid rgba(var(--nura-danger-rgb, 200,80,70),.35)', background: 'transparent', color: 'var(--nura-danger-soft)', fontSize: 13, cursor: 'pointer', lineHeight: 1, flexShrink: 0 }}>×</button>
+              )}
             </div>
           );
         })}
+        <button type="button" onClick={addSet}
+          style={{ width: '100%', marginTop: 8, padding: '10px 0', borderRadius: 12, border: `1px dashed ${LINE}`, background: 'transparent', color: 'var(--nura-accent-text)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+          + Add set
+        </button>
 
         {saveErr && <div style={{ fontSize: 12.5, color: 'var(--nura-danger-soft)', marginTop: 14 }}>{saveErr}</div>}
         {saveMsg && <div style={{ fontSize: 12.5, color: "var(--nura-accent-text)", marginTop: 14 }}>{saveMsg}</div>}
