@@ -11,7 +11,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { createClient } from '@supabase/supabase-js';
-import { generateProgram, type CatalogExercise, type GeneratorProfile } from '../src/lib/program-generator.ts';
+import { generateProgram, type CatalogExercise, type GeneratorProfile } from '../src/lib/program-generator';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 

@@ -113,7 +113,7 @@ export default function BodyScan({
     window.addEventListener("pointerup", onUp);
 
     function resize() {
-      const w = mount.clientWidth || 1, h = mount.clientHeight || 1;
+      const w = mount!.clientWidth || 1, h = mount!.clientHeight || 1;
       renderer.setSize(w, h, false);
       camera.aspect = w / h;
       const vt = Math.tan((camera.fov * Math.PI) / 360);

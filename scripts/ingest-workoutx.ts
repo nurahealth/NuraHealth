@@ -13,7 +13,7 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import { mapExercise, type ExerciseRecord } from '../src/lib/exercise-source.ts';
+import { mapExercise, type ExerciseRecord } from '../src/lib/exercise-source';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 
