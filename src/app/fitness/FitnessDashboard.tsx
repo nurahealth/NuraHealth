@@ -335,13 +335,6 @@ export default function FitnessDashboard() {
   const [savingCount, setSavingCount] = useState(0);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [generating, setGenerating] = useState(false);
-  // Arriving from the calendar's "Edit this day's workout" link: ?date=YYYY-MM-DD
-  // selects that day so the hero + editor open on it.
-  useEffect(() => {
-    const dp = new URLSearchParams(window.location.search).get('date');
-    if (dp && /^\d{4}-\d{2}-\d{2}$/.test(dp)) setSelected(new Date(`${dp}T00:00:00`));
-  }, []);
-
   const [reqOpen, setReqOpen] = useState(false);
   const [reqName, setReqName] = useState('');
   const [reqDetails, setReqDetails] = useState('');
@@ -407,7 +400,13 @@ export default function FitnessDashboard() {
     }
   }, [today]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    // Arriving from the calendar's "Edit this day's workout" link: ?date=YYYY-MM-DD
+    // must beat the auto-jump-to-next-training-day, so it rides load()'s `land`.
+    const dp = new URLSearchParams(window.location.search).get('date');
+    const explicit = dp && /^\d{4}-\d{2}-\d{2}$/.test(dp) ? new Date(`${dp}T00:00:00`) : undefined;
+    void load(explicit);
+  }, [load]);
   // Skips live in localStorage, so they can only be read once mounted.
   useEffect(() => { setSkips(loadSkips()); }, []);
 
