@@ -864,7 +864,9 @@ const app: React.CSSProperties = { width: '100%', maxWidth: 'var(--fit-frame, 44
         <GuidedWorkout
           workout={selWorkout!}
           dayLabel={guidedDayLabel}
+          startedAt={sessionActiveHere ? session!.startedAt : null}
           onStart={startWorkout}
+          onOpenHowTo={setDetailEx}
           onClose={() => setGuided(false)}
           onEditPlan={() => {
             setGuided(false);
