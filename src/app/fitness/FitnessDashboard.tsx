@@ -13,6 +13,8 @@ import {
   type CatalogEx, type Program, type ProgramSummary, type WEx, type Workout, type WorkoutCompletion,
 } from './planData';
 import { getBufferedSets, clearBufferedSets } from './sessionSets';
+import { titleCase, muscleLabel, estimateMinutes } from './workoutFormat';
+import GuidedWorkout from './GuidedWorkout';
 import ThemeToggle from "@/components/ThemeToggle";
 
 // ── Palette (ported verbatim from design-reference/fitness-dashboard.html) ────
@@ -37,13 +39,9 @@ const sameDay = (a: Date, b: Date) =>
   a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 
 // ── Display helpers ──────────────────────────────────────────────────────────
-const titleCase = (s: string) => s.replace(/\b\w/g, (c) => c.toUpperCase());
+// titleCase / muscleLabel / estimateMinutes live in workoutFormat.ts — the
+// guided-workout overlay needs the same formatting and can't import from here.
 const lc = (s: string | null | undefined) => (s ?? '').toLowerCase();
-function muscleLabel(ex: CatalogEx | null): string {
-  if (!ex) return '';
-  const t = (ex.target_muscles ?? []).filter(Boolean);
-  return (t.length ? t : (ex.body_part ? [ex.body_part] : [])).map(titleCase).join(' · ');
-}
 function isTraining(w: Workout | undefined): w is Workout {
   return !!w && !w.is_rest && w.exercises.length > 0;
 }
@@ -57,11 +55,6 @@ function muscleChips(exs: WEx[]): string[] {
     else (e.exercise?.target_muscles ?? []).forEach((m) => m && set.add(titleCase(m)));
   }
   return [...set].slice(0, 5);
-}
-function estimateMinutes(exs: WEx[]): number {
-  let s = 0;
-  for (const e of exs) s += (e.sets ?? 3) * (45 + (e.rest_seconds ?? 60));
-  return Math.max(5, Math.round(s / 60 / 5) * 5);
 }
 function candidatesForMuscle(ex: CatalogEx | null, catalog: CatalogEx[]): CatalogEx[] {
   if (!ex) return catalog;
@@ -288,6 +281,10 @@ export default function FitnessDashboard() {
   const [session, setSession] = useState<{ workoutId: string; dateKey: string; startedAt: number } | null>(null);
   const [logging, setLogging] = useState(false);
   const [completeErr, setCompleteErr] = useState<string | null>(null);
+  // Guided Workout Mode — full-screen overlay driving start → log → finish.
+  const [guided, setGuided] = useState(false);
+  // Target for "Edit today's plan": the overlay closes and scrolls here.
+  const editPanelRef = useRef<HTMLDivElement | null>(null);
 
   const today = useMemo(() => startOfDay(new Date()), []);
   const saveTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
@@ -490,6 +487,8 @@ const app: React.CSSProperties = { width: '100%', maxWidth: 'var(--fit-frame, 44
   const editEyebrow = sameDay(selected, today)
     ? "EDIT TODAY'S WORKOUT"
     : `EDIT ${selected.toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase()}'S WORKOUT`;
+  // Guided overlay eyebrow — day + workout title, e.g. "TUESDAY · UPPER BODY".
+  const guidedDayLabel = `${selected.toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase()} · ${focusOf(selWorkout).toUpperCase()}`;
 
   // Week strip dates (Monday-first week containing today).
   const weekDays = useMemo(() => {
@@ -698,7 +697,7 @@ const app: React.CSSProperties = { width: '100%', maxWidth: 'var(--fit-frame, 44
                         {logging ? 'Saving…' : 'Finish workout'}
                       </button>
                     ) : (
-                      <button className="nura-lift" type="button" onClick={startWorkout} style={{ flex: 1, background: SAGE, color: BG, border: 'none', borderRadius: 13, padding: 14, fontSize: 15, fontWeight: 700, cursor: 'pointer', boxShadow: '0 8px 24px rgba(var(--nura-sage-rgb),.3)' }}>
+                      <button className="nura-lift" type="button" onClick={() => setGuided(true)} style={{ flex: 1, background: SAGE, color: BG, border: 'none', borderRadius: 13, padding: 14, fontSize: 15, fontWeight: 700, cursor: 'pointer', boxShadow: '0 8px 24px rgba(var(--nura-sage-rgb),.3)' }}>
                         Start workout
                       </button>
                     )}
@@ -715,7 +714,7 @@ const app: React.CSSProperties = { width: '100%', maxWidth: 'var(--fit-frame, 44
 
             {/* SIMPLE EDIT */}
             {training && (
-              <div className="nura-card" style={{ background: SURF, border: `1px solid ${LINE}`, borderRadius: 18, padding: '6px 16px 14px', marginBottom: 22 }}>
+              <div ref={editPanelRef} className="nura-card" style={{ background: SURF, border: `1px solid ${LINE}`, borderRadius: 18, padding: '6px 16px 14px', marginBottom: 22 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 0 6px' }}>
                   <span style={{ fontSize: 13, letterSpacing: '.04em', color: MUT }}>{editEyebrow}</span>
                   <span style={{ fontSize: 13, letterSpacing: '.04em', color: "var(--nura-accent-text)" }}>{savingCount > 0 ? 'saving…' : 'auto-saves'}</span>
@@ -858,6 +857,20 @@ const app: React.CSSProperties = { width: '100%', maxWidth: 'var(--fit-frame, 44
           busy={savingCount > 0}
           onClose={() => setPicker(null)}
           onPick={(c) => doAdd(c)}
+        />
+      )}
+
+      {guided && training && (
+        <GuidedWorkout
+          workout={selWorkout!}
+          dayLabel={guidedDayLabel}
+          onStart={startWorkout}
+          onClose={() => setGuided(false)}
+          onEditPlan={() => {
+            setGuided(false);
+            // Let the overlay unmount before scrolling, or the panel isn't laid out yet.
+            requestAnimationFrame(() => editPanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+          }}
         />
       )}
 
