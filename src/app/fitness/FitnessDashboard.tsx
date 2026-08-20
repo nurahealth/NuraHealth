@@ -805,23 +805,9 @@ const app: React.CSSProperties = { width: '100%', maxWidth: 'var(--fit-frame, 44
               </div>
             )}
 
-            {/* PROGRAMS */}
-            <div style={{ fontSize: 12, letterSpacing: '.16em', color: MUT, textTransform: 'uppercase', margin: '4px 0 12px' }}>Continue</div>
-            {summaries.map((p) => {
-              const pct = programProgress(p.created_at);
-              return (
-                <div className="nura-card" key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 14, background: SURF, border: `1px solid ${LINE}`, borderRadius: 16, padding: 14, marginBottom: 10 }}>
-                  <div style={{ width: 46, height: 46, borderRadius: 12, background: 'linear-gradient(135deg,rgba(var(--nura-sage-rgb),.25),rgba(var(--nura-sage-rgb),.06))', border: '1px solid rgba(var(--nura-sage-rgb),.2)', flexShrink: 0 }} />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 14.5, fontWeight: 700 }}>{programName(p)}</div>
-                    <div style={{ height: 6, borderRadius: 6, background: 'rgba(var(--nura-bg-tint-rgb),.1)', marginTop: 8, overflow: 'hidden' }}>
-                      <div style={{ display: 'block', height: '100%', background: SAGE, borderRadius: 6, width: `${pct}%` }} />
-                    </div>
-                  </div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: "var(--nura-accent-text)" }}>{pct}%</div>
-                </div>
-              );
-            })}
+            {/* Old "Continue" program list removed 2026-08-20: it showed every
+                regenerate leftover with age-based fake percentages. The active
+                plan lives in the hero; real progress lives in /fitness/progress. */}
           </>
         )}
 
