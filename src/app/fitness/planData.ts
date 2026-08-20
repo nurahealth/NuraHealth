@@ -587,3 +587,20 @@ export async function saveWorkoutLog(args: {
   }
   return { ok: true, setCount: rows.length };
 }
+
+// ── Exercise requests ─────────────────────────────────────────────────────────
+// Users ask for exercises the catalog is missing; rows land in exercise_requests
+// (owner-reviewed). RLS: users insert/read only their own.
+export async function submitExerciseRequest(name: string, details: string | null):
+  Promise<{ ok: true } | { ok: false; error: string }> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: 'Not signed in.' };
+  const { error } = await supabase.from('exercise_requests').insert({
+    user_id: user.id, name: name.trim(), details: details?.trim() || null,
+  });
+  if (error) {
+    console.error('[fitness] exercise request failed', error);
+    return { ok: false, error: error.message };
+  }
+  return { ok: true };
+}

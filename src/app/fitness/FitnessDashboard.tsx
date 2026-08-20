@@ -9,7 +9,7 @@ import { MUSCLE_GROUPS, CARDIO_GROUP, inGroup } from './muscleGroups';
 import {
   loadActiveProgram, loadCatalog, loadProgramSummaries,
   updateExerciseFields, swapExerciseRow, removeExerciseRow, addExerciseRow, reorderExerciseRows,
-  loadCompletions, logWorkoutCompletion, saveWorkoutLog, localDateKey,
+  loadCompletions, logWorkoutCompletion, saveWorkoutLog, submitExerciseRequest, localDateKey,
   type CatalogEx, type Program, type ProgramSummary, type WEx, type Workout, type WorkoutCompletion,
 } from './planData';
 import { getBufferedSets, clearBufferedSets } from './sessionSets';
@@ -273,6 +273,10 @@ export default function FitnessDashboard() {
   const [savingCount, setSavingCount] = useState(0);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [generating, setGenerating] = useState(false);
+  const [reqOpen, setReqOpen] = useState(false);
+  const [reqName, setReqName] = useState('');
+  const [reqDetails, setReqDetails] = useState('');
+  const [reqState, setReqState] = useState<'idle' | 'busy' | 'sent' | 'error'>('idle');
   const [detailEx, setDetailEx] = useState<{ id: string; sets: number | null; reps: string | null; rest_seconds: number | null } | null>(null);
 
   // ── Consistency log: real completions + an in-progress session timer ─────────
@@ -795,6 +799,9 @@ const app: React.CSSProperties = { width: '100%', maxWidth: 'var(--fit-frame, 44
                 <button type="button" onClick={() => setPicker({ kind: 'add' })} style={{ width: '100%', marginTop: 10, background: 'transparent', border: '1px dashed rgba(var(--nura-sage-rgb),.4)', color: SAGE, borderRadius: 12, padding: 12, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
                   + Add exercise
                 </button>
+                <button type="button" onClick={() => { setReqOpen(true); setReqState('idle'); }} style={{ width: '100%', marginTop: 8, background: 'transparent', border: 'none', color: MUT, fontSize: 12, cursor: 'pointer', textDecoration: 'underline', textUnderlineOffset: 3 }}>
+                  Can&apos;t find an exercise? Request it
+                </button>
               </div>
             )}
 
@@ -881,6 +888,40 @@ const app: React.CSSProperties = { width: '100%', maxWidth: 'var(--fit-frame, 44
           }}
         />
       )}
+
+      {reqOpen && (
+        <div onClick={() => setReqOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 140, background: 'rgba(0,0,0,.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+          <div className="nura-card" onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: 380, background: SURF, border: `1px solid ${LINE}`, borderRadius: 18, padding: 20 }}>
+            <div style={{ fontSize: 16, fontWeight: 700, color: TEXT, marginBottom: 4 }}>Request an exercise</div>
+            <div style={{ fontSize: 12.5, color: MUT, marginBottom: 14 }}>Tell us what&apos;s missing — we review every request.</div>
+            {reqState === 'sent' ? (
+              <div style={{ fontSize: 13.5, color: SAGE, padding: '8px 0 4px' }}>Request sent — thank you. We&apos;ll review it soon.</div>
+            ) : (
+              <>
+                <input value={reqName} onChange={(e) => setReqName(e.target.value)} placeholder="Exercise name (e.g. Nordic curl)"
+                  style={{ width: '100%', boxSizing: 'border-box', padding: '11px 12px', borderRadius: 11, fontSize: 14, color: TEXT, background: 'var(--nura-inset-dark)', border: `1px solid ${LINE}`, outline: 'none', marginBottom: 9 }} />
+                <textarea value={reqDetails} onChange={(e) => setReqDetails(e.target.value)} placeholder="Anything else? Equipment, variation… (optional)" rows={3}
+                  style={{ width: '100%', boxSizing: 'border-box', padding: '11px 12px', borderRadius: 11, fontSize: 13.5, color: TEXT, background: 'var(--nura-inset-dark)', border: `1px solid ${LINE}`, outline: 'none', resize: 'vertical', fontFamily: 'inherit' }} />
+                {reqState === 'error' && (
+                  <div style={{ fontSize: 12, color: 'var(--nura-danger-soft)', marginTop: 8 }}>Couldn&apos;t send your request — try again.</div>
+                )}
+                <div style={{ display: 'flex', gap: 9, marginTop: 14 }}>
+                  <button type="button" onClick={() => setReqOpen(false)} style={{ flex: 1, padding: 12, borderRadius: 12, border: `1px solid ${LINE}`, background: 'transparent', color: TEXT, fontSize: 13.5, fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
+                  <button type="button" disabled={reqState === 'busy' || !reqName.trim()} onClick={async () => {
+                    setReqState('busy');
+                    const res = await submitExerciseRequest(reqName, reqDetails);
+                    if (res.ok) { setReqState('sent'); setReqName(''); setReqDetails(''); }
+                    else setReqState('error');
+                  }} style={{ flex: 1, padding: 12, borderRadius: 12, border: 'none', background: SAGE, color: BG, fontSize: 13.5, fontWeight: 700, cursor: 'pointer', opacity: reqState === 'busy' || !reqName.trim() ? 0.6 : 1 }}>
+                    {reqState === 'busy' ? 'Sending…' : 'Send request'}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
 
       {detailEx && (
         <ExerciseDetail
