@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import FitnessBackButton from './FitnessBackButton';
-import { loadActiveProgram, loadCompletions, localDateKey, type Program, type WEx, type Workout } from './planData';
+import { loadActiveProgram, loadCompletions, localDateKey, buildByDay, type Program, type WEx, type Workout } from './planData';
 
 // ── Palette (NŪRA) ───────────────────────────────────────────────────────────
 const SAGE = 'var(--nura-sage)';
@@ -409,11 +409,7 @@ export default function FitnessCalendar() {
   }, []);
 
   // day_index (0=Mon..6=Sun) → workout
-  const byDay = useMemo(() => {
-    const m = new Map<number, Workout>();
-    program?.workouts.forEach((w) => m.set(w.day_index, w));
-    return m;
-  }, [program]);
+  const byDay = useMemo(() => buildByDay(program?.workouts ?? []), [program]);
 
   const label = view === 'week'
     ? (() => {

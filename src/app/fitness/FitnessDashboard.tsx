@@ -10,6 +10,7 @@ import {
   loadActiveProgram, loadCatalog, loadProgramSummaries,
   updateExerciseFields, swapExerciseRow, removeExerciseRow, addExerciseRow, reorderExerciseRows,
   loadCompletions, logWorkoutCompletion, saveWorkoutLog, submitExerciseRequest, localDateKey,
+  buildByDay,
   type CatalogEx, type Program, type ProgramSummary, type WEx, type Workout, type WorkoutCompletion,
 } from './planData';
 import { getBufferedSets, clearBufferedSets } from './sessionSets';
@@ -333,11 +334,8 @@ export default function FitnessDashboard() {
     }
   }, [load]);
 
-  const byDay = useMemo(() => {
-    const m = new Map<number, Workout>();
-    program?.workouts.forEach((w) => m.set(w.day_index, w));
-    return m;
-  }, [program]);
+  // Shared resolver — one workout per weekday, custom workouts winning their day.
+  const byDay = useMemo(() => buildByDay(program?.workouts ?? []), [program]);
   const selWorkout = byDay.get(programDayIndex(selected));
   const training = isTraining(selWorkout);
 

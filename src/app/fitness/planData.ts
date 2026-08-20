@@ -604,3 +604,123 @@ export async function submitExerciseRequest(name: string, details: string | null
   }
   return { ok: true };
 }
+
+// ── Custom (user-built) workouts ─────────────────────────────────────────────
+// Users build their own workouts and schedule them onto weekdays. There is no
+// spare column to flag them with and the schema is fixed, so identity rides in
+// the two free text columns on program_workouts:
+//
+//   title = "nura:custom:<groupId>"   the flag, plus a group id that ties the
+//                                     one-row-per-weekday copies together so
+//                                     rename/delete act on the whole workout
+//   focus = "<the user's name>"       the display name — focusOf() already
+//                                     prefers focus, so every existing screen
+//                                     renders it with no change
+//
+// The rows are ordinary program_workouts inside the user's active program, one
+// per selected weekday (day_index 0=Mon..6=Sun), with ordinary
+// workout_exercises children. That means Start workout, the edit panel,
+// exercise taps, set logging and Finish all work on them for free.
+//
+// RLS resolves ownership through program_id → fitness_programs.user_id, so no
+// user_id is written. workout_exercises and workout_completions both cascade
+// from program_workouts, so deleting a custom workout cleans up after itself
+// and can never touch a generated row.
+
+const CUSTOM_TAG = 'nura:custom:';
+
+export function isCustomWorkout(w: Pick<Workout, 'title'>): boolean {
+  return !!w.title?.startsWith(CUSTOM_TAG);
+}
+
+/** The id shared by the one-row-per-weekday copies of a single custom workout. */
+export function customGroupId(w: Pick<Workout, 'title'>): string | null {
+  return isCustomWorkout(w) ? (w.title as string).slice(CUSTOM_TAG.length) : null;
+}
+
+/** What to show for a workout — the user's name for custom, focus/title otherwise. */
+export function workoutDisplayName(w: Pick<Workout, 'title' | 'focus'>): string {
+  if (isCustomWorkout(w)) return w.focus || 'My workout';
+  return w.focus || w.title || 'Training';
+}
+
+// One workout can surface per weekday: every consumer resolves the day through a
+// single-slot Map keyed by day_index. When a custom workout shares a day with a
+// generated one the custom row wins deterministically — the generated row stays
+// in the database untouched, just shadowed for that day.
+export function buildByDay(workouts: Workout[]): Map<number, Workout> {
+  const m = new Map<number, Workout>();
+  for (const w of workouts) {
+    const held = m.get(w.day_index);
+    if (held && isCustomWorkout(held) && !isCustomWorkout(w)) continue;
+    m.set(w.day_index, w);
+  }
+  return m;
+}
+
+export type CustomWorkoutDraft = {
+  name: string;
+  days: number[];                                   // day_index values, 0=Mon..6=Sun
+  exercises: { exercise_id: string; sets: number; reps: string; rest_seconds: number }[];
+};
+
+// Write a custom workout: one program_workouts row per selected weekday, each
+// with its own copy of the exercise rows. Returns the group id on success.
+//
+// Partial failure is cleaned up rather than left behind — a half-written
+// workout would show up on some days and not others with no way to fix it from
+// the UI.
+export async function createCustomWorkout(
+  programId: string,
+  draft: CustomWorkoutDraft,
+): Promise<{ groupId: string | null; error: string | null }> {
+  const groupId = crypto.randomUUID().slice(0, 8);
+  const rows = draft.days.map((day_index) => ({
+    program_id: programId,
+    day_index,
+    title: `${CUSTOM_TAG}${groupId}`,
+    focus: draft.name,
+    is_rest: false,
+    sort_order: 0,
+  }));
+
+  const { data, error } = await supabase.from('program_workouts').insert(rows).select('id');
+  if (error || !data) {
+    console.error('[fitness] createCustomWorkout: program_workouts insert failed', error);
+    return { groupId: null, error: error?.message ?? 'Could not save the workout.' };
+  }
+
+  const workoutIds = (data as { id: string }[]).map((r) => r.id);
+  const exRows = workoutIds.flatMap((workout_id) =>
+    draft.exercises.map((e, i) => ({ workout_id, notes: null, sort_order: i, ...e })));
+
+  if (exRows.length > 0) {
+    const { error: exErr } = await supabase.from('workout_exercises').insert(exRows);
+    if (exErr) {
+      console.error('[fitness] createCustomWorkout: workout_exercises insert failed', exErr);
+      await supabase.from('program_workouts').delete().in('id', workoutIds);
+      return { groupId: null, error: exErr.message };
+    }
+  }
+  return { groupId, error: null };
+}
+
+// Rename every day-row of one custom workout. The name lives in focus.
+export async function renameCustomWorkout(groupId: string, name: string): Promise<string | null> {
+  const { error } = await supabase
+    .from('program_workouts')
+    .update({ focus: name })
+    .eq('title', `${CUSTOM_TAG}${groupId}`);
+  return error?.message ?? null;
+}
+
+// Delete every day-row of one custom workout. Matching on the tagged title is
+// what keeps this off generated workouts: their titles never carry the tag.
+// Exercises and completion marks cascade.
+export async function deleteCustomWorkout(groupId: string): Promise<string | null> {
+  const { error } = await supabase
+    .from('program_workouts')
+    .delete()
+    .eq('title', `${CUSTOM_TAG}${groupId}`);
+  return error?.message ?? null;
+}
