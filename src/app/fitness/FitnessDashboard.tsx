@@ -10,12 +10,13 @@ import {
   loadActiveProgram, loadCatalog, loadProgramSummaries,
   updateExerciseFields, swapExerciseRow, removeExerciseRow, addExerciseRow, reorderExerciseRows,
   loadCompletions, logWorkoutCompletion, saveWorkoutLog, submitExerciseRequest, localDateKey,
-  buildByDay,
+  buildByDay, isCustomWorkout,
   type CatalogEx, type Program, type ProgramSummary, type WEx, type Workout, type WorkoutCompletion,
 } from './planData';
 import { getBufferedSets, clearBufferedSets } from './sessionSets';
 import { titleCase, muscleLabel, estimateMinutes } from './workoutFormat';
 import GuidedWorkout from './GuidedWorkout';
+import WorkoutBuilder from './WorkoutBuilder';
 import ThemeToggle from "@/components/ThemeToggle";
 
 // ── Palette (ported verbatim from design-reference/fitness-dashboard.html) ────
@@ -288,6 +289,8 @@ export default function FitnessDashboard() {
   const [completeErr, setCompleteErr] = useState<string | null>(null);
   // Guided Workout Mode — full-screen overlay driving start → log → finish.
   const [guided, setGuided] = useState(false);
+  // Workout Builder — user-built workouts scheduled onto weekdays.
+  const [building, setBuilding] = useState(false);
   // Target for "Edit today's plan": the overlay closes and scrolls here.
   const editPanelRef = useRef<HTMLDivElement | null>(null);
 
@@ -336,6 +339,14 @@ export default function FitnessDashboard() {
 
   // Shared resolver — one workout per weekday, custom workouts winning their day.
   const byDay = useMemo(() => buildByDay(program?.workouts ?? []), [program]);
+  // Days a generated workout already occupies — the builder warns which it shadows.
+  const generatedDays = useMemo(() => {
+    const s = new Set<number>();
+    for (const w of program?.workouts ?? []) {
+      if (!isCustomWorkout(w) && !w.is_rest && w.exercises.length > 0) s.add(w.day_index);
+    }
+    return s;
+  }, [program]);
   const selWorkout = byDay.get(programDayIndex(selected));
   const training = isTraining(selWorkout);
 
@@ -803,6 +814,17 @@ const app: React.CSSProperties = { width: '100%', maxWidth: 'var(--fit-frame, 44
               </div>
             )}
 
+            {/* Build your own — sits with the plan, above the removed Continue list. */}
+            {program && (
+              <button type="button" onClick={() => setBuilding(true)} className="nura-lift" style={{
+                width: '100%', marginBottom: 22, background: 'transparent',
+                border: '1px dashed rgba(var(--nura-sage-rgb),.4)', color: SAGE, borderRadius: 14,
+                padding: 14, fontSize: 13.5, fontWeight: 600, fontFamily: FONT, cursor: 'pointer',
+              }}>
+                + Create workout
+              </button>
+            )}
+
             {/* Old "Continue" program list removed 2026-08-20: it showed every
                 regenerate leftover with age-based fake percentages. The active
                 plan lives in the hero; real progress lives in /fitness/progress. */}
@@ -850,6 +872,16 @@ const app: React.CSSProperties = { width: '100%', maxWidth: 'var(--fit-frame, 44
           busy={savingCount > 0}
           onClose={() => setPicker(null)}
           onPick={(c) => doAdd(c)}
+        />
+      )}
+
+      {building && program && (
+        <WorkoutBuilder
+          programId={program.id}
+          catalog={catalog}
+          generatedDays={generatedDays}
+          onClose={() => setBuilding(false)}
+          onSaved={() => { setBuilding(false); void load(); }}
         />
       )}
 
