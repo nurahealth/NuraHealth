@@ -890,8 +890,8 @@ const app: React.CSSProperties = { width: '100%', maxWidth: 'var(--fit-frame, 44
       )}
 
       {reqOpen && (
-        <div onClick={() => setReqOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 140, background: 'rgba(0,0,0,.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-          <div className="nura-card" onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: 380, background: SURF, border: `1px solid ${LINE}`, borderRadius: 18, padding: 20 }}>
+        <div onClick={() => setReqOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 140, background: 'rgba(0,0,0,.72)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+          <div className="nura-card" onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: 380, background: BG, border: `1px solid ${LINE}`, borderRadius: 18, padding: 20, boxShadow: '0 24px 60px rgba(0,0,0,.5)' }}>
             <div style={{ fontSize: 16, fontWeight: 700, color: TEXT, marginBottom: 4 }}>Request an exercise</div>
             <div style={{ fontSize: 12.5, color: MUT, marginBottom: 14 }}>Tell us what&apos;s missing — we review every request.</div>
             {reqState === 'sent' ? (
