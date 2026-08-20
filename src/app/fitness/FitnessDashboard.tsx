@@ -9,11 +9,12 @@ import { MUSCLE_GROUPS, CARDIO_GROUP, inGroup } from './muscleGroups';
 import {
   loadActiveProgram, loadCatalog, loadProgramSummaries,
   updateExerciseFields, swapExerciseRow, removeExerciseRow, addExerciseRow, reorderExerciseRows,
-  loadCompletions, logWorkoutCompletion, saveWorkoutLog, submitExerciseRequest, localDateKey,
+  loadCompletions, logWorkoutCompletion, deleteCompletion, saveWorkoutLog, submitExerciseRequest, localDateKey,
   buildByDay, isCustomWorkout, customGroupId, renameCustomWorkout, deleteCustomWorkout,
   type CatalogEx, type Program, type ProgramSummary, type WEx, type Workout, type WorkoutCompletion,
 } from './planData';
 import { getBufferedSets, clearBufferedSets } from './sessionSets';
+import { loadSkips, isSkipped, addSkip, removeSkip } from './skippedDates';
 import { titleCase, muscleLabel, estimateMinutes } from './workoutFormat';
 import GuidedWorkout from './GuidedWorkout';
 import WorkoutBuilder from './WorkoutBuilder';
@@ -259,6 +260,65 @@ function AddSheet({ workout, catalog, onPick, onClose, busy }: {
   );
 }
 
+// ── Day actions — the "•••" on a workout card ────────────────────────────────
+// Deliberately quiet: two plain-language choices about THIS DATE only, never
+// about the schedule. What it offers depends on where the day stands.
+function DayActionsSheet({ title, isToday, done, skipped, busy, onMarkDone, onUndoDone, onSkip, onUnskip, onClose }: {
+  title: string; isToday: boolean; done: boolean; skipped: boolean; busy: boolean;
+  onMarkDone: () => void; onUndoDone: () => void; onSkip: () => void; onUnskip: () => void; onClose: () => void;
+}) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [onClose]);
+
+  const dayWord = isToday ? 'today' : 'this day';
+
+  const actions: { label: string; hint: string; run: () => void; danger?: boolean }[] = skipped
+    ? [{ label: `Put ${dayWord} back`, hint: 'Undo the skip — the workout returns to this date.', run: onUnskip }]
+    : done
+      ? [{ label: 'Not done after all', hint: 'Removes the tick from this date.', run: onUndoDone, danger: true }]
+      : [
+          { label: 'Mark as done', hint: 'Ticks this date off without logging any sets.', run: onMarkDone },
+          { label: `Skip ${dayWord}`, hint: 'Just this date. Next week is unaffected.', run: onSkip },
+        ];
+
+  return (
+    <div onClick={onClose} style={{
+      position: 'fixed', inset: 0, zIndex: 90, display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+      background: 'rgba(0,0,0,.5)', backdropFilter: 'blur(2px)',
+    }}>
+      <div onClick={(e) => e.stopPropagation()} style={{
+        width: '100%', maxWidth: 440, background: 'var(--nura-card)',
+        borderTopLeftRadius: 22, borderTopRightRadius: 22, border: `1px solid ${LINE}`, borderBottom: 'none',
+        padding: '10px 16px 22px', fontFamily: FONT,
+      }}>
+        <div style={{ width: 38, height: 4, borderRadius: 999, background: 'rgba(var(--nura-bg-tint-rgb),.2)', margin: '0 auto 14px' }} />
+        <div style={{ fontSize: 15, fontWeight: 700, color: TEXT, marginBottom: 3 }}>{title}</div>
+        <div style={{ fontSize: 12, color: MUT, marginBottom: 14 }}>This date only — your weekly schedule stays as it is.</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {actions.map((a) => (
+            <button key={a.label} type="button" disabled={busy} onClick={a.run} style={{
+              appearance: 'none', textAlign: 'left', width: '100%', cursor: busy ? 'default' : 'pointer',
+              padding: '13px 14px', borderRadius: 13, background: SURF, opacity: busy ? 0.6 : 1,
+              border: `1px solid ${a.danger ? 'var(--nura-tint-danger-border)' : LINE}`,
+              color: a.danger ? 'var(--nura-danger-soft)' : TEXT, fontFamily: FONT,
+            }}>
+              <span style={{ display: 'block', fontSize: 14, fontWeight: 600 }}>{a.label}</span>
+              <span style={{ display: 'block', fontSize: 11.5, color: MUT, marginTop: 3 }}>{a.hint}</span>
+            </button>
+          ))}
+          <button type="button" onClick={onClose} style={{
+            appearance: 'none', width: '100%', cursor: 'pointer', padding: '12px 14px', borderRadius: 13,
+            background: 'transparent', border: `1px solid ${LINE}`, color: MUT, fontSize: 13.5, fontWeight: 600, fontFamily: FONT,
+          }}>Cancel</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Main ─────────────────────────────────────────────────────────────────────
 export default function FitnessDashboard() {
   const router = useRouter();
@@ -296,6 +356,11 @@ export default function FitnessDashboard() {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [customBusy, setCustomBusy] = useState(false);
   const [customErr, setCustomErr] = useState<string | null>(null);
+  // Per-date actions behind the card's "•••" — skip / mark done, this date only.
+  const [skips, setSkips] = useState<Set<string>>(() => new Set());
+  const [dayMenu, setDayMenu] = useState(false);
+  const [dayBusy, setDayBusy] = useState(false);
+  const [dayErr, setDayErr] = useState<string | null>(null);
   // Target for "Edit today's plan": the overlay closes and scrolls here.
   const editPanelRef = useRef<HTMLDivElement | null>(null);
 
@@ -336,6 +401,8 @@ export default function FitnessDashboard() {
   }, [today]);
 
   useEffect(() => { load(); }, [load]);
+  // Skips live in localStorage, so they can only be read once mounted.
+  useEffect(() => { setSkips(loadSkips()); }, []);
 
   // No active program yet → generate one from the onboarding profile, then reload.
   const generate = useCallback(async () => {
@@ -369,6 +436,8 @@ export default function FitnessDashboard() {
   }, [completions]);
   const selectedKey = localDateKey(selected);
   const selectedDone = completedKeys.has(selectedKey);
+  // A skipped date drops that one occurrence — the schedule is untouched.
+  const selectedSkipped = isSkipped(skips, selectedKey, selWorkout?.id);
   const sessionActiveHere = !!session && session.dateKey === selectedKey && session.workoutId === selWorkout?.id;
 
   const reloadCompletions = useCallback(async () => { setCompletions(await loadCompletions()); }, []);
@@ -513,6 +582,53 @@ const app: React.CSSProperties = { width: '100%', maxWidth: 'var(--fit-frame, 44
   const editEyebrow = sameDay(selected, today)
     ? "EDIT TODAY'S WORKOUT"
     : `EDIT ${selected.toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase()}'S WORKOUT`;
+  // ── Per-date actions ──────────────────────────────────────────────────────
+  // All three touch only the selected DATE. None of them edits the schedule.
+  const skipDay = useCallback(() => {
+    if (!selWorkout) return;
+    setSkips(addSkip(selectedKey, selWorkout.id));
+    setDayMenu(false);
+    setDayErr(null);
+  }, [selWorkout, selectedKey]);
+
+  const unskipDay = useCallback(() => {
+    if (!selWorkout) return;
+    setSkips(removeSkip(selectedKey, selWorkout.id));
+    setDayMenu(false);
+    setDayErr(null);
+  }, [selWorkout, selectedKey]);
+
+  // Mark done writes the same workout_completions row Finish writes, minus the
+  // sets and duration — so the calendar tick and streaks behave identically.
+  // Timestamped at midday local so no timezone shift can move it to another day.
+  const markDone = useCallback(async () => {
+    if (!selWorkout) return;
+    setDayBusy(true); setDayErr(null);
+    const at = new Date(selected.getFullYear(), selected.getMonth(), selected.getDate(), 12, 0, 0);
+    const res = await logWorkoutCompletion({
+      programWorkoutId: selWorkout.id,
+      completedAt: at.toISOString(),
+      durationSeconds: null,
+    });
+    setDayBusy(false);
+    if (!res.ok) { setDayErr("Couldn't mark it done — try again"); return; }
+    setDayMenu(false);
+    setCompletions(await loadCompletions());
+  }, [selWorkout, selected]);
+
+  // Undo clears the tick for this date. It removes only the completion row —
+  // any sets logged in a real session stay in workout_logs / set_logs.
+  const undoDone = useCallback(async () => {
+    const row = completions.find((c) => localDateKey(new Date(c.completed_at)) === selectedKey);
+    if (!row) { setDayMenu(false); return; }
+    setDayBusy(true); setDayErr(null);
+    const err = await deleteCompletion(row.id);
+    setDayBusy(false);
+    if (err) { setDayErr("Couldn't undo it — try again"); return; }
+    setDayMenu(false);
+    setCompletions(await loadCompletions());
+  }, [completions, selectedKey]);
+
   // ── Rename / delete a custom workout ──────────────────────────────────────
   // Both act on every day-row of the workout via its group id, and both match
   // on the tagged title, so a generated workout can never be caught by them.
@@ -632,10 +748,12 @@ const app: React.CSSProperties = { width: '100%', maxWidth: 'var(--fit-frame, 44
               <div style={{ display: 'flex', gap: 7, marginBottom: 22 }}>
                 {weekDays.map((date, i) => {
                   const w = byDay.get(i);
-                  const train = isTraining(w);
+                  const dateKey = localDateKey(date);
+                  // A skipped date reads as a rest day here — no training mark.
+                  const train = isTraining(w) && !isSkipped(skips, dateKey, w?.id);
                   const isToday = sameDay(date, today);
                   const isSel = sameDay(date, selected);
-                  const done = completedKeys.has(localDateKey(date));
+                  const done = completedKeys.has(dateKey);
                   return (
                     <div
                       className="nura-radius-control"
@@ -681,9 +799,10 @@ const app: React.CSSProperties = { width: '100%', maxWidth: 'var(--fit-frame, 44
                   {monthCells.map((date, i) => {
                     if (!date) return <div key={i} style={{ aspectRatio: '1', color: 'transparent' }} />;
                     const w = byDay.get(programDayIndex(date));
-                    const train = isTraining(w);
+                    const dateKey = localDateKey(date);
+                    const train = isTraining(w) && !isSkipped(skips, dateKey, w?.id);
                     const isToday = sameDay(date, today);
-                    const done = completedKeys.has(localDateKey(date));
+                    const done = completedKeys.has(dateKey);
                     return (
                       <div
                         key={i}
@@ -731,6 +850,19 @@ const app: React.CSSProperties = { width: '100%', maxWidth: 'var(--fit-frame, 44
                     color: 'var(--nura-sage-bg-on)', background: SAGE,
                   }}>YOURS</span>
                 )}
+                {/* Quiet overflow: what to do about THIS DATE. */}
+                {training && (
+                  <button
+                    type="button"
+                    aria-label="More options for this day"
+                    onClick={() => { setDayErr(null); setDayMenu(true); }}
+                    style={{
+                      marginLeft: 'auto', appearance: 'none', cursor: 'pointer', width: 28, height: 24,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 8,
+                      background: 'transparent', border: 'none', color: MUT, fontSize: 15, lineHeight: 1, letterSpacing: '.06em',
+                    }}
+                  >•••</button>
+                )}
               </div>
               <h2 style={{ fontSize: 24, fontWeight: 700, margin: '6px 0 4px', position: 'relative' }}>
                 {training ? focusOf(selWorkout) : 'Rest & recover'}
@@ -748,7 +880,12 @@ const app: React.CSSProperties = { width: '100%', maxWidth: 'var(--fit-frame, 44
               {training && (
                 <div style={{ position: 'relative', zIndex: 2, marginTop: muscleChips(selWorkout!.exercises).length ? 0 : 16 }}>
                   <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                    {selectedDone ? (
+                    {selectedSkipped ? (
+                      // The occurrence is dropped for this date only.
+                      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9, background: 'rgba(var(--nura-bg-tint-rgb),.05)', color: MUT, border: `1px solid ${LINE}`, borderRadius: 13, padding: 14, fontSize: 15, fontWeight: 700 }}>
+                        Skipped
+                      </div>
+                    ) : selectedDone ? (
                       // Already logged for this day — show a clear "done" state.
                       <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9, background: 'rgba(var(--nura-sage-rgb),.16)', color: "var(--nura-accent-text)", border: '1px solid rgba(var(--nura-sage-rgb),.4)', borderRadius: 13, padding: 14, fontSize: 15, fontWeight: 700 }}>
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={SAGE} strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
@@ -764,6 +901,12 @@ const app: React.CSSProperties = { width: '100%', maxWidth: 'var(--fit-frame, 44
                       </button>
                     )}
                   </div>
+                  {selectedSkipped && (
+                    <div style={{ fontSize: 11.5, color: MUT, marginTop: 9 }}>Skipped for this date. It&apos;s back on schedule next week.</div>
+                  )}
+                  {dayErr && (
+                    <div role="alert" style={{ fontSize: 11.5, color: 'var(--nura-danger-soft)', marginTop: 9 }}>{dayErr}</div>
+                  )}
                   {sessionActiveHere && !logging && (
                     <div style={{ fontSize: 11.5, color: MUT, marginTop: 9 }}>Workout in progress — tap Finish when you&apos;re done to log it.</div>
                   )}
@@ -972,6 +1115,21 @@ const app: React.CSSProperties = { width: '100%', maxWidth: 'var(--fit-frame, 44
           busy={savingCount > 0}
           onClose={() => setPicker(null)}
           onPick={(c) => doAdd(c)}
+        />
+      )}
+
+      {dayMenu && selWorkout && (
+        <DayActionsSheet
+          title={focusOf(selWorkout)}
+          isToday={sameDay(selected, today)}
+          done={selectedDone}
+          skipped={selectedSkipped}
+          busy={dayBusy}
+          onMarkDone={() => void markDone()}
+          onUndoDone={() => void undoDone()}
+          onSkip={skipDay}
+          onUnskip={unskipDay}
+          onClose={() => setDayMenu(false)}
         />
       )}
 
