@@ -38,7 +38,7 @@ Palette: background near-black **#0d0d0e**, accent **sage #9bb0a5**, text warm o
 - ⚠️ This Next.js has breaking changes vs. training data — see `AGENTS.md`; read `node_modules/next/dist/docs/` before writing code.
 - **Git:** active branch is **`app-build`** — always confirm `git branch --show-current` first (multiple Claude Code sessions share this folder). `main` stays clean until launch. **Never `git checkout` while `npm run dev` is running** — it poisons the `.next` cache (blank screen). Fix: stop server, `rm -rf .next`, restart.
 - **Supabase** project "Nura Health App" (ref `obkhzgvhxjdgbihuglrx`, us-east-1). Schema was built by hand in the SQL editor — **`supabase/migrations/` files are STALE, do NOT match the live DB, and must NOT be applied.**
-- Known bug: the in-app "strength logging needs a migration" message is an **app-code bug** — `workout_logs` + `set_logs` already exist and are correct; the Finish button writes `workout_completions` but not the detailed sets. Fix is **app code only**, no DB change.
+- **FIXED (commit `4090ffd`):** the old "strength logging needs a migration" message was an app-code bug, never a DB one — `workout_logs` + `set_logs` were always correct. Finish now writes the detailed sets (`workout_logs` parent → `set_logs` children) alongside the `workout_completions` row, and the false migration message is gone. No DB change was needed.
 - Apple Sign-In JWT **expires Nov 23, 2026 — regenerate ~Nov 16, 2026.**
 
 ## Marketing funnel

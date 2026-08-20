@@ -253,6 +253,9 @@ function Chip({ children, onClick }: { children: React.ReactNode; onClick: () =>
   );
 }
 
+// Display-scale numerals, not a boxed field — the card around them is the
+// control. `.nura-bare` opts out of the light theme's global input chrome so the
+// geometry is identical in both skins.
 const bigInput: React.CSSProperties = {
   width: '100%', background: 'transparent', border: 'none', outline: 'none',
   fontFamily: MONO, fontSize: 30, fontWeight: 500, color: TEXT, textAlign: 'center',
@@ -328,6 +331,7 @@ function LogScreen({
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
             <div style={{ flex: 1, minWidth: 0 }}>
               <input
+                className="nura-bare"
                 aria-label="Weight in pounds"
                 inputMode="decimal"
                 placeholder="0"
@@ -340,6 +344,7 @@ function LogScreen({
             <span style={{ fontFamily: MONO, fontSize: 20, color: FAINT, flexShrink: 0, paddingBottom: 16 }}>×</span>
             <div style={{ flex: 1, minWidth: 0 }}>
               <input
+                className="nura-bare"
                 aria-label="Reps"
                 inputMode="numeric"
                 placeholder="0"
@@ -466,8 +471,10 @@ function FinishScreen({
                 }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 14, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.name}</div>
+                    {/* A functional badge, not a heading — so it stays sage in
+                        both skins (light sage is #4f6f5c, 5.6:1). */}
                     {r.isPr && (
-                      <div style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: '.08em', color: ACCENT_TEXT, marginTop: 5 }}>
+                      <div style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: '.08em', color: SAGE, marginTop: 5 }}>
                         PR ▲
                       </div>
                     )}
