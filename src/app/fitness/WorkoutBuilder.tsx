@@ -42,8 +42,8 @@ type Props = {
   /** Weekdays that already hold a generated workout, for the schedule step's hint. */
   generatedDays: Set<number>;
   onClose: () => void;
-  /** Called after a successful save so the dashboard can reload the program. */
-  onSaved: () => void;
+  /** Called after a successful save with the first scheduled day_index (0=Mon). */
+  onSaved: (firstDay: number) => void;
 };
 
 const overlay: React.CSSProperties = {
@@ -375,9 +375,10 @@ export default function WorkoutBuilder({ programId, catalog, generatedDays, onCl
     if (days.size === 0) { setError('Pick at least one day to train.'); return; }
     setSaving(true);
     setError(null);
+    const sortedDays = [...days].sort((a, b) => a - b);
     const draft: CustomWorkoutDraft = {
       name: name.trim(),
-      days: [...days].sort((a, b) => a - b),
+      days: sortedDays,
       exercises: picked.map((p) => ({
         exercise_id: p.ex.id, sets: p.sets, reps: p.reps, rest_seconds: DEFAULT_REST,
       })),
@@ -385,7 +386,7 @@ export default function WorkoutBuilder({ programId, catalog, generatedDays, onCl
     const res = await createCustomWorkout(programId, draft);
     setSaving(false);
     if (res.error) { setError(`Couldn't save your workout — ${res.error}`); return; }
-    onSaved();
+    onSaved(sortedDays[0]);
   };
 
   if (step === 1) {

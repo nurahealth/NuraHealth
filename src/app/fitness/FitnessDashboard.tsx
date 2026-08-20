@@ -10,7 +10,7 @@ import {
   loadActiveProgram, loadCatalog, loadProgramSummaries,
   updateExerciseFields, swapExerciseRow, removeExerciseRow, addExerciseRow, reorderExerciseRows,
   loadCompletions, logWorkoutCompletion, saveWorkoutLog, submitExerciseRequest, localDateKey,
-  buildByDay, isCustomWorkout,
+  buildByDay, isCustomWorkout, customGroupId, renameCustomWorkout, deleteCustomWorkout,
   type CatalogEx, type Program, type ProgramSummary, type WEx, type Workout, type WorkoutCompletion,
 } from './planData';
 import { getBufferedSets, clearBufferedSets } from './sessionSets';
@@ -291,6 +291,11 @@ export default function FitnessDashboard() {
   const [guided, setGuided] = useState(false);
   // Workout Builder — user-built workouts scheduled onto weekdays.
   const [building, setBuilding] = useState(false);
+  // Rename / delete for the selected custom workout.
+  const [renaming, setRenaming] = useState<string | null>(null);   // draft name while editing
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [customBusy, setCustomBusy] = useState(false);
+  const [customErr, setCustomErr] = useState<string | null>(null);
   // Target for "Edit today's plan": the overlay closes and scrolls here.
   const editPanelRef = useRef<HTMLDivElement | null>(null);
 
@@ -300,7 +305,11 @@ export default function FitnessDashboard() {
   useEffect(() => { programRef.current = program; }, [program]);
   const dragIndexRef = useRef<number | null>(null);
 
-  const load = useCallback(async () => {
+  // `land` controls where the view sits after the reload:
+  //   undefined → today, or the next training day (the mount behaviour)
+  //   'keep'    → leave the user on the day they were looking at
+  //   a Date    → go to that day (used after building a workout, to show it)
+  const load = useCallback(async (land?: 'keep' | Date) => {
     // Never leave the UI stuck on "Loading…": if any loader rejects (network
     // drop, auth-refresh stall, a chunk that failed to fetch after a deploy),
     // surface it as a visible, retryable error instead of hanging forever.
@@ -311,7 +320,9 @@ export default function FitnessDashboard() {
       ]);
       setProgram(program); setCatalog(cat); setSummaries(sums); setCompletions(comps); setLoading(false);
       // Land on a real workout: today if it trains, else the next training day.
-      if (program) {
+      if (land instanceof Date) {
+        setSelected(startOfDay(land));
+      } else if (land !== 'keep' && program) {
         const baseIdx = programDayIndex(today);
         for (let k = 0; k < 7; k++) {
           const w = program.workouts.find((x) => x.day_index === (baseIdx + k) % 7);
@@ -502,6 +513,33 @@ const app: React.CSSProperties = { width: '100%', maxWidth: 'var(--fit-frame, 44
   const editEyebrow = sameDay(selected, today)
     ? "EDIT TODAY'S WORKOUT"
     : `EDIT ${selected.toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase()}'S WORKOUT`;
+  // ── Rename / delete a custom workout ──────────────────────────────────────
+  // Both act on every day-row of the workout via its group id, and both match
+  // on the tagged title, so a generated workout can never be caught by them.
+  const selGroupId = selWorkout ? customGroupId(selWorkout) : null;
+
+  const commitRename = useCallback(async () => {
+    const name = (renaming ?? '').trim();
+    if (!selGroupId) return;
+    if (!name) { setCustomErr('Give your workout a name.'); return; }
+    setCustomBusy(true); setCustomErr(null);
+    const err = await renameCustomWorkout(selGroupId, name);
+    setCustomBusy(false);
+    if (err) { setCustomErr(`Couldn't rename it — ${err}`); return; }
+    setRenaming(null);
+    await load('keep');
+  }, [renaming, selGroupId, load]);
+
+  const doDeleteCustom = useCallback(async () => {
+    if (!selGroupId) return;
+    setCustomBusy(true); setCustomErr(null);
+    const err = await deleteCustomWorkout(selGroupId);
+    setCustomBusy(false);
+    if (err) { setCustomErr(`Couldn't delete it — ${err}`); return; }
+    setConfirmDelete(false);
+    await load();
+  }, [selGroupId, load]);
+
   // Guided overlay eyebrow — day + workout title, e.g. "TUESDAY · UPPER BODY".
   const guidedDayLabel = `${selected.toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase()} · ${focusOf(selWorkout).toUpperCase()}`;
 
@@ -684,7 +722,16 @@ const app: React.CSSProperties = { width: '100%', maxWidth: 'var(--fit-frame, 44
               <svg className="nura-halo" style={{ position: 'absolute', right: -10, bottom: -30, opacity: 0.13 }} width="150" height="150" viewBox="0 0 24 24" fill="none" stroke={SAGE} strokeWidth="1.2">
                 <path d="M6.5 6.5 17.5 17.5M3 8l3-3M16 21l3-3M8 3 5 6M21 16l-3 3" />
               </svg>
-              <div style={{ fontSize: 11, letterSpacing: '.16em', color: "var(--nura-accent-text)", position: 'relative' }}>{heroEyebrow}</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, position: 'relative' }}>
+                <span style={{ fontSize: 11, letterSpacing: '.16em', color: "var(--nura-accent-text)" }}>{heroEyebrow}</span>
+                {/* Marks a workout the user built themselves. */}
+                {selWorkout && isCustomWorkout(selWorkout) && (
+                  <span style={{
+                    fontSize: 9.5, fontWeight: 700, letterSpacing: '.14em', padding: '3px 8px', borderRadius: 999,
+                    color: 'var(--nura-sage-bg-on)', background: SAGE,
+                  }}>YOURS</span>
+                )}
+              </div>
               <h2 style={{ fontSize: 24, fontWeight: 700, margin: '6px 0 4px', position: 'relative' }}>
                 {training ? focusOf(selWorkout) : 'Rest & recover'}
               </h2>
@@ -811,6 +858,59 @@ const app: React.CSSProperties = { width: '100%', maxWidth: 'var(--fit-frame, 44
                 <button type="button" onClick={() => { setReqOpen(true); setReqState('idle'); }} style={{ width: '100%', marginTop: 8, background: 'transparent', border: 'none', color: MUT, fontSize: 12, cursor: 'pointer', textDecoration: 'underline', textUnderlineOffset: 3 }}>
                   Can&apos;t find an exercise? Request it
                 </button>
+
+                {/* Rename / delete — only for workouts the user built. Generated
+                    workouts never show these and are never touched by them. */}
+                {selWorkout && isCustomWorkout(selWorkout) && (
+                  <div style={{ marginTop: 14, paddingTop: 14, borderTop: `1px solid ${LINE}` }}>
+                    {customErr && (
+                      <div role="alert" style={{ fontSize: 12, color: 'var(--nura-danger-soft)', marginBottom: 10 }}>{customErr}</div>
+                    )}
+
+                    {renaming !== null ? (
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        <input
+                          aria-label="Workout name"
+                          value={renaming}
+                          maxLength={60}
+                          autoFocus
+                          onChange={(e) => { setCustomErr(null); setRenaming(e.target.value); }}
+                          onKeyDown={(e) => { if (e.key === 'Enter') void commitRename(); if (e.key === 'Escape') { setRenaming(null); setCustomErr(null); } }}
+                          style={{ flex: 1, minWidth: 0, background: 'rgba(var(--nura-bg-tint-rgb),.05)', border: `1px solid ${LINE}`, borderRadius: 10, padding: '10px 12px', fontSize: 13.5, color: TEXT, fontFamily: FONT, outline: 'none' }}
+                        />
+                        <button type="button" disabled={customBusy} onClick={() => void commitRename()} style={{ flexShrink: 0, padding: '10px 14px', borderRadius: 10, border: 'none', background: SAGE, color: 'var(--nura-sage-bg-on)', fontSize: 12.5, fontWeight: 700, fontFamily: FONT, cursor: customBusy ? 'default' : 'pointer', opacity: customBusy ? 0.7 : 1 }}>
+                          {customBusy ? 'Saving…' : 'Save'}
+                        </button>
+                        <button type="button" onClick={() => { setRenaming(null); setCustomErr(null); }} style={{ flexShrink: 0, padding: '10px 12px', borderRadius: 10, border: `1px solid ${LINE}`, background: 'transparent', color: MUT, fontSize: 12.5, fontWeight: 600, fontFamily: FONT, cursor: 'pointer' }}>
+                          Cancel
+                        </button>
+                      </div>
+                    ) : confirmDelete ? (
+                      <div>
+                        <div style={{ fontSize: 12.5, color: MUT, marginBottom: 10, lineHeight: 1.5 }}>
+                          Delete <strong style={{ color: TEXT, fontWeight: 600 }}>{focusOf(selWorkout)}</strong> from every day it runs? Its completed-day marks go with it. Your generated plan comes back on those days.
+                        </div>
+                        <div style={{ display: 'flex', gap: 8 }}>
+                          <button type="button" disabled={customBusy} onClick={() => void doDeleteCustom()} style={{ flex: 1, padding: '11px 12px', borderRadius: 10, fontSize: 12.5, fontWeight: 700, fontFamily: FONT, cursor: customBusy ? 'default' : 'pointer', color: 'var(--nura-danger-soft)', background: 'var(--nura-tint-danger)', border: '1px solid var(--nura-tint-danger-border)', opacity: customBusy ? 0.7 : 1 }}>
+                            {customBusy ? 'Deleting…' : 'Yes, delete it'}
+                          </button>
+                          <button type="button" onClick={() => { setConfirmDelete(false); setCustomErr(null); }} style={{ flex: 1, padding: '11px 12px', borderRadius: 10, border: `1px solid ${LINE}`, background: 'transparent', color: MUT, fontSize: 12.5, fontWeight: 600, fontFamily: FONT, cursor: 'pointer' }}>
+                            Keep it
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        <button type="button" onClick={() => { setCustomErr(null); setRenaming(focusOf(selWorkout)); }} style={{ flex: 1, padding: '10px 12px', borderRadius: 10, border: `1px solid ${LINE}`, background: 'transparent', color: MUT, fontSize: 12.5, fontWeight: 600, fontFamily: FONT, cursor: 'pointer' }}>
+                          Rename workout
+                        </button>
+                        <button type="button" onClick={() => { setCustomErr(null); setConfirmDelete(true); }} style={{ flex: 1, padding: '10px 12px', borderRadius: 10, fontSize: 12.5, fontWeight: 600, fontFamily: FONT, cursor: 'pointer', color: 'var(--nura-danger-soft)', background: 'transparent', border: '1px solid var(--nura-tint-danger-border)' }}>
+                          Delete workout
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             )}
 
@@ -881,7 +981,12 @@ const app: React.CSSProperties = { width: '100%', maxWidth: 'var(--fit-frame, 44
           catalog={catalog}
           generatedDays={generatedDays}
           onClose={() => setBuilding(false)}
-          onSaved={() => { setBuilding(false); void load(); }}
+          onSaved={(firstDay) => {
+            setBuilding(false);
+            // Drop the user on the new workout's first day so they see it land.
+            const offset = (firstDay - programDayIndex(today) + 7) % 7;
+            void load(addDays(today, offset));
+          }}
         />
       )}
 
