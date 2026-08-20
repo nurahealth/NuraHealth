@@ -231,7 +231,7 @@ function MonthView({ cursor, byDay, today, completedKeys, onPick }: {
                   fontSize: 8.5, fontFamily: MONO, letterSpacing: '0.2px', lineHeight: 1.1, textAlign: 'center',
                   color: "var(--nura-accent-text)", maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                 }}>
-                  {(w!.focus || 'Train').split(' ')[0]}
+                  {w!.focus || w!.title || 'Train'}
                 </span>
               ) : (
                 <span style={{ width: 4, height: 4, borderRadius: 999, background: `rgba(var(--nura-bg-tint-rgb),0.18)`, marginTop: 2 }} />
@@ -366,7 +366,7 @@ function DaySheet({ date, workout, done, onClose }: {
           )}
 
           <Link
-            href="/fitness"
+            href={`/fitness?date=${localDateKey(date)}`}
             style={{
               display: 'block', textAlign: 'center', marginTop: 18, textDecoration: 'none',
               fontSize: 13, fontWeight: 500, color: SAGE, fontFamily: SANS,
@@ -374,7 +374,7 @@ function DaySheet({ date, workout, done, onClose }: {
               border: '1px solid rgba(var(--nura-sage-rgb),0.3)',
             }}
           >
-            Edit in plan →
+            Edit this day&apos;s workout →
           </Link>
         </div>
       </div>

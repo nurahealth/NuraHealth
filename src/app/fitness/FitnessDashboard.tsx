@@ -335,6 +335,13 @@ export default function FitnessDashboard() {
   const [savingCount, setSavingCount] = useState(0);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [generating, setGenerating] = useState(false);
+  // Arriving from the calendar's "Edit this day's workout" link: ?date=YYYY-MM-DD
+  // selects that day so the hero + editor open on it.
+  useEffect(() => {
+    const dp = new URLSearchParams(window.location.search).get('date');
+    if (dp && /^\d{4}-\d{2}-\d{2}$/.test(dp)) setSelected(new Date(`${dp}T00:00:00`));
+  }, []);
+
   const [reqOpen, setReqOpen] = useState(false);
   const [reqName, setReqName] = useState('');
   const [reqDetails, setReqDetails] = useState('');
@@ -780,6 +787,10 @@ const app: React.CSSProperties = { width: '100%', maxWidth: 'var(--fit-frame, 44
                           <div style={{ width: 5, height: 5, borderRadius: '50%', background: isToday ? BG : train ? 'rgba(var(--nura-sage-rgb),.55)' : 'transparent' }} />
                         )}
                       </div>
+                      {/* Which workout lives here — visible without tapping. */}
+                      <div style={{ height: 11, marginTop: 2, padding: '0 4px', fontSize: 8.5, letterSpacing: '.02em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: isToday ? BG : train ? 'var(--nura-accent-text)' : 'transparent' }}>
+                        {train ? focusOf(w) : '·'}
+                      </div>
                     </div>
                   );
                 })}
@@ -826,7 +837,7 @@ const app: React.CSSProperties = { width: '100%', maxWidth: 'var(--fit-frame, 44
                             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={SAGE} strokeWidth="3.6" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
                           </span>
                         ) : train && !isToday ? (
-                          <span style={{ position: 'absolute', bottom: 4, width: 4, height: 4, borderRadius: '50%', background: 'rgba(var(--nura-sage-rgb),.55)' }} />
+                          <span style={{ position: 'absolute', bottom: 2, maxWidth: '94%', fontSize: 6.5, letterSpacing: '.02em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: 'var(--nura-accent-text)', fontWeight: 600 }}>{focusOf(w)}</span>
                         ) : null}
                       </div>
                     );
