@@ -279,6 +279,16 @@ export async function logWorkoutCompletion(args: {
   return { ok: true };
 }
 
+// Remove one completion — what "not done after all" undoes. The owner-only
+// delete policy on workout_completions already exists, so this is app code only.
+// Sets logged in a real session live in workout_logs / set_logs and are NOT
+// touched: this only clears the calendar tick.
+export async function deleteCompletion(id: string): Promise<string | null> {
+  const { error } = await supabase.from('workout_completions').delete().eq('id', id);
+  if (error) console.error('[fitness] workout_completions delete failed', error);
+  return error?.message ?? null;
+}
+
 // ── Body & weight metrics ────────────────────────────────────────────────────
 // One row per weigh-in. Powers the Progress screen's "Body" section.
 
