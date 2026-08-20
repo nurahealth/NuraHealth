@@ -325,6 +325,9 @@ export default function ExerciseDetail({ exerciseId, sets, reps, rest_seconds, o
             <div style={{ fontSize: 13.5, color: 'var(--nura-ink-strong)', lineHeight: 1.45 }}>{t}</div>
           </div>
         ))}
+        {/* Hard spacer: bottom padding inside scroll panels gets swallowed by some
+            browsers, so the breathing room is a real element they can't ignore. */}
+        <div aria-hidden="true" style={{ height: 120, flexShrink: 0 }} />
 
       </div>
       <style>{`@keyframes nuraFloat{0%,100%{transform:translateY(-5px)}50%{transform:translateY(5px)}}`}</style>
