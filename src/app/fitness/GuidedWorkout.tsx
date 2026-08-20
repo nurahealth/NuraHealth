@@ -13,7 +13,7 @@
 // Same fixed-overlay pattern as ExerciseDetail: it starts at the content edge so
 // it never slides under the docked desktop rail.
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { loadSetLogs, type CatalogEx, type Workout } from './planData';
 import { bufferSets, type PendingSet } from './sessionSets';
 import {
@@ -36,6 +36,9 @@ const MONO = "'JetBrains Mono', monospace";
 const ACCENT_TEXT = 'var(--nura-accent-text)';
 
 type Stage = 'start' | 'log' | 'done';
+
+// Stable empty map so the summary's memo doesn't rerun while history loads.
+const EMPTY_BEST: Map<string, number> = new Map();
 
 /** One exercise the guided flow can actually walk (a row with a catalog match). */
 export type Step = {
@@ -66,6 +69,14 @@ type Props = {
   onEditPlan: () => void;
   /** Open the existing ExerciseDetail screen as how-to reference. */
   onOpenHowTo: (s: { id: string; sets: number | null; reps: string | null; rest_seconds: number | null }) => void;
+  /** The dashboard's existing finishWorkout flush. Resolves true once saved. */
+  onSave: () => Promise<boolean>;
+  /** True while that flush is in flight. */
+  saving: boolean;
+  /** The dashboard's existing save error, shown verbatim. */
+  saveError: string | null;
+  /** Navigate to the progress screen (only ever called after a successful save). */
+  onViewProgress: () => void;
 };
 
 // ── Shared bits ──────────────────────────────────────────────────────────────
@@ -360,20 +371,154 @@ function LogScreen({
   );
 }
 
+// ── Stage C — finish summary ─────────────────────────────────────────────────
+
+/** One exercise's contribution to the summary. */
+type SummaryRow = { id: string; name: string; sets: number; topWeight: number; volume: number; isPr: boolean };
+
+/** Roll the buffered sets up into totals + per-exercise rows, flagging new PRs. */
+function summarise(steps: Step[], logged: Record<string, PendingSet[]>, best: Map<string, number>) {
+  const rows: SummaryRow[] = [];
+  let sets = 0;
+  let volume = 0;
+  for (const step of steps) {
+    const entries = logged[step.ex.id];
+    if (!entries?.length) continue;
+    const top = Math.max(...entries.map((e) => e.weight));
+    const vol = entries.reduce((sum, e) => sum + e.weight * e.reps, 0);
+    sets += entries.length;
+    volume += vol;
+    rows.push({
+      id: step.ex.id,
+      name: step.ex.name,
+      sets: entries.length,
+      topWeight: top,
+      volume: vol,
+      // A PR beats the user's previous best for this exercise. A bodyweight set
+      // logs at 0 lb and is never a PR.
+      isPr: top > 0 && top > (best.get(step.ex.id) ?? 0),
+    });
+  }
+  return { rows, sets, volume, prs: rows.filter((r) => r.isPr).length };
+}
+
+function Stat({ label, value }: { label: string; value: string }) {
+  return (
+    <div style={{ flex: 1, textAlign: 'center' }}>
+      <div style={{ fontFamily: MONO, fontSize: 22, fontWeight: 600, color: TEXT, fontVariantNumeric: 'tabular-nums' }}>{value}</div>
+      <div style={{ fontSize: 9.5, letterSpacing: '.14em', color: FAINT, marginTop: 5 }}>{label}</div>
+    </div>
+  );
+}
+
+function FinishScreen({
+  steps, logged, best, dayLabel, durationMs, saving, saveError, onSave, onViewProgress,
+}: {
+  steps: Step[]; logged: Record<string, PendingSet[]>; best: Map<string, number>;
+  dayLabel: string; durationMs: number | null; saving: boolean; saveError: string | null;
+  onSave: () => void; onViewProgress: () => void;
+}) {
+  const { rows, sets, volume, prs } = useMemo(() => summarise(steps, logged, best), [steps, logged, best]);
+
+  return (
+    <div style={overlay}>
+      <div style={{ ...column, paddingTop: 24 }}>
+
+        {/* mark — the one emphasis on the screen, so it carries the aura */}
+        <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', marginBottom: 22 }}>
+          <div className="nura-halo" aria-hidden style={{
+            position: 'absolute', width: 150, height: 150, top: -34, borderRadius: '50%', pointerEvents: 'none',
+            background: 'radial-gradient(circle,rgba(var(--nura-sage-rgb),.34),transparent 70%)',
+          }} />
+          <div style={{
+            position: 'relative', width: 72, height: 72, borderRadius: '50%',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            background: 'rgba(var(--nura-sage-rgb),.14)', border: '1.5px solid rgba(var(--nura-sage-rgb),.45)',
+          }}>
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke={SAGE} strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M20 6 9 17l-5-5" />
+            </svg>
+          </div>
+        </div>
+
+        <h1 style={{ fontFamily: SERIF, fontSize: 34, fontWeight: 400, lineHeight: 1.1, letterSpacing: '-.01em', margin: '0 0 10px', textAlign: 'center' }}>
+          Workout <em style={{ color: ACCENT_TEXT, fontStyle: 'italic' }}>complete</em>
+        </h1>
+        <div style={{ fontSize: 12.5, color: MUT, textAlign: 'center', marginBottom: 26 }}>
+          {dayLabel}{durationMs != null ? ` · ${fmtElapsed(durationMs)}` : ''}
+        </div>
+
+        {/* totals */}
+        <div className="nura-card" style={{ display: 'flex', background: SURF, border: `1px solid ${LINE}`, borderRadius: 18, padding: '18px 10px', marginBottom: 22 }}>
+          <Stat label="SETS" value={String(sets)} />
+          <Stat label="LB VOLUME" value={volume.toLocaleString('en-US')} />
+          <Stat label="NEW PRS" value={String(prs)} />
+        </div>
+
+        {rows.length > 0 ? (
+          <>
+            <SectionHead>What you logged</SectionHead>
+            <div className="nura-card" style={{ background: SURF, border: `1px solid ${LINE}`, borderRadius: 18, padding: '4px 16px 6px', marginBottom: 22 }}>
+              {rows.map((r, i) => (
+                <div key={r.id} style={{
+                  display: 'flex', alignItems: 'center', gap: 12, padding: '13px 0',
+                  borderTop: i === 0 ? 'none' : '1px solid rgba(var(--nura-bg-tint-rgb),.06)',
+                }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 14, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.name}</div>
+                    {r.isPr && (
+                      <div style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: '.08em', color: ACCENT_TEXT, marginTop: 5 }}>
+                        PR ▲
+                      </div>
+                    )}
+                  </div>
+                  <span style={{ fontFamily: MONO, fontSize: 12, color: MUT, flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}>
+                    {r.sets} × {fmtWeight(r.topWeight)} lb
+                  </span>
+                </div>
+              ))}
+            </div>
+          </>
+        ) : (
+          <div style={{ fontSize: 12.5, color: MUT, textAlign: 'center', marginBottom: 22 }}>
+            No sets logged — saving still marks the day complete.
+          </div>
+        )}
+
+        {saveError && (
+          <div style={{ fontSize: 12, color: 'var(--nura-danger-soft)', textAlign: 'center', marginBottom: 12 }}>{saveError}</div>
+        )}
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <PrimaryButton onClick={onSave} disabled={saving}>
+            {saving ? 'Saving…' : 'Save workout'}
+          </PrimaryButton>
+          <GhostButton onClick={onViewProgress}>View progress</GhostButton>
+        </div>
+
+      </div>
+    </div>
+  );
+}
+
 // ── Shell ────────────────────────────────────────────────────────────────────
 
 export default function GuidedWorkout({
   workout, dayLabel, startedAt, onStart, onClose, onEditPlan, onOpenHowTo,
+  onSave, saving, saveError, onViewProgress,
 }: Props) {
   const [stage, setStage] = useState<Stage>('start');
+  // Frozen at the moment the summary opens, so the duration stops counting.
+  const [finishedAt, setFinishedAt] = useState<number | null>(null);
   const [exIdx, setExIdx] = useState(0);
   const [setIdx, setSetIdx] = useState(0);
   const [weight, setWeight] = useState('');
   const [reps, setReps] = useState('');
   const [history, setHistory] = useState<History | null>(null);
-  // Sets logged in this session, per exercise. bufferSets REPLACES an exercise's
-  // entries, so every flush hands over that exercise's full cumulative list.
-  const logged = useRef<Record<string, PendingSet[]>>({});
+  // Sets logged in this session, per exercise — state, because the summary
+  // renders from it. bufferSets REPLACES an exercise's entries, so every flush
+  // hands over that exercise's full cumulative list.
+  const [logged, setLogged] = useState<Record<string, PendingSet[]>>({});
 
   // Only rows with a catalog match can be walked — the guided flow needs an
   // exercise id to log against and a name to show.
@@ -418,10 +563,11 @@ export default function GuidedWorkout({
     setStage('log');
   };
 
-  // End of the walk. Stage C replaces this with the finish summary; for now the
-  // workout hands back to the dashboard, where the existing Finish button
-  // flushes whatever was buffered.
-  const finish = useCallback(() => { onClose(); }, [onClose]);
+  // End of the walk — freeze the clock and show the summary.
+  const finish = useCallback(() => {
+    setFinishedAt(Date.now());
+    setStage('done');
+  }, []);
 
   // Move to the next set, the next exercise, or the end.
   const advance = useCallback((fromEx: number, fromSet: number, carry: string) => {
@@ -452,12 +598,12 @@ export default function GuidedWorkout({
       weight: Number.isFinite(w) && w > 0 ? w : 0,
       reps: Number.isFinite(r) ? r : 0,
     };
-    const next = [...(logged.current[step.ex.id] ?? []).filter((s) => s.setNumber !== entry.setNumber), entry]
+    const next = [...(logged[step.ex.id] ?? []).filter((s) => s.setNumber !== entry.setNumber), entry]
       .sort((a, b) => a.setNumber - b.setNumber);
-    logged.current[step.ex.id] = next;
+    setLogged({ ...logged, [step.ex.id]: next });
     bufferSets(step.ex.id, next);
     advance(exIdx, setIdx, weight);
-  }, [steps, exIdx, setIdx, weight, reps, advance]);
+  }, [steps, exIdx, setIdx, weight, reps, logged, advance]);
 
   // Skip leaves the buffer alone — anything already logged for this exercise stands.
   const skipExercise = useCallback(() => {
@@ -470,6 +616,12 @@ export default function GuidedWorkout({
     }
   }, [exIdx, steps.length, seedInputs, finish]);
 
+  // Both summary actions save first; the ghost only navigates once that lands.
+  const save = useCallback(async (then: () => void) => {
+    if (saving) return;
+    if (await onSave()) then();
+  }, [saving, onSave]);
+
   if (steps.length === 0) return null;
 
   if (stage === 'start') {
@@ -481,6 +633,22 @@ export default function GuidedWorkout({
         onStart={begin}
         onClose={onClose}
         onEditPlan={onEditPlan}
+      />
+    );
+  }
+
+  if (stage === 'done') {
+    return (
+      <FinishScreen
+        steps={steps}
+        logged={logged}
+        best={history?.best ?? EMPTY_BEST}
+        dayLabel={dayLabel}
+        durationMs={startedAt != null && finishedAt != null ? finishedAt - startedAt : null}
+        saving={saving}
+        saveError={saveError}
+        onSave={() => { void save(onClose); }}
+        onViewProgress={() => { void save(onViewProgress); }}
       />
     );
   }

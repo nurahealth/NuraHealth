@@ -361,8 +361,9 @@ export default function FitnessDashboard() {
   // Sets go first so a failure there leaves nothing half-written and the user can
   // simply tap Finish again; a workout with no logged sets skips straight to the
   // completion.
-  const finishWorkout = useCallback(async () => {
-    if (!selWorkout) return;
+  // Returns whether the workout was saved, so the guided summary knows to close.
+  const finishWorkout = useCallback(async (): Promise<boolean> => {
+    if (!selWorkout) return false;
     setLogging(true); setCompleteErr(null);
     const startedAt = sessionActiveHere ? session!.startedAt : null;
     const durationSeconds = startedAt ? Math.max(1, Math.round((Date.now() - startedAt) / 1000)) : null;
@@ -383,7 +384,7 @@ export default function FitnessDashboard() {
         console.error('[fitness] finishWorkout: saving sets failed', logRes.error);
         setLogging(false);
         setCompleteErr("Couldn't save your workout — try again");
-        return;
+        return false;
       }
       clearBufferedSets();
     }
@@ -393,10 +394,11 @@ export default function FitnessDashboard() {
     if (!res.ok) {
       console.error('[fitness] finishWorkout: saving the completion failed', res.error);
       setCompleteErr("Couldn't save your workout — try again");
-      return;
+      return false;
     }
     setSession(null);
     await reloadCompletions();
+    return true;
   }, [selWorkout, sessionActiveHere, session, program, reloadCompletions]);
 
   const runWrite = useCallback(async (fn: () => Promise<string | null>) => {
@@ -867,6 +869,10 @@ const app: React.CSSProperties = { width: '100%', maxWidth: 'var(--fit-frame, 44
           startedAt={sessionActiveHere ? session!.startedAt : null}
           onStart={startWorkout}
           onOpenHowTo={setDetailEx}
+          onSave={finishWorkout}
+          saving={logging}
+          saveError={completeErr}
+          onViewProgress={() => router.push('/fitness/progress')}
           onClose={() => setGuided(false)}
           onEditPlan={() => {
             setGuided(false);
