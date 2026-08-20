@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import FitnessBackButton from './FitnessBackButton';
 import { loadActiveProgram, loadCompletions, localDateKey, type Program, type WEx, type Workout } from './planData';
 
 // ── Palette (NŪRA) ───────────────────────────────────────────────────────────
@@ -382,6 +384,7 @@ function DaySheet({ date, workout, done, onClose }: {
 
 // ── Main ─────────────────────────────────────────────────────────────────────
 export default function FitnessCalendar() {
+  const router = useRouter();
   const [program, setProgram] = useState<Program | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -433,6 +436,7 @@ export default function FitnessCalendar() {
     <div>
       {/* Heading */}
       <div style={{ marginBottom: 20 }}>
+        <FitnessBackButton onClick={() => router.push('/fitness')} style={{ marginBottom: 14 }} />
         <h1 style={{ fontSize: 26, fontWeight: 600, color: 'var(--nura-text-primary)', fontFamily: SANS, margin: '0 0 6px', letterSpacing: '-0.5px' }}>
           Calendar
         </h1>
