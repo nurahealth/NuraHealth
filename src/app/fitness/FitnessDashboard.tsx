@@ -578,7 +578,11 @@ const app: React.CSSProperties = { width: '100%', maxWidth: 'var(--fit-frame, 44
 
   const heroEyebrow = sameDay(selected, today)
     ? `TODAY · ${selected.toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase()}`
-    : selected.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' }).toUpperCase();
+    : selected > today
+      // Rest day: the card auto-jumps to the next training day — say so, or the
+      // date reads like a mistake next to the week strip's "today" highlight.
+      ? `NEXT WORKOUT · ${selected.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }).toUpperCase()}`
+      : selected.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' }).toUpperCase();
   const editEyebrow = sameDay(selected, today)
     ? "EDIT TODAY'S WORKOUT"
     : `EDIT ${selected.toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase()}'S WORKOUT`;

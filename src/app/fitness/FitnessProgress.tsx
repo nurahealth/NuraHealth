@@ -1161,10 +1161,11 @@ export default function FitnessProgress() {
                       <div style={{ fontSize: 11, color: MUT, marginTop: 2 }}>Best set</div>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-                      {pr.isRecent && (
+                      {/* A 0-lb (bodyweight) best set is never a weight PR — no badge, no "0 lb". */}
+                      {pr.isRecent && pr.weight > 0 && (
                         <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '.08em', color: BG, background: SAGE, borderRadius: 999, padding: '3px 7px' }}>NEW PR</span>
                       )}
-                      <span style={{ fontFamily: MONO, fontSize: 13, fontWeight: 700, color: "var(--nura-accent-text)" }}>{fmtWeight(pr.weight)} {pr.unit} × {pr.reps}</span>
+                      <span style={{ fontFamily: MONO, fontSize: 13, fontWeight: 700, color: "var(--nura-accent-text)" }}>{pr.weight > 0 ? `${fmtWeight(pr.weight)} ${pr.unit} × ${pr.reps}` : `bodyweight × ${pr.reps}`}</span>
                     </div>
                   </button>
                 ))}
