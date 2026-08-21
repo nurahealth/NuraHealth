@@ -4,7 +4,10 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { GOAL_LABELS } from './FitnessOnboarding';
-import { mapProgram, PROGRAM_SELECT, type CatalogEx, type Program, type WEx, type Workout } from './planData';
+import {
+  mapProgram, PROGRAM_SELECT, isEmptyWorkout, dayLabel,
+  type CatalogEx, type Program, type WEx, type Workout,
+} from './planData';
 import ExerciseDetail from './ExerciseDetail';
 import ExerciseMedia, { CLIP_BG } from './ExerciseMedia';
 import { MOVEKIT_GIF_LIKE } from '@/lib/movekit';
@@ -313,9 +316,30 @@ function DayCard({
   onRemove: (weId: string) => Promise<string | null>;
   onOpenDetail: (we: WEx) => void;
 }) {
-  const focus = workout.focus || workout.title || 'Training';
+  const focus = dayLabel(workout);
 
-  if (workout.is_rest || workout.exercises.length === 0) {
+  // A workout that has lost all its exercises is NOT a rest day — it keeps its
+  // name and says it is empty, so it can never look like data that vanished.
+  if (isEmptyWorkout(workout)) {
+    return (
+      <div style={{
+        borderRadius: 16, padding: '16px 18px',
+        background: `rgba(var(--nura-bg-tint-rgb),0.025)`, border: `1px dashed rgba(var(--nura-sage-rgb),0.28)`,
+      }}>
+        <div style={{ fontSize: 10, fontFamily: MONO, letterSpacing: '1.6px', color: `var(--nura-text-tertiary)`, textTransform: 'uppercase' }}>
+          Day {index + 1}
+        </div>
+        <div style={{ fontSize: 17, fontWeight: 600, color: 'var(--nura-text-primary)', marginTop: 3, letterSpacing: '-0.3px' }}>
+          {focus}
+        </div>
+        <div style={{ fontSize: 12.5, color: `var(--nura-text-secondary)`, marginTop: 5, lineHeight: 1.5 }}>
+          Empty workout — no exercises yet. Add some from your fitness home.
+        </div>
+      </div>
+    );
+  }
+
+  if (workout.is_rest) {
     return (
       <div style={{
         borderRadius: 16, padding: '16px 18px',

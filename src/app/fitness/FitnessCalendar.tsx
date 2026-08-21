@@ -4,7 +4,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import FitnessBackButton from './FitnessBackButton';
-import { loadActiveProgram, loadCompletions, localDateKey, buildByDay, type Program, type WEx, type Workout } from './planData';
+import {
+  loadActiveProgram, loadCompletions, localDateKey, buildByDay,
+  isTrainingWorkout as isTraining, isEmptyWorkout, dayLabel as focusOf,
+  type Program, type WEx, type Workout,
+} from './planData';
 
 // ── Palette (NŪRA) ───────────────────────────────────────────────────────────
 const SAGE = 'var(--nura-sage)';
@@ -43,13 +47,8 @@ function prescription(we: WEx): string {
   if (we.rest_seconds != null) parts.push(`${we.rest_seconds}s rest`);
   return parts.join(' · ');
 }
-// A day is "training" only if it has a non-rest workout with exercises.
-function isTraining(w: Workout | undefined): w is Workout {
-  return !!w && !w.is_rest && w.exercises.length > 0;
-}
-function focusOf(w: Workout | undefined): string {
-  return isTraining(w) ? (w.focus || w.title || 'Training') : 'Rest';
-}
+// isTraining / isEmptyWorkout / focusOf come from planData (imported above) —
+// one shared definition of training vs. empty vs. rest across every surface.
 
 // ── Icons ────────────────────────────────────────────────────────────────────
 const I = ({ children, size = 18 }: { children: React.ReactNode; size?: number }) => (
@@ -129,6 +128,9 @@ function WeekView({ cursor, byDay, today, completedKeys, onPick }: {
       {days.map((date, i) => {
         const w = byDay.get(i);
         const training = isTraining(w);
+        // A workout stripped of its exercises still owns the day — it reads as
+        // itself with an "add exercises" prompt, never as "Rest & recover".
+        const empty = isEmptyWorkout(w);
         const isToday = sameDay(date, today);
         const done = completedKeys.has(localDateKey(date));
         return (
@@ -155,18 +157,21 @@ function WeekView({ cursor, byDay, today, completedKeys, onPick }: {
               </div>
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 15.5, fontWeight: 600, color: training ? 'var(--nura-text-primary)' : `var(--nura-text-secondary)`, letterSpacing: '-0.2px' }}>
+              <div style={{ fontSize: 15.5, fontWeight: 600, color: training || empty ? 'var(--nura-text-primary)' : `var(--nura-text-secondary)`, letterSpacing: '-0.2px' }}>
                 {focusOf(w)}
               </div>
               <div style={{ fontSize: 12, color: done ? SAGE : training ? SAGE : `var(--nura-text-tertiary)`, fontFamily: training ? MONO : SANS, marginTop: 3, letterSpacing: training ? '0.3px' : 0 }}>
-                {done ? 'Completed ✓' : training ? `${w!.exercises.length} ${w!.exercises.length === 1 ? 'exercise' : 'exercises'}` : 'Recovery'}
+                {done ? 'Completed ✓'
+                  : training ? `${w!.exercises.length} ${w!.exercises.length === 1 ? 'exercise' : 'exercises'}`
+                  : empty ? 'Empty — add exercises'
+                  : 'Recovery'}
               </div>
             </div>
             {done ? (
               <span style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', width: 26, height: 26, borderRadius: '50%', background: SAGE }}>
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={BG} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
               </span>
-            ) : training ? (
+            ) : training || empty ? (
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={`var(--nura-ink-faint)`} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
                 <path d="M9 6l6 6-6 6" />
               </svg>
@@ -202,6 +207,7 @@ function MonthView({ cursor, byDay, today, completedKeys, onPick }: {
           const inMonth = date.getMonth() === month;
           const w = byDay.get(programDayIndex(date));
           const training = isTraining(w);
+          const empty = isEmptyWorkout(w);
           const isToday = sameDay(date, today);
           const done = completedKeys.has(localDateKey(date));
           return (
@@ -226,12 +232,13 @@ function MonthView({ cursor, byDay, today, completedKeys, onPick }: {
                 <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 15, height: 15, borderRadius: '50%', background: SAGE, marginTop: 1 }}>
                   <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={BG} strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
                 </span>
-              ) : training ? (
+              ) : training || empty ? (
                 <span style={{
                   fontSize: 8.5, fontFamily: MONO, letterSpacing: '0.2px', lineHeight: 1.1, textAlign: 'center',
-                  color: "var(--nura-accent-text)", maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                  color: training ? 'var(--nura-accent-text)' : 'var(--nura-text-tertiary)',
+                  maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                 }}>
-                  {w!.focus || w!.title || 'Train'}
+                  {focusOf(w)}
                 </span>
               ) : (
                 <span style={{ width: 4, height: 4, borderRadius: 999, background: `rgba(var(--nura-bg-tint-rgb),0.18)`, marginTop: 2 }} />
@@ -266,6 +273,7 @@ function DaySheet({ date, workout, done, onClose }: {
   date: Date; workout: Workout | undefined; done: boolean; onClose: () => void;
 }) {
   const training = isTraining(workout);
+  const empty = isEmptyWorkout(workout);
   const heading = date.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
 
   const [visible, setVisible] = useState(false); // drives the fade + scale enter/exit
@@ -312,7 +320,7 @@ function DaySheet({ date, workout, done, onClose }: {
             <div style={{ fontSize: 11, fontFamily: MONO, letterSpacing: '1.4px', color: `var(--nura-text-tertiary)`, textTransform: 'uppercase' }}>
               {heading}
             </div>
-            <div style={{ fontSize: 22, fontWeight: 700, color: training ? 'var(--nura-text-primary)' : `var(--nura-ink-strong)`, marginTop: 5, letterSpacing: '-0.4px' }}>
+            <div style={{ fontSize: 22, fontWeight: 700, color: training || empty ? 'var(--nura-text-primary)' : `var(--nura-ink-strong)`, marginTop: 5, letterSpacing: '-0.4px' }}>
               {focusOf(workout)}
             </div>
             {done && (
@@ -331,7 +339,18 @@ function DaySheet({ date, workout, done, onClose }: {
 
         {/* body — scrolls if taller than the modal, which stays centered */}
         <div style={{ overflowY: 'auto', minHeight: 0 }}>
-          {!training ? (
+          {empty ? (
+            // A named workout with nothing in it — say exactly that. The "Edit
+            // this day's workout" link below is how the user fills it back in.
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 12, padding: '18px 16px', borderRadius: 14,
+              background: `rgba(var(--nura-bg-tint-rgb),0.02)`, border: `1px dashed rgba(var(--nura-sage-rgb),0.28)`,
+            }}>
+              <span style={{ fontSize: 14, color: `var(--nura-ink-muted)`, fontFamily: SANS, lineHeight: 1.5 }}>
+                Empty workout — no exercises yet. Add some to train on this day.
+              </span>
+            </div>
+          ) : !training ? (
             <div style={{
               display: 'flex', alignItems: 'center', gap: 12, padding: '18px 16px', borderRadius: 14,
               background: `rgba(var(--nura-bg-tint-rgb),0.02)`, border: `1px dashed rgba(var(--nura-bg-tint-rgb),0.1)`,
@@ -374,7 +393,7 @@ function DaySheet({ date, workout, done, onClose }: {
               border: '1px solid rgba(var(--nura-sage-rgb),0.3)',
             }}
           >
-            Edit this day&apos;s workout →
+            {empty ? 'Add exercises to this workout →' : "Edit this day's workout →"}
           </Link>
         </div>
       </div>

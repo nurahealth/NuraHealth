@@ -11,6 +11,7 @@ import {
   updateExerciseFields, swapExerciseRow, removeExerciseRow, addExerciseRow, reorderExerciseRows,
   loadCompletions, logWorkoutCompletion, deleteCompletion, saveWorkoutLog, submitExerciseRequest, localDateKey,
   buildByDay, isCustomWorkout, customGroupId, renameCustomWorkout, deleteCustomWorkout,
+  isTrainingWorkout as isTraining, isEmptyWorkout, dayLabel as focusOf,
   type CatalogEx, type Program, type ProgramSummary, type WEx, type Workout, type WorkoutCompletion,
 } from './planData';
 import { getBufferedSets, clearBufferedSets } from './sessionSets';
@@ -44,13 +45,10 @@ const sameDay = (a: Date, b: Date) =>
 // ── Display helpers ──────────────────────────────────────────────────────────
 // titleCase / muscleLabel / estimateMinutes live in workoutFormat.ts — the
 // guided-workout overlay needs the same formatting and can't import from here.
+// isTraining / isEmptyWorkout / focusOf come from planData (imported above) so
+// the dashboard, the calendar and the plan list share one definition of what an
+// empty workout is — see the "What a day actually is" note there.
 const lc = (s: string | null | undefined) => (s ?? '').toLowerCase();
-function isTraining(w: Workout | undefined): w is Workout {
-  return !!w && !w.is_rest && w.exercises.length > 0;
-}
-function focusOf(w: Workout | undefined): string {
-  return isTraining(w) ? (w.focus || w.title || 'Training') : 'Rest';
-}
 function muscleChips(exs: WEx[]): string[] {
   const set = new Set<string>();
   for (const e of exs) {
@@ -333,6 +331,9 @@ export default function FitnessDashboard() {
   const [selected, setSelected] = useState<Date>(() => startOfDay(new Date()));
   const [picker, setPicker] = useState<{ kind: 'swap' | 'add'; weId?: string } | null>(null);
   const [savingCount, setSavingCount] = useState(0);
+  // Edit-panel write failures (remove/add). Never swallowed — a failed delete
+  // that looked like a success is how exercises appear to vanish.
+  const [editErr, setEditErr] = useState<string | null>(null);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [generating, setGenerating] = useState(false);
   const [builderDay, setBuilderDay] = useState<number | null>(null);
@@ -434,6 +435,12 @@ export default function FitnessDashboard() {
   }, [program]);
   const selWorkout = byDay.get(programDayIndex(selected));
   const training = isTraining(selWorkout);
+  // A scheduled workout with nothing left in it. Never a rest day: it keeps its
+  // name, its editor and (when custom) its badge, rename and delete.
+  const emptyWorkout = isEmptyWorkout(selWorkout);
+  const scrollToEditor = useCallback(() => {
+    editPanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, []);
 
   // Real completions, indexed by local calendar day for O(1) "done" lookups.
   const completedKeys = useMemo(() => {
@@ -529,10 +536,25 @@ export default function FitnessDashboard() {
     runWrite(() => swapExerciseRow(weId, next.id));
   }, [mutateWorkout, runWrite]);
 
+  // Removing an exercise is the one edit that destroys data, so it never runs
+  // blind: the previous list is kept and put back if the delete fails, and the
+  // failure is shown instead of swallowed. Emptying a workout is recoverable —
+  // an empty workout keeps its editor (see isEmptyWorkout in planData), so the
+  // user can always add exercises back.
   const doRemove = useCallback((workoutId: string, weId: string) => {
+    const before = programRef.current?.workouts.find((w) => w.id === workoutId)?.exercises ?? null;
     mutateWorkout(workoutId, (exs) => exs.filter((e) => e.id !== weId));
     setPicker(null);
-    runWrite(() => removeExerciseRow(weId));
+    setEditErr(null);
+    runWrite(async () => {
+      const err = await removeExerciseRow(weId);
+      if (err) {
+        console.error('[fitness] removeExerciseRow failed', err);
+        if (before) mutateWorkout(workoutId, () => before);
+        setEditErr("Couldn't remove that exercise — it's still in your workout.");
+      }
+      return err;
+    });
   }, [mutateWorkout, runWrite]);
 
   const doAdd = useCallback(async (next: CatalogEx) => {
@@ -542,9 +564,15 @@ export default function FitnessDashboard() {
     const sort_order = selWorkout.exercises.reduce((m, e) => Math.max(m, e.sort_order), 0) + 1;
     const sets = last?.sets ?? 3, reps = last?.reps ?? '8-12', rest_seconds = last?.rest_seconds ?? 75;
     setSavingCount((n) => n + 1);
-    const { id } = await addExerciseRow(selWorkout.id, { exercise_id: next.id, sort_order, sets, reps, rest_seconds });
+    setEditErr(null);
+    const { id, error } = await addExerciseRow(selWorkout.id, { exercise_id: next.id, sort_order, sets, reps, rest_seconds });
     setSavingCount((n) => Math.max(0, n - 1));
     if (id) mutateWorkout(selWorkout.id, (exs) => [...exs, { id, sort_order, sets, reps, rest_seconds, notes: null, exercise: next }]);
+    else {
+      // This is the only way back from an empty workout — say so when it fails.
+      console.error('[fitness] addExerciseRow failed', error);
+      setEditErr("Couldn't add that exercise — try again.");
+    }
   }, [selWorkout, mutateWorkout]);
 
   // Drag-to-reorder (the grip). Authoritative index in a ref so StrictMode's
@@ -762,6 +790,9 @@ const app: React.CSSProperties = { width: '100%', maxWidth: 'var(--fit-frame, 44
                   const dateKey = localDateKey(date);
                   // A skipped date reads as a rest day here — no training mark.
                   const train = isTraining(w) && !isSkipped(skips, dateKey, w?.id);
+                  // An empty workout still owns its day, so the strip keeps its
+                  // name (quietly) rather than showing a blank rest slot.
+                  const named = train || isEmptyWorkout(w);
                   const isToday = sameDay(date, today);
                   const isSel = sameDay(date, selected);
                   const done = completedKeys.has(dateKey);
@@ -788,8 +819,8 @@ const app: React.CSSProperties = { width: '100%', maxWidth: 'var(--fit-frame, 44
                         )}
                       </div>
                       {/* Which workout lives here — visible without tapping. */}
-                      <div style={{ height: 11, marginTop: 2, padding: '0 4px', fontSize: 8.5, letterSpacing: '.02em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: isToday ? BG : train ? 'var(--nura-accent-text)' : 'transparent' }}>
-                        {train ? focusOf(w) : '·'}
+                      <div style={{ height: 11, marginTop: 2, padding: '0 4px', fontSize: 8.5, letterSpacing: '.02em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: isToday ? BG : train ? 'var(--nura-accent-text)' : named ? MUT : 'transparent' }}>
+                        {named ? focusOf(w) : '·'}
                       </div>
                     </div>
                   );
@@ -816,6 +847,7 @@ const app: React.CSSProperties = { width: '100%', maxWidth: 'var(--fit-frame, 44
                     const w = byDay.get(programDayIndex(date));
                     const dateKey = localDateKey(date);
                     const train = isTraining(w) && !isSkipped(skips, dateKey, w?.id);
+                    const named = train || isEmptyWorkout(w);
                     const isToday = sameDay(date, today);
                     const done = completedKeys.has(dateKey);
                     return (
@@ -836,8 +868,8 @@ const app: React.CSSProperties = { width: '100%', maxWidth: 'var(--fit-frame, 44
                           <span style={{ position: 'absolute', bottom: 2.5, display: 'flex' }}>
                             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={SAGE} strokeWidth="3.6" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
                           </span>
-                        ) : train && !isToday ? (
-                          <span style={{ position: 'absolute', bottom: 2, maxWidth: '94%', fontSize: 6.5, letterSpacing: '.02em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: 'var(--nura-accent-text)', fontWeight: 600 }}>{focusOf(w)}</span>
+                        ) : named && !isToday ? (
+                          <span style={{ position: 'absolute', bottom: 2, maxWidth: '94%', fontSize: 6.5, letterSpacing: '.02em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: train ? 'var(--nura-accent-text)' : MUT, fontWeight: 600 }}>{focusOf(w)}</span>
                         ) : null}
                       </div>
                     );
@@ -880,12 +912,25 @@ const app: React.CSSProperties = { width: '100%', maxWidth: 'var(--fit-frame, 44
                 )}
               </div>
               <h2 style={{ fontSize: 24, fontWeight: 700, margin: '6px 0 4px', position: 'relative' }}>
-                {training ? focusOf(selWorkout) : 'Rest & recover'}
+                {training || emptyWorkout ? focusOf(selWorkout) : 'Rest & recover'}
               </h2>
               <div style={{ fontSize: 13, color: MUT, position: 'relative' }}>
-                {training ? `${selWorkout!.exercises.length} exercises · ~${estimateMinutes(selWorkout!.exercises)} min` : 'Recovery day'}
+                {training
+                  ? `${selWorkout!.exercises.length} exercises · ~${estimateMinutes(selWorkout!.exercises)} min`
+                  : emptyWorkout
+                    ? 'Empty workout — no exercises yet'
+                    : 'Recovery day'}
               </div>
-              {!training && (
+              {/* An empty workout is not a free day: it already owns this slot,
+                  so the way forward is to fill it, not to build another one. */}
+              {emptyWorkout && (
+                <button type="button" className="nura-lift"
+                  onClick={scrollToEditor}
+                  style={{ position: 'relative', zIndex: 2, marginTop: 16, width: '100%', background: 'transparent', border: '1px dashed rgba(var(--nura-sage-rgb),.45)', color: SAGE, borderRadius: 13, padding: 13, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
+                  + Add exercises
+                </button>
+              )}
+              {!training && !emptyWorkout && (
                 <button type="button" className="nura-lift"
                   onClick={() => { setBuilderDay(programDayIndex(selected)); setBuilding(true); }}
                   style={{ position: 'relative', zIndex: 2, marginTop: 16, width: '100%', background: 'transparent', border: '1px dashed rgba(var(--nura-sage-rgb),.45)', color: SAGE, borderRadius: 13, padding: 13, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
@@ -939,16 +984,22 @@ const app: React.CSSProperties = { width: '100%', maxWidth: 'var(--fit-frame, 44
               )}
             </div>
 
-            {/* SIMPLE EDIT */}
-            {training && (
+            {/* SIMPLE EDIT — also the recovery path for an empty workout, so it
+                renders whenever a workout owns this day, exercises or not. */}
+            {(training || emptyWorkout) && (
               <div ref={editPanelRef} className="nura-card" style={{ background: SURF, border: `1px solid ${LINE}`, borderRadius: 18, padding: '6px 16px 14px', marginBottom: 22 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 0 6px' }}>
                   <span style={{ fontSize: 13, letterSpacing: '.04em', color: MUT }}>{editEyebrow}</span>
                   <span style={{ fontSize: 13, letterSpacing: '.04em', color: "var(--nura-accent-text)" }}>{savingCount > 0 ? 'saving…' : 'auto-saves'}</span>
                 </div>
                 <div style={{ fontSize: 11.5, color: MUT, marginTop: 6 }}>
-                  Tap an exercise to log your sets and see how to do it.
+                  {emptyWorkout
+                    ? 'This workout has no exercises yet. Add one below and it trains again.'
+                    : 'Tap an exercise to log your sets and see how to do it.'}
                 </div>
+                {editErr && (
+                  <div role="alert" style={{ fontSize: 12, color: 'var(--nura-danger-soft)', marginTop: 10 }}>{editErr}</div>
+                )}
                 {selWorkout!.exercises.map((we, i) => (
                   <div
                     key={we.id}
