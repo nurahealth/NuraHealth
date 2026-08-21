@@ -97,6 +97,34 @@ export function mapProgram(row: Record<string, unknown>): Program {
   };
 }
 
+// ── What a day actually is ───────────────────────────────────────────────────
+// Three states, and they are NOT interchangeable:
+//   rest     — an is_rest row, or no row at all: nothing is scheduled
+//   training — a scheduled workout that still has exercises
+//   empty    — a scheduled workout whose exercises have all been removed
+//
+// An empty workout is NOT a rest day. Rendering it as "Rest & recover" hides a
+// real, named workout behind a state that has no editor, so the user cannot put
+// exercises back and it reads as lost data. Every surface resolves the day
+// through these three predicates so they can never disagree.
+
+export function isTrainingWorkout(w: Workout | undefined): w is Workout {
+  return !!w && !w.is_rest && w.exercises.length > 0;
+}
+
+// Deliberately a plain boolean, not a type predicate: a `w is Workout` guard
+// would narrow the ELSE branch of every caller to `never` (the input is already
+// a Workout in most of them), which is not what "this day is empty" means.
+export function isEmptyWorkout(w: Workout | undefined): boolean {
+  return !!w && !w.is_rest && w.exercises.length === 0;
+}
+
+/** The name to show for a day — the workout's own name for training AND empty. */
+export function dayLabel(w: Workout | undefined): string {
+  if (!w || w.is_rest) return 'Rest';
+  return workoutDisplayName(w);
+}
+
 // Full exercise row including the fields the detail screen needs (instructions,
 // difficulty) that the lighter catalog select omits.
 export type ExerciseFull = CatalogEx & {
