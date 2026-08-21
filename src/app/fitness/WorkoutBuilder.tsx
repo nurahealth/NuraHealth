@@ -44,6 +44,8 @@ type Props = {
   onClose: () => void;
   /** Called after a successful save with the first scheduled day_index (0=Mon). */
   onSaved: (firstDay: number) => void;
+  /** Preselect this day_index (0=Mon) — used by "Create a workout for this day". */
+  initialDay?: number;
 };
 
 const overlay: React.CSSProperties = {
@@ -329,11 +331,11 @@ function ScheduleStep({
 
 // ── Shell ────────────────────────────────────────────────────────────────────
 
-export default function WorkoutBuilder({ programId, catalog, generatedDays, onClose, onSaved }: Props) {
+export default function WorkoutBuilder({ programId, catalog, generatedDays, onClose, onSaved, initialDay }: Props) {
   const [step, setStep] = useState<1 | 2>(1);
   const [name, setName] = useState('');
   const [picked, setPicked] = useState<Picked[]>([]);
-  const [days, setDays] = useState<Set<number>>(new Set());
+  const [days, setDays] = useState<Set<number>>(() => new Set(initialDay != null ? [initialDay] : []));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

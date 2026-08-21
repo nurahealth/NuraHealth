@@ -286,15 +286,15 @@ function DayActionsSheet({ title, isToday, done, skipped, busy, onMarkDone, onUn
 
   return (
     <div onClick={onClose} style={{
-      position: 'fixed', inset: 0, zIndex: 90, display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
-      background: 'rgba(0,0,0,.5)', backdropFilter: 'blur(2px)',
+      position: 'fixed', inset: 0, zIndex: 90, display: 'flex', alignItems: 'center', justifyContent: 'center',
+      padding: 20, background: 'rgba(0,0,0,.6)', backdropFilter: 'blur(2px)',
     }}>
+      {/* Centered popup — the design system forbids bottom sheets. */}
       <div onClick={(e) => e.stopPropagation()} style={{
-        width: '100%', maxWidth: 440, background: 'var(--nura-card)',
-        borderTopLeftRadius: 22, borderTopRightRadius: 22, border: `1px solid ${LINE}`, borderBottom: 'none',
-        padding: '10px 16px 22px', fontFamily: FONT,
+        width: '100%', maxWidth: 400, background: 'var(--nura-card)',
+        borderRadius: 18, border: `1px solid ${LINE}`, boxShadow: '0 24px 60px rgba(0,0,0,.45)',
+        padding: '18px 18px 16px', fontFamily: FONT,
       }}>
-        <div style={{ width: 38, height: 4, borderRadius: 999, background: 'rgba(var(--nura-bg-tint-rgb),.2)', margin: '0 auto 14px' }} />
         <div style={{ fontSize: 15, fontWeight: 700, color: TEXT, marginBottom: 3 }}>{title}</div>
         <div style={{ fontSize: 12, color: MUT, marginBottom: 14 }}>This date only — your weekly schedule stays as it is.</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -335,6 +335,7 @@ export default function FitnessDashboard() {
   const [savingCount, setSavingCount] = useState(0);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [generating, setGenerating] = useState(false);
+  const [builderDay, setBuilderDay] = useState<number | null>(null);
   const [reqOpen, setReqOpen] = useState(false);
   const [reqName, setReqName] = useState('');
   const [reqDetails, setReqDetails] = useState('');
@@ -820,7 +821,7 @@ const app: React.CSSProperties = { width: '100%', maxWidth: 'var(--fit-frame, 44
                     return (
                       <div
                         key={i}
-                        onClick={() => setSelected(date)}
+                        onClick={() => { setSelected(date); setView('week'); }}
                         style={{
                           aspectRatio: '1', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative',
                           fontSize: 13, borderRadius: 10, cursor: 'pointer',
@@ -884,6 +885,13 @@ const app: React.CSSProperties = { width: '100%', maxWidth: 'var(--fit-frame, 44
               <div style={{ fontSize: 13, color: MUT, position: 'relative' }}>
                 {training ? `${selWorkout!.exercises.length} exercises · ~${estimateMinutes(selWorkout!.exercises)} min` : 'Recovery day'}
               </div>
+              {!training && (
+                <button type="button" className="nura-lift"
+                  onClick={() => { setBuilderDay(programDayIndex(selected)); setBuilding(true); }}
+                  style={{ position: 'relative', zIndex: 2, marginTop: 16, width: '100%', background: 'transparent', border: '1px dashed rgba(var(--nura-sage-rgb),.45)', color: SAGE, borderRadius: 13, padding: 13, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
+                  + Create a workout for this day
+                </button>
+              )}
               {training && (
                 <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', margin: '14px 0 16px', position: 'relative' }}>
                   {muscleChips(selWorkout!.exercises).map((c) => (
@@ -1073,7 +1081,7 @@ const app: React.CSSProperties = { width: '100%', maxWidth: 'var(--fit-frame, 44
 
             {/* Build your own — sits with the plan, above the removed Continue list. */}
             {program && (
-              <button type="button" onClick={() => setBuilding(true)} className="nura-lift" style={{
+              <button type="button" onClick={() => { setBuilderDay(null); setBuilding(true); }} className="nura-lift" style={{
                 width: '100%', marginBottom: 22, background: 'transparent',
                 border: '1px dashed rgba(var(--nura-sage-rgb),.4)', color: SAGE, borderRadius: 14,
                 padding: 14, fontSize: 13.5, fontWeight: 600, fontFamily: FONT, cursor: 'pointer',
@@ -1152,6 +1160,7 @@ const app: React.CSSProperties = { width: '100%', maxWidth: 'var(--fit-frame, 44
           programId={program.id}
           catalog={catalog}
           generatedDays={generatedDays}
+          initialDay={builderDay ?? undefined}
           onClose={() => setBuilding(false)}
           onSaved={(firstDay) => {
             setBuilding(false);
