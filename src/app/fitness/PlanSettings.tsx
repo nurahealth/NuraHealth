@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import NuraPlexus from '@/components/NuraPlexus';
 import { saveFitnessPlanSettings, type PlanSettingsData } from './actions';
+import { GOAL_ID_TO_LABEL, GOAL_OPTS, SPLIT_OPTS, splitFromProgramType } from './planLabels';
 
 // ── Palette (NŪRA) ───────────────────────────────────────────────────────────
 const SAGE = 'var(--nura-sage)';
@@ -24,22 +25,11 @@ const SAGE_ON_SHADOW = '0 6px 18px rgba(var(--nura-sage-rgb),0.38), inset 0 1px 
 const DAYS_OPTS = ['2', '3', '4', '5', '6'];
 const SESSION_OPTS = ['20 min', '30 min', '45 min', '60 min'];
 
-const SPLIT_OPTS = ['Full Body', 'Push-Pull-Legs', 'Upper-Lower'];
 const SPLIT_HELP: Record<string, string> = {
   'Full Body': 'Every session trains the whole body — ideal at 2–3 days a week.',
   'Push-Pull-Legs': 'Rotates push, pull and leg days — strongest at 3 or 6 days a week.',
   'Upper-Lower': 'Alternates upper- and lower-body days — balanced at 4 days a week.',
 };
-
-const GOAL_OPTS: { label: string; id: string }[] = [
-  { label: 'General Fitness', id: 'general' },
-  { label: 'Build Muscle', id: 'muscle' },
-  { label: 'Strength', id: 'strength' },
-  { label: 'Weight Loss', id: 'fat' },
-  { label: 'Endurance', id: 'endurance' },
-];
-const GOAL_ID_TO_LABEL = (id: string): string =>
-  GOAL_OPTS.find((g) => g.id === id)?.label ?? 'General Fitness';
 
 const FOCUS_OPTS = ['Chest', 'Back', 'Shoulders', 'Biceps', 'Triceps', 'Core', 'Quads', 'Hamstrings', 'Glutes', 'Calves'];
 
@@ -63,16 +53,6 @@ function normalizeEquipment(stored: string[] | null | undefined): string[] {
     if (exact) out.add(exact);
   }
   return EQUIP_OPTS.filter((e) => out.has(e)); // keep canonical order
-}
-
-// Derive a split chip from a stored fitness_programs.split_type label.
-function splitFromProgramType(t: string | null | undefined): string | null {
-  const k = (t ?? '').toLowerCase();
-  if (!k) return null;
-  if (k.includes('push') || k.includes('pull')) return 'Push-Pull-Legs';
-  if (k.includes('upper') || k.includes('lower')) return 'Upper-Lower';
-  if (k.includes('full')) return 'Full Body';
-  return null;
 }
 
 // ── Icons ────────────────────────────────────────────────────────────────────
