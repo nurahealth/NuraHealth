@@ -25,3 +25,16 @@ export function splitFromProgramType(t: string | null | undefined): string | nul
   if (k.includes('full')) return 'Full Body';
   return null;
 }
+
+/**
+ * A goal as stored — fitness_profiles.primary_goal holds the onboarding id,
+ * fitness_programs.goal holds whatever that profile carried, which older rows
+ * may have written as the label itself. Accepts either; null when it matches
+ * neither, so a summary line can fall back rather than assert "General Fitness"
+ * about a goal it did not recognise.
+ */
+export function goalLabelFrom(raw: string | null | undefined): string | null {
+  const k = (raw ?? '').toLowerCase().trim();
+  if (!k) return null;
+  return GOAL_OPTS.find((g) => g.id === k || g.label.toLowerCase() === k)?.label ?? null;
+}

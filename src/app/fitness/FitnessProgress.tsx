@@ -473,6 +473,7 @@ export default function FitnessProgress() {
   const [viewing, setViewing] = useState<ProgressPhoto | null>(null);
   const [strengthEx, setStrengthEx] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const milestonesRef = useRef<HTMLDivElement>(null);
 
   const today = useMemo(() => startOfDay(new Date()), []);
 
@@ -492,6 +493,15 @@ export default function FitnessProgress() {
     })();
     return () => { cancelled = true; };
   }, []);
+
+  // Arriving from Profile's "Milestones" link: /fitness/progress#milestones.
+  // The browser resolves a hash against the first paint, when this screen is
+  // still "Loading…" and the section does not exist yet — so the scroll has to
+  // wait for the data that renders it.
+  useEffect(() => {
+    if (loading || window.location.hash !== '#milestones') return;
+    milestonesRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [loading]);
 
   // Re-pull weigh-ins after logging one (keeps the number + chart in sync).
   const refreshBody = useCallback(async () => { setBodyMetrics(await loadBodyMetrics()); }, []);
@@ -860,7 +870,7 @@ export default function FitnessProgress() {
           <div style={{ fontSize: 11, color: MUT, marginBottom: 30 }}>Last {HEATMAP_WEEKS} weeks</div>
 
           {/* milestones & achievements */}
-          {secHead('Milestones')}
+          <div id="milestones" ref={milestonesRef} style={{ scrollMarginTop: 20 }}>{secHead('Milestones')}</div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 30 }}>
             {milestones.map((b) => (
               <div className="nura-card" key={b.id} style={{
@@ -985,7 +995,7 @@ export default function FitnessProgress() {
           { label: 'Home', on: false, to: '/fitness', path: <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /> },
           { label: 'Calendar', on: false, to: '/fitness/calendar', path: <><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" /></> },
           { label: 'Progress', on: true, to: null, path: <path d="M3 3v18h18M7 14l3-3 3 3 5-5" /> },
-          { label: 'Profile', on: false, to: null, path: <><circle cx="12" cy="8" r="4" /><path d="M4 21a8 8 0 0 1 16 0" /></> },
+          { label: 'Profile', on: false, to: '/fitness/profile', path: <><circle cx="12" cy="8" r="4" /><path d="M4 21a8 8 0 0 1 16 0" /></> },
         ].map((n) => (
           <div
             key={n.label}

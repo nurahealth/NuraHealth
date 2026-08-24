@@ -36,6 +36,7 @@ const STAGE_PAD = 28;
 const ROUTES: { label: string; path: string }[] = [
   { label: "Dashboard", path: "/dashboard" },
   { label: "Fitness", path: "/fitness" },
+  { label: "Profile", path: "/fitness/profile" },
   { label: "Nutrition", path: "/nutrition" },
   { label: "Chat", path: "/chat" },
   { label: "Settings", path: "/settings" },

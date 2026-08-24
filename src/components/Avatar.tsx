@@ -9,9 +9,17 @@ interface Props {
   user: User | null;
   size?: number;
   className?: string;
+  /**
+   * Name to take the initial from when the auth metadata has none — the
+   * profiles.full_name a screen has already loaded. Falls back to the metadata
+   * name, then the email, exactly as before when omitted.
+   */
+  name?: string;
 }
 
-function getInitial(user: User | null): string {
+function getInitial(user: User | null, name?: string): string {
+  const given = (name ?? "").trim();
+  if (given) return given.charAt(0).toUpperCase();
   if (!user) return "?";
   const meta = (user.user_metadata ?? {}) as { full_name?: string; name?: string };
   const fromMeta = (meta.full_name || meta.name || "").trim();
@@ -26,9 +34,9 @@ function getAvatarUrl(user: User | null): string | null {
   return meta.avatar_url || null;
 }
 
-export default function Avatar({ user, size = 40, className }: Props) {
+export default function Avatar({ user, size = 40, className, name }: Props) {
   const avatarUrl = getAvatarUrl(user);
-  const initial = getInitial(user);
+  const initial = getInitial(user, name);
   const fontSize = Math.max(12, Math.round(size * 0.36));
 
   if (avatarUrl) {
