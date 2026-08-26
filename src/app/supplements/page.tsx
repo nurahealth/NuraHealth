@@ -1,7 +1,7 @@
 "use client";
 
-import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { ArrowLeft, Calendar, Camera, Check, Clock, Edit3, Eye, EyeOff, Flame, ScanLine, Sparkles } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import type { User } from "@supabase/supabase-js";
@@ -117,7 +117,6 @@ function capitalizeWord(s: string): string {
 // ── Page ──────────────────────────────────────────────────────────────────────
 function SupplementsPageInner() {
   const router = useRouter();
-  const searchParams = useSearchParams();
 
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
@@ -175,29 +174,50 @@ function SupplementsPageInner() {
     };
   }, []);
 
-  const viewParam = searchParams.get("view");
-  const view: View = viewParam === "schedule" ? "schedule" : "stack";
+  // `view` and `day` live in state, not in `useSearchParams()`. Reading them
+  // with that hook forces the whole client tree up to the nearest Suspense
+  // boundary to be client-rendered — with this page's boundary wrapping
+  // everything and falling back to `null`, a boundary that failed to resolve
+  // left the prerendered HTML in place but hidden, i.e. a permanently blank
+  // screen with no error to show for it. State + `history.replaceState` keeps
+  // the URL shareable without putting the page behind a boundary at all.
+  const [view, setViewState] = useState<View>("stack");
+  const [selectedDay, setSelectedDayState] = useState<Day>(() => todayDay());
 
-  const dayParam = searchParams.get("day");
-  const selectedDay: Day = (ALL_DAYS as readonly string[]).includes(dayParam ?? "")
-    ? (dayParam as Day)
-    : todayDay();
+  /** The querystring this page would write for a given view/day pair. */
+  const urlFor = useCallback(
+    (nextView: View, day: Day) =>
+      nextView === "stack" ? "/supplements?view=stack" : `/supplements?view=schedule&day=${day}`,
+    []
+  );
+
+  // Seed from the URL once on mount so a deep link (or a reload) lands on the
+  // view it names. Done in an effect rather than in the initial state because
+  // the server has no `window` to read, and a render-time read would be a
+  // hydration mismatch.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("view") === "schedule") setViewState("schedule");
+    const dayParam = params.get("day");
+    if ((ALL_DAYS as readonly string[]).includes(dayParam ?? "")) {
+      setSelectedDayState(dayParam as Day);
+    }
+  }, []);
 
   // Fade animations
   useEffect(() => { setViewFadeKey((k) => k + 1); }, [view]);
   useEffect(() => { setScheduleFadeKey((k) => k + 1); }, [selectedDay]);
 
   const setView = useCallback((next: View) => {
-    if (next === "stack") {
-      router.replace("/supplements?view=stack", { scroll: false });
-    } else {
-      router.replace(`/supplements?view=schedule&day=${selectedDay}`, { scroll: false });
-    }
-  }, [router, selectedDay]);
+    setViewState(next);
+    window.history.replaceState(null, "", urlFor(next, selectedDay));
+  }, [selectedDay, urlFor]);
 
   const setSelectedDay = useCallback((d: Day) => {
-    router.replace(`/supplements?view=schedule&day=${d}`, { scroll: false });
-  }, [router]);
+    setSelectedDayState(d);
+    setViewState("schedule");
+    window.history.replaceState(null, "", urlFor("schedule", d));
+  }, [urlFor]);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user: u } }) => {
@@ -951,11 +971,7 @@ function SupplementsPageInner() {
 }
 
 export default function SupplementsPage() {
-  return (
-    <Suspense fallback={null}>
-      <SupplementsPageInner />
-    </Suspense>
-  );
+  return <SupplementsPageInner />;
 }
 
 // ── Time to take (reminders due now) ──────────────────────────────────────────

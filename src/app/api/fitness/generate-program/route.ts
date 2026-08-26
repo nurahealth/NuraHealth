@@ -78,6 +78,29 @@ export async function POST(req: Request): Promise<NextResponse> {
     );
   }
 
+  // 3c. Refuse to persist a plan with empty training days. The generator only
+  // returns an empty day when the catalog read came back with nothing usable
+  // (see its hard-guarantee fallback), and writing that anyway is how a user
+  // ends up with an ACTIVE program whose days say "Empty — add exercises" with
+  // nothing to explain it. Failing here leaves the previous plan in place,
+  // which is always better than replacing it with an unusable one.
+  const emptyDays = trainingDays.filter((w) => w.exercises.length === 0);
+  if (emptyDays.length > 0) {
+    console.error(
+      `[generate-program] refusing to persist: ${emptyDays.length}/${trainingDays.length} training ` +
+      `day(s) came back empty (catalog=${catalog?.length ?? 0}). Days: ${emptyDays.map((w) => w.day_index).join(', ')}`,
+    );
+    return NextResponse.json(
+      {
+        error:
+          catalog?.length
+            ? 'Could not build a full week from the exercise catalog. Your existing plan is unchanged.'
+            : 'The exercise catalog is unavailable right now, so the plan could not be rebuilt. Your existing plan is unchanged.',
+      },
+      { status: 503 },
+    );
+  }
+
   // 4. Insert the new program FIRST (status active). We only archive the previous
   // active program once this one is fully built, so a failure never leaves the
   // user with an empty / all-rest plan as their active program.
