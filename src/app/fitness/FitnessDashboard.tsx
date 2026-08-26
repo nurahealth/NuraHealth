@@ -800,7 +800,7 @@ const app: React.CSSProperties = { width: '100%', maxWidth: 'var(--fit-frame, 44
                       key={i}
                       onClick={() => setSelected(date)}
                       style={{
-                        flex: 1, textAlign: 'center', padding: '11px 0 9px', borderRadius: 14, cursor: 'pointer', transition: '.16s',
+                        flex: 1, minWidth: 0, textAlign: 'center', padding: '11px 0 9px', borderRadius: 14, cursor: 'pointer', transition: '.16s',
                         background: isToday ? SAGE : SURF,
                         border: `1px solid ${isToday ? SAGE : isSel ? SAGE : LINE}`,
                         boxShadow: isToday ? '0 8px 22px rgba(var(--nura-sage-rgb),.28)' : 'none',
@@ -817,7 +817,7 @@ const app: React.CSSProperties = { width: '100%', maxWidth: 'var(--fit-frame, 44
                         )}
                       </div>
                       {/* Which workout lives here — visible without tapping. */}
-                      <div style={{ height: 11, marginTop: 2, padding: '0 4px', fontSize: 8.5, letterSpacing: '.02em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: isToday ? BG : train ? 'var(--nura-accent-text)' : named ? MUT : 'transparent' }}>
+                      <div style={{ height: 11, marginTop: 2, padding: '0 2px', fontSize: 7.5, letterSpacing: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: isToday ? BG : train ? 'var(--nura-accent-text)' : named ? MUT : 'transparent' }}>
                         {named ? focusOf(w) : '·'}
                       </div>
                     </div>
