@@ -39,6 +39,11 @@ const Icons = {
   bookmark: () => <I><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></I>,
   flask:    () => <I><path d="M9 3h6M10 3v6l-4.5 9a1 1 0 0 0 .9 1.5h11.2a1 1 0 0 0 .9-1.5L14 9V3M7.5 14h9"/></I>,
   leaf:     () => <I><path d="M5 21c.5-4.5 2.5-8 7-10"/><path d="M9 18c6.22 0 10.5-3.29 11-12V4h-4.01C9 4 6 7 6 11c0 3 1 5 3 7z"/></I>,
+  // Conditions. Deliberately NOT the heart-pulse from the mockup: `activity`
+  // (Dashboard) is already a heart with a pulse line, and two of them two rows
+  // apart in the same rail read as a duplicate. A stethoscope is the only glyph
+  // here that says "what's going on with me" rather than "a content library".
+  stetho:   () => <I><path d="M5 2v2M11 2v2"/><path d="M5 3H4a2 2 0 0 0-2 2v4a6 6 0 0 0 12 0V5a2 2 0 0 0-2-2h-1"/><path d="M8 15a6 6 0 0 0 12 0v-3"/><circle cx="20" cy="10" r="2"/></I>,
   book:     () => <I><path d="M3 6a9 9 0 0 1 9 0 9 9 0 0 1 9 0"/><path d="M3 19a9 9 0 0 1 9 0 9 9 0 0 1 9 0"/><path d="M3 6v13M12 6v13M21 6v13"/></I>,
   message:  () => <I><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8z"/></I>,
   chevron:  () => <I><path d="M6 9l6 6 6-6"/></I>,
@@ -77,6 +82,7 @@ const NAV_ITEMS: NavItem[] = [
   { key: "dashboard",   label: "Dashboard",    href: "/dashboard",    icon: Icons.activity },
   { key: "bloodwork",   label: "Bloodwork",    href: "/bloodwork",    icon: Icons.droplet },
   { key: "nutrition",   label: "Nutrition",    href: "/nutrition",    icon: Icons.leaf },
+  { key: "conditions",  label: "Conditions",   href: "/conditions",   icon: Icons.stetho },
   { key: "recipes",     label: "Recipes",      href: "/recipes",      icon: Icons.book },
   { key: "supplements", label: "Supplements",  href: "/supplements",  icon: Icons.pill },
   { key: "fitness",     label: "Fitness",      href: "/fitness",      icon: Icons.dumbbell },

@@ -38,6 +38,8 @@ const ROUTES: { label: string; path: string }[] = [
   { label: "Fitness", path: "/fitness" },
   { label: "Profile", path: "/fitness/profile" },
   { label: "Nutrition", path: "/nutrition" },
+  { label: "Conditions", path: "/conditions" },
+  { label: "Protocol", path: "/conditions/alpha-gal-syndrome" },
   { label: "Chat", path: "/chat" },
   { label: "Settings", path: "/settings" },
   { label: "Labs", path: "/lab" },
