@@ -1,0 +1,773 @@
+<title>NŪRA Conditions Mockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap">
+
+<style>
+/* ─────────────────────────────────────────────────────────────────────────
+   BOARD CHROME — deliberately NOT the app's design system.
+   Same stance as /dev/preview: the review furniture has its own little
+   vocabulary so it can never be mistaken for the screens being reviewed.
+   It is theme-aware; the app frames inside it are not — they are the two
+   locked skins, shown side by side on purpose.
+   ───────────────────────────────────────────────────────────────────────── */
+:root{
+  --board-bg:#eceae5; --board-bar:#ffffff; --board-line:#d5d2cb;
+  --board-text:#23262c; --board-dim:#6b7280; --board-on:#2f6b57;
+  --board-shadow:0 1px 2px rgba(20,20,20,.06), 0 12px 32px -12px rgba(20,20,20,.18);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --board-bg:#15161a; --board-bar:#1d1f25; --board-line:#2c2f38;
+    --board-text:#e7e9ee; --board-dim:#8f96a6; --board-on:#3f8f75;
+    --board-shadow:0 1px 2px rgba(0,0,0,.4), 0 18px 40px -16px rgba(0,0,0,.7);
+  }
+}
+:root[data-theme="dark"]{
+  --board-bg:#15161a; --board-bar:#1d1f25; --board-line:#2c2f38;
+  --board-text:#e7e9ee; --board-dim:#8f96a6; --board-on:#3f8f75;
+  --board-shadow:0 1px 2px rgba(0,0,0,.4), 0 18px 40px -16px rgba(0,0,0,.7);
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--board-bg); color:var(--board-text);
+  font-family:Inter,system-ui,-apple-system,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+
+.board-head{
+  position:sticky; top:0; z-index:20; background:var(--board-bar);
+  border-bottom:1px solid var(--board-line); padding:14px 22px;
+  display:flex; align-items:baseline; gap:14px; flex-wrap:wrap;
+}
+.board-head .logo{font-weight:700; letter-spacing:.5px; font-size:15px}
+.board-head .tag{
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:10.5px;
+  letter-spacing:2px; text-transform:uppercase; color:var(--board-on);
+}
+.board-head .note{font-size:12.5px; color:var(--board-dim); margin-left:auto}
+
+.wrap{max-width:1320px; margin:0 auto; padding:34px 22px 90px}
+
+section{margin-bottom:56px}
+h2.sec{
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:11px;
+  letter-spacing:2.4px; text-transform:uppercase; color:var(--board-dim);
+  margin:0 0 4px; font-weight:400;
+}
+p.sec-note{font-size:13.5px; line-height:1.65; color:var(--board-dim); margin:0 0 20px; max-width:70ch}
+
+.rail{display:flex; gap:26px; align-items:flex-start; overflow-x:auto; padding-bottom:10px}
+.cap{
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:10px;
+  letter-spacing:1.6px; text-transform:uppercase; color:var(--board-dim);
+  margin-bottom:9px; display:block;
+}
+
+/* Phone + desktop frames. 390 is the real iPhone measure the app targets. */
+.frame{flex:0 0 auto; box-shadow:var(--board-shadow); border-radius:26px; overflow:hidden}
+.frame.phone{width:390px}
+.frame.desk{width:1180px; border-radius:14px}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   APP SKINS — copied from src/app/globals.css, not re-invented.
+   Dark is frozen. Light is the Luminous system. Same geometry in both;
+   only these values differ.
+   ───────────────────────────────────────────────────────────────────────── */
+.app{
+  --sans:Inter,system-ui,sans-serif;
+  --serif:'DM Serif Display',Georgia,serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  font-family:var(--sans);
+  background:var(--bg); color:var(--text);
+  padding:22px 18px 26px;
+}
+.app.desk{padding:32px 40px 40px}
+
+.app.dark{
+  --bg:#0d0d0e;
+  --surface:rgba(235,230,216,.04);
+  --surface-2:rgba(235,230,216,.06);
+  --border:rgba(235,230,216,.09);
+  --text:#ebe6d8;
+  --text-2:rgba(235,230,216,.55);
+  --text-3:rgba(235,230,216,.40);
+  --sage:#9bb0a5;
+  --sage-rgb:155,176,165;
+  --accent-text:#9bb0a5;   /* sage headings allowed in dark */
+  --accent-label:#9bb0a5;
+  --warn:#d3a253;
+  --warn-rgb:211,162,83;
+  --alert:#e8745a;
+  --alert-rgb:232,116,90;
+  --card-shadow:none;
+}
+.app.light{
+  --bg:#f5f3ee;            /* warm paper */
+  --surface:#ffffff;
+  --surface-2:#ffffff;
+  --border:rgba(26,24,20,.10);
+  --text:#1a1a1a;
+  --text-2:#5a5750;
+  --text-3:#6e6b63;
+  --sage:#4f6f5c;
+  --sage-rgb:79,111,92;
+  --accent-text:#1a1a1a;   /* NO sage headings in light */
+  --accent-label:#5a5750;
+  --warn:#8a6118;
+  --warn-rgb:138,97,24;
+  --alert:#a54134;
+  --alert-rgb:165,65,52;
+  --card-shadow:0 1px 2px rgba(26,24,20,.05), 0 10px 28px -12px rgba(26,24,20,.16);
+}
+
+/* ── shared app pieces ─────────────────────────────────────────────────── */
+.eyebrow{
+  font-family:var(--mono); font-size:10.5px; letter-spacing:2.4px;
+  text-transform:uppercase; color:var(--accent-label); margin-bottom:11px;
+}
+.title{
+  font-family:var(--serif); font-weight:400; font-size:38px; line-height:1.05;
+  letter-spacing:-.5px; color:var(--text); margin:0 0 10px;
+}
+.app.desk .title{font-size:46px}
+.title em{font-style:italic; color:var(--accent-text)}
+.sub{font-size:13.5px; line-height:1.6; color:var(--text-2); margin:0 0 22px; max-width:56ch}
+
+.search{
+  display:flex; align-items:center; gap:9px; width:100%;
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:12px; padding:11px 13px; margin-bottom:26px;
+  box-shadow:var(--card-shadow);
+}
+.search span{font-size:13.5px; color:var(--text-3)}
+.search svg{color:var(--text-3); flex:0 0 auto}
+
+.group-label{
+  font-family:var(--mono); font-size:10px; letter-spacing:1.8px;
+  text-transform:uppercase; color:var(--text-3);
+  display:flex; align-items:center; gap:8px; margin:0 0 11px;
+}
+.group-label::after{content:""; flex:1; height:1px; background:var(--border)}
+
+.rows{display:flex; flex-direction:column; gap:9px; margin-bottom:26px}
+.app.desk .rows.two{display:grid; grid-template-columns:1fr 1fr; gap:14px}
+
+.row{
+  display:flex; align-items:center; gap:12px;
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:13px; padding:13px 14px; box-shadow:var(--card-shadow);
+}
+.row.matched{border-color:rgba(var(--warn-rgb),.32)}
+.chip-icon{
+  flex:0 0 auto; width:36px; height:36px; border-radius:10px;
+  background:rgba(var(--sage-rgb),.13); border:1px solid rgba(var(--sage-rgb),.26);
+  color:var(--sage); display:flex; align-items:center; justify-content:center;
+}
+.row .body{flex:1; min-width:0}
+.row .name{font-size:14.5px; font-weight:500; color:var(--text); line-height:1.3}
+.row .reason{
+  font-size:11.5px; color:var(--text-2); margin-top:3px; line-height:1.45;
+  font-variant-numeric:tabular-nums;
+}
+.row .chev{color:var(--text-3); flex:0 0 auto}
+
+.pill-markers{
+  display:inline-flex; align-items:center; gap:5px; margin-bottom:5px;
+  font-family:var(--mono); font-size:9px; letter-spacing:1.3px; text-transform:uppercase;
+  color:var(--warn); background:rgba(var(--warn-rgb),.14);
+  border:1px solid rgba(var(--warn-rgb),.3); border-radius:999px; padding:3px 7px;
+}
+
+.foot{
+  margin-top:26px; padding-top:14px; border-top:1px solid var(--border);
+  font-size:11px; color:var(--text-3); line-height:1.6; text-align:center;
+}
+
+/* ── protocol screen ───────────────────────────────────────────────────── */
+.back{
+  display:inline-flex; align-items:center; gap:6px; margin-bottom:18px;
+  font-size:12.5px; color:var(--text-2); background:var(--surface);
+  border:1px solid var(--border); border-radius:10px; padding:6px 11px 6px 8px;
+}
+.plain{font-size:14px; line-height:1.72; color:var(--text-2); margin:0 0 22px}
+.plain strong{color:var(--text); font-weight:500}
+
+.signals{display:flex; flex-wrap:wrap; gap:7px; margin-bottom:8px}
+.sig{
+  font-size:11.5px; font-variant-numeric:tabular-nums;
+  border-radius:999px; padding:5px 10px; border:1px solid;
+}
+.sig.flag{color:var(--warn); background:rgba(var(--warn-rgb),.13); border-color:rgba(var(--warn-rgb),.3)}
+.sig.ok{color:var(--sage); background:rgba(var(--sage-rgb),.12); border-color:rgba(var(--sage-rgb),.28)}
+.sig-note{font-size:11px; color:var(--text-3); margin:0 0 24px}
+
+.doc-banner{
+  display:flex; gap:11px; align-items:flex-start;
+  background:rgba(var(--warn-rgb),.09); border:1px solid rgba(var(--warn-rgb),.28);
+  border-radius:13px; padding:13px 14px; margin-bottom:24px;
+}
+.doc-banner svg{color:var(--warn); flex:0 0 auto; margin-top:1px}
+.doc-banner .t{font-size:13px; font-weight:600; color:var(--text); margin-bottom:3px}
+.doc-banner .d{font-size:12px; line-height:1.6; color:var(--text-2)}
+
+.steps{display:flex; flex-direction:column; gap:11px; margin-bottom:24px}
+.step{
+  display:flex; gap:12px; background:var(--surface); border:1px solid var(--border);
+  border-radius:14px; padding:14px; box-shadow:var(--card-shadow);
+}
+.step.supervised{opacity:.72}
+.step .n{
+  flex:0 0 auto; width:23px; height:23px; border-radius:50%;
+  border:1px solid rgba(var(--sage-rgb),.4); color:var(--sage);
+  font-family:var(--mono); font-size:10.5px;
+  display:flex; align-items:center; justify-content:center; margin-top:1px;
+}
+.step .sbody{flex:1; min-width:0}
+.step .action{font-size:14px; font-weight:600; color:var(--text); line-height:1.4; margin-bottom:4px}
+.step .action .doc{font-weight:400; color:var(--warn)}
+.step .why{font-size:12.5px; line-height:1.6; color:var(--text-2); margin-bottom:9px}
+.grade{
+  display:inline-flex; align-items:center; gap:7px;
+  font-size:10.5px; color:var(--text-3);
+}
+.grade b{
+  font-family:var(--mono); font-size:10px; letter-spacing:.5px; font-weight:600;
+  color:var(--sage); background:rgba(var(--sage-rgb),.12);
+  border:1px solid rgba(var(--sage-rgb),.28); border-radius:5px; padding:2px 6px;
+}
+
+.cta{
+  width:100%; text-align:center; border-radius:13px; padding:14px;
+  font-size:14.5px; font-weight:600; border:none;
+  background:var(--sage); color:var(--bg);
+}
+.app.light .cta{color:#ffffff}
+.cta.added{
+  background:rgba(var(--sage-rgb),.12); color:var(--sage);
+  border:1px solid rgba(var(--sage-rgb),.34);
+}
+
+/* ── step detail (centered modal — never a bottom sheet) ───────────────── */
+.scrim{
+  background:rgba(0,0,0,.55); padding:28px 18px;
+  display:flex; align-items:center; justify-content:center;
+}
+.app.light .scrim{background:rgba(26,24,20,.34)}
+.modal{
+  width:100%; max-width:352px; background:var(--bg);
+  border:1px solid var(--border); border-radius:18px; padding:20px 18px;
+  box-shadow:0 24px 60px -20px rgba(0,0,0,.6);
+}
+.modal-h{font-family:var(--serif); font-size:25px; line-height:1.15; color:var(--text); margin:0 0 4px}
+.modal-sub{font-size:11.5px; color:var(--text-3); margin:0 0 18px}
+.card{
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:13px; padding:13px 14px; margin-bottom:11px; box-shadow:var(--card-shadow);
+}
+.card .k{
+  font-family:var(--mono); font-size:9.5px; letter-spacing:1.7px;
+  text-transform:uppercase; color:var(--text-3); margin-bottom:7px;
+}
+.card .v{font-size:12.5px; line-height:1.68; color:var(--text-2)}
+.card .v strong{color:var(--text); font-weight:500}
+.card.lab{border-color:rgba(var(--sage-rgb),.3)}
+.card.lab .link{
+  display:inline-flex; align-items:center; gap:5px; margin-top:9px;
+  font-size:12px; font-weight:500; color:var(--sage);
+}
+.card.check{border-color:rgba(var(--alert-rgb),.45); background:rgba(var(--alert-rgb),.07)}
+.card.check .k{color:var(--alert)}
+.src{
+  display:block; font-size:11.5px; line-height:1.7; color:var(--text-2);
+  padding-left:12px; border-left:1px solid var(--border); margin-top:7px;
+}
+
+/* ── sidebar excerpt ──────────────────────────────────────────────────── */
+.railbox{
+  width:268px; background:var(--bg); border:1px solid var(--border);
+  border-radius:14px; padding:12px 10px;
+}
+.nav{display:flex; align-items:center; gap:11px; padding:9px 11px; border-radius:9px;
+  font-size:13.5px; color:var(--text-2)}
+.nav svg{color:var(--text-3)}
+.nav.new{background:rgba(var(--sage-rgb),.13); color:var(--text); font-weight:500}
+.nav.new svg{color:var(--sage)}
+
+/* ── approval checklist ───────────────────────────────────────────────── */
+.asks{
+  background:var(--board-bar); border:1px solid var(--board-line);
+  border-radius:12px; padding:20px 22px; box-shadow:var(--board-shadow);
+}
+.asks ol{margin:0; padding-left:20px}
+.asks li{font-size:13.5px; line-height:1.85; margin-bottom:9px}
+.asks li b{font-weight:600}
+.asks .warnbox{
+  margin-top:16px; padding:13px 15px; border-radius:10px;
+  border:1px solid rgba(190,120,40,.42); background:rgba(190,120,40,.09);
+  font-size:13px; line-height:1.7;
+}
+</style>
+
+<div class="board-head">
+  <span class="logo">nūra</span>
+  <span class="tag">conditions · mockup v1</span>
+  <span class="note">Every frame below is real markup at real width — nothing is a picture of a design.</span>
+</div>
+
+<div class="wrap">
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<section>
+  <h2 class="sec">01 — /conditions · index · 390px</h2>
+  <p class="sec-note">Dark and light are the same geometry — identical spacing, identical card sizes, identical row heights. Only the rendering differs. Note the light column has no sage headings and no sage numbers, per the Luminous rules.</p>
+
+  <div class="rail">
+    <div>
+      <span class="cap">dark · 390</span>
+      <div class="frame phone"><div class="app dark">
+
+        <div class="eyebrow">Natural protocols</div>
+        <h1 class="title">Conditions</h1>
+        <p class="sub">What you're dealing with — and the evidence-backed natural path through it.</p>
+
+        <div class="search">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          <span>Search conditions</span>
+        </div>
+
+        <div class="group-label">Matched to your data</div>
+        <div class="rows">
+          <div class="row matched">
+            <div class="chip-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg></div>
+            <div class="body">
+              <div class="pill-markers">Your markers</div>
+              <div class="name">Heart &amp; circulation</div>
+              <div class="reason">Flagged by triglycerides 169 · HDL 37</div>
+            </div>
+            <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+          </div>
+          <div class="row matched">
+            <div class="chip-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m8 2 1.88 1.88M14.12 3.88 16 2M9 7.13v-1a3 3 0 1 1 6 0v1"/><path d="M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6ZM12 20v-9M6.53 9C4.6 8.8 3 7.1 3 5M6 13H2M3 21c0-2.1 1.7-3.9 3.8-4M20.97 5c0 2.1-1.6 3.8-3.5 4M22 13h-4M17.2 17c2.1.1 3.8 1.9 3.8 4"/></svg></div>
+            <div class="body">
+              <div class="pill-markers">Your markers</div>
+              <div class="name">Alpha-gal syndrome</div>
+              <div class="reason">Flagged by alpha-gal IgE 4.2 kU/L</div>
+            </div>
+            <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+          </div>
+        </div>
+
+        <div class="group-label">All conditions</div>
+        <div class="rows">
+          <div class="row"><div class="chip-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8Z"/></svg></div><div class="body"><div class="name">Low energy &amp; metabolism</div></div><svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></div>
+          <div class="row"><div class="chip-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg></div><div class="body"><div class="name">Sleep support</div></div><svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></div>
+          <div class="row"><div class="chip-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6"/></svg></div><div class="body"><div class="name">Gut health &amp; digestion</div></div><svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></div>
+          <div class="row"><div class="chip-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.4 2 5 2 1.3 0 1.9-.5 2.5-1"/><path d="M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 1.3 0 1.9-.5 2.5-1"/><path d="M2 18c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 1.3 0 1.9-.5 2.5-1"/></svg></div><div class="body"><div class="name">Stress &amp; mood</div></div><svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></div>
+          <div class="row"><div class="chip-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div><div class="body"><div class="name">Joint &amp; recovery</div></div><svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></div>
+          <div class="row"><div class="chip-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1Z"/></svg></div><div class="body"><div class="name">Immune support</div></div><svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></div>
+          <div class="row"><div class="chip-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg></div><div class="body"><div class="name">Heart &amp; circulation</div></div><svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></div>
+          <div class="row"><div class="chip-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m8 2 1.88 1.88M14.12 3.88 16 2M9 7.13v-1a3 3 0 1 1 6 0v1"/><path d="M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6ZM12 20v-9M6.53 9C4.6 8.8 3 7.1 3 5M6 13H2M3 21c0-2.1 1.7-3.9 3.8-4M20.97 5c0 2.1-1.6 3.8-3.5 4M22 13h-4M17.2 17c2.1.1 3.8 1.9 3.8 4"/></svg></div><div class="body"><div class="name">Alpha-gal syndrome</div></div><svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></div>
+        </div>
+
+        <div class="foot">Wellness information · Not medical advice<br>Never a replacement for your doctor.</div>
+      </div></div>
+    </div>
+
+    <div>
+      <span class="cap">light · 390</span>
+      <div class="frame phone"><div class="app light">
+
+        <div class="eyebrow">Natural protocols</div>
+        <h1 class="title">Conditions</h1>
+        <p class="sub">What you're dealing with — and the evidence-backed natural path through it.</p>
+
+        <div class="search">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          <span>Search conditions</span>
+        </div>
+
+        <div class="group-label">Matched to your data</div>
+        <div class="rows">
+          <div class="row matched">
+            <div class="chip-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg></div>
+            <div class="body">
+              <div class="pill-markers">Your markers</div>
+              <div class="name">Heart &amp; circulation</div>
+              <div class="reason">Flagged by triglycerides 169 · HDL 37</div>
+            </div>
+            <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+          </div>
+          <div class="row matched">
+            <div class="chip-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m8 2 1.88 1.88M14.12 3.88 16 2M9 7.13v-1a3 3 0 1 1 6 0v1"/><path d="M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6ZM12 20v-9M6.53 9C4.6 8.8 3 7.1 3 5M6 13H2M3 21c0-2.1 1.7-3.9 3.8-4M20.97 5c0 2.1-1.6 3.8-3.5 4M22 13h-4M17.2 17c2.1.1 3.8 1.9 3.8 4"/></svg></div>
+            <div class="body">
+              <div class="pill-markers">Your markers</div>
+              <div class="name">Alpha-gal syndrome</div>
+              <div class="reason">Flagged by alpha-gal IgE 4.2 kU/L</div>
+            </div>
+            <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+          </div>
+        </div>
+
+        <div class="group-label">All conditions</div>
+        <div class="rows">
+          <div class="row"><div class="chip-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8Z"/></svg></div><div class="body"><div class="name">Low energy &amp; metabolism</div></div><svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></div>
+          <div class="row"><div class="chip-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg></div><div class="body"><div class="name">Sleep support</div></div><svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></div>
+          <div class="row"><div class="chip-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6"/></svg></div><div class="body"><div class="name">Gut health &amp; digestion</div></div><svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></div>
+          <div class="row"><div class="chip-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.4 2 5 2 1.3 0 1.9-.5 2.5-1"/><path d="M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 1.3 0 1.9-.5 2.5-1"/><path d="M2 18c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 1.3 0 1.9-.5 2.5-1"/></svg></div><div class="body"><div class="name">Stress &amp; mood</div></div><svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></div>
+          <div class="row"><div class="chip-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div><div class="body"><div class="name">Joint &amp; recovery</div></div><svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></div>
+          <div class="row"><div class="chip-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1Z"/></svg></div><div class="body"><div class="name">Immune support</div></div><svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></div>
+          <div class="row"><div class="chip-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg></div><div class="body"><div class="name">Heart &amp; circulation</div></div><svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></div>
+          <div class="row"><div class="chip-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m8 2 1.88 1.88M14.12 3.88 16 2M9 7.13v-1a3 3 0 1 1 6 0v1"/><path d="M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6ZM12 20v-9M6.53 9C4.6 8.8 3 7.1 3 5M6 13H2M3 21c0-2.1 1.7-3.9 3.8-4M20.97 5c0 2.1-1.6 3.8-3.5 4M22 13h-4M17.2 17c2.1.1 3.8 1.9 3.8 4"/></svg></div><div class="body"><div class="name">Alpha-gal syndrome</div></div><svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></div>
+        </div>
+
+        <div class="foot">Wellness information · Not medical advice<br>Never a replacement for your doctor.</div>
+      </div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<section>
+  <h2 class="sec">02 — /conditions · index · desktop</h2>
+  <p class="sec-note">One centred measure inside <code>NuraPageShell</code>, 40px gutter. The eight rows go two-up so the list doesn't become a thin ribbon down a wide screen; the matched block stays full width because it's the thing you're meant to read first. Scroll this strip sideways if your window is narrow.</p>
+  <div class="rail">
+    <div>
+      <span class="cap">light · desktop measure 1100</span>
+      <div class="frame desk"><div class="app light desk">
+        <div class="eyebrow">Natural protocols</div>
+        <h1 class="title">Conditions</h1>
+        <p class="sub">What you're dealing with — and the evidence-backed natural path through it.</p>
+        <div class="search" style="max-width:420px">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          <span>Search conditions</span>
+        </div>
+
+        <div class="group-label">Matched to your data</div>
+        <div class="rows two">
+          <div class="row matched">
+            <div class="chip-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg></div>
+            <div class="body"><div class="pill-markers">Your markers</div><div class="name">Heart &amp; circulation</div><div class="reason">Flagged by triglycerides 169 · HDL 37</div></div>
+            <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+          </div>
+          <div class="row matched">
+            <div class="chip-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m8 2 1.88 1.88M14.12 3.88 16 2M9 7.13v-1a3 3 0 1 1 6 0v1"/><path d="M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6ZM12 20v-9M6.53 9C4.6 8.8 3 7.1 3 5M6 13H2M3 21c0-2.1 1.7-3.9 3.8-4M20.97 5c0 2.1-1.6 3.8-3.5 4M22 13h-4M17.2 17c2.1.1 3.8 1.9 3.8 4"/></svg></div>
+            <div class="body"><div class="pill-markers">Your markers</div><div class="name">Alpha-gal syndrome</div><div class="reason">Flagged by alpha-gal IgE 4.2 kU/L</div></div>
+            <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+          </div>
+        </div>
+
+        <div class="group-label">All conditions</div>
+        <div class="rows two">
+          <div class="row"><div class="chip-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8Z"/></svg></div><div class="body"><div class="name">Low energy &amp; metabolism</div></div><svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></div>
+          <div class="row"><div class="chip-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg></div><div class="body"><div class="name">Sleep support</div></div><svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></div>
+          <div class="row"><div class="chip-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6"/></svg></div><div class="body"><div class="name">Gut health &amp; digestion</div></div><svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></div>
+          <div class="row"><div class="chip-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.4 2 5 2 1.3 0 1.9-.5 2.5-1"/><path d="M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 1.3 0 1.9-.5 2.5-1"/><path d="M2 18c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 1.3 0 1.9-.5 2.5-1"/></svg></div><div class="body"><div class="name">Stress &amp; mood</div></div><svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></div>
+          <div class="row"><div class="chip-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div><div class="body"><div class="name">Joint &amp; recovery</div></div><svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></div>
+          <div class="row"><div class="chip-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1Z"/></svg></div><div class="body"><div class="name">Immune support</div></div><svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></div>
+          <div class="row"><div class="chip-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg></div><div class="body"><div class="name">Heart &amp; circulation</div></div><svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></div>
+          <div class="row"><div class="chip-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m8 2 1.88 1.88M14.12 3.88 16 2M9 7.13v-1a3 3 0 1 1 6 0v1"/><path d="M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6ZM12 20v-9M6.53 9C4.6 8.8 3 7.1 3 5M6 13H2M3 21c0-2.1 1.7-3.9 3.8-4M20.97 5c0 2.1-1.6 3.8-3.5 4M22 13h-4M17.2 17c2.1.1 3.8 1.9 3.8 4"/></svg></div><div class="body"><div class="name">Alpha-gal syndrome</div></div><svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></div>
+        </div>
+
+        <div class="foot">Wellness information · Not medical advice · Never a replacement for your doctor.</div>
+      </div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<section>
+  <h2 class="sec">03 — /conditions/alpha-gal-syndrome · protocol · 390px</h2>
+  <p class="sec-note">The most doctor-forward screen in the section, and the template for how a serious condition is handled: an allergist banner above the protocol, supervised steps dimmed and labelled in the step title itself, and grades that name institutions rather than inventing study counts. All copy here is final — this is what I'd ship into <code>data.ts</code>.</p>
+
+  <div class="rail">
+    <div>
+      <span class="cap">dark · 390</span>
+      <div class="frame phone"><div class="app dark">
+        <div class="back"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg> Conditions</div>
+        <div class="eyebrow">Natural protocols</div>
+        <h1 class="title">Alpha-gal <em>syndrome</em></h1>
+
+        <p class="plain">Alpha-gal syndrome is an allergy to a sugar called <strong>galactose-α-1,3-galactose</strong> — found in most mammals, but not in people. In the US it usually begins after a bite from a lone star tick. Your immune system starts treating that sugar as a threat, so beef, pork, lamb and venison can set off a reaction. The timing is what throws people: symptoms often arrive <strong>two to six hours after eating</strong>, so the meal rarely gets blamed.</p>
+
+        <div class="group-label">Your signals</div>
+        <div class="signals">
+          <span class="sig flag">Alpha-gal IgE 4.2 kU/L</span>
+          <span class="sig ok">Total IgE 88 kU/L</span>
+          <span class="sig ok">Tryptase 4.1 µg/L</span>
+        </div>
+        <p class="sig-note">From your bloodwork uploaded Jun 14.</p>
+
+        <div class="doc-banner">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01"/><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/></svg>
+          <div>
+            <div class="t">This one belongs with an allergist</div>
+            <div class="d">Alpha-gal reactions can be severe, and diagnosis needs a blood test read against your history. Everything below supports that care — it doesn't stand in for it.</div>
+          </div>
+        </div>
+
+        <div class="group-label">The protocol</div>
+        <div class="steps">
+          <div class="step supervised">
+            <div class="n">1</div>
+            <div class="sbody">
+              <div class="action">Confirm it with an allergist <span class="doc">— talk to your doctor first</span></div>
+              <div class="why">Alpha-gal is diagnosed with a specific IgE blood test read alongside what actually happened to you. This is a diagnosis to confirm, not one to settle on your own.</div>
+              <div class="grade"><b>A</b> AAAAI &amp; NIAID clinical guidance</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="n">2</div>
+            <div class="sbody">
+              <div class="action">Cut mammalian meat completely</div>
+              <div class="why">Beef, pork, lamb, venison, bison, goat and rabbit all carry alpha-gal. Poultry, fish and shellfish don't — they stay on the plate.</div>
+              <div class="grade"><b>A</b> CDC clinical overview</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="n">3</div>
+            <div class="sbody">
+              <div class="action">Learn the hidden sources — gelatin first</div>
+              <div class="why">Gelatin is mammal collagen: gummies, marshmallows, some capsule shells, broths and gravies. Tallow, lard and suet count too. Dairy affects some people and not others.</div>
+              <div class="grade"><b>A−</b> CDC &amp; NIAID</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="n">4</div>
+            <div class="sbody">
+              <div class="action">Stop the next tick bite</div>
+              <div class="why">This is the step that changes your trajectory. Further bites can push alpha-gal IgE back up and undo months of progress. Permethrin-treated clothing, EPA-registered repellent, and a full tick check within two hours of coming inside.</div>
+              <div class="grade"><b>A</b> CDC tick-bite prevention</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="n">5</div>
+            <div class="sbody">
+              <div class="action">Keep total histamine load down on reactive days</div>
+              <div class="why">Some people find flares are milder when they go easy on other histamine-heavy foods while they're already reacting. Treat it as a comfort measure — it is not a substitute for avoidance.</div>
+              <div class="grade"><b>B</b> Evidence summary — not guideline-backed</div>
+            </div>
+          </div>
+          <div class="step supervised">
+            <div class="n">6</div>
+            <div class="sbody">
+              <div class="action">Retest your IgE over time <span class="doc">— talk to your doctor first</span></div>
+              <div class="why">Alpha-gal IgE can fall over months to years once the bites stop, and some people regain tolerance. Your allergist is the only one who can tell you whether — and when — anything comes back on the plate.</div>
+              <div class="grade"><b>A−</b> NIAID &amp; AAAAI</div>
+            </div>
+          </div>
+        </div>
+
+        <button class="cta">Add protocol to my plan</button>
+        <div class="foot">Wellness information · Not medical advice<br>Never a replacement for your doctor.</div>
+      </div></div>
+    </div>
+
+    <div>
+      <span class="cap">light · 390 · added state</span>
+      <div class="frame phone"><div class="app light">
+        <div class="back"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg> Conditions</div>
+        <div class="eyebrow">Natural protocols</div>
+        <h1 class="title">Alpha-gal <em>syndrome</em></h1>
+
+        <p class="plain">Alpha-gal syndrome is an allergy to a sugar called <strong>galactose-α-1,3-galactose</strong> — found in most mammals, but not in people. In the US it usually begins after a bite from a lone star tick. Your immune system starts treating that sugar as a threat, so beef, pork, lamb and venison can set off a reaction. The timing is what throws people: symptoms often arrive <strong>two to six hours after eating</strong>, so the meal rarely gets blamed.</p>
+
+        <div class="group-label">Your signals</div>
+        <div class="signals">
+          <span class="sig flag">Alpha-gal IgE 4.2 kU/L</span>
+          <span class="sig ok">Total IgE 88 kU/L</span>
+          <span class="sig ok">Tryptase 4.1 µg/L</span>
+        </div>
+        <p class="sig-note">From your bloodwork uploaded Jun 14.</p>
+
+        <div class="doc-banner">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01"/><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/></svg>
+          <div>
+            <div class="t">This one belongs with an allergist</div>
+            <div class="d">Alpha-gal reactions can be severe, and diagnosis needs a blood test read against your history. Everything below supports that care — it doesn't stand in for it.</div>
+          </div>
+        </div>
+
+        <div class="group-label">The protocol</div>
+        <div class="steps">
+          <div class="step supervised">
+            <div class="n">1</div>
+            <div class="sbody">
+              <div class="action">Confirm it with an allergist <span class="doc">— talk to your doctor first</span></div>
+              <div class="why">Alpha-gal is diagnosed with a specific IgE blood test read alongside what actually happened to you. This is a diagnosis to confirm, not one to settle on your own.</div>
+              <div class="grade"><b>A</b> AAAAI &amp; NIAID clinical guidance</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="n">2</div>
+            <div class="sbody">
+              <div class="action">Cut mammalian meat completely</div>
+              <div class="why">Beef, pork, lamb, venison, bison, goat and rabbit all carry alpha-gal. Poultry, fish and shellfish don't — they stay on the plate.</div>
+              <div class="grade"><b>A</b> CDC clinical overview</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="n">3</div>
+            <div class="sbody">
+              <div class="action">Learn the hidden sources — gelatin first</div>
+              <div class="why">Gelatin is mammal collagen: gummies, marshmallows, some capsule shells, broths and gravies. Tallow, lard and suet count too. Dairy affects some people and not others.</div>
+              <div class="grade"><b>A−</b> CDC &amp; NIAID</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="n">4</div>
+            <div class="sbody">
+              <div class="action">Stop the next tick bite</div>
+              <div class="why">This is the step that changes your trajectory. Further bites can push alpha-gal IgE back up and undo months of progress. Permethrin-treated clothing, EPA-registered repellent, and a full tick check within two hours of coming inside.</div>
+              <div class="grade"><b>A</b> CDC tick-bite prevention</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="n">5</div>
+            <div class="sbody">
+              <div class="action">Keep total histamine load down on reactive days</div>
+              <div class="why">Some people find flares are milder when they go easy on other histamine-heavy foods while they're already reacting. Treat it as a comfort measure — it is not a substitute for avoidance.</div>
+              <div class="grade"><b>B</b> Evidence summary — not guideline-backed</div>
+            </div>
+          </div>
+          <div class="step supervised">
+            <div class="n">6</div>
+            <div class="sbody">
+              <div class="action">Retest your IgE over time <span class="doc">— talk to your doctor first</span></div>
+              <div class="why">Alpha-gal IgE can fall over months to years once the bites stop, and some people regain tolerance. Your allergist is the only one who can tell you whether — and when — anything comes back on the plate.</div>
+              <div class="grade"><b>A−</b> NIAID &amp; AAAAI</div>
+            </div>
+          </div>
+        </div>
+
+        <button class="cta added">In your plan ✓</button>
+        <div class="foot">Wellness information · Not medical advice<br>Never a replacement for your doctor.</div>
+      </div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<section>
+  <h2 class="sec">04 — step detail · centered modal</h2>
+  <p class="sec-note">My recommendation is a centered modal rather than a third route: <code>/conditions/[slug]/[step]</code> is a lot of routing for a card you close in four seconds, and centered popups are the locked pattern. Two variants below — a supplement step that links into Lab Reports, and a behaviour step that carries the red CHECK FIRST card and clears up the carrageenan myth.</p>
+
+  <div class="rail">
+    <div>
+      <span class="cap">dark · supplement step · links to /lab</span>
+      <div class="frame phone"><div class="app dark scrim">
+        <div class="modal">
+          <div class="modal-h">Omega-3 (EPA+DHA)</div>
+          <p class="modal-sub">Heart &amp; circulation · step 2 of 5</p>
+
+          <div class="card">
+            <div class="k">How to take it</div>
+            <div class="v"><strong>1–2 g combined EPA + DHA a day</strong>, with a meal that has some fat in it — that's what it needs to absorb. Split the dose if 2 g at once sits badly. Give it <strong>8–12 weeks</strong> before you judge it; triglycerides move slowly.</div>
+          </div>
+
+          <div class="card lab">
+            <div class="k">Pick a good one</div>
+            <div class="v">Fish oil is where quality actually separates products — oxidation is the thing to look for, and it isn't on the label. Check the Purity Score and Evidence Grade before you buy.</div>
+            <div class="link">Open Lab Reports <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></div>
+          </div>
+
+          <div class="card">
+            <div class="k">Evidence · A−</div>
+            <div class="v">
+              <span class="src">American Heart Association science advisory on omega-3 fatty acids and triglyceride lowering.</span>
+              <span class="src">REDUCE-IT trial of icosapent ethyl (<em>New England Journal of Medicine</em>, 2019).</span>
+              <span class="src">Cochrane systematic review of omega-3 for cardiovascular prevention.</span>
+            </div>
+          </div>
+
+          <div class="card check">
+            <div class="k">Check first</div>
+            <div class="v">High-dose omega-3 thins the blood a little. If you take a blood thinner, or you have surgery coming up, clear the dose with your doctor before you start.</div>
+          </div>
+
+          <div class="foot">Wellness information · Not medical advice<br>Never a replacement for your doctor.</div>
+        </div>
+      </div></div>
+    </div>
+
+    <div>
+      <span class="cap">light · behaviour step · myth-buster + check first</span>
+      <div class="frame phone"><div class="app light scrim">
+        <div class="modal">
+          <div class="modal-h">Reading a label</div>
+          <p class="modal-sub">Alpha-gal syndrome · step 3 of 6</p>
+
+          <div class="card">
+            <div class="k">How to do it</div>
+            <div class="v">Scan for the four words that matter most: <strong>gelatin, tallow, lard, suet</strong>. Then the quieter ones — beef or pork broth, collagen, and capsule shells on supplements and medicines. Tell every prescriber and pharmacist you have alpha-gal; some capsules and surgical products are mammal-derived.</div>
+          </div>
+
+          <div class="card">
+            <div class="k">One thing you can stop worrying about</div>
+            <div class="v"><strong>Carrageenan is seaweed, not mammal.</strong> It contains no alpha-gal. It gets passed around in alpha-gal circles because it's a galactose polymer, but avoiding it isn't part of any standard guidance — don't spend your label-reading attention there.</div>
+          </div>
+
+          <div class="card">
+            <div class="k">Evidence · A−</div>
+            <div class="v">
+              <span class="src">CDC — Alpha-gal Syndrome, clinical overview and patient guidance.</span>
+              <span class="src">NIH / NIAID — alpha-gal syndrome research and food allergy guidance.</span>
+            </div>
+          </div>
+
+          <div class="card check">
+            <div class="k">Check first</div>
+            <div class="v">If you have ever had trouble breathing, throat tightness, faintness or a whole-body rash after eating, that is anaphylaxis territory. You need an allergist — and, if they prescribe one, an epinephrine auto-injector you carry.</div>
+          </div>
+
+          <div class="foot">Wellness information · Not medical advice<br>Never a replacement for your doctor.</div>
+        </div>
+      </div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<section>
+  <h2 class="sec">05 — sidebar entry</h2>
+  <p class="sec-note">Between Nutrition and Recipes, as specified. Icon is lucide <code>HeartPulse</code> — the only nav slot that reads as "what's going on with me" rather than a content library.</p>
+  <div class="rail">
+    <div>
+      <span class="cap">dark rail · excerpt</span>
+      <div class="railbox app dark" style="padding:12px 10px">
+        <div class="nav"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6"/></svg> Nutrition</div>
+        <div class="nav new"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/><path d="M3.22 12H9.5l.5-1 2 4.5 2-7 1.5 3.5h5.27"/></svg> Conditions</div>
+        <div class="nav"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"/></svg> Recipes</div>
+      </div>
+    </div>
+    <div>
+      <span class="cap">light rail · excerpt</span>
+      <div class="railbox app light" style="padding:12px 10px">
+        <div class="nav"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6"/></svg> Nutrition</div>
+        <div class="nav new"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/><path d="M3.22 12H9.5l.5-1 2 4.5 2-7 1.5 3.5h5.27"/></svg> Conditions</div>
+        <div class="nav"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"/></svg> Recipes</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<section>
+  <h2 class="sec">06 — what I need from you before I build</h2>
+  <div class="asks">
+    <ol>
+      <li><b>Layout and spacing</b> — approve, or tell me what's off. Card radii, row height, gutter and the two-up desktop grid are the things to look at.</li>
+      <li><b>Step detail: modal or route?</b> I've mocked the centered modal and recommend it. Say the word if you want the third route instead.</li>
+      <li><b>Alpha-gal copy</b> — read steps 1–6 in section 03 closely. That's shipping copy, and it's the condition with the most legal and safety exposure in the section.</li>
+      <li><b>Evidence grade format</b> — I've used institution names (<span class="mono">A · CDC clinical overview</span>) rather than invented study counts. Confirm that's the format you want across all eight.</li>
+      <li><b>Sidebar icon</b> — HeartPulse shown. Easy to swap.</li>
+    </ol>
+    <div class="warnbox">
+      <b>One flag before I write it.</b> Alpha-gal is an anaphylaxis risk, not a wellness topic, and it's the first condition in this section where a reader could be harmed by acting on a page instead of seeing a doctor. I've handled it with the allergist banner above the protocol, doctor-forward language in two step titles, and a CHECK FIRST card naming anaphylaxis symptoms directly. If you want it heavier still — a hard interstitial before the protocol renders, or the protocol collapsed until acknowledged — tell me now; it's much cheaper to build in than to retrofit.
+    </div>
+  </div>
+</section>
+
+</div>
