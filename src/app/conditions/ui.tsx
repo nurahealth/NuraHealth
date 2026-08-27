@@ -17,7 +17,7 @@ import { Fragment } from "react";
 import {
   Zap, Moon, Leaf, Waves, Activity, Shield, Heart, Bug, Droplets, Brain, Bone,
   Flame, Wind, Scale, Sparkles, Thermometer, Sun, Footprints, Hand, Salad,
-  Pill, TestTube, Smile, Flower2, Droplet, Gauge, Bed, Wheat, Stethoscope,
+  Pill, TestTube, Smile, Flower2, Droplet, Gauge, Bed, Wheat, WheatOff, Stethoscope,
   Snowflake, Wine, Dumbbell, Venus, Mars, Sprout, Layers, Microscope, Bubbles,
   Target, PersonStanding, Bandage, Ribbon, EyeOff,
 } from "lucide-react";
@@ -74,7 +74,7 @@ const ICONS: Record<ConditionIcon, typeof Zap> = {
   bone: Bone, flame: Flame, wind: Wind, scale: Scale, sparkles: Sparkles,
   thermometer: Thermometer, sun: Sun, footprints: Footprints, hand: Hand,
   salad: Salad, pill: Pill, testTube: TestTube, smile: Smile, flower: Flower2,
-  droplet: Droplet, gauge: Gauge, bed: Bed, wheat: Wheat,
+  droplet: Droplet, gauge: Gauge, bed: Bed, wheat: Wheat, wheatOff: WheatOff,
   stethoscope: Stethoscope, snowflake: Snowflake, wine: Wine,
   dumbbell: Dumbbell, venus: Venus, mars: Mars, sprout: Sprout, layers: Layers,
   microscope: Microscope, bubbles: Bubbles, target: Target,

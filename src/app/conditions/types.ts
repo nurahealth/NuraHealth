@@ -31,7 +31,7 @@ export type ConditionIcon =
   | "bug" | "droplets" | "brain" | "bone" | "flame" | "wind" | "scale"
   | "sparkles" | "thermometer" | "sun" | "footprints" | "hand" | "salad"
   | "pill" | "testTube" | "smile" | "flower" | "droplet" | "gauge"
-  | "bed" | "wheat" | "stethoscope" | "snowflake" | "wine" | "dumbbell"
+  | "bed" | "wheat" | "wheatOff" | "stethoscope" | "snowflake" | "wine" | "dumbbell"
   | "venus" | "mars" | "sprout" | "layers" | "microscope" | "bubbles"
   | "target" | "personStanding" | "bandage" | "ribbon";
 
