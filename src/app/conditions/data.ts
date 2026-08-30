@@ -11,6 +11,7 @@ import type { Condition, ConditionCategory } from "./types";
 import { CATEGORY_ORDER } from "./types";
 
 import { CORE_CONDITIONS } from "./library/core";
+import { NUTRITION_CONDITIONS } from "./library/nutrition";
 import { PAIN_BODY_CONDITIONS } from "./library/pain-body";
 import { DIGESTION_CONDITIONS } from "./library/digestion";
 import { MIND_SLEEP_CONDITIONS } from "./library/mind-sleep";
@@ -23,6 +24,7 @@ export * from "./types";
 
 export const CONDITIONS: Condition[] = [
   ...CORE_CONDITIONS,
+  ...NUTRITION_CONDITIONS,
   ...PAIN_BODY_CONDITIONS,
   ...DIGESTION_CONDITIONS,
   ...MIND_SLEEP_CONDITIONS,

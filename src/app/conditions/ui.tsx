@@ -20,6 +20,9 @@ import {
   Pill, TestTube, Smile, Flower2, Droplet, Gauge, Bed, Wheat, WheatOff, Stethoscope,
   Snowflake, Wine, Dumbbell, Venus, Mars, Sprout, Layers, Microscope, Bubbles,
   Target, PersonStanding, Bandage, Ribbon, EyeOff,
+  Syringe, Sunrise, Tablets, CalendarHeart, Orbit, Baby, HeartPulse, Vibrate,
+  Volume2, Hourglass, BatteryLow, Plane, Network, Cable, Milk, Armchair, Cloud,
+  Brush, Scissors, Eye,
 } from "lucide-react";
 import type { ConditionIcon, SkipTheHype as SkipTheHypeData } from "./types";
 import { DISCLAIMER } from "./types";
@@ -79,6 +82,11 @@ const ICONS: Record<ConditionIcon, typeof Zap> = {
   dumbbell: Dumbbell, venus: Venus, mars: Mars, sprout: Sprout, layers: Layers,
   microscope: Microscope, bubbles: Bubbles, target: Target,
   personStanding: PersonStanding, bandage: Bandage, ribbon: Ribbon,
+  syringe: Syringe, sunrise: Sunrise, tablets: Tablets,
+  calendarHeart: CalendarHeart, orbit: Orbit, baby: Baby, heartPulse: HeartPulse,
+  vibrate: Vibrate, volume: Volume2, hourglass: Hourglass, batteryLow: BatteryLow,
+  plane: Plane, network: Network, cable: Cable, milk: Milk, armchair: Armchair,
+  cloud: Cloud, brush: Brush, scissors: Scissors, eye: Eye,
 };
 
 export function ConditionIconChip({ icon, size = 38 }: { icon: ConditionIcon; size?: number }) {

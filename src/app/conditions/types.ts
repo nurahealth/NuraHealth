@@ -33,13 +33,18 @@ export type ConditionIcon =
   | "pill" | "testTube" | "smile" | "flower" | "droplet" | "gauge"
   | "bed" | "wheat" | "wheatOff" | "stethoscope" | "snowflake" | "wine" | "dumbbell"
   | "venus" | "mars" | "sprout" | "layers" | "microscope" | "bubbles"
-  | "target" | "personStanding" | "bandage" | "ribbon";
+  | "target" | "personStanding" | "bandage" | "ribbon"
+  | "syringe" | "sunrise" | "tablets" | "calendarHeart" | "orbit" | "baby"
+  | "heartPulse" | "vibrate" | "volume" | "hourglass" | "batteryLow" | "plane"
+  | "network" | "cable" | "milk" | "armchair" | "cloud" | "brush"
+  | "scissors" | "eye";
 
 /** Conservative four-step scale. Nothing in this section grades above A. */
 export type EvidenceGrade = "A" | "A−" | "B+" | "B";
 
 /** Index grouping. Order is CATEGORY_ORDER, not declaration order. */
 export type ConditionCategory =
+  | "nutrition"
   | "pain-body"
   | "digestion"
   | "mind-sleep"
@@ -49,17 +54,19 @@ export type ConditionCategory =
   | "everyday";
 
 export const CATEGORY_LABELS: Record<ConditionCategory, string> = {
-  "pain-body": "Pain & body",
+  nutrition: "Nutrition & deficiency",
+  "pain-body": "Pain & nerve",
   digestion: "Digestion",
-  "mind-sleep": "Mind & sleep",
+  "mind-sleep": "Mind, sleep & energy",
   "metabolic-heart": "Metabolic & heart",
-  hormonal: "Hormonal",
+  hormonal: "Hormonal & reproductive",
   "skin-immune": "Skin & immune",
   everyday: "Everyday",
 };
 
 export const CATEGORY_ORDER: ConditionCategory[] = [
   "metabolic-heart",
+  "nutrition",
   "mind-sleep",
   "digestion",
   "pain-body",

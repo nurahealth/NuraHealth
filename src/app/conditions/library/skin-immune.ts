@@ -106,9 +106,9 @@ export const SKIN_IMMUNE_CONDITIONS: Condition[] = [
       remedy: "Coconut oil and \"natural\" balms as the main moisturiser",
       why: "Coconut oil has some antibacterial data, but it's a poor occlusive compared with a proper emollient and a recognised contact allergen for some people. The bigger problem is the category: essential-oil-containing balms and \"natural\" creams are among the most common causes of contact dermatitis layered on top of eczema. Fragrance-free and boring wins here.",
     },
-    bookTitle: null,
+    bookTitle: "The Skin Barrier Book — moisturisers, steroids and the flare plan",
     bookUrl: null,
-    landingSlug: null,
+    landingSlug: "eczema-skin-barrier",
   },
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -211,9 +211,9 @@ export const SKIN_IMMUNE_CONDITIONS: Condition[] = [
       remedy: "Pore strips, DIY lemon juice and toothpaste on spots",
       why: "Pore strips pull out the top of a sebaceous filament — a normal structure, not a blackhead — and it refills within days while the strip irritates the surrounding skin. Lemon juice is a photosensitiser that causes real chemical burns in sunlight, and toothpaste irritates skin without touching any of the four causes of acne. All three are barrier damage sold as progress.",
     },
-    bookTitle: null,
+    bookTitle: "The Acne Handbook — what works, in what order",
     bookUrl: null,
-    landingSlug: null,
+    landingSlug: "acne-support",
   },
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -328,9 +328,9 @@ export const SKIN_IMMUNE_CONDITIONS: Condition[] = [
       remedy: "Local honey for pollen allergy",
       why: "The logic sounds right and the biology doesn't cooperate: the pollen that triggers hay fever is wind-borne from trees, grasses and weeds, while honey contains heavy flower pollen carried by bees — largely different proteins. The controlled trials that tested it found no benefit over placebo.",
     },
-    bookTitle: null,
+    bookTitle: "The Allergy Season Guide — sprays, timing and immunotherapy",
     bookUrl: null,
-    landingSlug: null,
+    landingSlug: "seasonal-allergies",
   },
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -452,8 +452,8 @@ export const SKIN_IMMUNE_CONDITIONS: Condition[] = [
       remedy: "The \"psoriasis diet\" — gluten-free for everyone, and Dead Sea salt cures",
       why: "The AAD/NPF dietary guidance supports weight loss in people with obesity, and a gluten-free trial **only** in people who test positive for coeliac markers. For everyone else the evidence doesn't support it. Salt baths can soften scale and feel good — that's symptom relief, not disease modification, and it's often sold as the latter.",
     },
-    bookTitle: null,
+    bookTitle: "The Psoriasis Companion — skin, joints and the systemic picture",
     bookUrl: null,
-    landingSlug: null,
+    landingSlug: "psoriasis-support",
   },
 ];

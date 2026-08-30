@@ -2,14 +2,15 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { ChevronRight, Search, X } from "lucide-react";
+import { ChevronRight, Plus, Search, X } from "lucide-react";
 import { CONDITIONS, CATEGORY_LABELS, groupByCategory } from "./data";
 import type { Condition } from "./data";
 import {
-  AMBER, AMBER_RGB, BORDER, CARD, CARD_SHADOW, SANS, MONO, SERIF, SP, SURFACE,
-  TEXT, TEXT_SEC, TEXT_TER,
+  AMBER, AMBER_RGB, BORDER, CARD, CARD_SHADOW, SAGE, SAGE_RGB, SANS, MONO, SERIF,
+  SP, SURFACE, TEXT, TEXT_SEC, TEXT_TER,
   CategoryLabel, ConditionIconChip, Disclaimer, Eyebrow, GroupLabel, SampleBanner,
 } from "./ui";
+import RequestConditionModal from "./RequestConditionModal";
 
 /** One row's personalization, computed server-side in page.tsx. */
 export interface MatchVM {
@@ -64,8 +65,61 @@ function ConditionRow({ condition, reason }: { condition: Condition; reason?: st
   );
 }
 
+/**
+ * "Don't see yours?" — the quiet card that closes the index.
+ *
+ * Deliberately understated: dashed border, no card shadow, no sage fill. It sits
+ * under the last category as an aside, not as a 63rd condition competing with
+ * the real ones. Same geometry in both skins.
+ */
+function RequestCard({ onOpen }: { onOpen: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onOpen}
+      className="cond-request"
+      style={{
+        display: "flex", alignItems: "center", gap: 13, width: "100%",
+        textAlign: "left", fontFamily: SANS, cursor: "pointer",
+        background: "transparent",
+        border: `1px dashed ${BORDER}`,
+        borderRadius: CARD.radius, padding: CARD.padding,
+        transition: "border-color 160ms, background 160ms",
+      }}
+    >
+      <span
+        aria-hidden
+        style={{
+          flex: "0 0 auto", width: 38, height: 38, borderRadius: 11,
+          background: `rgba(${SAGE_RGB}, 0.09)`,
+          border: `1px dashed rgba(${SAGE_RGB}, 0.32)`,
+          color: SAGE,
+          display: "flex", alignItems: "center", justifyContent: "center",
+        }}
+      >
+        <Plus size={17} strokeWidth={1.7} />
+      </span>
+      <span style={{ flex: 1, minWidth: 0 }}>
+        <span style={{
+          display: "block", fontSize: 14.5, fontWeight: 500, color: TEXT, lineHeight: 1.35,
+        }}>
+          Don&rsquo;t see yours?
+        </span>
+        <span style={{
+          display: "block", fontSize: 12, color: TEXT_SEC, marginTop: 4, lineHeight: 1.5,
+        }}>
+          Tell us what you&rsquo;re dealing with — we write these by hand, and
+          the most-asked-for come next.
+        </span>
+      </span>
+      <ChevronRight size={16} strokeWidth={1.7} style={{ color: TEXT_TER, flex: "0 0 auto" }} />
+    </button>
+  );
+}
+
 export default function ConditionsIndex({ matches, isSample }: Props) {
   const [query, setQuery] = useState("");
+  const [requesting, setRequesting] = useState(false);
 
   const reasonBySlug = useMemo(
     () => new Map(matches.map((m) => [m.slug, m.reason])),
@@ -105,6 +159,8 @@ export default function ConditionsIndex({ matches, isSample }: Props) {
         .cond-row { transition: border-color 160ms, background 160ms; }
         .cond-rows { display: flex; flex-direction: column; gap: ${SP.stack}px; }
         .cond-search:focus-within { border-color: rgba(var(--nura-sage-rgb), 0.45); }
+        .cond-request:hover { border-color: rgba(var(--nura-sage-rgb), 0.42);
+                              background: rgba(var(--nura-sage-rgb), 0.045); }
         @media (min-width: 1024px) {
           .cond-rows.two { display: grid; grid-template-columns: 1fr 1fr; gap: ${SP.stack}px 18px; }
           .cond-title { font-size: 48px; }
@@ -181,6 +237,18 @@ export default function ConditionsIndex({ matches, isSample }: Props) {
             <div style={{ color: TEXT_TER, fontSize: 12.5, marginTop: 7 }}>
               More conditions are on the way.
             </div>
+            <button
+              type="button"
+              onClick={() => setRequesting(true)}
+              style={{
+                marginTop: SP.label, padding: "10px 16px", borderRadius: 11,
+                border: `1px solid ${BORDER}`, background: "transparent",
+                fontFamily: SANS, fontSize: 12.5, fontWeight: 500, color: SAGE,
+                cursor: "pointer",
+              }}
+            >
+              Request this condition
+            </button>
           </div>
         )
       ) : (
@@ -208,8 +276,13 @@ export default function ConditionsIndex({ matches, isSample }: Props) {
               </div>
             </div>
           ))}
+          <div style={{ marginTop: SP.section }}>
+            <RequestCard onOpen={() => setRequesting(true)} />
+          </div>
         </>
       )}
+
+      {requesting && <RequestConditionModal onClose={() => setRequesting(false)} />}
 
       <Disclaimer />
     </>

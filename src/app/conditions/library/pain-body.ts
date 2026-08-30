@@ -132,9 +132,9 @@ export const PAIN_BODY_CONDITIONS: Condition[] = [
       remedy: "Butterbur (Petasites)",
       why: "It genuinely has preventive data — and that's what makes it dangerous. Unpurified butterbur contains pyrrolizidine alkaloids that cause liver injury, the certified PA-free products were pulled in several countries, and you can't verify from a label which you've bought. The American Headache Society stopped recommending it for exactly this reason.",
     },
-    bookTitle: null,
+    bookTitle: "The Migraine Manual — triggers, prevention and the rescue plan",
     bookUrl: null,
-    landingSlug: null,
+    landingSlug: "migraines-headaches",
   },
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -229,9 +229,9 @@ export const PAIN_BODY_CONDITIONS: Condition[] = [
       remedy: "Spinal traction and inversion tables",
       why: "Traction is one of the few back pain treatments that guidelines specifically do not recommend — reviews consistently find no meaningful benefit over sham. Inversion tables add a genuine risk on top for anyone with high blood pressure, glaucoma or heart disease.",
     },
-    bookTitle: null,
+    bookTitle: "The Back Pain Truth — movement over rest, and what imaging can't tell you",
     bookUrl: null,
-    landingSlug: null,
+    landingSlug: "chronic-back-pain",
   },
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -342,9 +342,9 @@ export const PAIN_BODY_CONDITIONS: Condition[] = [
       remedy: "Tart cherry juice and cherry extract",
       why: "It's the most-recommended gout remedy on the internet and the evidence is thin — small, mostly observational, and the ACR does not recommend it. It's also frequently sold as a sweetened juice, and fructose raises urate. If you enjoy cherries, eat cherries; don't treat gout with them.",
     },
-    bookTitle: null,
+    bookTitle: "The Gout Handbook — purines, urate and the myths that keep flares coming",
     bookUrl: null,
-    landingSlug: null,
+    landingSlug: "gout",
   },
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -447,9 +447,9 @@ export const PAIN_BODY_CONDITIONS: Condition[] = [
       remedy: "Pickle juice as an electrolyte fix",
       why: "The odd part is that it does seem to help — but not for the reason it's sold. The volume is far too small and too fast to replace electrolytes; the working theory is that the strong flavour triggers a reflex in the mouth and throat that damps the nerve firing. Fine as a trick. It is not rehydration.",
     },
-    bookTitle: null,
+    bookTitle: "The Cramp Guide — electrolytes, nerves and what actually stops them",
     bookUrl: null,
-    landingSlug: null,
+    landingSlug: "muscle-cramps-spasms",
   },
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -546,8 +546,316 @@ export const PAIN_BODY_CONDITIONS: Condition[] = [
       remedy: "Rolling your foot on a frozen bottle as the treatment",
       why: "It feels good and it's harmless, so use it — but it's pain relief for a few minutes, not a treatment. It doesn't load the tissue, and the trials that changed outcomes were all about stretching, orthoses and progressive strength work. Rolling instead of loading is the most common way people stay stuck for a year.",
     },
-    bookTitle: null,
+    bookTitle: "The Plantar Fasciitis Fix — loading, not resting",
     bookUrl: null,
-    landingSlug: null,
+    landingSlug: "plantar-fasciitis",
+  },
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // Companion page. Fibromyalgia is a real, diagnosable condition managed by a
+  // clinician; nothing here treats it. The evidence-based core is movement,
+  // sleep and pain education — in that order.
+  {
+    slug: "fibromyalgia-companion",
+    name: "Fibromyalgia companion",
+    nameEmphasis: "companion",
+    icon: "network",
+    category: "pain-body",
+    blurb: "Real pain from a real mechanism — and the plan starts smaller than you'd expect.",
+    matchRules: [
+      { markerId: "vit-d", label: "Vitamin D", unit: "ng/mL", flagBelow: 30 },
+    ],
+    intro:
+      "Fibromyalgia is widespread pain lasting months, with fatigue, unrefreshing sleep and cognitive difficulty — \"fibro fog\" — alongside it. It affects roughly `2–4%` of people, most often women, and it is a **recognised diagnosis with defined criteria**, not a label for pain nobody can explain.\n\nThe mechanism has a name: **nociplastic pain**, or central sensitisation. The problem isn't damage in the muscles and joints where you feel it — imaging is usually normal, which is exactly why people get dismissed. The problem is in how the central nervous system **processes** pain signals. The volume is turned up: ordinary sensations register as painful, and painful ones register as worse. Brain imaging studies show measurably altered pain processing.\n\n**That is the sentence worth carrying out of here: the pain is real, the mechanism is real, and \"nothing showed up on the scan\" is consistent with the diagnosis rather than an argument against it.**\n\nWhat follows is companion support alongside a clinician who is managing this. The interventions with the strongest evidence are unglamorous — graded movement, sleep, pain education, and psychological approaches aimed at the nervous system's volume control rather than at your character.",
+    matchedIntro:
+      "Your vitamin D is low, which is common in widespread pain and worth correcting on its own merits. It is not the cause of fibromyalgia, and correcting it won't resolve it — but low vitamin D adds its own muscle aching and fatigue, and there's no reason to carry both.",
+    signals: [
+      { markerId: "vit-d", label: "Vitamin D", unit: "ng/mL", flagBelow: 30 },
+      { markerId: "tsh", label: "TSH", unit: "mIU/L", flagAbove: 4 },
+      { markerId: "ferritin", label: "Ferritin", unit: "ng/mL", flagBelow: 30 },
+      { markerId: "b12", label: "B12", unit: "pg/mL", flagBelow: 400 },
+      { markerId: "hs-crp", label: "hs-CRP", unit: "mg/L", flagAbove: 3 },
+      { markerId: "mg-rbc", label: "Magnesium RBC", unit: "mg/dL", flagBelow: 6 },
+    ],
+    pillarRule: { key: "recovery", label: "Recovery", below: 60 },
+    doctorBanner: {
+      title: "Get the diagnosis made properly first",
+      body: "Widespread pain has other causes — inflammatory arthritis, polymyalgia rheumatica, thyroid disease, vitamin D deficiency, and some medication side effects among them. Several are treatable in ways fibromyalgia isn't. This page supports care alongside a clinician; it doesn't diagnose and it doesn't treat.",
+    },
+    steps: [
+      {
+        id: "diagnosis",
+        title: "Get it named — and get the mimics ruled out",
+        detailTitle: "Why the diagnosis itself helps",
+        why: "Widespread pain has several treatable causes that look similar, and being given a name is itself associated with better outcomes.",
+        grade: "A−",
+        gradeNote: "EULAR recommendations · American College of Rheumatology criteria",
+        supervised: true,
+        how: "Fibromyalgia is diagnosed **clinically**, on criteria: widespread pain across defined body regions for at least `3` months, with fatigue, unrefreshing sleep and cognitive symptoms. **There is no blood test that confirms it** — and beware anyone selling one.\n\nBloods are done to exclude the mimics: **thyroid function, full blood count, inflammatory markers (CRP/ESR), vitamin D, calcium and creatine kinase**, with more depending on the picture. Inflammatory arthritis, polymyalgia rheumatica, hypothyroidism and statin-related muscle problems all present similarly and are managed completely differently.\n\n**The old tender-point exam is outdated.** Current criteria don't require it, so a clinician pressing eighteen points is working from a superseded version.\n\nAnd this is worth knowing: **receiving the diagnosis is itself associated with better outcomes** — fewer investigations, less distress. Being told what you have ends a search that is exhausting in its own right.",
+        extra: {
+          label: "What travels alongside it",
+          body: "Fibromyalgia frequently coexists with **IBS, migraine, endometriosis, restless legs, sleep apnoea, anxiety and depression.** Several of those are separately treatable, and treating them meaningfully lowers total load. It also commonly sits alongside inflammatory disease — having rheumatoid arthritis does not exclude having fibromyalgia too, and conflating the two leads to years of escalating the wrong treatment.",
+        },
+        evidence: [
+          "EULAR — revised recommendations for the management of fibromyalgia.",
+          "American College of Rheumatology — fibromyalgia diagnostic criteria (2010/2016 revisions).",
+          "Evidence summary — impact of formal diagnosis on healthcare utilisation and patient distress in fibromyalgia.",
+        ],
+        checkFirst:
+          "New weakness, joint swelling, fever, weight loss, or pain that started suddenly is not fibromyalgia's pattern and needs investigating. So does new severe pain and stiffness in the shoulders and hips over 50 — polymyalgia rheumatica is very treatable and easy to miss.",
+      },
+      {
+        id: "movement",
+        title: "Move — start absurdly small, and go up slowly",
+        detailTitle: "The intervention with the best evidence",
+        why: "Exercise has the strongest evidence base in fibromyalgia of anything, medication included — and doing too much too soon is the most common reason people abandon it.",
+        grade: "A",
+        gradeNote: "EULAR — strong recommendation · Cochrane reviews",
+        how: "**EULAR gives exercise its only strong recommendation** in fibromyalgia. Cochrane reviews support aerobic and resistance training for pain, function and quality of life.\n\n**Start smaller than feels worth doing.** `5` minutes of walking. Two or three exercises with light resistance. If that sounds pointless, it's probably the right starting dose — the classic pattern is a good week, an ambitious session, a flare, and then giving up on exercise entirely.\n\n**Increase by around `10%` a week**, and hold when you flare rather than quitting.\n\n**Warm water works well** — pool-based exercise has particularly good evidence here, because warmth eases the muscular pain and buoyancy lowers the load.\n\n**Consistency beats intensity, always.** Ten minutes most days beats an hour on Saturday, and by a wide margin in this condition.\n\n**Expect it to hurt more at first.** Increased pain in the early weeks is normal and does not mean damage — a fact worth having in advance, because without it most people stop in week two.",
+        extra: {
+          label: "Fibromyalgia and ME/CFS are not the same here",
+          body: "If you have **post-exertional malaise** — a delayed crash `12–72` hours after exertion — that changes the plan and the pacing approach applies instead. The two conditions overlap and are often confused, but graded exercise is appropriate in fibromyalgia and not in PEM-predominant illness. If you're unsure which describes you, say the words \"post-exertional malaise\" to your clinician and let them sort it out before you start.",
+        },
+        evidence: [
+          "EULAR — revised recommendations for the management of fibromyalgia: exercise as the sole strong recommendation.",
+          "Cochrane systematic reviews — aerobic and resistance exercise for fibromyalgia.",
+          "Cochrane review — aquatic exercise training for fibromyalgia.",
+        ],
+        checkFirst:
+          "If you have heart or lung disease, or haven't exercised in a long time, get clearance first. And if exertion reliably causes a delayed crash lasting days, stop and discuss post-exertional malaise before continuing a graded programme.",
+      },
+      {
+        id: "sleep",
+        title: "Treat sleep as a pain intervention",
+        why: "Poor sleep measurably lowers pain thresholds the next day, and in fibromyalgia the two run in a self-reinforcing loop.",
+        grade: "A−",
+        gradeNote: "Evidence summary — sleep restriction and pain sensitivity · CBT-I trials",
+        how: "Experimental studies are consistent: **restricting sleep lowers pain tolerance in healthy people the following day.** In fibromyalgia, unrefreshing sleep and pain feed each other, and breaking into that loop at the sleep end is often more productive than attacking the pain directly.\n\n**CBT-I — cognitive behavioural therapy for insomnia — is the first-line treatment for chronic insomnia** and has trials specifically in fibromyalgia showing improvements in both sleep and pain. It is more effective than sleeping tablets and it lasts. Ask for a referral or a digital programme.\n\n**The basics still matter:** a consistent wake time (more important than bedtime), a cool dark room, morning light, and getting out of bed if you're lying awake.\n\n**Screen for sleep apnoea and restless legs.** Both are more common here and both are treatable — restless legs in particular has a specific ferritin threshold worth checking.\n\n**Alcohol is a poor trade.** It shortens sleep onset and fragments the second half of the night, which is where the restorative sleep you're short of lives.",
+        evidence: [
+          "Evidence summary — experimental sleep restriction and reduced pain thresholds.",
+          "Randomised trials of CBT-I in fibromyalgia: effects on sleep and pain outcomes.",
+          "American Academy of Sleep Medicine — CBT-I as first-line treatment for chronic insomnia.",
+        ],
+        checkFirst:
+          "Loud snoring, witnessed breathing pauses or severe daytime sleepiness need a sleep study rather than sleep hygiene. Untreated apnoea makes every part of this worse and it's genuinely common.",
+      },
+      {
+        id: "pain-education",
+        title: "Learn how the pain system works — it changes the pain",
+        detailTitle: "Pain neuroscience education",
+        why: "Understanding that pain output isn't a direct readout of tissue damage measurably reduces pain and disability — this is one of the more surprising well-supported findings in the field.",
+        grade: "B+",
+        gradeNote: "Evidence summary — randomised trials of pain neuroscience education",
+        how: "**Pain is produced by the brain, not delivered by the tissues.** It's an output — the nervous system's assessment of threat — and in nociplastic pain the assessment system has become over-protective. That's why hurt does not reliably equal harm in fibromyalgia, and why movement can be safe while painful.\n\n**Randomised trials of pain neuroscience education** — structured teaching about how the pain system works — show reductions in pain, disability and fear of movement. Understanding the mechanism is itself part of the treatment, which is not true of most conditions.\n\n**Where to get it:** an NHS or hospital pain management programme, a physiotherapist trained in persistent pain, or reputable pain-science resources. The book *Explain Pain* and the **Curable** and **Retrain Pain** style programmes work from this evidence base.\n\n**The critical distinction:** this says the pain-processing system is over-protective. It does **not** say the pain is imagined, exaggerated or your fault. Anyone presenting it that way has misunderstood it, and you're entitled to say so.",
+        evidence: [
+          "Evidence summary — randomised trials and systematic reviews of pain neuroscience education in chronic pain.",
+          "EULAR — recommendations on patient education in fibromyalgia management.",
+          "Evidence summary — central sensitisation and altered pain processing on functional imaging in fibromyalgia.",
+        ],
+        checkFirst:
+          "Pain education is for pain that has already been assessed. New pain, or a clear change in an established pattern, still needs looking at — persistent pain doesn't make you immune to new problems.",
+      },
+      {
+        id: "psychological",
+        title: "Use the psychological therapies for what they actually do",
+        why: "CBT and ACT have real evidence in fibromyalgia — for function and distress — and the reason people refuse them is a misunderstanding worth clearing up.",
+        grade: "A−",
+        gradeNote: "EULAR — recommended · Cochrane reviews",
+        how: "**Why people bristle:** being offered therapy for pain reads as \"they think it's in my head\", especially after years of being dismissed. That reading is understandable and it's wrong. These therapies target the nervous system's threat processing and the practical business of living with pain — the same reason they're offered in cancer pain, which nobody suggests is imaginary.\n\n**CBT for chronic pain** has consistent evidence for improving function, mood and distress, and modest evidence for pain itself.\n\n**ACT — acceptance and commitment therapy** — focuses on doing what matters to you alongside the pain rather than waiting for it to go. It's a good fit for a condition without a cure.\n\n**Mindfulness-based stress reduction** has trial evidence in fibromyalgia too.\n\nRealistic framing: these usually improve **function and quality of life more than they lower pain scores.** That is still a large amount of life back, and it's a fair thing to know going in.",
+        evidence: [
+          "EULAR — revised recommendations for the management of fibromyalgia: psychological therapies.",
+          "Cochrane systematic reviews — psychological therapies for fibromyalgia and chronic pain.",
+          "Evidence summary — acceptance and commitment therapy and mindfulness-based interventions in fibromyalgia.",
+        ],
+        checkFirst:
+          "Depression and anxiety are common alongside fibromyalgia and are separately treatable. If low mood, hopelessness or thoughts of self-harm are present, that needs treatment in its own right and it needs it now.",
+      },
+      {
+        id: "pacing-flares",
+        title: "Pace the good days, and have a flare plan written down",
+        why: "Boom-and-bust is the most common self-defeating pattern in fibromyalgia, and flares are far less frightening when the response is decided in advance.",
+        grade: "B+",
+        gradeNote: "Evidence summary — activity pacing in chronic pain",
+        how: "**The boom-and-bust loop:** a good day arrives, you catch up on everything you've been unable to do, and you pay for it for three days. Repeat, and your overall capacity falls.\n\n**Pace by time, not by feel.** Decide in advance — `20` minutes of a task, then a break, regardless of whether you feel fine at `20` minutes. Feeling fine is precisely when the trap springs.\n\n**Write a flare plan while you're well.** What you drop, what you keep, what helps (heat, gentle movement, rest, a bath), who you tell, and when you'd contact your clinician. Flares are far less frightening when the plan already exists and you don't have to think it up while in pain.\n\n**Keep moving during a flare, at a reduced dose.** Complete rest tends to lengthen them. Half the usual walk beats none.\n\n**Heat helps many people** — baths, heat packs, warm pools. Cheap, safe, worth using.",
+        evidence: [
+          "Evidence summary — activity pacing interventions in chronic pain populations.",
+          "EULAR — self-management and multimodal approaches in fibromyalgia.",
+          "Evidence summary — heat therapy and warm-water immersion for musculoskeletal pain.",
+        ],
+        checkFirst:
+          "A flare that doesn't settle in the usual way, or that comes with new symptoms — swelling, fever, weakness, numbness — needs medical review rather than the flare plan.",
+      },
+      {
+        id: "supplements-meds",
+        title: "Supplements and medication — the honest ranking",
+        why: "This is a heavily targeted market, and knowing what has evidence saves both money and hope.",
+        grade: "B",
+        gradeNote: "Evidence summary — small trials, inconsistent results",
+        supplement: true,
+        labNote:
+          "The fibromyalgia supplement market is full of expensive proprietary blends with no trials behind the finished product. If you trial anything here, prefer single ingredients with a declared dose and check the Purity Score — a blend that hides doses inside a \"proprietary matrix\" can't be evaluated at all.",
+        how: "**Worth correcting if low:** **vitamin D** (deficiency causes its own muscle aching and is common here) and **B12 and iron** if the workup found them low. Real, cheap, and not a treatment for fibromyalgia.\n\n**Modest and mixed evidence:** **magnesium** — small trials, plausible mechanism, safe to trial for a month at `200–400 mg` elemental. **Coenzyme Q10** — a few small positive trials, not established. **Omega-3** — general anti-inflammatory support, not specific here.\n\n**Not supported despite heavy marketing:** most proprietary \"fibro\" blends, high-dose antioxidant stacks, and detox protocols.\n\n**On medication**, so you know the landscape: **duloxetine, milnacipran, pregabalin and low-dose amitriptyline** have the best evidence, and they work through the central nervous system, which fits the mechanism. **Opioids are not recommended** — they perform poorly in nociplastic pain and carry real harm. **NSAIDs and paracetamol are largely ineffective** here, which surprises people and is worth knowing before you spend years on them.",
+        evidence: [
+          "EULAR — pharmacological recommendations in fibromyalgia, including advice against opioids.",
+          "Cochrane systematic reviews — duloxetine, pregabalin and amitriptyline for fibromyalgia.",
+          "Evidence summary — magnesium, CoQ10 and vitamin D trials in fibromyalgia.",
+        ],
+        checkFirst:
+          "Never start or stop a prescribed medication based on this page. Duloxetine and pregabalin both need supervised tapering, and opioid reduction in particular has to be planned with your prescriber rather than attempted alone.",
+      },
+    ],
+    skipTheHype: {
+      remedy: "Expensive \"fibromyalgia detox\" and proprietary supplement protocols",
+      why: "The pitch is familiar: fibromyalgia is caused by toxins, mould, parasites or heavy metals, and a multi-month protocol of proprietary supplements, chelation or colonics will clear it. **There is no evidence that fibromyalgia is a toxic or infectious condition**, and no trial showing any detox protocol improves it. Some of the interventions carry direct risk — chelation therapy has caused deaths, and colonic irrigation has caused bowel perforation. The pattern is what marks it out: an unfalsifiable cause, a proprietary product, and relapse blamed on the patient's incomplete adherence. Meanwhile the interventions that genuinely work in this condition — graded movement, sleep treatment, pain education — are inexpensive, unglamorous and have nobody selling them.",
+    },
+    bookTitle: "The Fibromyalgia Companion — turning down the volume on persistent pain",
+    bookUrl: null,
+    landingSlug: "fibromyalgia-companion",
+  },
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // Doctor-forward because the cause dictates everything. Diabetic neuropathy,
+  // B12 deficiency and a compressive lesion are three different problems that
+  // present identically and are managed nothing alike.
+  {
+    slug: "peripheral-neuropathy-companion",
+    name: "Peripheral neuropathy companion",
+    nameEmphasis: "companion",
+    icon: "cable",
+    category: "pain-body",
+    blurb: "The cause decides everything — and some causes are reversible if caught early.",
+    matchRules: [
+      { markerId: "hba1c", label: "HbA1c", unit: "%", flagAbove: 5.7 },
+      { markerId: "b12", label: "B12", unit: "pg/mL", flagBelow: 300 },
+    ],
+    intro:
+      "Peripheral neuropathy is damage to the nerves outside the brain and spinal cord. The classic presentation is **symmetrical, starting in the feet and moving upward** — the \"stocking and glove\" pattern — because the longest nerves fail first. Numbness, burning, pins and needles, electric-shock pains, and often worse at night.\n\nThe single most important thing about it is that **it is a symptom of something, and the something dictates the entire plan.** Diabetes and prediabetes are the most common causes in developed countries. But **B12 deficiency, thyroid disease, alcohol, chemotherapy, some antibiotics and other medications, kidney disease, autoimmune conditions and vitamin B6 toxicity** all cause it too — and several of those are **reversible if caught early and permanent if not.**\n\nThat's the argument for urgency. Nerves regenerate slowly, roughly a millimetre a day at best, and the window for recovery narrows with time. Two years of assuming it's \"just getting older\" while an undiagnosed B12 deficiency runs is how reversible damage becomes permanent.\n\nThis page supports care — it doesn't diagnose the cause, and finding the cause is the work that matters most.",
+    matchedIntro:
+      "One of your markers is directly relevant to nerve health — blood sugar and B12 are the two most common correctable causes of peripheral neuropathy. That's a specific thing to raise with your doctor rather than a general concern.",
+    signals: [
+      { markerId: "hba1c", label: "HbA1c", unit: "%", flagAbove: 5.7 },
+      { markerId: "glucose", label: "Fasting glucose", unit: "mg/dL", flagAbove: 100 },
+      { markerId: "b12", label: "B12", unit: "pg/mL", flagBelow: 400 },
+      { markerId: "mma", label: "Methylmalonate", unit: "nmol/L", flagAbove: 270 },
+      { markerId: "tsh", label: "TSH", unit: "mIU/L", flagAbove: 4 },
+      { markerId: "egfr", label: "eGFR", unit: "mL/min/1.73m²", flagBelow: 60 },
+      { markerId: "folate", label: "Folate", unit: "ng/mL", flagBelow: 4 },
+    ],
+    doctorBanner: {
+      title: "Find the cause — several are reversible",
+      body: "Peripheral neuropathy always needs a medical workup. B12 deficiency, thyroid disease, diabetes and some medication effects are treatable, and treating them early can prevent permanent nerve damage. Sudden onset, rapidly progressive weakness, symptoms on one side only, or bladder and bowel changes are urgent — those patterns suggest something other than a slow metabolic neuropathy.",
+    },
+    steps: [
+      {
+        id: "find-cause",
+        title: "Get the cause identified — this is the whole page",
+        detailTitle: "The workup that decides everything else",
+        why: "Diabetic, B12-related, alcohol-related and compressive neuropathies present identically and are managed completely differently.",
+        grade: "A",
+        gradeNote: "American Academy of Neurology · AAN diagnostic guideline",
+        supervised: true,
+        how: "A standard first-line workup: **HbA1c or a glucose tolerance test, B12 (with MMA if borderline), thyroid function, full blood count, kidney and liver function, and serum protein electrophoresis.** More follows depending on the picture, and **nerve conduction studies** may be arranged.\n\n**Why the glucose tolerance test specifically:** neuropathy can appear in **prediabetes**, before HbA1c crosses the diabetes threshold. A normal HbA1c doesn't clear blood sugar as the cause, and this is a common miss.\n\n**Bring your full medication and supplement list.** Some chemotherapy agents, metronidazole, isoniazid, some HIV medications and — importantly — **high-dose vitamin B6** all cause neuropathy. B6 toxicity is the one people give themselves: doses above roughly `100 mg` daily, taken for months in an ordinary B-complex or \"energy\" supplement, can damage nerves, and it is often missed because nobody thinks to ask about supplements.\n\n**Be honest about alcohol.** It is a leading cause and the conversation only works if it's accurate.",
+        extra: {
+          label: "When it isn't the usual pattern",
+          body: "Symptoms that are **asymmetrical**, start in the hands rather than the feet, come on rapidly, or include significant weakness point away from the common metabolic causes and toward something needing faster assessment — inflammatory neuropathies, nerve compression, or a spinal problem. Rapidly ascending weakness is an emergency. The stocking-and-glove pattern is the reassuring-in-context one.",
+        },
+        evidence: [
+          "American Academy of Neurology — evidence-based guideline on the evaluation of distal symmetric polyneuropathy.",
+          "NIH / NINDS — peripheral neuropathy: causes and diagnosis.",
+          "NIH Office of Dietary Supplements — vitamin B6: sensory neuropathy at high chronic intakes.",
+        ],
+        checkFirst:
+          "Rapidly progressive weakness, weakness spreading upward over days, symptoms on one side only, or new bladder or bowel changes need urgent medical assessment — not a supplement and not a wait-and-see.",
+      },
+      {
+        id: "treat-cause",
+        title: "Treat the cause hard — that's what protects the nerves",
+        why: "Nothing on this page slows nerve damage the way addressing the underlying cause does.",
+        grade: "A",
+        gradeNote: "ADA Standards of Care · AAN guidance",
+        supervised: true,
+        how: "**If it's diabetes:** tight glucose control is the intervention with the strongest evidence for preventing progression — and the evidence is much stronger in **type 1** than type 2, which is worth knowing so the expectations are right. It reliably slows progression; it does not usually reverse established damage. Blood pressure and lipids matter too, since the small blood vessels supplying nerves are part of the mechanism.\n\n**If it's prediabetes:** this is the best-case scenario, because lifestyle change at this stage may genuinely improve small-fibre neuropathy. Weight loss and exercise have evidence here.\n\n**If it's B12:** replacement, promptly, via the route your doctor decides. Early B12 neuropathy can recover substantially; long-standing damage often doesn't. **This is the one where speed matters most.**\n\n**If it's alcohol:** stopping halts progression and some recovery is possible. Thiamine and other B vitamins are usually given alongside, under supervision.\n\n**If it's a medication:** never stop it yourself — some are essential and some have alternatives. That's a prescriber conversation, and often an urgent one.",
+        evidence: [
+          "American Diabetes Association — Standards of Medical Care: neuropathy screening and management.",
+          "Evidence summary — glycaemic control and progression of distal symmetric polyneuropathy in type 1 versus type 2 diabetes.",
+          "British Society for Haematology — treatment of cobalamin deficiency with neurological involvement.",
+        ],
+        checkFirst:
+          "Don't stop chemotherapy or any other prescribed medication because of neuropathy. Tell your team — dose adjustments and alternatives exist, and unilateral stopping can be dangerous.",
+      },
+      {
+        id: "foot-care",
+        title: "Protect your feet — daily, without exception",
+        detailTitle: "The step that prevents amputations",
+        why: "Numbness removes the warning system, and an unnoticed injury on an insensate foot is how ulcers and amputations begin.",
+        grade: "A",
+        gradeNote: "ADA Standards of Care — strong recommendation",
+        supervised: true,
+        how: "This is the highest-stakes practical item in the entire condition, and it is unglamorous.\n\n**Look at your feet every single day** — tops, soles, between the toes, heels. Use a mirror or your phone camera for the soles. You are checking for cuts, blisters, redness, swelling, cracks and colour changes, because **you can no longer feel them.**\n\n**Never walk barefoot**, indoors included. **Check inside your shoes with your hand before putting them on** — a stone or a rucked-up sock can cause an ulcer over a single day on a numb foot.\n\n**Test bathwater with your elbow or a thermometer**, not your foot. Burns from hot water and hot-water bottles are a classic and preventable injury here.\n\n**Wash and dry daily**, especially between the toes. Moisturise the soles and heels, **not between the toes**. Cut nails straight across.\n\n**See a podiatrist regularly** if you have diabetes with neuropathy — this is standard care, not a luxury. And **any new wound, blister or area of redness that doesn't settle within a day or two needs seeing urgently.**",
+        evidence: [
+          "American Diabetes Association — Standards of Medical Care: comprehensive foot care recommendations.",
+          "NICE — diabetic foot problems: prevention and management.",
+          "Evidence summary — foot self-examination and podiatry access in preventing diabetic foot ulceration.",
+        ],
+        checkFirst:
+          "A foot wound with redness spreading, warmth, swelling, discharge or fever is an emergency in a neuropathic foot. Infection moves fast and is often painless. Same-day medical care, not wound care at home.",
+      },
+      {
+        id: "movement-balance",
+        title: "Train balance — and keep moving",
+        why: "Neuropathy takes away the position sense your balance depends on, and falls are the most common serious consequence after foot injury.",
+        grade: "B+",
+        gradeNote: "Evidence summary — exercise and balance training trials in peripheral neuropathy",
+        how: "**Exercise has genuine evidence here** — aerobic and resistance training improve nerve function measures and symptoms in diabetic neuropathy, and improve quality of life. It also treats the cause when the cause is metabolic.\n\n**Balance training specifically.** You lose proprioception — the sense of where your feet are — so balance degrades and falls become likely, especially in the dark when vision can no longer compensate. Tai chi, standing balance work and dedicated programmes all have supporting evidence. Practise near a counter, not in the middle of a room.\n\n**Practical fall-proofing:** a nightlight on the route to the bathroom, no loose rugs, handrails, good shoes indoors. Simple, and it prevents the fracture.\n\n**Non-weight-bearing options** — cycling, swimming, rowing — are useful if you have foot ulceration risk or existing wounds. **Check with your podiatrist before starting weight-bearing exercise if you have an active foot problem.**",
+        evidence: [
+          "Evidence summary — randomised trials of aerobic and resistance exercise in diabetic peripheral neuropathy.",
+          "Evidence summary — balance training and fall prevention in peripheral neuropathy.",
+          "American Diabetes Association — physical activity recommendations with neuropathy present.",
+        ],
+        checkFirst:
+          "If you have an active foot ulcer or a Charcot foot, weight-bearing exercise needs specific clearance — the wrong activity on the wrong foot causes lasting damage.",
+      },
+      {
+        id: "pain-management",
+        title: "Manage the nerve pain — and know what doesn't work",
+        why: "Neuropathic pain responds to a different class of treatment than ordinary pain, and the usual painkillers largely don't touch it.",
+        grade: "A−",
+        gradeNote: "AAN guideline · NICE neuropathic pain guidance",
+        supervised: true,
+        how: "**The medications that work are not painkillers in the ordinary sense.** First-line options are **gabapentin, pregabalin, duloxetine and amitriptyline** — they act on nerve signalling rather than inflammation. Your doctor picks based on your other conditions and medications; several have meaningful side effects and all need proper titration.\n\n**Paracetamol and ibuprofen are largely ineffective for neuropathic pain.** Many people spend years on them assuming nothing works. Something might; it's just a different drawer.\n\n**Opioids are not recommended** for chronic neuropathic pain — poor long-term evidence, real harm.\n\n**Topical options** worth asking about: **capsaicin cream or the high-concentration patch**, and **lidocaine patches** for a localised area. Both act locally, which suits people already on several medications.\n\n**Practical, free and genuinely useful:** a **bed cradle** to keep sheets off hypersensitive feet at night, cool (not cold) foot soaks, and loose cotton socks. Night is when this is worst for most people, and small comfort measures are worth more than they sound.",
+        evidence: [
+          "American Academy of Neurology — guideline on oral and topical treatments for painful diabetic neuropathy.",
+          "NICE — neuropathic pain in adults: pharmacological management in non-specialist settings.",
+          "Evidence summary — capsaicin and lidocaine topical therapy in localised neuropathic pain.",
+        ],
+        checkFirst:
+          "Gabapentin and pregabalin cause drowsiness and dizziness, raise fall risk in older adults, and must be tapered rather than stopped abruptly. Amitriptyline and duloxetine interact with several common medications. All of this needs a prescriber.",
+      },
+      {
+        id: "supplements",
+        title: "Supplements — one has real evidence, the rest don't",
+        why: "This category is heavily marketed to neuropathy patients, and one ingredient genuinely stands apart from the rest.",
+        grade: "B+",
+        gradeNote: "Evidence summary — randomised trials of alpha-lipoic acid",
+        supplement: true,
+        labNote:
+          "Neuropathy supplement blends frequently combine a token dose of alpha-lipoic acid with high-dose B6 — the exact vitamin that causes neuropathy at sustained high intake. Check the B6 content of anything you're considering, and prefer single ingredients with declared doses. This is a category where reading the label matters more than usual.",
+        how: "**Alpha-lipoic acid** has the best evidence of anything in this category — several randomised trials, mostly of **intravenous** ALA in diabetic neuropathy, showing reduced pain and paraesthesia; oral trials at around `600 mg` daily are more mixed but not nothing. It's reasonable to discuss with your doctor. **It can lower blood sugar**, so if you're on diabetes medication that needs coordinating.\n\n**Benfotiamine** (a fat-soluble thiamine derivative) has some supportive trial data, particularly where thiamine status is poor.\n\n**B12** — essential if you're deficient, useless if you aren't.\n\n**The one to actively avoid: high-dose vitamin B6.** Sustained intake above roughly `100 mg` daily **causes** sensory neuropathy. It is in a great many B-complexes, energy drinks and — perversely — some products sold **for** neuropathy. Check every label you take.\n\n**Not established despite the marketing:** acetyl-L-carnitine (mixed), most proprietary \"nerve repair\" blends, and anything promising regeneration.",
+        evidence: [
+          "Evidence summary — randomised controlled trials of alpha-lipoic acid in diabetic peripheral neuropathy.",
+          "NIH Office of Dietary Supplements — vitamin B6: upper intake level and neuropathy risk.",
+          "Evidence summary — benfotiamine and acetyl-L-carnitine trials in peripheral neuropathy.",
+        ],
+        checkFirst:
+          "Alpha-lipoic acid can lower blood glucose — if you take insulin or a sulfonylurea, that's a conversation with your diabetes team first. And check every supplement you take for vitamin B6 content; more than about `100 mg` daily long-term is a known cause of the exact problem you're treating.",
+      },
+    ],
+    skipTheHype: {
+      remedy: "\"Nerve regeneration\" supplement blends and infrared nerve-repair devices",
+      why: "The category is enormous and the promise is always the same: regrow damaged nerves, reverse neuropathy, no doctor required. **No supplement has been shown to regenerate damaged peripheral nerves in humans**, and the proprietary blends typically combine an under-dosed ingredient with real evidence (alpha-lipoic acid) with several that have none — and frequently with **high-dose vitamin B6, which causes neuropathy at sustained intake**. Infrared and low-level laser devices sold for home nerve repair have inconsistent trial results and none showing structural nerve recovery. The genuine harm here is delay: the causes that are actually reversible — B12 deficiency, prediabetes, a medication effect, alcohol — are reversible **early**, and every month spent on a `$70` bottle is a month the nerve damage becomes more permanent.",
+    },
+    bookTitle: "The Neuropathy Guide — finding the cause before the damage sticks",
+    bookUrl: null,
+    landingSlug: "peripheral-neuropathy-companion",
   },
 ];

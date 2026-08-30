@@ -131,9 +131,9 @@ export const CORE_CONDITIONS: Condition[] = [
       remedy: "\"Adrenal fatigue\" protocols and cortisol-support stacks",
       why: "Adrenal fatigue is not a recognised diagnosis — the Endocrine Society reviewed the literature and found no evidence it exists as a condition. Real adrenal insufficiency is rare, serious, and diagnosed with a blood test, not a saliva kit sold with a supplement.",
     },
-    bookTitle: null,
+    bookTitle: "The Energy Audit — finding what's actually draining you",
     bookUrl: null,
-    landingSlug: null,
+    landingSlug: "low-energy-metabolism",
   },
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -259,9 +259,9 @@ export const CORE_CONDITIONS: Condition[] = [
       remedy: "High-dose melatonin gummies",
       why: "More is not better with melatonin — it is a clock-setter, not a sedative, and the `5–10 mg` doses on the shelf are far above what the timing studies used. Independent testing has repeatedly found gummy content far off the label.",
     },
-    bookTitle: null,
+    bookTitle: "The Sleep Rebuild — evidence-based nights, without the sedatives",
     bookUrl: null,
-    landingSlug: null,
+    landingSlug: "sleep-support",
   },
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -382,9 +382,9 @@ export const CORE_CONDITIONS: Condition[] = [
       remedy: "\"Leaky gut\" cleanses and detox kits",
       why: "Intestinal permeability is a real research finding. The commercial protocols built on top of it are not — no cleanse has been shown to change it, and your liver and kidneys already do the detoxing.",
     },
-    bookTitle: null,
+    bookTitle: "The Gut Reset — fibre, fermentation and what the microbiome really needs",
     bookUrl: null,
-    landingSlug: null,
+    landingSlug: "gut-health-digestion",
   },
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -505,9 +505,9 @@ export const CORE_CONDITIONS: Condition[] = [
       remedy: "Saliva \"cortisol curve\" tests and the stacks sold with them",
       why: "Four-point saliva cortisol testing is not used to diagnose anything in mainstream endocrinology, and the supplement protocols sold off the result are treating a number that was never validated.",
     },
-    bookTitle: null,
+    bookTitle: "The Stress Load — turning down the alarm without switching it off",
     bookUrl: null,
-    landingSlug: null,
+    landingSlug: "stress-mood",
   },
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -630,9 +630,9 @@ export const CORE_CONDITIONS: Condition[] = [
       remedy: "Glucosamine and chondroitin",
       why: "The ACR conditionally recommends against both for knee and hip osteoarthritis. The largest independent trials found no benefit over placebo — this is the most-sold joint supplement with some of the weakest evidence.",
     },
-    bookTitle: null,
+    bookTitle: "The Joint Playbook — load, recovery and what actually rebuilds cartilage",
     bookUrl: null,
-    landingSlug: null,
+    landingSlug: "joint-recovery",
   },
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -763,9 +763,9 @@ export const CORE_CONDITIONS: Condition[] = [
       remedy: "Mega-dose vitamin C, taken daily to prevent colds",
       why: "Cochrane reviews are clear: routine vitamin C does not prevent colds in the general population. It shaves a small amount off duration in people under extreme physical stress, and that is the whole finding.",
     },
-    bookTitle: null,
+    bookTitle: "The Immune Handbook — what supports it, and what only claims to",
     bookUrl: null,
-    landingSlug: null,
+    landingSlug: "immune-support",
   },
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -883,9 +883,9 @@ export const CORE_CONDITIONS: Condition[] = [
       remedy: "Red yeast rice",
       why: "It works because it contains monacolin K, which is chemically lovastatin — so it is an unregulated statin at an unpredictable dose, carrying the same muscle and liver risks without the monitoring. If a statin is right for you, get a real one.",
     },
-    bookTitle: null,
+    bookTitle: "The Heart Numbers — the markers that matter and how to move them",
     bookUrl: null,
-    landingSlug: null,
+    landingSlug: "heart-circulation",
   },
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -1180,8 +1180,8 @@ export const CORE_CONDITIONS: Condition[] = [
       remedy: "Apple cider vinegar as a blood sugar fix",
       why: "The studies are small, short and inconsistent, and the effect where it appears is a fraction of what a ten-minute walk after the meal does. It also erodes tooth enamel taken neat.",
     },
-    bookTitle: null,
+    bookTitle: "The Blood Sugar Guide — insulin resistance, reversed honestly",
     bookUrl: null,
-    landingSlug: null,
+    landingSlug: "blood-sugar-support",
   },
 ];

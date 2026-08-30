@@ -101,9 +101,9 @@ export const DIGESTION_CONDITIONS: Condition[] = [
       remedy: "Apple cider vinegar for \"low stomach acid\"",
       why: "The idea that reflux is usually caused by too little acid isn't supported, and no major gastroenterology guideline recognises the hypochlorhydria-causes-GERD model. Pouring acid onto an already irritated oesophagus is a bad trade, and neat vinegar erodes tooth enamel on the way down.",
     },
-    bookTitle: null,
+    bookTitle: "The Reflux Playbook — mechanics, meals and getting off the pills safely",
     bookUrl: null,
-    landingSlug: null,
+    landingSlug: "acid-reflux-gerd",
   },
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -211,9 +211,9 @@ export const DIGESTION_CONDITIONS: Condition[] = [
       remedy: "\"SIBO\" breath tests bought direct-to-consumer",
       why: "Breath testing is poorly standardised, false positives are common, and a positive result routinely sends people into repeated antibiotic or herbal-antimicrobial rounds for symptoms that were IBS all along. Gastroenterology guidance does not support routine breath testing in IBS. Get the IBS diagnosis and treat that.",
     },
-    bookTitle: null,
+    bookTitle: "The IBS Handbook — FODMAPs, the gut-brain axis and a diet you can live with",
     bookUrl: null,
-    landingSlug: null,
+    landingSlug: "ibs-bloating",
   },
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -313,9 +313,9 @@ export const DIGESTION_CONDITIONS: Condition[] = [
       remedy: "Colon cleanses and \"detox\" tea",
       why: "There is no impacted matter lining a healthy colon waiting to be flushed out — that idea has no basis in anatomy. Most detox teas work because they contain senna, a stimulant laxative, sold without saying so. Colon hydrotherapy has caused perforations and electrolyte disturbances, and no gastroenterology body recommends it.",
     },
-    bookTitle: null,
+    bookTitle: "The Regularity Guide — fibre, fluid and the toilet habits nobody teaches",
     bookUrl: null,
-    landingSlug: null,
+    landingSlug: "constipation",
   },
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -418,9 +418,9 @@ export const DIGESTION_CONDITIONS: Condition[] = [
       remedy: "IgG food sensitivity panels",
       why: "The AAAAI, the European allergy academy and multiple other societies explicitly recommend against them. IgG to a food is a normal marker of **exposure and tolerance** — it means you've eaten it, not that it harms you. These panels routinely return 20–40 \"reactive\" foods and send people into restrictions they never needed.",
     },
-    bookTitle: null,
+    bookTitle: "The Food Sensitivity Guide — testing honestly, eliminating carefully",
     bookUrl: null,
-    landingSlug: null,
+    landingSlug: "food-sensitivities",
   },
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -763,8 +763,419 @@ export const DIGESTION_CONDITIONS: Condition[] = [
       remedy: "\"Leaky gut\" repair protocols sold as an alternative to IBD medication",
       why: "The glutamine, slippery-elm and bone-broth stacks marketed for Crohn's and colitis have no controlled evidence that they induce or maintain remission. The harm isn't in the ingredients — it's in the framing. People feel well, conclude the protocol is what's working, and taper off the maintenance therapy that is actually holding the disease down. Inflammation is often silent, so the bill arrives months later as a flare, an admission, or surgery.",
     },
-    bookTitle: null,
+    bookTitle: "The Crohn's & Colitis Companion — supportive care alongside your team",
     bookUrl: null,
-    landingSlug: null,
+    landingSlug: "ibd-companion-support",
+  },
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // Deliberately sceptical framing. Histamine intolerance is a real clinical
+  // picture and a genuinely contested diagnosis — the honest page says both,
+  // and spends most of its length on the things it gets confused with.
+  {
+    slug: "histamine-intolerance",
+    name: "Histamine intolerance",
+    nameEmphasis: "intolerance",
+    icon: "wine",
+    category: "digestion",
+    blurb: "A real pattern, a contested diagnosis — and several look-alikes worth excluding.",
+    matchRules: [],
+    intro:
+      "The proposed mechanism is simple: histamine arrives in food and is also released by your own cells, and the enzyme **diamine oxidase (DAO)** breaks it down in the gut. If the histamine load exceeds what your DAO can clear, symptoms follow — flushing, headache, hives, a runny or blocked nose, palpitations, bloating and diarrhoea, sometimes within an hour of eating.\n\nHere is the honest position. **The symptom pattern is real and people genuinely improve on a low-histamine diet.** What's contested is the mechanism and the diagnosis: **there is no validated test**. Serum DAO and histamine levels don't reliably identify who responds, and much of the underlying research is small and inconsistent. Several allergy and gastroenterology bodies treat histamine intolerance as a working hypothesis rather than a settled diagnosis.\n\nWhy that matters practically: the symptoms overlap heavily with **mast cell disorders, real IgE food allergy, scombroid fish poisoning, carcinoid, medication side effects and IBS** — some of which are serious and specifically treatable. So this page does the diagnosis-of-exclusion work first, then runs a **short, structured, time-limited trial** — never an open-ended elimination diet, which is where the real harm in this area lives.",
+    signals: [
+      { markerId: "hs-crp", label: "hs-CRP", unit: "mg/L", flagAbove: 3 },
+      {
+        aliases: ["tryptase", "serum tryptase", "baseline tryptase"],
+        label: "Tryptase",
+        unit: "ng/mL",
+        flagAbove: 11.4,
+      },
+      {
+        aliases: ["eosinophils", "eosinophil count", "absolute eosinophils"],
+        label: "Eosinophils",
+        unit: "K/µL",
+        flagAbove: 0.5,
+      },
+      { markerId: "ferritin", label: "Ferritin", unit: "ng/mL", flagBelow: 30 },
+      { markerId: "vit-d", label: "Vitamin D", unit: "ng/mL", flagBelow: 30 },
+    ],
+    doctorBanner: {
+      title: "Rule out the serious look-alikes first",
+      body: "Flushing, hives and gut symptoms after eating can also be IgE food allergy, a mast cell disorder, scombroid poisoning or a medication effect. If you have ever had throat tightness, difficulty breathing, swelling of the lips or tongue, or fainting with a reaction, that is possible anaphylaxis and needs allergy assessment — not a diet trial.",
+    },
+    steps: [
+      {
+        id: "exclude",
+        title: "Get the look-alikes excluded before you cut anything",
+        detailTitle: "What this shares a symptom list with",
+        why: "Several conditions produce exactly this picture, and at least two of them are dangerous to manage as a food intolerance.",
+        grade: "A−",
+        gradeNote: "Allergy society position statements · evidence summary",
+        supervised: true,
+        how: "**IgE food allergy** is the first thing to exclude. Allergy causes reproducible reactions to a specific food and can be life-threatening; histamine intolerance is dose-dependent and doesn't cause anaphylaxis. **If you've ever had lip or tongue swelling, throat tightness, breathing difficulty or fainting, that's an allergy assessment, not a diet trial.**\n\n**Mast cell activation disorders**, including mastocytosis, produce overlapping symptoms and have specific treatment. A **baseline serum tryptase** is the usual screening test and is worth asking about if symptoms are severe, systemic or include fainting.\n\n**Scombroid poisoning** — histamine formed in poorly stored oily fish (tuna, mackerel, mahi-mahi) — causes flushing and palpitations within minutes of a specific meal. It's a food safety problem, not an intolerance, and it can affect everyone at the table.\n\n**Medication.** A long list of common drugs inhibit DAO or release histamine, including some antibiotics, NSAIDs, opioids, some antidepressants and contrast agents. Bring the list.\n\n**And the boring ones:** IBS, coeliac disease, SIBO, and perimenopause all produce overlapping symptoms and are far more common.",
+        evidence: [
+          "Evidence summary — allergy and gastroenterology society position statements on histamine intolerance as a contested diagnosis.",
+          "American Academy of Allergy, Asthma & Immunology — evaluation of adverse food reactions and mast cell disorders.",
+          "Evidence summary — scombroid (histamine) fish poisoning and drug-induced histamine release.",
+        ],
+        checkFirst:
+          "Reactions involving breathing difficulty, throat tightness, widespread hives with faintness, or swelling of the lips and tongue are potential anaphylaxis. That needs emergency care and an allergy referral — never a food diary.",
+      },
+      {
+        id: "diary",
+        title: "Keep a proper food and symptom diary first",
+        why: "The pattern in histamine intolerance is dose-dependent and delayed, which makes it nearly impossible to spot from memory.",
+        grade: "B+",
+        gradeNote: "Evidence summary — dietetic assessment practice",
+        how: "Log **everything you eat and drink with times**, plus symptoms with times and severity, for `2–4` weeks. Note **how long the food had been open or stored**, because that is a genuine variable here — histamine accumulates in leftovers.\n\n**The pattern you're looking for** is different from allergy: symptoms that are **dose-dependent** (a little is fine, more is not), **cumulative** across a day, **inconsistent** with the same food on different days, and typically arriving **`30` minutes to a few hours** after eating.\n\n**Log the non-food variables too** — alcohol (a major DAO inhibitor and histamine source in its own right), stress, sleep, exercise, menstrual cycle and medications. In women, symptoms often track the cycle, since oestrogen interacts with histamine signalling.\n\n**Take it to a dietitian.** Interpreting this well is a skill, and the alternative — self-interpretation — reliably produces an ever-shrinking food list.",
+        evidence: [
+          "Evidence summary — food and symptom diaries in the assessment of suspected food intolerance.",
+          "British Dietetic Association — guidance on food intolerance assessment.",
+          "Evidence summary — alcohol as a DAO inhibitor and dietary histamine source.",
+        ],
+        checkFirst:
+          "If your list of tolerated foods is already shrinking, stop and get dietetic help now. Progressive self-elimination is the main harm in this area and it's much easier to prevent than to unwind.",
+      },
+      {
+        id: "trial",
+        title: "Run a short, structured low-histamine trial — then reintroduce",
+        detailTitle: "Four weeks, with an end date",
+        why: "A time-limited trial answers the question. An open-ended one becomes a nutritional problem of its own.",
+        grade: "B",
+        gradeNote: "Evidence summary — small uncontrolled dietary studies",
+        how: "**Set the end date before you start: `2–4` weeks.** That is long enough to know, and short enough not to cause harm. Anyone recommending months of this without reintroduction is doing it wrong.\n\n**The high-histamine list**, roughly ranked: **aged cheeses, cured and processed meats, fermented foods (sauerkraut, kimchi, soy sauce, miso, vinegar), alcohol — especially red wine and beer — and fish that wasn't fresh or frozen promptly.** Then the histamine-releasers and DAO inhibitors people also react to: tomatoes, spinach, aubergine, avocado, citrus, strawberries and chocolate.\n\n**Freshness is the biggest single lever.** Histamine accumulates as food sits — a piece of fish or meat eaten fresh may be fine and the same food as leftovers may not. **Cook and freeze in portions, and don't keep leftovers in the fridge for days.** Many people find this alone does most of the work.\n\n**Then reintroduce, one food every `3` days, in a normal portion.** This step is not optional — it's the half that tells you what's actually true, and it's the half most people skip.",
+        extra: {
+          label: "Why the lists on the internet disagree with each other",
+          body: "There is **no reliable histamine content database for food.** Levels vary enormously with storage, ripeness, processing and the specific batch — two pieces of the same cheese can differ several-fold. That's why every low-histamine list contradicts the last one, and why treating any of them as authoritative leads to cutting far more than necessary. Use them as a starting hypothesis, not as a rulebook.",
+        },
+        evidence: [
+          "Evidence summary — small uncontrolled trials of low-histamine diets in suspected histamine intolerance.",
+          "Evidence summary — variability of histamine content in foods by storage and processing.",
+          "British Dietetic Association — structured elimination and reintroduction protocols.",
+        ],
+        checkFirst:
+          "Don't do this without a dietitian if you're pregnant, breastfeeding, underweight, have a history of disordered eating, or are already avoiding several food groups. This diet cuts across many nutrient-dense foods and the nutritional risk is real.",
+      },
+      {
+        id: "dao-supplements",
+        title: "DAO supplements — what's known, and what isn't",
+        why: "It's the most-marketed product in this space and the evidence is genuinely thin, which is worth saying plainly.",
+        grade: "B",
+        gradeNote: "Evidence summary — few small trials, inconsistent",
+        supplement: true,
+        labNote:
+          "DAO supplements are expensive, largely unregulated, and the enzyme content is rarely verified. Given how thin the evidence is, this is a category where checking the Purity Score before spending is the minimum — and where a short defined trial beats a standing order.",
+        how: "**DAO enzyme capsules** are taken before meals on the theory that they supplement the enzyme that breaks histamine down in the gut. A small number of trials suggest symptom improvement; they're small, several are industry-funded, and results are inconsistent. **This is a maybe, not a treatment.**\n\nIf you trial one: take it **`15` minutes before a meal**, and give it a defined `2–4` week test with a clear yes-or-no at the end. They're expensive, so an open-ended subscription is a poor bet on this evidence.\n\n**Vitamin C and copper** are cofactors for DAO and are commonly recommended. The evidence is mechanistic rather than clinical. Correcting a genuine deficiency is sensible; dosing high on a theory is not.\n\n**Quercetin** is widely sold as a natural mast cell stabiliser. Test-tube plausible, clinically unproven at supplement doses.\n\n**Careful with probiotics.** Some bacterial strains **produce** histamine — several *Lactobacillus* species among them — so a generic probiotic can make this worse. If you use one, choose a strain-specific product, and stop if symptoms worsen.",
+        evidence: [
+          "Evidence summary — randomised and open-label trials of diamine oxidase supplementation.",
+          "Evidence summary — histamine-producing bacterial strains in probiotic preparations.",
+          "NIH Office of Dietary Supplements — vitamin C and copper fact sheets.",
+        ],
+        checkFirst:
+          "DAO supplements are often derived from porcine kidney — relevant if that matters to you. And no supplement here substitutes for excluding mast cell disorders or allergy if your symptoms are severe.",
+      },
+      {
+        id: "gut-and-load",
+        title: "Work on the gut and the total load, not just the food list",
+        why: "Most people who improve here do it by lowering total burden across several inputs — not by finding one villain food.",
+        grade: "B",
+        gradeNote: "Evidence summary — mechanistic and observational",
+        how: "**Alcohol is usually the biggest single win**, and it's not primarily about the histamine in the drink — alcohol directly inhibits DAO and triggers histamine release. Red wine, champagne and beer are the usual worst offenders. Cutting it is often more effective than any food restriction.\n\n**Fix the gut underneath.** DAO is produced by the small intestinal lining, so anything damaging it — coeliac disease, inflammatory bowel disease, untreated infection — reduces capacity. If there's an underlying gut condition, treating it is more productive than trimming the food list.\n\n**Consider SIBO** if bloating dominates. It's a genuine overlap and it's treated specifically.\n\n**Think in load, not in banned foods.** Symptoms are cumulative across a day. A glass of wine *or* aged cheese may be fine; both plus leftovers may not. That framing keeps a diet liveable in a way a blacklist never does.\n\n**Stress and sleep are real inputs** — mast cells respond to stress signalling, and most people notice worse reactions in bad weeks.",
+        evidence: [
+          "Evidence summary — intestinal DAO expression and mucosal integrity.",
+          "Evidence summary — alcohol, DAO inhibition and histamine release.",
+          "Evidence summary — overlap of suspected histamine intolerance with SIBO and IBS.",
+        ],
+        checkFirst:
+          "Ongoing diarrhoea, weight loss, blood in your stool or anaemia are not histamine intolerance and need investigating properly. Those point at coeliac disease, IBD or something else entirely.",
+      },
+      {
+        id: "long-term",
+        title: "Get back to a normal diet — that's the goal",
+        why: "The endpoint here is the widest diet you can tolerate, and the failure mode is a permanently shrinking one.",
+        grade: "B+",
+        gradeNote: "Dietetic consensus on elimination diet management",
+        how: "**Most people find a threshold rather than a set of forbidden foods.** Aim to identify your tolerance level and eat freely below it, rather than to eliminate categories permanently.\n\n**Retry things periodically.** Tolerance changes — with gut healing, with hormonal shifts, with time. A food that caused problems a year ago may be fine now, and you only find out by testing.\n\n**Watch the nutritional cost.** A strict long-term low-histamine diet cuts across fermented foods, many vegetables and fruits, and often fish and dairy. That's a genuine risk to fibre, calcium, vitamin C and gut microbial diversity. A dietitian can keep the diet wide while managing symptoms — that is exactly the expertise worth paying for.\n\n**And keep the door open on the diagnosis.** If a careful trial and reintroduction doesn't produce a clear pattern, the honest conclusion may be that this isn't the explanation — and that's useful information, not a failure. IBS, anxiety, perimenopause and mast cell disorders are all still on the table.",
+        evidence: [
+          "British Dietetic Association — long-term management and reintroduction after elimination diets.",
+          "Evidence summary — nutritional adequacy risks of restrictive elimination diets.",
+          "Evidence summary — variability and change in reported food tolerance over time.",
+        ],
+        checkFirst:
+          "If food restriction is causing anxiety around eating, social withdrawal or weight loss, that needs addressing directly. Restrictive eating that starts for medical reasons can become a disorder in its own right, and it's common enough to name.",
+      },
+    ],
+    skipTheHype: {
+      remedy: "IgG food sensitivity panels",
+      why: "Marketed as a shortcut to your personal trigger list — a blood test that returns dozens of \"reactive\" foods — and heavily sold to people investigating histamine intolerance. **Every major allergy organisation has issued statements against them.** The reason is not subtle: IgG antibodies to food indicate **exposure and normal immune tolerance**, not intolerance. A high IgG to eggs usually means you eat eggs. Used as a diagnostic, the test reliably returns a long list of common foods, which is exactly why it feels revelatory — and exactly why it leads to unnecessary elimination, nutritional shortfalls and, in a documented pattern, disordered eating. It costs several hundred pounds to be told to stop eating the things you eat most.",
+    },
+    bookTitle: "The Histamine Question — testing the theory without wrecking your diet",
+    bookUrl: null,
+    landingSlug: "histamine-intolerance",
+  },
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  {
+    slug: "lactose-intolerance",
+    name: "Lactose intolerance",
+    nameEmphasis: "intolerance",
+    icon: "milk",
+    category: "digestion",
+    blurb: "The normal adult state for most of the world — and rarely a reason to cut dairy entirely.",
+    matchRules: [],
+    intro:
+      "Lactose is the sugar in milk. The enzyme **lactase** splits it so you can absorb it, and in most mammals — humans included — lactase production falls after weaning. **Lactase non-persistence is the genetic norm for roughly `65–70%` of the world's adults.** Continued production into adulthood is the evolutionary novelty, common in northern European ancestry and much rarer in East Asian, West African, Indigenous American and Southeast Asian populations.\n\nSo the framing matters: this usually isn't a disease or a damaged gut. It's the default human setting.\n\nUndigested lactose passes into the colon, where bacteria ferment it — producing gas, bloating, cramping and diarrhoea, typically **`30` minutes to `2` hours** after dairy.\n\nAnd the practical headline that most people never hear: **this is dose-dependent, and near-total avoidance is almost never necessary.** Studies consistently find that most people with lactose intolerance tolerate around **`12 g` of lactose — a cup of milk — in one sitting without significant symptoms**, especially with food. The people who cut all dairy for life usually did so on far less information than that.",
+    signals: [
+      { markerId: "calcium", label: "Calcium", unit: "mg/dL", flagBelow: 8.5 },
+      { markerId: "vit-d", label: "Vitamin D", unit: "ng/mL", flagBelow: 30 },
+      { markerId: "ferritin", label: "Ferritin", unit: "ng/mL", flagBelow: 30 },
+      { markerId: "hs-crp", label: "hs-CRP", unit: "mg/L", flagAbove: 3 },
+    ],
+    steps: [
+      {
+        id: "confirm",
+        title: "Confirm it's lactose — and not the several things it mimics",
+        detailTitle: "Self-diagnosis goes wrong here often",
+        why: "Coeliac disease, IBS and a milk protein allergy all cause similar symptoms after dairy, and the treatment for each is different.",
+        grade: "A−",
+        gradeNote: "NIH / NIDDK · AGA guidance",
+        supervised: true,
+        how: "**The hydrogen breath test** is the usual clinical test: you drink a lactose solution and breath hydrogen is measured, since colonic fermentation produces it. There's also a **lactose tolerance blood test** and genetic testing for lactase persistence.\n\n**A structured home trial is reasonable too:** remove lactose for `2` weeks, then reintroduce a measured amount and watch. That's cheap and often sufficient.\n\n**What to rule out first, though:**\n\n**Coeliac disease** — it damages the intestinal lining where lactase lives, causing **secondary** lactose intolerance. Treat the coeliac disease and the lactose problem often resolves. **Test for coeliac before going dairy-free**, and while still eating gluten.\n**IBS** — extremely common, overlaps heavily, and dairy is often blamed for a broader FODMAP sensitivity.\n**Cow's milk protein allergy** — an immune reaction to the protein, not the sugar. Lactase pills won't help, and reactions can be severe.\n\n**Secondary lactose intolerance** also follows gastroenteritis, and it is usually **temporary** — weeks to months. Don't make a permanent decision on a temporary problem.",
+        evidence: [
+          "NIH / NIDDK — lactose intolerance: diagnosis and testing.",
+          "American Gastroenterological Association — evaluation of chronic diarrhoea and carbohydrate malabsorption.",
+          "Evidence summary — secondary lactose intolerance following gastroenteritis and in untreated coeliac disease.",
+        ],
+        checkFirst:
+          "Weight loss, blood in your stool, symptoms that wake you at night, or a family history of coeliac disease or IBD need investigating — not a dairy-free trial. And get coeliac testing done before you change your diet, or the result is unreliable.",
+      },
+      {
+        id: "dose",
+        title: "Find your threshold instead of cutting dairy out",
+        detailTitle: "The 12-gram finding",
+        why: "Most people tolerate far more lactose than they think, and total avoidance costs calcium, protein and quality of life for no benefit.",
+        grade: "A",
+        gradeNote: "NIH consensus · systematic reviews of lactose tolerance",
+        how: "**Most adults with lactose intolerance tolerate about `12 g` of lactose — roughly `250 ml` / one cup of milk — at a time with few or no symptoms**, particularly when it's taken with other food. That figure comes from an NIH consensus review of the evidence, and it is the single most useful fact on this page.\n\n**How to find your own line:** start with a small amount — say `50 ml` of milk with a meal — and increase every few days until symptoms appear. That number is your threshold, and you can eat freely below it.\n\n**Spread it across the day** rather than taking it all at once. Two small servings are usually tolerated where one large one isn't.\n\n**Always take dairy with a meal.** Food slows gastric emptying, which gives what lactase you have more time to work. Milk in coffee after lunch behaves quite differently from a glass of milk on an empty stomach.\n\n**Fat helps too** — whole milk is often better tolerated than skimmed for exactly that reason.",
+        evidence: [
+          "NIH Consensus Development Conference — lactose intolerance and health.",
+          "Systematic reviews of tolerated lactose doses in adults with lactase non-persistence.",
+          "NIH / NIDDK — eating, diet and nutrition for lactose intolerance.",
+        ],
+        checkFirst:
+          "If even tiny amounts cause severe symptoms, or you get hives, swelling or breathing symptoms, that's not lactose intolerance — that pattern suggests milk protein allergy and needs allergy assessment.",
+      },
+      {
+        id: "which-dairy",
+        title: "Learn which dairy is already low in lactose",
+        why: "A large amount of dairy contains little or no lactose, and most people avoiding it don't know which.",
+        grade: "A−",
+        gradeNote: "NIDDK · food composition data",
+        how: "**Hard and aged cheeses are essentially lactose-free.** Cheddar, parmesan, Swiss, gouda, aged goat's cheese — the lactose is drained off with the whey and what remains is fermented during ageing. Parmesan has effectively none. This alone gives most people cheese back.\n\n**Butter** is almost entirely fat — trace lactose, tolerated by nearly everyone.\n\n**Yoghurt with live cultures is usually well tolerated** even though the lactose is still there: the bacteria carry their own lactase and continue digesting it in your gut. **Greek yoghurt is lower still**, since straining removes lactose-containing whey. **Kefir** is well tolerated for the same reason.\n\n**The higher-lactose ones:** milk, cream, ice cream, soft cheeses (ricotta, cottage cheese, cream cheese), condensed milk, and milk powder in processed foods.\n\n**Lactose-free milk is real milk** with lactase added — same protein, same calcium, same nutrition, just pre-digested. It's the simplest swap and it tastes slightly sweeter because the split sugars are sweeter than lactose.\n\n**A2 milk** is a different thing entirely — a protein variant, not lower in lactose. It won't help lactose intolerance, whatever the packaging implies.",
+        evidence: [
+          "NIH / NIDDK — lactose content of common dairy foods.",
+          "Evidence summary — bacterial lactase activity in yoghurt and fermented dairy and its effect on tolerance.",
+          "Evidence summary — A2 beta-casein milk and lactose content.",
+        ],
+        checkFirst:
+          "If dairy causes symptoms regardless of lactose content — including hard cheese and butter — reconsider the diagnosis. That pattern points at milk protein rather than lactose.",
+      },
+      {
+        id: "calcium",
+        title: "Protect your calcium and vitamin D — this is the real risk",
+        detailTitle: "What avoiding dairy actually costs",
+        why: "The genuine health consequence of lactose intolerance isn't the symptoms — it's the bone health of people who cut dairy without replacing what it provided.",
+        grade: "A",
+        gradeNote: "NIH consensus · NIH Office of Dietary Supplements",
+        supplement: true,
+        labNote:
+          "If you supplement calcium, the form and dose both matter — calcium carbonate needs stomach acid and must be taken with food, citrate doesn't. Split doses absorb better than one large one. Check the elemental calcium figure on the label rather than the compound weight.",
+        how: "Adults need roughly **`1,000–1,200 mg` of calcium daily**, and dairy is where most people in Western diets get it. Cutting dairy without a plan is the actual harm in this condition, and the NIH consensus statement flags it specifically.\n\n**Non-dairy sources worth knowing:** **fortified plant milks** (shake them — the calcium settles), **tinned sardines and salmon with the bones**, **tofu set with calcium sulphate**, **kale, bok choy and broccoli** (better absorbed than spinach, whose oxalate binds calcium), **almonds**, **white beans**, and fortified orange juice.\n\n**But note:** most low-lactose dairy is still excellent calcium. **Hard cheese and yoghurt** deliver a lot with very little lactose — for most people that's the easiest route back to adequacy.\n\n**Vitamin D matters just as much**, since it governs calcium absorption. Milk is fortified in many countries; if you've cut it, check your intake.\n\n**Food first, supplements second** where you can. Calcium supplements have a less favourable safety profile than dietary calcium and are worth taking only for a genuine shortfall.",
+        evidence: [
+          "NIH Consensus Development Conference — lactose intolerance and health: calcium adequacy concerns.",
+          "NIH Office of Dietary Supplements — calcium and vitamin D fact sheets.",
+          "Evidence summary — calcium bioavailability from dairy and plant sources.",
+        ],
+        checkFirst:
+          "If you've avoided dairy for years without replacing calcium — especially if you're post-menopausal, over 50, or have had a fracture — ask your doctor about bone density. This is the part of lactose intolerance that actually causes long-term harm.",
+      },
+      {
+        id: "lactase",
+        title: "Use lactase supplements for the meals that matter",
+        why: "They work, they're cheap, and they're for the occasion rather than the everyday.",
+        grade: "B+",
+        gradeNote: "Evidence summary — randomised trials of lactase supplementation",
+        supplement: true,
+        labNote:
+          "Lactase products are dosed in FCC units and the strength varies widely between brands — the dose matters more than the price. Check the declared unit count rather than the pill count.",
+        how: "**Take it with the first bite**, not afterwards — the enzyme has to be in the stomach with the lactose. If the meal runs long, a second dose partway through helps.\n\n**Dose to the meal.** A splash of milk in coffee needs little; a bowl of ice cream needs more. Trials support effectiveness, and individual responses vary enough that finding your own dose is worth a couple of tries.\n\n**Lactase drops** added to milk `24` hours in advance pre-digest it — cheaper than lactose-free milk if you use a lot.\n\n**This is a tool for the meal out, the birthday cake, the holiday**, not a licence to override your threshold three times a day. Working out your tolerance is a better long-term strategy than dosing enzymes around every meal.\n\n**If it doesn't work at all**, that's meaningful — reconsider whether lactose is really the problem.",
+        evidence: [
+          "Evidence summary — randomised trials of exogenous lactase supplementation and symptom reduction.",
+          "NIH / NIDDK — lactase products and their use.",
+          "Evidence summary — dose-response variability in commercial lactase preparations.",
+        ],
+        checkFirst:
+          "Lactase supplements do nothing for milk protein allergy — and using one to push through a reaction that isn't lactose-related is how a genuine allergy gets missed.",
+      },
+      {
+        id: "if-it-persists",
+        title: "If cutting lactose doesn't fix it, look further",
+        why: "A large proportion of people who self-diagnose lactose intolerance turn out to have something else, and staying dairy-free for the wrong reason has a cost.",
+        grade: "B+",
+        gradeNote: "Evidence summary — blinded lactose challenge studies",
+        how: "**Blinded challenge studies are humbling reading.** A substantial share of people who identify as lactose intolerant do not report symptoms when given lactose blind, and many report symptoms after a placebo. Expectation is a genuinely powerful driver of gut symptoms, which is not a criticism — it's a reason to test rather than assume.\n\n**If you're dairy-free and still symptomatic, look at:**\n\n**IBS and other FODMAPs** — fructans in wheat and onion, sorbitol, fructose. A structured low-FODMAP trial with a dietitian sorts this out properly.\n**Coeliac disease** — test while still eating gluten.\n**SIBO** — if bloating dominates.\n**Bile acid diarrhoea** — often missed, and specifically treatable.\n\n**And be careful with the substitutes.** Many \"free-from\" products contain sorbitol, inulin or other sweeteners that cause exactly the symptoms you were avoiding — plenty of people swap milk for an oat drink and feel worse.",
+        evidence: [
+          "Evidence summary — blinded lactose challenge studies in self-reported lactose intolerance.",
+          "Monash University — low FODMAP diet evidence base.",
+          "Evidence summary — bile acid diarrhoea as an under-recognised cause of chronic diarrhoea.",
+        ],
+        checkFirst:
+          "Persistent diarrhoea, unintended weight loss, blood in your stool, or night-time symptoms need proper investigation regardless of what you've cut out. Those aren't lactose symptoms.",
+      },
+    ],
+    skipTheHype: {
+      remedy: "Going completely dairy-free \"just in case\"",
+      why: "The most common intervention in lactose intolerance is also the most over-applied one. **The NIH consensus review concluded that most people with lactose intolerance can tolerate around `12 g` of lactose at a time** — a cup of milk — and that unnecessary dairy avoidance is a genuine public health concern because of its effect on calcium intake and bone health. Meanwhile a large share of people who cut dairy never had lactose intolerance at all: blinded challenges routinely fail to reproduce their symptoms, and the real cause is often IBS, another FODMAP, or coeliac disease still undiagnosed. Cutting a nutrient-dense food group is not a free action. Find your threshold, keep the hard cheese and yoghurt, and spend the effort on finding out what's actually going on.",
+    },
+    bookTitle: "The Dairy Threshold — keeping the cheese, losing the symptoms",
+    bookUrl: null,
+    landingSlug: "lactose-intolerance",
+  },
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  {
+    slug: "hemorrhoids",
+    name: "Hemorrhoids",
+    icon: "armchair",
+    category: "digestion",
+    blurb: "Common, treatable — and never something to self-diagnose from the symptom alone.",
+    matchRules: [
+      { markerId: "ferritin", label: "Ferritin", unit: "ng/mL", flagBelow: 30 },
+    ],
+    intro:
+      "Haemorrhoids are cushions of blood vessels that everyone has, sitting inside the anal canal, where they help with continence. They become a problem when they swell, prolapse or bleed — typically from **straining, constipation, prolonged sitting on the toilet, pregnancy, or heavy lifting.** Roughly half of adults will have symptoms at some point.\n\nThe symptoms are unmistakable enough that most people diagnose themselves: bright red blood on the paper or in the bowl, itching, a lump, discomfort. **That self-diagnosis is the danger.** Rectal bleeding is also the first sign of colorectal cancer, of inflammatory bowel disease, and of several other conditions — and colorectal cancer is rising in adults under 50. \"It's just piles\" is one of the most costly assumptions in medicine, precisely because it's usually correct.\n\nThe treatment itself is well established and mostly unglamorous: **fibre, fluid, and stopping the straining.** A large randomised evidence base supports fibre specifically. Almost everything else — creams, wipes, herbal capsules — is comfort care layered on top of that.",
+    matchedIntro:
+      "Your iron stores are low, which is worth taking seriously alongside any rectal bleeding. Haemorrhoids can cause iron deficiency, but so can several other sources of blood loss — and low iron plus bleeding is exactly the combination that earns a proper look rather than a cream.",
+    signals: [
+      { markerId: "ferritin", label: "Ferritin", unit: "ng/mL", flagBelow: 30 },
+      {
+        aliases: ["hemoglobin", "haemoglobin", "hgb", "hb"],
+        label: "Haemoglobin",
+        unit: "g/dL",
+        flagBelow: 12,
+      },
+      { markerId: "hs-crp", label: "hs-CRP", unit: "mg/L", flagAbove: 3 },
+    ],
+    doctorBanner: {
+      title: "Never assume rectal bleeding is haemorrhoids",
+      body: "Bleeding from the back passage needs a doctor's assessment — even when haemorrhoids are the likely cause and even when you have had them before. Colorectal cancer, IBD and anal fissures all bleed too, and rates of colorectal cancer in younger adults are rising. Get it examined, then treat the haemorrhoids.",
+    },
+    steps: [
+      {
+        id: "get-examined",
+        title: "Get it looked at before you treat it",
+        detailTitle: "Why 'I know what this is' isn't enough",
+        why: "Rectal bleeding has several causes and the serious ones are treatable when they're found early.",
+        grade: "A",
+        gradeNote: "ASCRS clinical practice guideline · NICE",
+        supervised: true,
+        how: "**See a doctor for any rectal bleeding**, even if you've had haemorrhoids before and even if it looks identical. Examination takes a couple of minutes and settles it.\n\n**These features mean go promptly, not eventually:** you're **over 40**, the bleeding is **dark or mixed into the stool** rather than bright red on the surface, there's been a **change in bowel habit lasting weeks**, **unintended weight loss**, **abdominal pain**, **anaemia**, or a **family history of bowel cancer or IBD**.\n\n**Colorectal cancer incidence in adults under 50 has been rising**, and young age is no longer the reassurance it once was. Screening guidance in the US now starts at `45`.\n\n**What to expect:** a visual inspection, a digital rectal examination, and often a **proctoscopy** — a short look into the anal canal. Uncomfortable, brief, and it distinguishes haemorrhoids from a fissure, which is treated differently. Depending on your risk, a colonoscopy may follow.\n\nThe embarrassment is real. It is also, without exception, a worse reason to wait than any reason to go.",
+        evidence: [
+          "American Society of Colon and Rectal Surgeons — clinical practice guideline for the management of hemorrhoids.",
+          "NICE — suspected cancer: recognition and referral (lower gastrointestinal).",
+          "Evidence summary — rising incidence of early-onset colorectal cancer.",
+        ],
+        checkFirst:
+          "Heavy bleeding, dizziness or fainting, severe pain with a hard tender lump, or fever with anal pain needs urgent care. A thrombosed haemorrhoid is most treatable within the first 72 hours, and a perianal abscess is an emergency.",
+      },
+      {
+        id: "fibre",
+        title: "Fibre and fluid — the treatment with the actual evidence",
+        detailTitle: "The intervention everything else is layered on",
+        why: "Fibre supplementation has randomised evidence for reducing symptoms and bleeding, which is more than can be said for most of the shelf.",
+        grade: "A",
+        gradeNote: "Cochrane review — fibre for haemorrhoids",
+        supplement: true,
+        labNote:
+          "Fibre supplements are simple products where dose and form are what matter — psyllium is the best-studied. Prefer plain psyllium husk over flavoured blends with added sweeteners, which often carry sugar alcohols that cause their own gut symptoms.",
+        how: "**A Cochrane review of randomised trials found fibre reduces symptoms and bleeding** in haemorrhoids. It is the highest-graded intervention on this page and it's cheap.\n\n**Target around `25–30 g` of fibre a day.** Food first: beans and lentils, oats, fruit with the skin, vegetables, whole grains, nuts and seeds. Two kiwifruit a day has trial evidence for constipation specifically and is a pleasant way in.\n\n**Add a supplement if food doesn't get you there.** **Psyllium** is the best-studied. Start low — `1` teaspoon daily — and build over `2` weeks; going straight to a full dose causes bloating and makes people quit.\n\n**Fluid is not optional.** Fibre works by holding water; taken without it, it makes constipation worse. Roughly `2` litres a day, more in heat or with exercise.\n\n**Give it time.** Trials run over weeks, and the benefit builds. Judging fibre after three days is judging it too early.\n\nThe goal is a stool that's **soft and formed, passed without straining** — that's the whole mechanical target.",
+        evidence: [
+          "Cochrane systematic review — laxatives and fibre for the treatment of haemorrhoids.",
+          "American Society of Colon and Rectal Surgeons — dietary and lifestyle management of hemorrhoids.",
+          "Evidence summary — psyllium supplementation and stool consistency.",
+        ],
+        checkFirst:
+          "Increase fibre gradually and with fluid — a sudden jump causes bloating and cramping. If you have a bowel stricture, a history of obstruction, or swallowing difficulty, check with your doctor before starting a bulking agent.",
+      },
+      {
+        id: "toilet-habits",
+        title: "Change what happens on the toilet — this is bigger than it sounds",
+        detailTitle: "Straining, sitting time and the phone",
+        why: "Prolonged sitting and straining are the mechanical cause, and both are habits rather than physiology.",
+        grade: "A−",
+        gradeNote: "ASCRS guideline · evidence summary",
+        how: "**Don't take your phone in.** This is the most practical sentence on the page. Sitting on the toilet for `15` minutes reading keeps the anal cushions engorged, and the modern rise in sitting time is a genuine contributor. **Aim for under `5` minutes.**\n\n**Don't strain.** If nothing is happening, get up and come back later. Pushing hard against a closed system is exactly what damages the cushions.\n\n**Go when you get the urge.** Habitually postponing lets stool dry out in the rectum and guarantees straining later.\n\n**Use a footstool.** Raising your knees above your hips straightens the anorectal angle and lets things pass with less effort. A small stool, or a stack of books, does it.\n\n**Clean gently.** Wet wipes or water beat dry paper, but **avoid wipes with alcohol, fragrance or preservatives** — they're a common cause of contact dermatitis that people then mistake for worsening haemorrhoids. Pat dry rather than rubbing.\n\n**Don't scratch.** Itching is common and scratching damages already-inflamed skin, which itches more.",
+        evidence: [
+          "American Society of Colon and Rectal Surgeons — behavioural and toilet-habit recommendations.",
+          "Evidence summary — defecation posture, anorectal angle and straining effort.",
+          "Evidence summary — perianal contact dermatitis from wipes and topical preparations.",
+        ],
+        checkFirst:
+          "Persistent itching that doesn't settle with these measures needs a look — it can be dermatitis, a fungal infection, threadworm or a skin condition rather than haemorrhoids, and each is treated differently.",
+      },
+      {
+        id: "symptom-relief",
+        title: "Use the comfort measures for what they are",
+        why: "Sitz baths and topical treatments genuinely help symptoms — they just don't fix the cause, and knowing that keeps expectations right.",
+        grade: "B+",
+        gradeNote: "ASCRS guideline · evidence summary",
+        how: "**Sitz baths** — sitting in warm water for `10–15` minutes, `2–3` times a day and after bowel movements — are the most useful comfort measure. They relax the anal sphincter and improve blood flow, and they cost nothing.\n\n**Cold packs** for `10–15` minutes reduce acute swelling, especially in the first day or two of a flare. Wrapped, never directly on skin.\n\n**Over-the-counter preparations**, honestly ranked: **plain barrier ointments and witch hazel pads** soothe and protect. **Short courses of hydrocortisone-containing creams** reduce inflammation, but should be used for no more than about `7` days — longer thins the skin and makes things worse. **Products containing local anaesthetics** relieve pain and are a common cause of allergic contact dermatitis, so watch for symptoms getting oddly worse.\n\n**Paracetamol for pain.** **Avoid opioid-containing painkillers** — codeine causes constipation, which is the mechanism you're trying to escape. NSAIDs are fine for most people but can irritate the stomach.\n\n**Flavonoid supplements** (diosmin, hesperidin, horse chestnut) have a real evidence base for haemorrhoidal symptoms and bleeding — used routinely in some countries, less so in others. Worth mentioning to your doctor; **avoid in pregnancy** without advice.",
+        evidence: [
+          "American Society of Colon and Rectal Surgeons — topical and conservative therapy for hemorrhoids.",
+          "Evidence summary — systematic reviews of phlebotonic (flavonoid) therapy for haemorrhoids.",
+          "Evidence summary — corticosteroid and local anaesthetic preparations: duration limits and contact dermatitis.",
+        ],
+        checkFirst:
+          "Don't use steroid creams in this area for more than about a week without medical advice, and avoid codeine-containing painkillers entirely — constipation is the one thing you can least afford here.",
+      },
+      {
+        id: "prevent",
+        title: "Fix the load underneath — lifting, sitting, weight",
+        why: "Haemorrhoids recur when the pressure that caused them is still there, and most of that pressure is habitual.",
+        grade: "B+",
+        gradeNote: "Evidence summary — risk factors and recurrence",
+        how: "**Breathe out through the effort when you lift.** Holding your breath and bearing down — the Valsalva manoeuvre — spikes abdominal and pelvic venous pressure. This applies in the gym and when moving furniture, and it's a habit worth rebuilding if you lift heavy regularly.\n\n**Get up from your desk.** Prolonged sitting raises pressure in the same veins. A few minutes of movement each hour is enough.\n\n**Move daily.** Regular activity keeps the bowel working and reduces constipation, which is the upstream cause.\n\n**Weight matters** — higher body weight raises intra-abdominal pressure and is an associated risk factor.\n\n**Pregnancy is a special case.** Haemorrhoids are very common in the third trimester and after delivery, from pressure and hormonal changes, and they frequently resolve postpartum. **Get treatment cleared by your midwife or doctor** — several oral and topical products aren't recommended in pregnancy.\n\n**Review chronic cough and constipating medications** with your doctor — iron supplements, opioids and some antidepressants all constipate, and each has options.",
+        evidence: [
+          "Evidence summary — risk factors for haemorrhoidal disease including sedentary behaviour, obesity and heavy lifting.",
+          "American Society of Colon and Rectal Surgeons — prevention and recurrence.",
+          "Evidence summary — haemorrhoids in pregnancy and the postpartum period.",
+        ],
+        checkFirst:
+          "If you're pregnant or breastfeeding, clear any oral or topical treatment with your midwife or doctor first — several standard options aren't recommended, and the safe list is short but real.",
+      },
+      {
+        id: "procedures",
+        title: "Know the procedures — and that they're quick",
+        why: "People endure years of symptoms believing the only option is major surgery, when the common treatments are outpatient and take minutes.",
+        grade: "A−",
+        gradeNote: "ASCRS clinical practice guideline",
+        supervised: true,
+        how: "If conservative treatment hasn't worked after a few months, or symptoms are significant, there are effective office-based options — and most people are surprised how minor they are.\n\n**Rubber band ligation** is the most common: a small band is placed at the base of the haemorrhoid, cutting off its blood supply so it drops off within days. It takes a few minutes, needs no anaesthetic, and has the best evidence among the office procedures for internal haemorrhoids.\n\n**Sclerotherapy and infrared coagulation** are alternatives for smaller ones.\n\n**Surgical haemorrhoidectomy** is reserved for large, prolapsed or persistent disease. It is effective and it is genuinely painful to recover from — which is why it's the last option, not the first.\n\n**A thrombosed external haemorrhoid** — a sudden, exquisitely painful hard lump — is a special case: it can be **drained, and that's most effective within the first `72` hours.** After that, it settles on its own over a couple of weeks. If it's agony and it's new, that's a same-week appointment, not a wait-and-see.",
+        evidence: [
+          "American Society of Colon and Rectal Surgeons — clinical practice guideline: office-based and surgical treatment of hemorrhoids.",
+          "Evidence summary — rubber band ligation versus sclerotherapy and infrared coagulation.",
+          "Evidence summary — timing of intervention for acutely thrombosed external haemorrhoids.",
+        ],
+        checkFirst:
+          "If you take anticoagulants or antiplatelet medication, say so before any procedure — bleeding risk after banding is higher and the plan may need adjusting. Never stop those medications yourself.",
+      },
+    ],
+    skipTheHype: {
+      remedy: "Herbal \"hemorrhoid cure\" capsules and detox suppositories sold online",
+      why: "The category promises to shrink haemorrhoids permanently from the inside, usually with a proprietary herbal blend and often with an accompanying detox regimen. **There is no evidence that any oral herbal product cures haemorrhoids**, and the one class with genuine trial support — flavonoids like diosmin — improves symptoms and bleeding rather than eliminating the underlying vessels. Some imported products have been found to contain undeclared steroids, which cause real damage in this area with prolonged use. The most serious problem, though, is what they encourage: **treating rectal bleeding at home without an examination.** Colorectal cancer, inflammatory bowel disease and anal fissures all bleed the same way, and the months spent on capsules are months without a diagnosis. Fibre, fluid, five minutes on the toilet and a doctor who has actually looked — that's the protocol with evidence behind it.",
+    },
+    bookTitle: "The Hemorrhoid Handbook — what works, and what needs a doctor",
+    bookUrl: null,
+    landingSlug: "hemorrhoids",
   },
 ];

@@ -133,9 +133,9 @@ export const METABOLIC_HEART_CONDITIONS: Condition[] = [
       remedy: "Beetroot shots as a blood pressure treatment",
       why: "Dietary nitrate does produce a small, real, short-lived drop — and that's the whole finding. The effect is a fraction of what sodium reduction, weight loss or medication achieve, it fades with regular use, and no hypertension guideline recommends it. Enjoy beetroot as food; don't build a plan on it.",
     },
-    bookTitle: null,
+    bookTitle: "The Blood Pressure Book — sodium, potassium and the numbers that count",
     bookUrl: null,
-    landingSlug: null,
+    landingSlug: "blood-pressure-support",
   },
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -270,9 +270,9 @@ export const METABOLIC_HEART_CONDITIONS: Condition[] = [
       remedy: "Red yeast rice",
       why: "It lowers cholesterol because it contains monacolin K, which is chemically identical to lovastatin. So it's an unregulated statin at a dose that varies wildly between batches, carrying the same muscle and liver risks with none of the monitoring — and some products have tested positive for citrinin, a kidney toxin. If a statin is right for you, get a real one.",
     },
-    bookTitle: null,
+    bookTitle: "The Cholesterol Guide — ApoB, LDL and what actually lowers risk",
     bookUrl: null,
-    landingSlug: null,
+    landingSlug: "high-cholesterol-support",
   },
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -396,9 +396,9 @@ export const METABOLIC_HEART_CONDITIONS: Condition[] = [
       remedy: "Milk thistle (silymarin) as a liver treatment",
       why: "It's the default \"liver support\" supplement and the evidence doesn't support it. NCCIH's summary is that studies in liver disease have been largely negative or inconclusive, and no liver society recommends it for fatty liver. The weight, sugar and alcohol steps above are what actually change liver fat.",
     },
-    bookTitle: null,
+    bookTitle: "The Liver Reset — reversing fatty liver with evidence",
     bookUrl: null,
-    landingSlug: null,
+    landingSlug: "fatty-liver-support",
   },
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -513,9 +513,9 @@ export const METABOLIC_HEART_CONDITIONS: Condition[] = [
       remedy: "Apple cider vinegar, raspberry ketones and \"metabolism boosters\"",
       why: "This whole shelf shares one problem: effects that are tiny where they exist at all, measured over weeks, in small studies. The FDA has repeatedly found weight-loss supplements spiked with undeclared prescription drugs including sibutramine, which was withdrawn for cardiovascular risk. Nothing in this category comes close to protein, resistance training and sleep.",
     },
-    bookTitle: null,
+    bookTitle: "The Weight Handbook — metabolism, appetite and the honest levers",
     bookUrl: null,
-    landingSlug: null,
+    landingSlug: "weight-management",
   },
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -636,8 +636,8 @@ export const METABOLIC_HEART_CONDITIONS: Condition[] = [
       remedy: "\"Nature's Ozempic\" — berberine sold as a GLP-1 alternative",
       why: "Berberine is not a GLP-1 agonist and does not work by the same mechanism. The weight effects in studies are small and inconsistent, it has a long list of drug interactions through CYP3A4, and it is unsafe in pregnancy. Compounded or grey-market versions of the real medications carry their own serious risks — the FDA has warned about dosing errors and adverse events from them.",
     },
-    bookTitle: null,
+    bookTitle: "The GLP-1 Companion — protecting muscle, nutrition and the gut",
     bookUrl: null,
-    landingSlug: null,
+    landingSlug: "glp1-companion-support",
   },
 ];
