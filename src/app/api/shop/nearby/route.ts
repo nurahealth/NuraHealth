@@ -56,13 +56,6 @@ const BRANDS: { match: string[]; domain: string; logo?: string }[] = [
 const ORGANIC_CHAINS = BRANDS.flatMap((b) => b.match);
 
 // Explicitly excluded — conventional big-box / low-quality chains.
-// A real farmers/green market names itself as one. A lone company sitting at a
-// market does not — so amenity=marketplace only counts when the name says market.
-const MARKET_WORDS = [
-  "market", "farmers", "farmer's", "greenmarket", "green market",
-  "bazaar", "produce", "growers", "farm stand", "farmstand", "co-op", "coop",
-];
-
 const CONVENTIONAL = [
   "walmart", "target", "publix", "kroger", "safeway", "costco", "sam's club",
   "sams club", "aldi", "food lion", "winn-dixie", "winn dixie", "albertsons",
@@ -129,7 +122,6 @@ function haversineMi(aLat: number, aLng: number, bLat: number, bLng: number): nu
 
 function classify(tags: Record<string, string>): { type: string; tier: Tier; organic: boolean } | null {
   const shop = tags.shop;
-  const amenity = tags.amenity;
   const name = (tags.name ?? "").toLowerCase();
   if (isClosed(tags)) return null;
   if (CLOSED_NAMES.some((c) => name.includes(c))) return null;
@@ -141,10 +133,6 @@ function classify(tags: Record<string, string>): { type: string; tier: Tier; org
   const organic = organicTag || chain;
 
   if (shop === "farm") return { type: "Local farm", tier: 1, organic };
-  if (amenity === "marketplace") {
-    const looksLikeMarket = MARKET_WORDS.some((w) => name.includes(w));
-    return looksLikeMarket ? { type: "Farmers market", tier: 2, organic } : null;
-  }
   if (shop === "greengrocer") return { type: "Greengrocer", tier: 3, organic };
   if (shop === "health_food" || shop === "organic") return { type: "Health-food market", tier: 3, organic };
   if (shop === "supermarket") {
@@ -257,8 +245,6 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 (
   node["shop"~"^(health_food|greengrocer|farm|organic|supermarket)$"](around:${radiusM},${lat},${lng});
   way["shop"~"^(health_food|greengrocer|farm|organic|supermarket)$"](around:${radiusM},${lat},${lng});
-  node["amenity"="marketplace"](around:${radiusM},${lat},${lng});
-  way["amenity"="marketplace"](around:${radiusM},${lat},${lng});
 );
 out center tags;`;
 

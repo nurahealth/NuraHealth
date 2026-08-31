@@ -33,12 +33,11 @@ interface Vendor {
   imageKind: "photo" | "logo" | null;
 }
 
-type FilterKey = "all" | "farm" | "market" | "health" | "grocer";
+type FilterKey = "all" | "farm" | "health" | "grocer";
 
 const FILTERS: { key: FilterKey; label: string; match: (v: Vendor) => boolean }[] = [
   { key: "all", label: "All", match: () => true },
   { key: "farm", label: "Farms", match: (v) => v.tier === 1 },
-  { key: "market", label: "Markets", match: (v) => v.tier === 2 },
   { key: "health", label: "Health-food", match: (v) => v.tier === 3 },
   { key: "grocer", label: "Grocers", match: (v) => v.tier >= 4 },
 ];
@@ -56,7 +55,6 @@ function tierGradient(tier: number): string {
 
 function tierNote(v: Vendor): string {
   if (v.tier === 1) return "Local farm — as fresh and close to source as it gets";
-  if (v.tier === 2) return "Farmers market — seasonal, local growers";
   if (v.tier === 3) return v.organic ? "Health-food market — organic focus" : "Health-food market";
   if (v.tier === 4) return "Organic-focused grocer";
   return "Grocery store with fresh options";
@@ -444,7 +442,7 @@ export default function ShopClient() {
           The healthiest food near you
         </h1>
         <p style={{ fontFamily: SANS, fontSize: 14, color: TEXT_SEC, lineHeight: 1.6, maxWidth: 560 }}>
-          Find local farms, farmers markets, and organic grocers close by — ranked from the freshest,
+          Find local farms and premium organic grocers close by — ranked from the freshest,
           most local sources first. Whole foods that actually nourish the body.
         </p>
       </div>
