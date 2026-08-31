@@ -39,6 +39,7 @@ const Icons = {
   bookmark: () => <I><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></I>,
   flask:    () => <I><path d="M9 3h6M10 3v6l-4.5 9a1 1 0 0 0 .9 1.5h11.2a1 1 0 0 0 .9-1.5L14 9V3M7.5 14h9"/></I>,
   leaf:     () => <I><path d="M5 21c.5-4.5 2.5-8 7-10"/><path d="M9 18c6.22 0 10.5-3.29 11-12V4h-4.01C9 4 6 7 6 11c0 3 1 5 3 7z"/></I>,
+  pin:      () => <I><path d="M12 21s7-6.5 7-11a7 7 0 1 0-14 0c0 4.5 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></I>,
   // Conditions. Deliberately NOT the heart-pulse from the mockup: `activity`
   // (Dashboard) is already a heart with a pulse line, and two of them two rows
   // apart in the same rail read as a duplicate. A stethoscope is the only glyph
@@ -87,6 +88,7 @@ const NAV_ITEMS: NavItem[] = [
   { key: "supplements", label: "Supplements",  href: "/supplements",  icon: Icons.pill },
   { key: "fitness",     label: "Fitness",      href: "/fitness",      icon: Icons.dumbbell },
   { key: "integrations",label: "Integrations", href: "/integrations", icon: Icons.watch },
+  { key: "shop",        label: "Shop Local",   href: "/shop",         icon: Icons.pin },
   { key: "saved",       label: "Saved",        href: "/saved",        icon: Icons.bookmark },
 ];
 
