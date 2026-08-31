@@ -51,7 +51,7 @@ const BRANDS: { match: string[]; domain: string; logo?: string }[] = [
   { match: ["earth fare"], domain: "earthfare.com" },
   { match: ["mom's organic", "moms organic"], domain: "momsorganicmarket.com" },
   { match: ["new seasons"], domain: "newseasonsmarket.com" },
-  { match: ["the fresh market", "fresh market"], domain: "thefreshmarket.com" },
+  { match: ["the fresh market"], domain: "thefreshmarket.com" },
 ];
 const ORGANIC_CHAINS = BRANDS.flatMap((b) => b.match);
 
@@ -61,6 +61,8 @@ const CONVENTIONAL = [
   "sams club", "aldi", "food lion", "winn-dixie", "winn dixie", "albertsons",
   "meijer", "dollar general", "family dollar", "stop & shop", "giant eagle",
   "winco", "smith's", "vons", "ralphs", "food 4 less",
+  "pete's fresh market", "petes fresh market", "pete's market",
+  "jewel-osco", "jewel osco", "mariano's", "marianos", "heinen's",
 ];
 
 // Specific local farms we have a real logo for (matched by name).
