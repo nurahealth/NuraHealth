@@ -26,6 +26,10 @@ interface Vendor {
   distanceMi: number;
   address: string | null;
   hours: string | null;
+  hoursWeek: string[] | null;
+  openNow: boolean | null;
+  rating: number | null;
+  ratingCount: number | null;
   mapsUrl: string;
   website: string | null;
   searchUrl: string;
@@ -53,6 +57,14 @@ function tierGradient(tier: number): string {
   return `linear-gradient(140deg, rgba(${SAGE_RGB},${top[tier] ?? "0.3"}), rgba(${SAGE_RGB},${bot[tier] ?? "0.12"}))`;
 }
 
+// Google's weekdayDescriptions run Monday..Sunday; JS getDay() is Sunday=0.
+function todaysHours(v: Vendor): string | null {
+  if (!v.hoursWeek || v.hoursWeek.length !== 7) return v.hours;
+  const idx = (new Date().getDay() + 6) % 7;
+  const line = v.hoursWeek[idx] ?? "";
+  return line.replace(/^[A-Za-z]+:\s*/, "Today: ");
+}
+
 function tierNote(v: Vendor): string {
   if (v.tier === 1) return "Local farm — as fresh and close to source as it gets";
   if (v.tier === 3) return v.organic ? "Health-food market — organic focus" : "Health-food market";
@@ -74,6 +86,13 @@ function Globe() {
     <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
       <circle cx="12" cy="12" r="9" />
       <path d="M3 12h18M12 3c2.4 2.6 2.4 15.4 0 18M12 3c-2.4 2.6-2.4 15.4 0 18" />
+    </svg>
+  );
+}
+function Star() {
+  return (
+    <svg width={12} height={12} viewBox="0 0 24 24" fill="currentColor" stroke="none" style={{ marginTop: -1 }}>
+      <path d="M12 2l2.9 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l7.1-1.01L12 2z" />
     </svg>
   );
 }
@@ -200,14 +219,26 @@ function VendorCard({ v }: { v: Vendor }) {
           )}
         </div>
 
-        <div style={{ fontFamily: SANS, fontSize: 12, color: SAGE, marginTop: 4 }}>
-          {v.type} · {v.distanceMi} mi
+        <div style={{ fontFamily: SANS, fontSize: 12, color: SAGE, marginTop: 4, display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+          <span>{v.type} · {v.distanceMi} mi</span>
+          {v.rating != null && (
+            <span style={{ color: TEXT_SEC, display: "inline-flex", alignItems: "center", gap: 3 }}>
+              <span style={{ color: SAGE, display: "inline-flex" }}><Star /></span>
+              {v.rating.toFixed(1)}
+              {v.ratingCount != null && <span style={{ color: TEXT_TER }}>({v.ratingCount})</span>}
+            </span>
+          )}
+          {v.openNow != null && (
+            <span style={{ color: v.openNow ? SAGE : TEXT_TER, fontWeight: 500 }}>
+              {v.openNow ? "Open now" : "Closed"}
+            </span>
+          )}
         </div>
         <div style={{ fontFamily: SANS, fontSize: 12, color: TEXT_TER, marginTop: 5, lineHeight: 1.5 }}>
           {tierNote(v)}
         </div>
         {v.address && <div style={{ fontFamily: SANS, fontSize: 12, color: TEXT_SEC, marginTop: 6 }}>{v.address}</div>}
-        {v.hours && <div style={{ fontFamily: SANS, fontSize: 11.5, color: TEXT_TER, marginTop: 2 }}>{v.hours}</div>}
+        {todaysHours(v) && <div style={{ fontFamily: SANS, fontSize: 11.5, color: TEXT_TER, marginTop: 2 }}>{todaysHours(v)}</div>}
 
         <div style={{ display: "flex", gap: 16, marginTop: 10, flexWrap: "wrap" }}>
           <DirectionsButton v={v} />
@@ -234,110 +265,150 @@ function escapeHtml(v: string): string {
   return v.replace(/[&<>"']/g, (c) => m[c] ?? c);
 }
 
-// Keyless OpenStreetMap map (Leaflet + dark CARTO tiles) with a pin per place.
+// Google Maps — luxury dark style, one sage pin per place. Auto-fits to results.
+const MAP_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
+
+const DARK_STYLE: any[] = [
+  { elementType: "geometry", stylers: [{ color: "#131417" }] },
+  { elementType: "labels.icon", stylers: [{ visibility: "off" }] },
+  { elementType: "labels.text.fill", stylers: [{ color: "#8b908c" }] },
+  { elementType: "labels.text.stroke", stylers: [{ color: "#0d0d0e" }] },
+  { featureType: "administrative", elementType: "geometry", stylers: [{ color: "#2a2d2b" }] },
+  { featureType: "administrative.land_parcel", stylers: [{ visibility: "off" }] },
+  { featureType: "administrative.neighborhood", stylers: [{ visibility: "off" }] },
+  { featureType: "poi", stylers: [{ visibility: "off" }] },
+  { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#1a201c" }] },
+  { featureType: "road", elementType: "geometry", stylers: [{ color: "#26282b" }] },
+  { featureType: "road", elementType: "labels", stylers: [{ visibility: "off" }] },
+  { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#34373b" }] },
+  { featureType: "transit", stylers: [{ visibility: "off" }] },
+  { featureType: "landscape.natural", elementType: "geometry", stylers: [{ color: "#171a18" }] },
+  { featureType: "water", elementType: "geometry", stylers: [{ color: "#0b0d0e" }] },
+];
+
+// Google recommends loading=async + a callback param: Google invokes the callback
+// only once the API is fully bootstrapped (Map, Marker, etc. all ready). The script
+// tag's own load event fires too early, so we never rely on it.
+let mapsPromise: Promise<any> | null = null;
+function ensureGoogleMaps(): Promise<any> {
+  const w = window as any;
+  if (w.google?.maps?.Map) return Promise.resolve(w.google.maps);
+  if (mapsPromise) return mapsPromise;
+  mapsPromise = new Promise((resolve, reject) => {
+    w.__nuraMapsReady = () => resolve(w.google.maps);
+    const sc = document.createElement("script");
+    sc.id = "gmaps-js";
+    sc.src = `https://maps.googleapis.com/maps/api/js?key=${MAP_KEY}&v=weekly&loading=async&callback=__nuraMapsReady`;
+    sc.async = true;
+    sc.onerror = () => {
+      mapsPromise = null;
+      reject(new Error("Google Maps script failed to load"));
+    };
+    document.head.appendChild(sc);
+  });
+  return mapsPromise;
+}
+
+function pinIcon(maps: any, color: string) {
+  const svg =
+    '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="32" viewBox="0 0 28 38">' +
+    '<path d="M14 0C6.27 0 0 6.27 0 14c0 9.2 12.1 22.3 12.6 22.9a1.9 1.9 0 0 0 2.8 0C15.9 36.3 28 23.2 28 14 28 6.27 21.73 0 14 0z" fill="' +
+    color + '"/><circle cx="14" cy="14" r="5.5" fill="#0d0d0e"/></svg>';
+  return {
+    url: "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg),
+    scaledSize: new maps.Size(24, 32),
+    anchor: new maps.Point(12, 32),
+  };
+}
+function youIcon(maps: any) {
+  const svg =
+    '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20">' +
+    '<circle cx="10" cy="10" r="6" fill="#9bb0a5" stroke="#fff" stroke-width="2.5"/></svg>';
+  return {
+    url: "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg),
+    scaledSize: new maps.Size(20, 20),
+    anchor: new maps.Point(10, 10),
+  };
+}
+
 function ShopMap({ center, vendors }: { center: { lat: number; lng: number }; vendors: Vendor[] }) {
   const elRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<any>(null);
-  const layerRef = useRef<any>(null);
+  const markersRef = useRef<any[]>([]);
+  const infoRef = useRef<any>(null);
+
+  function draw(maps: any) {
+    if (!mapRef.current) return;
+    markersRef.current.forEach((m) => m.setMap(null));
+    markersRef.current = [];
+    if (!infoRef.current) infoRef.current = new maps.InfoWindow();
+    const bounds = new maps.LatLngBounds();
+
+    const you = new maps.Marker({
+      position: { lat: center.lat, lng: center.lng },
+      map: mapRef.current,
+      icon: youIcon(maps),
+      zIndex: 999,
+      title: "You",
+    });
+    markersRef.current.push(you);
+    bounds.extend({ lat: center.lat, lng: center.lng });
+
+    for (const v of vendors) {
+      const mk = new maps.Marker({
+        position: { lat: v.lat, lng: v.lng },
+        map: mapRef.current,
+        icon: pinIcon(maps, "#9bb0a5"),
+        title: v.name,
+      });
+      mk.addListener("click", () => {
+        infoRef.current.setContent(
+          `<div style="font-family:system-ui,sans-serif;font-size:12.5px;line-height:1.5;color:#1a1a1a"><strong>${escapeHtml(v.name)}</strong><br/>${escapeHtml(v.type)} · ${v.distanceMi} mi</div>`
+        );
+        infoRef.current.open(mapRef.current, mk);
+      });
+      markersRef.current.push(mk);
+      bounds.extend({ lat: v.lat, lng: v.lng });
+    }
+
+    if (vendors.length) mapRef.current.fitBounds(bounds, 44);
+    else mapRef.current.setCenter({ lat: center.lat, lng: center.lng });
+  }
 
   useEffect(() => {
     let cancelled = false;
-    async function ensureLeaflet(): Promise<any> {
-      const w = window as any;
-      if (w.L) return w.L;
-      if (!document.getElementById("leaflet-css")) {
-        const link = document.createElement("link");
-        link.id = "leaflet-css";
-        link.rel = "stylesheet";
-        link.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
-        document.head.appendChild(link);
-      }
-      await new Promise<void>((resolve, reject) => {
-        if ((window as any).L) return resolve();
-        const sc = document.createElement("script");
-        sc.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
-        sc.async = true;
-        sc.onload = () => resolve();
-        sc.onerror = () => reject(new Error("leaflet failed to load"));
-        document.body.appendChild(sc);
-      });
-      return (window as any).L;
-    }
-
-    ensureLeaflet()
-      .then((L: any) => {
+    ensureGoogleMaps()
+      .then((maps: any) => {
         if (cancelled || !elRef.current) return;
         if (!mapRef.current) {
-          mapRef.current = L.map(elRef.current, {
+          mapRef.current = new maps.Map(elRef.current, {
+            center: { lat: center.lat, lng: center.lng },
+            zoom: 11,
+            disableDefaultUI: true,
             zoomControl: true,
-            attributionControl: false,
-            scrollWheelZoom: false,
-          }).setView([center.lat, center.lng], 11);
-          L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-            maxZoom: 19,
-            subdomains: "abc",
-          }).addTo(mapRef.current);
-          layerRef.current = L.layerGroup().addTo(mapRef.current);
+            gestureHandling: "cooperative",
+            clickableIcons: false,
+            styles: DARK_STYLE,
+            backgroundColor: "#0d0d0e",
+          });
         }
-        drawMarkers(L);
+        draw(maps);
       })
-      .catch(() => {});
-
-    return () => {
-      cancelled = true;
-      if (mapRef.current) {
-        mapRef.current.remove();
-        mapRef.current = null;
-      }
-    };
+      .catch((e) => console.error("[ShopMap] failed to initialise Google Map:", e));
+    return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
-    const L = (window as any).L;
-    if (L && mapRef.current) drawMarkers(L);
+    const maps = (window as any).google?.maps;
+    if (maps && mapRef.current) draw(maps);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [vendors, center]);
-
-  function drawMarkers(L: any) {
-    if (!layerRef.current || !mapRef.current) return;
-    layerRef.current.clearLayers();
-    const pts: [number, number][] = [[center.lat, center.lng]];
-    const pin = (color: string) =>
-      L.divIcon({
-        className: "nura-pin",
-        html:
-          '<div style="filter:drop-shadow(0 3px 3px rgba(0,0,0,.45))"><svg width="20" height="27" viewBox="0 0 28 38" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14 0C6.27 0 0 6.27 0 14c0 9.2 12.1 22.3 12.6 22.9a1.9 1.9 0 0 0 2.8 0C15.9 36.3 28 23.2 28 14 28 6.27 21.73 0 14 0z" fill="' +
-          color +
-          '"/><circle cx="14" cy="14" r="5.5" fill="#0d0d0e"/></svg></div>',
-        iconSize: [20, 27],
-        iconAnchor: [10, 27],
-        popupAnchor: [0, -25],
-      });
-    const youIcon = L.divIcon({
-      className: "nura-you",
-      html:
-        '<div style="width:13px;height:13px;border-radius:50%;background:#9bb0a5;border:2px solid #fff;box-shadow:0 0 0 2px rgba(155,176,165,.45),0 1px 4px rgba(0,0,0,.4)"></div>',
-      iconSize: [13, 13],
-      iconAnchor: [7, 7],
-    });
-    L.marker([center.lat, center.lng], { icon: youIcon })
-      .bindPopup("<strong>You</strong>")
-      .addTo(layerRef.current);
-    for (const v of vendors) {
-      L.marker([v.lat, v.lng], { icon: pin("#9bb0a5") })
-        .bindPopup(`<strong>${escapeHtml(v.name)}</strong><br/>${escapeHtml(v.type)} \u00b7 ${v.distanceMi} mi`)
-        .addTo(layerRef.current);
-      pts.push([v.lat, v.lng]);
-    }
-    if (pts.length > 1) mapRef.current.fitBounds(pts, { padding: [28, 28], maxZoom: 13 });
-    else mapRef.current.setView([center.lat, center.lng], 11);
-  }
 
   return (
     <div
       ref={elRef}
-      style={{ height: 260, width: "100%", borderRadius: 16, overflow: "hidden", border: `0.5px solid ${BORDER}`, marginBottom: 16, background: SURFACE }}
+      style={{ height: 360, width: "100%", borderRadius: 16, overflow: "hidden", border: `0.5px solid ${BORDER}`, marginBottom: 16, background: "#0d0d0e" }}
     />
   );
 }
@@ -568,8 +639,8 @@ export default function ShopClient() {
           )}
 
           <p style={{ fontFamily: SANS, fontSize: 11, color: TEXT_TER, marginTop: 20, lineHeight: 1.5 }}>
-            Places and details come from OpenStreetMap, a community map — hours, photos, and organic tags
-            may be incomplete. Always confirm with the store.
+            Places, photos, ratings, and hours come from Google. We show only operating farms and
+            premium organic grocers — always confirm details with the store.
           </p>
         </>
       )}

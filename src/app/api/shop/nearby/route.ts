@@ -4,21 +4,23 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const maxDuration = 30;
 
-// Keyless local-vendor search over OpenStreetMap:
-//  - Nominatim geocodes a US ZIP → lat/lng (when no coordinates are supplied)
-//  - Overpass returns nearby food vendors by tag
-//  - Known chains get their official site + logo; independents try their own
-//    website's og:image (a real facility photo), then a logo, then a tile.
-//  - Every card gets a working link (its site, or a Google search fallback).
-// No API key, no billing. Location arrives in the POST body (never the URL).
+// Nearby organic-food search powered by Google Places API (New).
+//  - Text Search returns real, live businesses with a business_status flag,
+//    so permanently-closed / phantom places are filtered out automatically.
+//  - We keep only local farms and premium organic / health-food grocers;
+//    conventional big-box chains and non-food shops are excluded by name.
+//  - Real Google photos, star ratings and open-now status ride along.
+// The Maps key is read from NEXT_PUBLIC_GOOGLE_MAPS_API_KEY. ZIP geocoding
+// still uses keyless Nominatim so only two Google APIs need enabling.
 
-const OVERPASS_ENDPOINTS = [
-  "https://overpass-api.de/api/interpreter",
-  "https://overpass.kumi.systems/api/interpreter",
-  "https://overpass.private.coffee/api/interpreter",
-];
+const KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
+const PLACES_SEARCH = "https://places.googleapis.com/v1/places:searchText";
 const NOMINATIM = "https://nominatim.openstreetmap.org/search";
 const UA = "NuraHealthApp/1.0 (https://nura-health-three.vercel.app)";
+
+// Google circle radius caps at 50km (~31mi) per request; we bias to that and
+// then filter to the user's chosen radius on the client.
+const MAX_BIAS_M = 50000;
 
 type Tier = 1 | 2 | 3 | 4 | 5;
 type ImageKind = "photo" | "logo" | null;
@@ -33,6 +35,10 @@ interface Vendor {
   distanceMi: number;
   address: string | null;
   hours: string | null;
+  hoursWeek: string[] | null;
+  openNow: boolean | null;
+  rating: number | null;
+  ratingCount: number | null;
   mapsUrl: string;
   website: string | null;
   searchUrl: string;
@@ -40,7 +46,7 @@ interface Vendor {
   imageKind: ImageKind;
 }
 
-// Known health/organic chains → official domain (drives logo + website).
+// Known health/organic chains -> real logo where we host one.
 const BRANDS: { match: string[]; domain: string; logo?: string }[] = [
   { match: ["whole foods"], domain: "wholefoodsmarket.com", logo: "/logos/whole-foods.webp?v=3" },
   { match: ["sprouts"], domain: "sprouts.com", logo: "/logos/sprouts.webp?v=3" },
@@ -53,9 +59,13 @@ const BRANDS: { match: string[]; domain: string; logo?: string }[] = [
   { match: ["new seasons"], domain: "newseasonsmarket.com" },
   { match: ["the fresh market"], domain: "thefreshmarket.com" },
 ];
-const ORGANIC_CHAINS = BRANDS.flatMap((b) => b.match);
+const brandFavicon = (domain: string) => `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
+function brandFor(name: string): { match: string[]; domain: string; logo?: string } | null {
+  const n = name.toLowerCase();
+  return BRANDS.find((b) => b.match.some((m) => n.includes(m))) ?? null;
+}
 
-// Explicitly excluded — conventional big-box / low-quality chains.
+// Conventional big-box / low-quality chains -> excluded.
 const CONVENTIONAL = [
   "walmart", "target", "publix", "kroger", "safeway", "costco", "sam's club",
   "sams club", "aldi", "food lion", "winn-dixie", "winn dixie", "albertsons",
@@ -63,9 +73,10 @@ const CONVENTIONAL = [
   "winco", "smith's", "vons", "ralphs", "food 4 less",
   "pete's fresh market", "petes fresh market", "pete's market",
   "jewel-osco", "jewel osco", "mariano's", "marianos", "heinen's",
+  "7-eleven", "circle k", "wawa", "quiktrip", "cvs", "walgreens", "rite aid",
 ];
 
-// Specific local farms we have a real logo for (matched by name).
+// Specific local farms we have a real logo for.
 const FARMS: { match: string[]; logo: string }[] = [
   { match: ["firefly"], logo: "/logos/firefly-farm.webp?v=3" },
 ];
@@ -74,20 +85,13 @@ function farmLogoFor(name: string): string | null {
   return FARMS.find((f) => f.match.some((m) => n.includes(m)))?.logo ?? null;
 }
 
-// Known permanently-closed places OSM still lists as open (manual blocklist —
-// add any that slip through here).
 const CLOSED_NAMES = ["yankee peddler"];
-
-// Supplement / vitamin retailers — not real food sources. OSM tags these as
-// shop=health_food just like grocers, so exclude them by name.
-// Non-food product companies that get mis-tagged as shops/markets. Excluded.
 const NON_FOOD_NAMES = [
   "deodorant", "cosmetic", "perfume", "fragrance", "candle", "soap",
   "skincare", "skin care", "beauty", "salon", "spa", "nail", "barber",
   "boutique", "apparel", "clothing", "jewelry", "florist", "cbd", "vape",
-  "smoke shop", "pet ", "hardware",
+  "smoke shop", "hardware", "pharmacy", "liquor", "wine & spirits",
 ];
-
 const SUPPLEMENT_NAMES = [
   "nutrishop", "gnc", "vitamin shoppe", "vitamin world", "max muscle",
   "complete nutrition", "supplement superstore", "supplement warehouse",
@@ -95,22 +99,19 @@ const SUPPLEMENT_NAMES = [
   "supplement", "nutrishop usa",
 ];
 
-// Detect a place OSM has flagged as closed/disused/gone.
-function isClosed(tags: Record<string, string>): boolean {
-  const oh = (tags.opening_hours ?? "").toLowerCase().trim();
-  if (oh === "closed" || oh === "off") return true;
-  if (tags.disused === "yes" || tags.abandoned === "yes") return true;
-  if (tags.end_date) return true;
-  for (const k of Object.keys(tags)) {
-    if (/^(disused|was|abandoned|closed|removed|demolished|razed):/i.test(k)) return true;
-  }
-  return false;
-}
+// Google lists in-store departments as their own places ("Whole Foods Bakery",
+// "Whole Foods Market Floral"). Collapse them — we only want the store itself.
+const DEPARTMENT_WORDS = [
+  "bakery", "floral", "deli", "coffee", "juice", "pizza", "sushi", "seafood",
+  "pharmacy", "catering", "wine", "beer", "liquor", "butcher", "cafe", "café",
+];
+// Farmers markets are intentionally excluded (they pull in anything with
+// "market" in the name). Branded chains like Sprouts are matched first, so
+// "Sprouts Farmers Market" is unaffected.
+const FARMERS_MARKET_WORDS = ["farmers market", "farmer's market", "farmers' market", "green market", "greenmarket"];
 
-function brandFor(name: string): { domain: string; logo?: string } | null {
-  const n = name.toLowerCase();
-  return BRANDS.find((b) => b.match.some((m) => n.includes(m))) ?? null;
-}
+const FARM_WORDS = ["farm", "orchard", "ranch", "produce", "u-pick", "upick", "you-pick", "grove", "homestead", "creamery", "dairy", "apiary"];
+const ORGANIC_WORDS = ["organic", "natural", "health food", "health foods", "co-op", "coop", "wholesome", "sprout"];
 
 function haversineMi(aLat: number, aLng: number, bLat: number, bLng: number): number {
   const R = 3958.8;
@@ -122,50 +123,49 @@ function haversineMi(aLat: number, aLng: number, bLat: number, bLng: number): nu
   return R * 2 * Math.asin(Math.min(1, Math.sqrt(s)));
 }
 
-function classify(tags: Record<string, string>): { type: string; tier: Tier; organic: boolean } | null {
-  const shop = tags.shop;
-  const name = (tags.name ?? "").toLowerCase();
-  if (isClosed(tags)) return null;
-  if (CLOSED_NAMES.some((c) => name.includes(c))) return null;
-  if (SUPPLEMENT_NAMES.some((c) => name.includes(c))) return null;
-  if (NON_FOOD_NAMES.some((c) => name.includes(c))) return null;
-  const organicTag = tags.organic === "yes" || tags.organic === "only" || shop === "organic";
-  const chain = ORGANIC_CHAINS.some((c) => name.includes(c));
-  if (CONVENTIONAL.some((c) => name.includes(c))) return null;
-  const organic = organicTag || chain;
+// Decide whether a Google place is a quality organic source, and how to label it.
+function classify(
+  name: string,
+  primaryType: string,
+  types: string[],
+  fromFarmQuery: boolean
+): { type: string; tier: Tier; organic: boolean } | null {
+  const n = name.toLowerCase();
+  if (CLOSED_NAMES.some((c) => n.includes(c))) return null;
+  if (SUPPLEMENT_NAMES.some((c) => n.includes(c))) return null;
+  if (NON_FOOD_NAMES.some((c) => n.includes(c))) return null;
+  if (CONVENTIONAL.some((c) => n.includes(c))) return null;
 
-  if (shop === "farm") return { type: "Local farm", tier: 1, organic };
-  if (shop === "greengrocer") return { type: "Greengrocer", tier: 3, organic };
-  if (shop === "health_food" || shop === "organic") return { type: "Health-food market", tier: 3, organic };
-  if (shop === "supermarket") {
-    if (chain || organicTag) return { type: "Organic-focused grocer", tier: 4, organic: true };
-    return null;
+  const brand = brandFor(name);
+  const organicWord = ORGANIC_WORDS.some((w) => n.includes(w));
+  const organic = !!brand || organicWord;
+
+  // Known chains first — "Sprouts Farmers Market" is a grocer, not a farm.
+  if (brand) {
+    if (DEPARTMENT_WORDS.some((w) => n.includes(w))) return null; // in-store department, not the store
+    return { type: "Organic-focused grocer", tier: 4, organic: true };
   }
+  if (FARMERS_MARKET_WORDS.some((w) => n.includes(w))) return null;
+
+  // Must actually look like a farm/produce source — coming back from the farm
+  // search alone isn't enough (Google returns conventional grocers for it too).
+  void fromFarmQuery;
+  const farmish =
+    FARM_WORDS.some((w) => n.includes(w)) ||
+    types.includes("farm") ||
+    primaryType === "farm";
+  if (farmish) return { type: "Local farm", tier: 1, organic };
+  if (organicWord) return { type: "Health-food market", tier: 3, organic: true };
+
+  const grocery =
+    primaryType === "grocery_store" ||
+    primaryType === "supermarket" ||
+    types.includes("grocery_store") ||
+    types.includes("supermarket");
+  // Unbranded conventional grocers with no organic signal -> drop (Austin: no bullshit).
+  if (grocery) return null;
   return null;
 }
-
-function buildAddress(t: Record<string, string>): string | null {
-  const line1 = [t["addr:housenumber"], t["addr:street"]].filter(Boolean).join(" ");
-  const parts = [line1, t["addr:city"], t["addr:state"], t["addr:postcode"]].filter(Boolean);
-  return parts.length ? parts.join(", ") : null;
-}
-
-function normalizeUrl(raw: string | null | undefined): string | null {
-  if (!raw) return null;
-  const t = raw.trim();
-  if (!t) return null;
-  return /^https?:\/\//i.test(t) ? t : `https://${t}`;
-}
-
-function domainOf(url: string): string | null {
-  try {
-    return new URL(normalizeUrl(url)!).hostname.replace(/^www\./, "");
-  } catch {
-    return null;
-  }
-}
-
-const logoUrl = (domain: string) => `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
 
 async function geocodeZip(zip: string): Promise<{ lat: number; lng: number } | null> {
   const url = `${NOMINATIM}?postalcode=${encodeURIComponent(zip)}&country=us&format=json&limit=1`;
@@ -176,50 +176,139 @@ async function geocodeZip(zip: string): Promise<{ lat: number; lng: number } | n
   return { lat: parseFloat(rows[0].lat), lng: parseFloat(rows[0].lon) };
 }
 
-// Fetch a store's homepage: report whether it's alive (link is safe to show)
-// and its og:image / twitter:image (a real facility photo) when present.
-async function fetchSite(siteUrl: string): Promise<{ ok: boolean; og: string | null }> {
-  const base = normalizeUrl(siteUrl);
-  if (!base) return { ok: false, og: null };
+interface GPlace {
+  id: string;
+  displayName?: { text: string };
+  formattedAddress?: string;
+  location?: { latitude: number; longitude: number };
+  businessStatus?: string;
+  rating?: number;
+  userRatingCount?: number;
+  websiteUri?: string;
+  googleMapsUri?: string;
+  primaryType?: string;
+  types?: string[];
+  photos?: { name: string }[];
+  currentOpeningHours?: { openNow?: boolean; weekdayDescriptions?: string[] };
+  regularOpeningHours?: { weekdayDescriptions?: string[] };
+}
+
+const FIELD_MASK = [
+  "places.id",
+  "places.displayName",
+  "places.formattedAddress",
+  "places.location",
+  "places.businessStatus",
+  "places.rating",
+  "places.userRatingCount",
+  "places.websiteUri",
+  "places.googleMapsUri",
+  "places.primaryType",
+  "places.types",
+  "places.photos",
+  "places.currentOpeningHours",
+  "places.regularOpeningHours",
+].join(",");
+
+async function textSearch(
+  query: string,
+  lat: number,
+  lng: number,
+  radiusM: number
+): Promise<{ places: GPlace[]; error: string | null }> {
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 12000);
+    const res = await fetch(PLACES_SEARCH, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Goog-Api-Key": KEY,
+        "X-Goog-FieldMask": FIELD_MASK,
+      },
+      body: JSON.stringify({
+        textQuery: query,
+        maxResultCount: 20,
+        locationBias: {
+          circle: {
+            center: { latitude: lat, longitude: lng },
+            radius: Math.min(radiusM, MAX_BIAS_M),
+          },
+        },
+      }),
+      cache: "no-store",
+      signal: controller.signal,
+    });
+    clearTimeout(timer);
+    if (!res.ok) {
+      let msg = `Google Places returned ${res.status}`;
+      try {
+        const err = (await res.json()) as { error?: { message?: string; status?: string } };
+        if (err.error?.message) msg = `${err.error.status ?? res.status}: ${err.error.message}`;
+      } catch {}
+      return { places: [], error: msg };
+    }
+    const data = (await res.json()) as { places?: GPlace[] };
+    return { places: data.places ?? [], error: null };
+  } catch (e) {
+    return { places: [], error: e instanceof Error ? e.message : "request failed" };
+  }
+}
+
+const QUERIES: { q: string; farm: boolean }[] = [
+  { q: "organic grocery store", farm: false },
+  { q: "health food store", farm: false },
+  { q: "whole foods market", farm: false },
+  { q: "sprouts farmers market", farm: false },
+  { q: "farm stand", farm: true },
+  { q: "organic farm", farm: true },
+];
+
+// Google isn't returning photos for this project, so for places with a website
+// we pull the site's og:image (a real facility photo) as a fallback.
+async function fetchOgImage(siteUrl: string): Promise<string | null> {
   try {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 4500);
-    const res = await fetch(base, {
+    const res = await fetch(siteUrl, {
       headers: { "User-Agent": UA, Accept: "text/html" },
       signal: controller.signal,
       redirect: "follow",
       cache: "no-store",
     });
     clearTimeout(timer);
-    if (!res.ok) return { ok: false, og: null };
-    if (!(res.headers.get("content-type") ?? "").includes("text/html")) return { ok: true, og: null };
+    if (!res.ok || !(res.headers.get("content-type") ?? "").includes("text/html")) return null;
     const html = (await res.text()).slice(0, 200_000);
     const m =
       html.match(/<meta[^>]+property=["']og:image(?::secure_url)?["'][^>]+content=["']([^"']+)["']/i) ||
       html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i) ||
       html.match(/<meta[^>]+name=["']twitter:image["'][^>]+content=["']([^"']+)["']/i);
-    if (!m) return { ok: true, og: null };
+    if (!m) return null;
     let img = m[1].trim();
-    const origin = new URL(base).origin;
+    const origin = new URL(siteUrl).origin;
     if (img.startsWith("//")) img = "https:" + img;
     else if (img.startsWith("/")) img = origin + img;
     else if (!/^https?:\/\//i.test(img)) img = origin + "/" + img.replace(/^\.?\//, "");
-    return { ok: true, og: /^https?:\/\//i.test(img) ? img : null };
+    // Skip social/generic/site-builder placeholder images — they're not the store.
+    if (/facebook\.com|fbcdn|instagram|bolt\.new|og[_-]?default|default[_-]?og|placeholder|\/wp-includes\/|gravatar|squarespace-cdn\.com\/content\/v1\/[^/]+\/1[0-9]{9}/i.test(img)) return null;
+    return /^https?:\/\//i.test(img) ? img : null;
   } catch {
-    return { ok: false, og: null };
+    return null;
   }
 }
 
-interface OverpassEl {
-  type: string;
-  id: number;
-  lat?: number;
-  lon?: number;
-  center?: { lat: number; lon: number };
-  tags?: Record<string, string>;
+function photoUrl(name: string): string {
+  return `https://places.googleapis.com/v1/${name}/media?maxHeightPx=640&maxWidthPx=640&key=${KEY}`;
 }
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
+  if (!KEY) {
+    return NextResponse.json(
+      { error: "Maps isn't configured yet. Add NEXT_PUBLIC_GOOGLE_MAPS_API_KEY to .env.local and restart." },
+      { status: 500 }
+    );
+  }
+
   let body: { lat?: number; lng?: number; zip?: string; radiusMi?: number };
   try {
     body = await req.json();
@@ -243,119 +332,102 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   const radiusMi = Math.min(Math.max(body.radiusMi ?? 10, 1), 100);
   const radiusM = Math.round(radiusMi * 1609.34);
 
-  const q = `[out:json][timeout:20];
-(
-  node["shop"~"^(health_food|greengrocer|farm|organic|supermarket)$"](around:${radiusM},${lat},${lng});
-  way["shop"~"^(health_food|greengrocer|farm|organic|supermarket)$"](around:${radiusM},${lat},${lng});
-);
-out center tags;`;
+  // Run all queries in parallel.
+  const results = await Promise.all(
+    QUERIES.map((qq) => textSearch(qq.q, lat!, lng!, radiusM).then((r) => ({ ...r, farm: qq.farm })))
+  );
 
-  const controllers = OVERPASS_ENDPOINTS.map(() => new AbortController());
-  const timers = controllers.map((c) => setTimeout(() => c.abort(), 22000));
-  let elements: OverpassEl[] | null = null;
-  try {
-    const winner = await Promise.any(
-      OVERPASS_ENDPOINTS.map(async (ep, i) => {
-        const res = await fetch(ep, {
-          method: "POST",
-          headers: { "Content-Type": "application/x-www-form-urlencoded", "User-Agent": UA },
-          body: "data=" + encodeURIComponent(q),
-          cache: "no-store",
-          signal: controllers[i].signal,
-        });
-        if (!res.ok) throw new Error(`status ${res.status}`);
-        return (await res.json()) as { elements?: OverpassEl[] };
-      })
-    );
-    elements = winner.elements ?? [];
-  } catch {
-    elements = null; // every mirror failed
-  } finally {
-    timers.forEach(clearTimeout);
-    controllers.forEach((c) => { try { c.abort(); } catch {} });
-  }
-  if (elements === null) {
-    return NextResponse.json({ error: "The map service is busy right now — give it a few seconds and search again." }, { status: 502 });
+  const firstError = results.find((r) => r.error)?.error ?? null;
+  const totalPlaces = results.reduce((n, r) => n + r.places.length, 0);
+  if (totalPlaces === 0 && firstError) {
+    console.error("[shop/nearby] Google Places error:", firstError);
+    return NextResponse.json({ error: `Google Places error — ${firstError}` }, { status: 502 });
   }
 
   const vendors: Vendor[] = [];
   const seen = new Set<string>();
-  for (const el of elements) {
-    const tags = el.tags ?? {};
-    const name = tags.name;
-    if (!name) continue;
-    const vlat = el.lat ?? el.center?.lat;
-    const vlng = el.lon ?? el.center?.lon;
-    if (vlat === undefined || vlng === undefined) continue;
-    const cls = classify(tags);
-    if (!cls) continue;
-    const key = `${name.toLowerCase()}|${vlat.toFixed(3)}|${vlng.toFixed(3)}`;
-    if (seen.has(key)) continue;
-    seen.add(key);
 
-    let website = normalizeUrl(tags.website ?? tags["contact:website"]);
-    try { if (website) website = new URL(website).origin; } catch { website = null; }
-    let image = normalizeUrl(tags.image);
-    let imageKind: ImageKind = image ? "photo" : null;
+  for (const { places, farm } of results) {
+    for (const p of places) {
+      if (!p.id || seen.has(p.id)) continue;
+      const name = p.displayName?.text;
+      const loc = p.location;
+      if (!name || !loc) continue;
+      // Live status: drop anything not actively operating.
+      if (p.businessStatus && p.businessStatus !== "OPERATIONAL") continue;
 
-    // Known chain → official site + real logo. Specific farms → their logo.
-    // Any other place with a website → its favicon as a logo (upgraded to a real
-    // facility photo below when the site has one).
-    const brand = brandFor(name);
-    if (brand) {
-      website = website ?? `https://www.${brand.domain}`;
-      image = brand.logo ?? logoUrl(brand.domain);
-      imageKind = "logo";
+      const cls = classify(name, p.primaryType ?? "", p.types ?? [], farm);
+      if (!cls) continue;
+      seen.add(p.id);
+
+      let image: string | null = null;
+      let imageKind: ImageKind = null;
+      const brand = brandFor(name);
+      const farmLogo = farmLogoFor(name);
+      if (farmLogo) {
+        image = farmLogo;
+        imageKind = "logo";
+      } else if (brand?.logo) {
+        image = brand.logo;
+        imageKind = "logo";
+      } else if (p.photos && p.photos.length) {
+        image = photoUrl(p.photos[0].name);
+        imageKind = "photo";
+      }
+
+      const hoursArr =
+        p.currentOpeningHours?.weekdayDescriptions ?? p.regularOpeningHours?.weekdayDescriptions ?? null;
+
+      vendors.push({
+        id: p.id,
+        name,
+        type: cls.type,
+        tier: cls.tier,
+        organic: cls.organic,
+        lat: loc.latitude,
+        lng: loc.longitude,
+        distanceMi: Math.round(haversineMi(lat, lng, loc.latitude, loc.longitude) * 10) / 10,
+        address: p.formattedAddress ?? null,
+        hours: hoursArr ? hoursArr.join(" · ") : null,
+        hoursWeek: hoursArr,
+        openNow: p.currentOpeningHours?.openNow ?? null,
+        rating: p.rating ?? null,
+        ratingCount: p.userRatingCount ?? null,
+        mapsUrl: p.googleMapsUri ?? `https://www.google.com/maps/search/?api=1&query=${loc.latitude}%2C${loc.longitude}`,
+        website: p.websiteUri ?? null,
+        searchUrl: `https://www.google.com/search?q=${encodeURIComponent(name)}`,
+        image,
+        imageKind,
+      });
     }
-    const farmLogo = farmLogoFor(name);
-    if (farmLogo) {
-      image = farmLogo;
-      imageKind = "logo";
-    }
-
-    const searchQ = [name, tags["addr:city"], tags["addr:state"]].filter(Boolean).join(" ");
-
-    vendors.push({
-      id: `${el.type}/${el.id}`,
-      name,
-      type: cls.type,
-      tier: cls.tier,
-      organic: cls.organic,
-      lat: vlat,
-      lng: vlng,
-      distanceMi: Math.round(haversineMi(lat, lng, vlat, vlng) * 10) / 10,
-      address: buildAddress(tags),
-      hours: tags.opening_hours ?? null,
-      mapsUrl: `https://www.google.com/maps/search/?api=1&query=${vlat}%2C${vlng}`,
-      website,
-      searchUrl: `https://www.google.com/search?q=${encodeURIComponent(searchQ)}`,
-      image,
-      imageKind,
-    });
   }
 
   vendors.sort((a, b) => a.tier - b.tier || a.distanceMi - b.distanceMi);
   const top = vendors.slice(0, 60);
 
-  // Verify EVERY shown independent's website actually loads (2xx). If it doesn't,
-  // drop the link so the card shows the working "Find online" search instead.
-  // Upgrade its logo to a real facility photo when the site has one. All checks
-  // run in parallel, so verifying them all costs ~one request of latency.
-  const toProcess = top.filter((v) => v.website && !brandFor(v.name));
+  // Photo fallback: any shown place with no image but a real (non-social) website
+  // gets its site's og:image. All in parallel, so it costs ~one request of latency.
+  const needPhoto = top.filter(
+    (v) => !v.image && v.website && !/facebook\.com|instagram\.com|yelp\.com/i.test(v.website)
+  );
   await Promise.allSettled(
-    toProcess.map(async (v) => {
-      const curated = !!farmLogoFor(v.name); // hosted logo — never overwrite it
-      const r = await fetchSite(v.website!);
-      if (!r.ok) {
-        v.website = null; // not reachable → fall back to search link
-        return;
-      }
-      if (!curated && r.og) {
-        v.image = r.og;
+    needPhoto.map(async (v) => {
+      const og = await fetchOgImage(v.website!);
+      if (og) {
+        v.image = og;
         v.imageKind = "photo";
       }
     })
   );
+  // Known chains that still have nothing → their official favicon as a logo.
+  for (const v of top) {
+    if (v.image) continue;
+    const b = brandFor(v.name);
+    if (b) {
+      v.image = brandFavicon(b.domain);
+      v.imageKind = "logo";
+    }
+  }
 
   return NextResponse.json({ center: { lat, lng }, count: vendors.length, vendors: top });
 }
