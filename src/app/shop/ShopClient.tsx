@@ -299,19 +299,24 @@ function ensureMapStyles() {
   st.textContent = `
     .gm-style .gm-style-iw-c{background:#141517;color:#ebe6d8;border-radius:14px;padding:0!important;overflow:hidden!important;
       box-shadow:0 10px 30px rgba(0,0,0,.55),0 0 0 .5px rgba(155,176,165,.35);max-width:260px!important}
+    /* kill Google's default top gap so the photo reaches the card's edge */
+    .gm-style .gm-style-iw-ch{display:none!important;padding:0!important}
+    .gm-style .gm-style-iw{padding:0!important}
     .gm-style .gm-style-iw-d{overflow:hidden!important;padding:0!important;max-height:none!important}
     .gm-style .gm-style-iw-c{max-height:none!important}
     .nura-iw a.phl{display:block;text-decoration:none}
     .gm-style .gm-style-iw-tc::after{background:#141517}
     /* Close button: a small dark pill floating over the photo's top-right corner */
-    .gm-style .gm-style-iw-c button.gm-ui-hover-effect{width:28px!important;height:28px!important;top:8px!important;right:8px!important;
-      opacity:1!important;background:rgba(13,13,14,.72)!important;border-radius:50%!important;backdrop-filter:blur(4px)}
-    .gm-style .gm-style-iw-c button.gm-ui-hover-effect span{background-color:#ebe6d8!important;width:14px!important;height:14px!important;margin:7px!important}
+    .gm-style .gm-style-iw-c button.gm-ui-hover-effect{width:26px!important;height:26px!important;top:6px!important;right:6px!important;
+      opacity:1!important;background:rgba(13,13,14,.78)!important;border-radius:50%!important;backdrop-filter:blur(4px);
+      margin:0!important;position:absolute!important;z-index:2}
+    .gm-style .gm-style-iw-c button.gm-ui-hover-effect span{background-color:#ebe6d8!important;width:13px!important;height:13px!important;margin:6.5px!important}
     .gm-style .gm-style-iw-c button.gm-ui-hover-effect:hover{background:rgba(155,176,165,.85)!important}
     .gm-style .gm-style-iw-c button.gm-ui-hover-effect:hover span{background-color:#0d0d0e!important}
     .nura-iw{font-family:var(--font-inter),system-ui,sans-serif;line-height:1.45;width:240px}
-    .nura-iw .ph{width:100%;height:110px;display:block;object-fit:cover;background:#1a1d1c}
-    .nura-iw .ph.logo{object-fit:contain;background:#fff;padding:10px;box-sizing:border-box}
+    .nura-iw a.phl{position:relative}
+    .nura-iw .ph{width:100%;height:132px;display:block;object-fit:cover;background:#1a1d1c}
+    .nura-iw .ph.logo{object-fit:contain;background:#fff;padding:14px;box-sizing:border-box}
     .nura-iw .tx{padding:11px 14px 12px}
     .nura-iw b{display:block;font-size:13.5px;font-weight:600;color:#ebe6d8;margin-bottom:2px}
     .nura-iw span{font-size:12px;color:#9bb0a5}

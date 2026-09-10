@@ -52,7 +52,7 @@ interface Vendor {
 
 // Known health/organic chains -> real logo where we host one.
 const BRANDS: { match: string[]; domain: string; logo?: string }[] = [
-  { match: ["whole foods"], domain: "wholefoodsmarket.com", logo: "/logos/whole-foods.webp?v=3" },
+  { match: ["whole foods market"], domain: "wholefoodsmarket.com", logo: "/logos/whole-foods.webp?v=3" },
   { match: ["sprouts"], domain: "sprouts.com", logo: "/logos/sprouts.webp?v=3" },
   { match: ["trader joe"], domain: "traderjoes.com" },
   { match: ["natural grocers"], domain: "naturalgrocers.com" },
@@ -108,6 +108,8 @@ const SUPPLEMENT_NAMES = [
 const DEPARTMENT_WORDS = [
   "bakery", "floral", "deli", "coffee", "juice", "pizza", "sushi", "seafood",
   "pharmacy", "catering", "wine", "beer", "liquor", "butcher", "cafe", "café",
+  "prepared food", "counter", "refill station", "water refill", "pickup",
+  "curbside", "kiosk", "atm", "customer service", "amazon",
 ];
 // Farmers markets are intentionally excluded (they pull in anything with
 // "market" in the name). Branded chains like Sprouts are matched first, so
@@ -297,6 +299,14 @@ async function fetchOgImage(siteUrl: string): Promise<string | null> {
     else if (!/^https?:\/\//i.test(img)) img = origin + "/" + img.replace(/^\.?\//, "");
     // Skip social/generic/site-builder placeholder images — they're not the store.
     if (/facebook\.com|fbcdn|instagram|bolt\.new|og[_-]?default|default[_-]?og|placeholder|\/wp-includes\/|gravatar|squarespace-cdn\.com\/content\/v1\/[^/]+\/1[0-9]{9}/i.test(img)) return null;
+    // Stock-photo libraries and product shots aren't pictures of the store.
+    if (/gettyimages|shutterstock|istockphoto|unsplash\.com\/photos|stock\.adobe/i.test(img)) return null;
+    // A bare domain (no path) isn't an image at all.
+    try {
+      const u = new URL(img);
+      if (u.pathname === "/" || u.pathname === "") return null;
+      if (!/\.(jpe?g|png|webp|gif|avif|svg)(\?|$)/i.test(u.pathname) && !/image|photo|media|cdn|uploads|isteam/i.test(u.hostname + u.pathname)) return null;
+    } catch { return null; }
     return /^https?:\/\//i.test(img) ? img : null;
   } catch {
     return null;
@@ -413,8 +423,10 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
   // Photo fallback: any shown place with no image but a real (non-social) website
   // gets its site's og:image. All in parallel, so it costs ~one request of latency.
+  // Known chains skip og:image scraping — a chain's homepage banner is usually a
+  // product shot, not the store. They fall through to their official logo below.
   const needPhoto = top.filter(
-    (v) => !v.image && v.website && !/facebook\.com|instagram\.com|yelp\.com/i.test(v.website)
+    (v) => !v.image && v.website && !brandFor(v.name) && !/facebook\.com|instagram\.com|yelp\.com/i.test(v.website)
   );
   await Promise.allSettled(
     needPhoto.map(async (v) => {
