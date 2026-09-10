@@ -108,24 +108,30 @@ function Star() {
 // clean branded tile (no broken images, no paid photo API needed).
 function Thumb({ v }: { v: Vendor }) {
   const [err, setErr] = useState(false);
+  const [wordmark, setWordmark] = useState(false); // very wide/tall image → it's a logo, don't crop it
   const show = !!v.image && !err;
-  const isLogo = show && v.imageKind === "logo";
+  const isLogo = show && (v.imageKind === "logo" || wordmark);
   const src = show ? v.image! : fallbackImage(v);
+  const href = v.website ?? v.searchUrl;
   return (
-    <div style={{
-      width: 96, height: 96, flexShrink: 0, borderRadius: 14, overflow: "hidden",
+    <a href={href} target="_blank" rel="noopener noreferrer" title={v.website ? `Open ${v.name}'s website` : `Find ${v.name} online`} style={{
+      width: 112, alignSelf: "stretch", minHeight: 104, flexShrink: 0, borderRadius: 14, overflow: "hidden",
       border: `0.5px solid ${BORDER}`,
-      background: show && isLogo ? "#ffffff" : tierGradient(v.tier),
-      display: "flex", alignItems: "center", justifyContent: "center",
+      background: show && v.imageKind === "logo" ? "#ffffff" : tierGradient(v.tier),
+      display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer",
     }}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={src}
         alt={v.name}
         onError={() => setErr(true)}
-        style={{ width: "100%", height: "100%", objectFit: isLogo ? "contain" : "cover", padding: isLogo ? 4 : 0 }}
+        onLoad={(e) => {
+          const { naturalWidth: w, naturalHeight: h } = e.currentTarget;
+          if (w && h && (w / h > 1.6 || w / h < 0.6)) setWordmark(true);
+        }}
+        style={{ width: "100%", height: "100%", objectFit: isLogo ? "contain" : "cover", padding: isLogo ? 6 : 0, display: "block" }}
       />
-    </div>
+    </a>
   );
 }
 
@@ -293,7 +299,9 @@ function ensureMapStyles() {
   st.textContent = `
     .gm-style .gm-style-iw-c{background:#141517;color:#ebe6d8;border-radius:14px;padding:0!important;overflow:hidden!important;
       box-shadow:0 10px 30px rgba(0,0,0,.55),0 0 0 .5px rgba(155,176,165,.35);max-width:260px!important}
-    .gm-style .gm-style-iw-d{overflow:hidden!important;padding:0!important}
+    .gm-style .gm-style-iw-d{overflow:hidden!important;padding:0!important;max-height:none!important}
+    .gm-style .gm-style-iw-c{max-height:none!important}
+    .nura-iw a.phl{display:block;text-decoration:none}
     .gm-style .gm-style-iw-tc::after{background:#141517}
     /* Close button: a small dark pill floating over the photo's top-right corner */
     .gm-style .gm-style-iw-c button.gm-ui-hover-effect{width:28px!important;height:28px!important;top:8px!important;right:8px!important;
@@ -302,7 +310,7 @@ function ensureMapStyles() {
     .gm-style .gm-style-iw-c button.gm-ui-hover-effect:hover{background:rgba(155,176,165,.85)!important}
     .gm-style .gm-style-iw-c button.gm-ui-hover-effect:hover span{background-color:#0d0d0e!important}
     .nura-iw{font-family:var(--font-inter),system-ui,sans-serif;line-height:1.45;width:240px}
-    .nura-iw .ph{width:100%;height:120px;display:block;object-fit:cover;background:#1a1d1c}
+    .nura-iw .ph{width:100%;height:110px;display:block;object-fit:cover;background:#1a1d1c}
     .nura-iw .ph.logo{object-fit:contain;background:#fff;padding:10px;box-sizing:border-box}
     .nura-iw .tx{padding:11px 14px 12px}
     .nura-iw b{display:block;font-size:13.5px;font-weight:600;color:#ebe6d8;margin-bottom:2px}
@@ -385,7 +393,8 @@ function ShopMap({ center, vendors }: { center: { lat: number; lng: number }; ve
       });
       mk.addListener("click", () => {
         const src = v.image ?? fallbackImage(v);
-        const photo = `<img class="ph${v.image && v.imageKind === "logo" ? " logo" : ""}" src="${escapeHtml(src)}" alt="" onerror="this.src='${fallbackImage(v)}'"/>`;
+        const href = escapeHtml(v.website ?? v.searchUrl);
+        const photo = `<a class="phl" href="${href}" target="_blank" rel="noopener noreferrer"><img class="ph${v.image && v.imageKind === "logo" ? " logo" : ""}" src="${escapeHtml(src)}" alt="" onerror="this.src='${fallbackImage(v)}'" onload="var r=this.naturalWidth/this.naturalHeight;if(r>1.6||r<0.6){this.style.objectFit='contain';this.style.padding='12px';this.style.boxSizing='border-box'}"/></a>`;
         infoRef.current.setContent(
           `<div class="nura-iw">${photo}<div class="tx"${photo ? "" : ' style="padding-right:40px"'}><b>${escapeHtml(v.name)}</b><span>${escapeHtml(v.type)} · ${v.distanceMi} mi</span></div></div>`
         );
