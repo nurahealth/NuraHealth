@@ -14,6 +14,10 @@ const SAGE = "var(--nura-sage)";
 const SAGE_ON = "var(--nura-sage-bg-on)";
 const SAGE_RGB = "var(--nura-sage-rgb)";
 const FG_RGB = "var(--nura-fg-rgb)";
+// Packshots are shot on white by every brand. Giving the tile its own light
+// ground keeps them consistent in both themes instead of leaving each product
+// floating on a halo of its own background.
+const PACKSHOT_BG = "#f4f2ee";
 const SANS = "var(--font-inter), system-ui, sans-serif";
 const SERIF = "'DM Serif Display', Georgia, serif";
 
@@ -50,12 +54,28 @@ export function ProductCard({ p }: { p: LabProduct }) {
       }}
     >
       {/* Image */}
-      <div style={{ position: "relative", width: "100%", aspectRatio: "1 / 1", background: `rgba(${FG_RGB},0.04)` }}>
+      {/* A locked square. The image is absolutely positioned so its intrinsic
+          size can never push the tile taller than the aspect ratio — packshots
+          arrive in every shape, and the grid has to stay uniform regardless.
+          Contained, not cropped, on a white ground: product photography reads
+          as premium only when the whole product is visible and every tile
+          shares the same optical size. */}
+      <div style={{ position: "relative", width: "100%", aspectRatio: "1 / 1", background: PACKSHOT_BG, overflow: "hidden" }}>
         {p.image_url ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={p.image_url} alt={p.name} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+          <img
+            src={p.image_url}
+            alt={p.name}
+            loading="lazy"
+            style={{
+              position: "absolute", inset: 0,
+              width: "100%", height: "100%",
+              objectFit: "contain", padding: "13%",
+              display: "block",
+            }}
+          />
         ) : (
-          <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke={`rgba(${FG_RGB},0.22)`} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
               <rect x="3" y="3" width="18" height="18" rx="2" />
               <circle cx="8.5" cy="8.5" r="1.5" />
@@ -86,6 +106,9 @@ export function ProductCard({ p }: { p: LabProduct }) {
           style={{
             fontFamily: SERIF, fontSize: 15.5, fontWeight: 500, color: TEXT, lineHeight: 1.25,
             display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden",
+            // Reserve both lines so a one-line name and a two-line name produce
+            // the same card height and the grid stays on a single baseline.
+            minHeight: "calc(15.5px * 1.25 * 2)",
           }}
         >
           {p.name}

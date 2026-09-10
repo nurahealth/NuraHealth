@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { storePackshot } from "@/lib/packshot";
 import { requireAdminFromRequest, AdminError } from "@/lib/admin";
 import { buildProductFields, ProductFieldError } from "@/lib/catalog-product-fields";
 
@@ -32,7 +33,7 @@ import { buildProductFields, ProductFieldError } from "@/lib/catalog-product-fie
 // }
 
 export const runtime = "nodejs";
-export const maxDuration = 60;
+export const maxDuration = 300;
 
 const VALID_STATUS = new Set(["draft", "published"]);
 const VALID_KIND = new Set(["contaminant", "nutrient", "property"]);
@@ -78,6 +79,7 @@ interface RowResult {
   documents?: number;
   reason?: string;
   measurement_errors?: string[];
+  packshot?: string;
 }
 
 function num(v: unknown): number | null {
@@ -94,6 +96,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       products?: InProduct[];
       dry_run?: boolean;
       update_existing?: boolean;
+      normalise_images?: boolean;
     };
 
     const items = body.products;
@@ -105,6 +108,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     }
     const dryRun = body.dry_run === true;
     const updateExisting = body.update_existing === true;
+    const normaliseImages = body.normalise_images !== false;
 
     // ── Preload lookup tables once, rather than per product ──────────────────
     const [{ data: catRows }, { data: typeRows }, { data: prodRows }] = await Promise.all([
@@ -187,6 +191,25 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       } catch (e) {
         results.push({ name, status: "error", reason: e instanceof ProductFieldError ? e.message : "Bad field" });
         continue;
+      }
+
+      // Normalise the product photo before it is stored. Source imagery arrives
+      // in every shape and on every background; without this the catalogue grid
+      // is a mix of tight transparent crops, letterboxed landscape shots and
+      // brand-tinted backdrops. Failure is non-fatal — the original URL is kept
+      // and the row says what went wrong.
+      let packshotNote: string | undefined;
+      if (!dryRun && normaliseImages && typeof extended.image_url === "string" && extended.image_url) {
+        const already = extended.image_url.includes("/catalog-images/");
+        if (!already) {
+          const shot = await storePackshot(extended.image_url);
+          if (shot.ok && shot.url) {
+            extended = { ...extended, image_url: shot.url };
+            if (shot.meta?.keyedTint) packshotNote = `keyed ${shot.meta.keyedTint} background to white`;
+          } else {
+            packshotNote = `image not normalised (${shot.error}) — kept original`;
+          }
+        }
       }
 
       const base = slugify(name);
@@ -371,6 +394,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         measurements: measCount,
         documents: docCount,
         ...(measErrors.length ? { measurement_errors: measErrors } : {}),
+        ...(packshotNote ? { packshot: packshotNote } : {}),
       });
     }
 
