@@ -4,18 +4,30 @@ import { supabaseAdmin } from "./supabase-admin";
 // ── Packshot normalisation ────────────────────────────────────────────────────
 // Brands ship product photography in wildly different shapes: transparent PNGs
 // cropped tight to the wrapper (IQ Bar is 1206×3466), 2:1 landscape JPEGs with
-// huge white margins (Larabar), 1:1 squares (Clif), and a few on a flat brand
-// tint instead of white (Perfect Bar, ALOHA). Dropped into a grid as-is they
+// large white margins (Larabar), 1:1 squares (Clif), and some on a flat brand
+// tint rather than white (Perfect Bar, ALOHA). Dropped into a grid as-is they
 // look like a junk drawer.
 //
-// This turns any of them into the same asset: product centred on white, trimmed
-// of its original margin, re-padded to a fixed proportion, square, same pixel
-// size every time.
+// Every source is reduced to the same asset: background removed to TRANSPARENT
+// (never white — a white plate on a dark card reads as a box floating inside
+// the tile instead of a product sitting on it), trimmed to the product's true
+// bounding box, then re-centred on a fixed square canvas with a consistent
+// margin. Output is a PNG with alpha, so the card's own surface shows through
+// and the tile is seamless in either theme.
 
 const CANVAS = 1000;
-// Fraction of the canvas left as breathing room on the tightest edge.
-const PAD = 0.1;
-const WHITE = { r: 255, g: 255, b: 255 };
+// Margin left on the tightest edge, as a fraction of the canvas. Enough that a
+// landscape bar is not hugging the tile edge, tight enough that it still reads
+// at the same optical weight as a tall product like a bottle.
+const PAD = 0.08;
+// Ceiling on how much of the canvas a product may cover. Keeps a landscape bar
+// and a tall bottle at comparable visual weight in the same grid.
+const MAX_AREA = 0.2;
+// How far a pixel may drift from the sampled backdrop and still count as
+// background.
+const KEY_TOLERANCE = 26;
+// Alpha above which a pixel counts as product when measuring the bounding box.
+const SOLID = 24;
 
 export interface PackshotResult {
   ok: boolean;
@@ -24,30 +36,20 @@ export interface PackshotResult {
   meta?: { sourceW: number; sourceH: number; keyedTint: string | null };
 }
 
-function near(
-  a: { r: number; g: number; b: number },
-  b: { r: number; g: number; b: number },
-  tol: number
-): boolean {
-  return (
-    Math.abs(a.r - b.r) <= tol && Math.abs(a.g - b.g) <= tol && Math.abs(a.b - b.b) <= tol
-  );
-}
+interface RGB { r: number; g: number; b: number }
+
+const near = (a: RGB, b: RGB, tol: number) =>
+  Math.abs(a.r - b.r) <= tol && Math.abs(a.g - b.g) <= tol && Math.abs(a.b - b.b) <= tol;
 
 /**
- * Replace a flat background tint with white by flood-filling inward from the
- * border. A global colour replace would also punch holes in the product itself
- * wherever the packaging happens to use the same shade — filling only from the
- * edges means the product is never touched.
+ * Erase a flat backdrop by flood-filling inward from the border.
+ *
+ * A global colour replace would also punch holes through the product wherever
+ * its packaging happens to use the same shade — a white RXBAR wrapper on a
+ * white backdrop would lose its middle. Filling only from the edges means
+ * anything enclosed by product pixels is untouched.
  */
-function keyOutBorder(
-  data: Buffer,
-  width: number,
-  height: number,
-  channels: number,
-  tint: { r: number; g: number; b: number },
-  tol: number
-): void {
+function keyBackdrop(data: Buffer, width: number, height: number, backdrop: RGB): void {
   const seen = new Uint8Array(width * height);
   const stack: number[] = [];
   const push = (x: number, y: number) => {
@@ -62,20 +64,40 @@ function keyOutBorder(
 
   while (stack.length) {
     const i = stack.pop()!;
-    const o = i * channels;
-    const px = { r: data[o], g: data[o + 1], b: data[o + 2] };
-    if (!near(px, tint, tol)) continue;
-    data[o] = 255; data[o + 1] = 255; data[o + 2] = 255;
+    const o = i * 4;
+    if (data[o + 3] === 0) {
+      // Already transparent — keep walking through it.
+    } else {
+      const px = { r: data[o], g: data[o + 1], b: data[o + 2] };
+      if (!near(px, backdrop, KEY_TOLERANCE)) continue;
+      data[o + 3] = 0;
+    }
     const x = i % width;
     const y = (i / width) | 0;
     push(x + 1, y); push(x - 1, y); push(x, y + 1); push(x, y - 1);
   }
 }
 
-export async function normalisePackshot(sourceUrl: string): Promise<{
-  buffer: Buffer;
-  meta: { sourceW: number; sourceH: number; keyedTint: string | null };
-} | { error: string }> {
+/** Tightest rectangle containing every non-transparent pixel. */
+function boundingBox(data: Buffer, width: number, height: number) {
+  let top = -1, left = width, right = -1, bottom = -1;
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      if (data[(y * width + x) * 4 + 3] < SOLID) continue;
+      if (top === -1) top = y;
+      bottom = y;
+      if (x < left) left = x;
+      if (x > right) right = x;
+    }
+  }
+  if (top === -1 || right === -1) return null;
+  return { left, top, width: right - left + 1, height: bottom - top + 1 };
+}
+
+export async function normalisePackshot(sourceUrl: string): Promise<
+  | { buffer: Buffer; meta: { sourceW: number; sourceH: number; keyedTint: string | null } }
+  | { error: string }
+> {
   let input: Buffer;
   try {
     const res = await fetch(sourceUrl, {
@@ -91,67 +113,87 @@ export async function normalisePackshot(sourceUrl: string): Promise<{
   }
 
   try {
-    const probe = sharp(input, { failOn: "none" });
-    const meta = await probe.metadata();
+    const meta = await sharp(input, { failOn: "none" }).metadata();
     const sourceW = meta.width ?? 0;
     const sourceH = meta.height ?? 0;
     if (!sourceW || !sourceH) return { error: "could not read image dimensions" };
 
-    // Composite onto white first so transparency and tint are handled the same.
-    const flat = await sharp(input, { failOn: "none" })
-      .flatten({ background: WHITE })
+    const { data, info } = await sharp(input, { failOn: "none" })
+      .ensureAlpha()
       .toColourspace("srgb")
       .raw()
       .toBuffer({ resolveWithObject: true });
 
-    const { data, info } = flat;
-    const ch = info.channels;
-
-    // Sample the four corners. If they agree on a colour that is not white,
-    // that is a flat brand-tint backdrop and it gets keyed out.
-    const at = (x: number, y: number) => {
-      const o = (y * info.width + x) * ch;
+    // Sample the corners. If they agree, that is the backdrop and it gets
+    // erased — white, brand tint, or anything else flat.
+    const at = (x: number, y: number): RGB => {
+      const o = (y * info.width + x) * 4;
       return { r: data[o], g: data[o + 1], b: data[o + 2] };
     };
-    const corners = [
-      at(1, 1),
-      at(info.width - 2, 1),
-      at(1, info.height - 2),
-      at(info.width - 2, info.height - 2),
+    const alphaAt = (x: number, y: number) => data[(y * info.width + x) * 4 + 3];
+    const pts: [number, number][] = [
+      [1, 1], [info.width - 2, 1], [1, info.height - 2], [info.width - 2, info.height - 2],
     ];
+    const opaqueCorners = pts.filter(([x, y]) => alphaAt(x, y) > SOLID);
+
     let keyedTint: string | null = null;
-    const c0 = corners[0];
-    const agree = corners.every((c) => near(c, c0, 12));
-    const isWhite = near(c0, WHITE, 10);
-    if (agree && !isWhite) {
-      keyOutBorder(data, info.width, info.height, ch, c0, 26);
-      keyedTint = `rgb(${c0.r},${c0.g},${c0.b})`;
+    if (opaqueCorners.length) {
+      const c0 = at(...opaqueCorners[0]);
+      if (opaqueCorners.every(([x, y]) => near(at(x, y), c0, 14))) {
+        keyBackdrop(data, info.width, info.height, c0);
+        keyedTint = `rgb(${c0.r},${c0.g},${c0.b})`;
+      }
     }
 
-    const keyed = await sharp(data, {
-      raw: { width: info.width, height: info.height, channels: ch as 3 | 4 },
+    const box = boundingBox(data, info.width, info.height);
+    if (!box) return { error: "image is entirely background" };
+
+    const cropped = await sharp(data, {
+      raw: { width: info.width, height: info.height, channels: 4 },
     })
+      .extract(box)
       .png()
       .toBuffer();
 
-    // Trim the now-white margin, then rebuild it to a fixed proportion so every
-    // product ends up optically the same size in the grid.
+    // Size the product, then pad out to the canvas.
+    //
+    // Two constraints. It must fit inside the inner box so it never touches the
+    // tile edge. And its area must not exceed a ceiling: fitting purely by
+    // bounding box makes a wide bar span the full width and read far heavier
+    // than a tall bottle of the same height, so anything over the ceiling is
+    // scaled down until it carries the same optical weight.
     const inner = Math.round(CANVAS * (1 - PAD * 2));
-    const trimmed = await sharp(keyed)
-      .trim({ background: WHITE, threshold: 12 })
-      .toBuffer()
-      .catch(() => keyed);
+    const fitScale = Math.min(inner / box.width, inner / box.height);
+    let w = box.width * fitScale;
+    let h = box.height * fitScale;
+    const areaFraction = (w * h) / (CANVAS * CANVAS);
+    if (areaFraction > MAX_AREA) {
+      const k = Math.sqrt(MAX_AREA / areaFraction);
+      w *= k;
+      h *= k;
+    }
+    w = Math.max(1, Math.round(w));
+    h = Math.max(1, Math.round(h));
 
-    // Scale the product to fill the inner box, then centre it on the full
-    // canvas — every output is CANVAS×CANVAS with the same margin.
-    const scaled = await sharp(trimmed)
-      .resize(inner, inner, { fit: "inside", withoutEnlargement: false })
+    const fitted = await sharp(cropped)
+      .resize(w, h, { fit: "fill" })
+      .png()
       .toBuffer();
 
-    const buffer = await sharp(scaled)
-      .resize(CANVAS, CANVAS, { fit: "contain", background: WHITE })
-      .flatten({ background: WHITE })
-      .jpeg({ quality: 92, chromaSubsampling: "4:4:4" })
+    // Centre it by padding to the canvas. Note this is an extend, not a second
+    // resize: resizing again here would scale the product back up to fill the
+    // canvas and destroy the margin we just created.
+    const left = Math.floor((CANVAS - w) / 2);
+    const top = Math.floor((CANVAS - h) / 2);
+    const buffer = await sharp(fitted)
+      .extend({
+        left,
+        right: CANVAS - w - left,
+        top,
+        bottom: CANVAS - h - top,
+        background: { r: 0, g: 0, b: 0, alpha: 0 },
+      })
+      .png({ compressionLevel: 9 })
       .toBuffer();
 
     return { buffer, meta: { sourceW, sourceH, keyedTint } };
@@ -165,10 +207,10 @@ export async function storePackshot(sourceUrl: string): Promise<PackshotResult> 
   const out = await normalisePackshot(sourceUrl);
   if ("error" in out) return { ok: false, error: out.error };
 
-  const path = `products/${crypto.randomUUID()}.jpg`;
+  const path = `products/${crypto.randomUUID()}.png`;
   const { error } = await supabaseAdmin.storage
     .from("catalog-images")
-    .upload(path, out.buffer, { contentType: "image/jpeg", upsert: false });
+    .upload(path, out.buffer, { contentType: "image/png", upsert: false });
   if (error) return { ok: false, error: `upload failed: ${error.message}` };
 
   const { data } = supabaseAdmin.storage.from("catalog-images").getPublicUrl(path);

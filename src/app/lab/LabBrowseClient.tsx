@@ -14,10 +14,10 @@ const SAGE = "var(--nura-sage)";
 const SAGE_ON = "var(--nura-sage-bg-on)";
 const SAGE_RGB = "var(--nura-sage-rgb)";
 const FG_RGB = "var(--nura-fg-rgb)";
-// Packshots are shot on white by every brand. Giving the tile its own light
-// ground keeps them consistent in both themes instead of leaving each product
-// floating on a halo of its own background.
-const PACKSHOT_BG = "#f4f2ee";
+// Packshots are normalised to transparent PNGs, so the tile shows the card's
+// own surface straight through. Anything opaque here would reappear as a plate
+// sitting inside the card instead of a product sitting on it.
+const PACKSHOT_BG = "transparent";
 const SANS = "var(--font-inter), system-ui, sans-serif";
 const SERIF = "'DM Serif Display', Georgia, serif";
 
@@ -70,7 +70,9 @@ export function ProductCard({ p }: { p: LabProduct }) {
             style={{
               position: "absolute", inset: 0,
               width: "100%", height: "100%",
-              objectFit: "contain", padding: "13%",
+              // The square canvas already carries the margin, so the tile adds
+              // none and the geometry is identical for every product.
+              objectFit: "contain",
               display: "block",
             }}
           />
