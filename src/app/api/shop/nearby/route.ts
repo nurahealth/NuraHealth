@@ -13,7 +13,11 @@ export const maxDuration = 30;
 // The Maps key is read from NEXT_PUBLIC_GOOGLE_MAPS_API_KEY. ZIP geocoding
 // still uses keyless Nominatim so only two Google APIs need enabling.
 
-const KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
+// Server-side Places calls use a server-only key (restricted to Places API (New),
+// never shipped to the browser). The public key is browser-only (Maps JS, locked
+// to our domains) and is used here solely to build photo URLs the browser loads.
+const KEY = process.env.GOOGLE_PLACES_SERVER_KEY ?? process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
+const BROWSER_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
 const PLACES_SEARCH = "https://places.googleapis.com/v1/places:searchText";
 const NOMINATIM = "https://nominatim.openstreetmap.org/search";
 const UA = "NuraHealthApp/1.0 (https://nura-health-three.vercel.app)";
@@ -298,13 +302,13 @@ async function fetchOgImage(siteUrl: string): Promise<string | null> {
 }
 
 function photoUrl(name: string): string {
-  return `https://places.googleapis.com/v1/${name}/media?maxHeightPx=640&maxWidthPx=640&key=${KEY}`;
+  return `https://places.googleapis.com/v1/${name}/media?maxHeightPx=640&maxWidthPx=640&key=${BROWSER_KEY}`;
 }
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
   if (!KEY) {
     return NextResponse.json(
-      { error: "Maps isn't configured yet. Add NEXT_PUBLIC_GOOGLE_MAPS_API_KEY to .env.local and restart." },
+      { error: "Maps isn't configured yet. Add GOOGLE_PLACES_SERVER_KEY (and NEXT_PUBLIC_GOOGLE_MAPS_API_KEY) to .env.local and restart." },
       { status: 500 }
     );
   }
