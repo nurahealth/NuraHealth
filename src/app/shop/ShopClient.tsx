@@ -65,6 +65,13 @@ function todaysHours(v: Vendor): string | null {
   return line.replace(/^[A-Za-z]+:\s*/, "Today: ");
 }
 
+// Branded fallback artwork so no place is ever pictureless.
+function fallbackImage(v: Vendor): string {
+  if (v.tier === 1) return "/shop/fallback-farm.svg";
+  if (v.tier === 3) return "/shop/fallback-health.svg";
+  return "/shop/fallback-grocer.svg";
+}
+
 function tierNote(v: Vendor): string {
   if (v.tier === 1) return "Local farm — as fresh and close to source as it gets";
   if (v.tier === 3) return v.organic ? "Health-food market — organic focus" : "Health-food market";
@@ -96,21 +103,14 @@ function Star() {
     </svg>
   );
 }
-function LeafGlyph() {
-  return (
-    <svg width={30} height={30} viewBox="0 0 24 24" fill="none" stroke="var(--nura-sage-bg-on)" strokeWidth="1.35" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.85 }}>
-      <path d="M5 21c.5-4.5 2.5-8 7-10" />
-      <path d="M9 18c6.22 0 10.5-3.29 11-12V4h-4.01C9 4 6 7 6 11c0 3 1 5 3 7z" />
-    </svg>
-  );
-}
 
 // Right-side thumbnail: the store's own photo when the map has one, otherwise a
 // clean branded tile (no broken images, no paid photo API needed).
 function Thumb({ v }: { v: Vendor }) {
   const [err, setErr] = useState(false);
   const show = !!v.image && !err;
-  const isLogo = v.imageKind === "logo";
+  const isLogo = show && v.imageKind === "logo";
+  const src = show ? v.image! : fallbackImage(v);
   return (
     <div style={{
       width: 96, height: 96, flexShrink: 0, borderRadius: 14, overflow: "hidden",
@@ -118,17 +118,13 @@ function Thumb({ v }: { v: Vendor }) {
       background: show && isLogo ? "#ffffff" : tierGradient(v.tier),
       display: "flex", alignItems: "center", justifyContent: "center",
     }}>
-      {show ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={v.image!}
-          alt={v.name}
-          onError={() => setErr(true)}
-          style={{ width: "100%", height: "100%", objectFit: isLogo ? "contain" : "cover", padding: isLogo ? 4 : 0 }}
-        />
-      ) : (
-        <LeafGlyph />
-      )}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={src}
+        alt={v.name}
+        onError={() => setErr(true)}
+        style={{ width: "100%", height: "100%", objectFit: isLogo ? "contain" : "cover", padding: isLogo ? 4 : 0 }}
+      />
     </div>
   );
 }
@@ -295,17 +291,20 @@ function ensureMapStyles() {
   const st = document.createElement("style");
   st.id = "nura-gmap-css";
   st.textContent = `
-    .gm-style .gm-style-iw-c{background:#141517;color:#ebe6d8;border-radius:14px;padding:0!important;
+    .gm-style .gm-style-iw-c{background:#141517;color:#ebe6d8;border-radius:14px;padding:0!important;overflow:hidden!important;
       box-shadow:0 10px 30px rgba(0,0,0,.55),0 0 0 .5px rgba(155,176,165,.35);max-width:260px!important}
     .gm-style .gm-style-iw-d{overflow:hidden!important;padding:0!important}
     .gm-style .gm-style-iw-tc::after{background:#141517}
-    .gm-style .gm-style-iw-c button.gm-ui-hover-effect{width:26px!important;height:26px!important;top:4px!important;right:4px!important;opacity:.7}
-    .gm-style .gm-style-iw-c button.gm-ui-hover-effect span{background-color:#ebe6d8!important}
-    .gm-style .gm-style-iw-c button.gm-ui-hover-effect:hover{opacity:1}
+    /* Close button: a small dark pill floating over the photo's top-right corner */
+    .gm-style .gm-style-iw-c button.gm-ui-hover-effect{width:28px!important;height:28px!important;top:8px!important;right:8px!important;
+      opacity:1!important;background:rgba(13,13,14,.72)!important;border-radius:50%!important;backdrop-filter:blur(4px)}
+    .gm-style .gm-style-iw-c button.gm-ui-hover-effect span{background-color:#ebe6d8!important;width:14px!important;height:14px!important;margin:7px!important}
+    .gm-style .gm-style-iw-c button.gm-ui-hover-effect:hover{background:rgba(155,176,165,.85)!important}
+    .gm-style .gm-style-iw-c button.gm-ui-hover-effect:hover span{background-color:#0d0d0e!important}
     .nura-iw{font-family:var(--font-inter),system-ui,sans-serif;line-height:1.45;width:240px}
     .nura-iw .ph{width:100%;height:120px;display:block;object-fit:cover;background:#1a1d1c}
     .nura-iw .ph.logo{object-fit:contain;background:#fff;padding:10px;box-sizing:border-box}
-    .nura-iw .tx{padding:11px 32px 12px 14px}
+    .nura-iw .tx{padding:11px 14px 12px}
     .nura-iw b{display:block;font-size:13.5px;font-weight:600;color:#ebe6d8;margin-bottom:2px}
     .nura-iw span{font-size:12px;color:#9bb0a5}
   `;
@@ -385,11 +384,10 @@ function ShopMap({ center, vendors }: { center: { lat: number; lng: number }; ve
         optimized: false,
       });
       mk.addListener("click", () => {
-        const photo = v.image
-          ? `<img class="ph${v.imageKind === "logo" ? " logo" : ""}" src="${escapeHtml(v.image)}" alt="" onerror="this.remove()"/>`
-          : "";
+        const src = v.image ?? fallbackImage(v);
+        const photo = `<img class="ph${v.image && v.imageKind === "logo" ? " logo" : ""}" src="${escapeHtml(src)}" alt="" onerror="this.src='${fallbackImage(v)}'"/>`;
         infoRef.current.setContent(
-          `<div class="nura-iw">${photo}<div class="tx"><b>${escapeHtml(v.name)}</b><span>${escapeHtml(v.type)} · ${v.distanceMi} mi</span></div></div>`
+          `<div class="nura-iw">${photo}<div class="tx"${photo ? "" : ' style="padding-right:40px"'}><b>${escapeHtml(v.name)}</b><span>${escapeHtml(v.type)} · ${v.distanceMi} mi</span></div></div>`
         );
         infoRef.current.open({ map: mapRef.current, anchor: mk, shouldFocus: false });
       });

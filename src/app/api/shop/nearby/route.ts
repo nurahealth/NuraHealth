@@ -150,6 +150,8 @@ function classify(
     return { type: "Organic-focused grocer", tier: 4, organic: true };
   }
   if (FARMERS_MARKET_WORDS.some((w) => n.includes(w))) return null;
+  // Catch spellings like "Farmers' & Arts Market", "Farmer's Market", "Farmers Mkt"
+  if (/farmer['’]?s?\b[^.]{0,20}\bm(ar)?k(e)?t/.test(n)) return null;
 
   // Must actually look like a farm/produce source — coming back from the farm
   // search alone isn't enough (Google returns conventional grocers for it too).

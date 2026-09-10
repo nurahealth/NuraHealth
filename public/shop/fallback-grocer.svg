@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+<defs>
+  <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#1b211e"/><stop offset="1" stop-color="#101312"/>
+  </linearGradient>
+  <radialGradient id="glow" cx="0.5" cy="0.35" r="0.6">
+    <stop offset="0" stop-color="#9bb0a5" stop-opacity="0.22"/><stop offset="1" stop-color="#9bb0a5" stop-opacity="0"/>
+  </radialGradient>
+</defs>
+<rect width="400" height="400" fill="url(#bg)"/>
+<rect width="400" height="400" fill="url(#glow)"/>
+<!-- produce peeking above the bag -->
+<circle cx="168" cy="150" r="30" fill="#9bb0a5"/>
+<path d="M168 122 c 4 -12 12 -18 22 -20" fill="none" stroke="#ebe6d8" stroke-width="2.4" stroke-linecap="round"/>
+<circle cx="232" cy="142" r="26" fill="#ebe6d8" fill-opacity="0.9"/>
+<path d="M232 118 c 2 -10 8 -16 16 -18" fill="none" stroke="#9bb0a5" stroke-width="2.4" stroke-linecap="round"/>
+<path d="M118 172 C 130 130, 168 118, 196 130 C 176 150, 150 166, 118 172 Z" fill="#7f958a"/>
+<path d="M118 172 C 140 156, 160 146, 196 130" fill="none" stroke="#101312" stroke-opacity="0.5" stroke-width="1.8"/>
+<!-- paper bag -->
+<path d="M112 166 L 288 166 L 274 342 C 273 350, 266 356, 258 356 L 142 356 C 134 356, 127 350, 126 342 Z" fill="#26302b" stroke="#9bb0a5" stroke-opacity="0.55" stroke-width="2"/>
+<path d="M112 166 L 288 166" stroke="#9bb0a5" stroke-width="3" stroke-linecap="round"/>
+<path d="M140 190 L 138 336" stroke="#9bb0a5" stroke-opacity="0.35" stroke-width="1.6"/>
+<path d="M260 190 L 262 336" stroke="#9bb0a5" stroke-opacity="0.35" stroke-width="1.6"/>
+<!-- leaf mark on bag -->
+<path d="M176 292 C 180 254, 206 232, 238 226 C 236 262, 214 288, 184 292 Z" fill="#9bb0a5" fill-opacity="0.9"/>
+<path d="M184 288 C 200 268, 216 250, 234 232" fill="none" stroke="#101312" stroke-opacity="0.55" stroke-width="1.8" stroke-linecap="round"/>
+</svg>
