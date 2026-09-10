@@ -127,7 +127,9 @@ function Thumb({ v }: { v: Vendor }) {
         onError={() => setErr(true)}
         onLoad={(e) => {
           const { naturalWidth: w, naturalHeight: h } = e.currentTarget;
-          if (w && h && (w / h > 1.6 || w / h < 0.6)) setWordmark(true);
+          // A logo is either extremely wide/tall (a wordmark) or too small to fill
+          // the tile without going blurry. Everything else is a photo → fill it.
+          if (w && h && (w / h > 2.2 || w / h < 0.5 || w < 130 || h < 110)) setWordmark(true);
         }}
         style={{ width: "100%", height: "100%", objectFit: isLogo ? "contain" : "cover", padding: isLogo ? 6 : 0, display: "block" }}
       />
@@ -399,7 +401,7 @@ function ShopMap({ center, vendors }: { center: { lat: number; lng: number }; ve
       mk.addListener("click", () => {
         const src = v.image ?? fallbackImage(v);
         const href = escapeHtml(v.website ?? v.searchUrl);
-        const photo = `<a class="phl" href="${href}" target="_blank" rel="noopener noreferrer"><img class="ph${v.image && v.imageKind === "logo" ? " logo" : ""}" src="${escapeHtml(src)}" alt="" onerror="this.src='${fallbackImage(v)}'" onload="var r=this.naturalWidth/this.naturalHeight;if(r>1.6||r<0.6){this.style.objectFit='contain';this.style.padding='12px';this.style.boxSizing='border-box'}"/></a>`;
+        const photo = `<a class="phl" href="${href}" target="_blank" rel="noopener noreferrer"><img class="ph${v.image && v.imageKind === "logo" ? " logo" : ""}" src="${escapeHtml(src)}" alt="" onerror="this.src='${fallbackImage(v)}'" onload="var w=this.naturalWidth,h=this.naturalHeight,r=w/h;if(r>2.2||r<0.5||w<200||h<130){this.style.objectFit='contain';this.style.padding='14px';this.style.boxSizing='border-box';this.style.background='#fff'}"/></a>`;
         infoRef.current.setContent(
           `<div class="nura-iw">${photo}<div class="tx"${photo ? "" : ' style="padding-right:40px"'}><b>${escapeHtml(v.name)}</b><span>${escapeHtml(v.type)} · ${v.distanceMi} mi</span></div></div>`
         );

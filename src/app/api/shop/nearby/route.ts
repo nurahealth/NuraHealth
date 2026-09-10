@@ -26,6 +26,35 @@ const UA = "NuraHealthApp/1.0 (https://nura-health-three.vercel.app)";
 // then filter to the user's chosen radius on the client.
 const MAX_BIAS_M = 50000;
 
+// ── Result cache ──────────────────────────────────────────────────────────────
+// Searches of the same area are extremely common (a user nudging the radius, or
+// several users in one town). Serving those from memory keeps us far under
+// Google's daily request quota and makes repeat searches instant.
+const CACHE_TTL_MS = 6 * 60 * 60 * 1000; // 6 hours
+const CACHE_MAX = 200;
+const cache = new Map<string, { at: number; payload: unknown }>();
+
+function cacheKey(lat: number, lng: number, radiusMi: number): string {
+  // ~1km buckets so nearby searches share an entry.
+  return `${lat.toFixed(2)},${lng.toFixed(2)},${radiusMi}`;
+}
+function cacheGet(key: string): unknown | null {
+  const hit = cache.get(key);
+  if (!hit) return null;
+  if (Date.now() - hit.at > CACHE_TTL_MS) {
+    cache.delete(key);
+    return null;
+  }
+  return hit.payload;
+}
+function cacheSet(key: string, payload: unknown): void {
+  if (cache.size >= CACHE_MAX) {
+    const oldest = cache.keys().next().value;
+    if (oldest) cache.delete(oldest);
+  }
+  cache.set(key, { at: Date.now(), payload });
+}
+
 type Tier = 1 | 2 | 3 | 4 | 5;
 type ImageKind = "photo" | "logo" | null;
 interface Vendor {
@@ -222,11 +251,12 @@ async function textSearch(
   query: string,
   lat: number,
   lng: number,
-  radiusM: number
+  radiusM: number,
+  attempt = 0
 ): Promise<{ places: GPlace[]; error: string | null }> {
   try {
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 12000);
+    const timer = setTimeout(() => controller.abort(), 20000);
     const res = await fetch(PLACES_SEARCH, {
       method: "POST",
       headers: {
@@ -259,17 +289,17 @@ async function textSearch(
     const data = (await res.json()) as { places?: GPlace[] };
     return { places: data.places ?? [], error: null };
   } catch (e) {
+    // A timed-out query would silently drop a whole category — retry once.
+    if (attempt === 0) return textSearch(query, lat, lng, radiusM, 1);
     return { places: [], error: e instanceof Error ? e.message : "request failed" };
   }
 }
 
+// Kept deliberately small — each entry is one billed Google request per search.
 const QUERIES: { q: string; farm: boolean }[] = [
-  { q: "organic grocery store", farm: false },
-  { q: "health food store", farm: false },
-  { q: "whole foods market", farm: false },
-  { q: "sprouts farmers market", farm: false },
-  { q: "farm stand", farm: true },
-  { q: "organic farm", farm: true },
+  { q: "organic grocery and health food store", farm: false },
+  { q: "natural foods market", farm: false },
+  { q: "local farm stand fresh produce", farm: true },
 ];
 
 // Google isn't returning photos for this project, so for places with a website
@@ -290,7 +320,11 @@ async function fetchOgImage(siteUrl: string): Promise<string | null> {
     const m =
       html.match(/<meta[^>]+property=["']og:image(?::secure_url)?["'][^>]+content=["']([^"']+)["']/i) ||
       html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i) ||
-      html.match(/<meta[^>]+name=["']twitter:image["'][^>]+content=["']([^"']+)["']/i);
+      html.match(/<meta[^>]+name=["']twitter:image["'][^>]+content=["']([^"']+)["']/i) ||
+      // No social image? A site's apple-touch-icon is a high-res version of its logo.
+      html.match(/<link[^>]+rel=["'](?:apple-touch-icon|apple-touch-icon-precomposed)["'][^>]+href=["']([^"']+)["']/i) ||
+      html.match(/<link[^>]+href=["']([^"']+)["'][^>]+rel=["'](?:apple-touch-icon|apple-touch-icon-precomposed)["']/i) ||
+      html.match(/<link[^>]+rel=["'][^"']*icon[^"']*["'][^>]+sizes=["'](?:192x192|180x180|256x256|512x512)["'][^>]+href=["']([^"']+)["']/i);
     if (!m) return null;
     let img = m[1].trim();
     const origin = new URL(siteUrl).origin;
@@ -348,16 +382,28 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   const radiusMi = Math.min(Math.max(body.radiusMi ?? 10, 1), 100);
   const radiusM = Math.round(radiusMi * 1609.34);
 
+  const key = cacheKey(lat, lng, radiusMi);
+  const cached = cacheGet(key);
+  if (cached) return NextResponse.json(cached);
+
   // Run all queries in parallel.
   const results = await Promise.all(
-    QUERIES.map((qq) => textSearch(qq.q, lat!, lng!, radiusM).then((r) => ({ ...r, farm: qq.farm })))
+    QUERIES.map((qq) => textSearch(qq.q, lat!, lng!, radiusM, 0).then((r) => ({ ...r, farm: qq.farm })))
   );
 
   const firstError = results.find((r) => r.error)?.error ?? null;
   const totalPlaces = results.reduce((n, r) => n + r.places.length, 0);
   if (totalPlaces === 0 && firstError) {
     console.error("[shop/nearby] Google Places error:", firstError);
-    return NextResponse.json({ error: `Google Places error — ${firstError}` }, { status: 502 });
+    const quota = /RESOURCE_EXHAUSTED|Quota exceeded/i.test(firstError);
+    return NextResponse.json(
+      {
+        error: quota
+          ? "We've hit today's search limit. Results come back tomorrow — or enable billing on the Google Cloud project to lift the cap."
+          : `Google Places error — ${firstError}`,
+      },
+      { status: 502 }
+    );
   }
 
   const vendors: Vendor[] = [];
@@ -447,5 +493,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     }
   }
 
-  return NextResponse.json({ center: { lat, lng }, count: vendors.length, vendors: top });
+  const payload = { center: { lat, lng }, count: vendors.length, vendors: top };
+  cacheSet(key, payload);
+  return NextResponse.json(payload);
 }
