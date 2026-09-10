@@ -289,8 +289,32 @@ const DARK_STYLE: any[] = [
 // Google recommends loading=async + a callback param: Google invokes the callback
 // only once the API is fully bootstrapped (Map, Marker, etc. all ready). The script
 // tag's own load event fires too early, so we never rely on it.
+// Google's InfoWindow is white by default — restyle it to the NŪRA dark system.
+function ensureMapStyles() {
+  if (document.getElementById("nura-gmap-css")) return;
+  const st = document.createElement("style");
+  st.id = "nura-gmap-css";
+  st.textContent = `
+    .gm-style .gm-style-iw-c{background:#141517;color:#ebe6d8;border-radius:14px;padding:0!important;
+      box-shadow:0 10px 30px rgba(0,0,0,.55),0 0 0 .5px rgba(155,176,165,.35);max-width:260px!important}
+    .gm-style .gm-style-iw-d{overflow:hidden!important;padding:0!important}
+    .gm-style .gm-style-iw-tc::after{background:#141517}
+    .gm-style .gm-style-iw-c button.gm-ui-hover-effect{width:26px!important;height:26px!important;top:4px!important;right:4px!important;opacity:.7}
+    .gm-style .gm-style-iw-c button.gm-ui-hover-effect span{background-color:#ebe6d8!important}
+    .gm-style .gm-style-iw-c button.gm-ui-hover-effect:hover{opacity:1}
+    .nura-iw{font-family:var(--font-inter),system-ui,sans-serif;line-height:1.45;width:240px}
+    .nura-iw .ph{width:100%;height:120px;display:block;object-fit:cover;background:#1a1d1c}
+    .nura-iw .ph.logo{object-fit:contain;background:#fff;padding:10px;box-sizing:border-box}
+    .nura-iw .tx{padding:11px 32px 12px 14px}
+    .nura-iw b{display:block;font-size:13.5px;font-weight:600;color:#ebe6d8;margin-bottom:2px}
+    .nura-iw span{font-size:12px;color:#9bb0a5}
+  `;
+  document.head.appendChild(st);
+}
+
 let mapsPromise: Promise<any> | null = null;
 function ensureGoogleMaps(): Promise<any> {
+  ensureMapStyles();
   const w = window as any;
   if (w.google?.maps?.Map) return Promise.resolve(w.google.maps);
   if (mapsPromise) return mapsPromise;
@@ -349,7 +373,6 @@ function ShopMap({ center, vendors }: { center: { lat: number; lng: number }; ve
       map: mapRef.current,
       icon: youIcon(maps),
       zIndex: 999,
-      title: "You",
     });
     markersRef.current.push(you);
     bounds.extend({ lat: center.lat, lng: center.lng });
@@ -359,13 +382,16 @@ function ShopMap({ center, vendors }: { center: { lat: number; lng: number }; ve
         position: { lat: v.lat, lng: v.lng },
         map: mapRef.current,
         icon: pinIcon(maps, "#9bb0a5"),
-        title: v.name,
+        optimized: false,
       });
       mk.addListener("click", () => {
+        const photo = v.image
+          ? `<img class="ph${v.imageKind === "logo" ? " logo" : ""}" src="${escapeHtml(v.image)}" alt="" onerror="this.remove()"/>`
+          : "";
         infoRef.current.setContent(
-          `<div style="font-family:system-ui,sans-serif;font-size:12.5px;line-height:1.5;color:#1a1a1a"><strong>${escapeHtml(v.name)}</strong><br/>${escapeHtml(v.type)} · ${v.distanceMi} mi</div>`
+          `<div class="nura-iw">${photo}<div class="tx"><b>${escapeHtml(v.name)}</b><span>${escapeHtml(v.type)} · ${v.distanceMi} mi</span></div></div>`
         );
-        infoRef.current.open(mapRef.current, mk);
+        infoRef.current.open({ map: mapRef.current, anchor: mk, shouldFocus: false });
       });
       markersRef.current.push(mk);
       bounds.extend({ lat: v.lat, lng: v.lng });
