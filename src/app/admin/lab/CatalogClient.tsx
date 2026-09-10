@@ -1512,6 +1512,197 @@ export default function CatalogClient({ initialProducts, categories }: {
     }
   };
 
+
+// ── Bulk import ───────────────────────────────────────────────────────────────
+// Paste a JSON array of products (with their measurements and sources) to seed a
+// whole category at once instead of filling in the form one product at a time.
+interface BulkRowResult {
+  name: string;
+  status: string;
+  slug?: string;
+  measurements?: number;
+  documents?: number;
+  reason?: string;
+}
+
+const BULK_EXAMPLE = `[
+  {
+    "name": "Example Oat Bar",
+    "brand": "Example Foods",
+    "category": "protein-snack-bars",
+    "status": "draft",
+    "score": 72,
+    "score_label": "Good",
+    "score_rationale": "Low heavy metals; no detectable glyphosate.",
+    "lab_tested": true,
+    "measurements": [
+      { "type": "Lead", "kind": "contaminant", "unit": "ppb", "value": 3.1, "risk_count": 0 },
+      { "type": "Protein", "kind": "nutrient", "unit": "g", "value": 12 }
+    ],
+    "documents": [
+      { "title": "Source study", "doc_type": "study", "year": 2025, "source_url": "https://example.org/report" }
+    ]
+  }
+]`;
+
+function BulkImportPanel({ token, onDone }: { token: string; onDone: () => void }) {
+  const [open, setOpen] = useState(false);
+  const [text, setText] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState("");
+  const [tally, setTally] = useState<Record<string, number> | null>(null);
+  const [rows, setRows] = useState<BulkRowResult[]>([]);
+  const [wasDryRun, setWasDryRun] = useState(true);
+
+  const run = async (dryRun: boolean) => {
+    setBusy(true); setErr(""); setTally(null); setRows([]);
+    try {
+      let parsed: unknown;
+      try {
+        parsed = JSON.parse(text);
+      } catch {
+        throw new Error("That isn't valid JSON — check for a trailing comma or a missing bracket.");
+      }
+      const products = Array.isArray(parsed) ? parsed : (parsed as { products?: unknown }).products;
+      if (!Array.isArray(products) || products.length === 0) {
+        throw new Error("Paste a JSON array of products, or an object with a `products` array.");
+      }
+      const res = await fetch("/api/admin/catalog/products/bulk", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ products, dry_run: dryRun, update_existing: false }),
+      });
+      const body = (await res.json()) as { error?: string; tally?: Record<string, number>; results?: BulkRowResult[] };
+      if (!res.ok) throw new Error(body.error ?? "Import failed");
+      setTally(body.tally ?? {});
+      setRows(body.results ?? []);
+      setWasDryRun(dryRun);
+      if (!dryRun) onDone();
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Import failed");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const statusColor = (st: string) =>
+    st === "error" ? DANGER : st === "skipped" ? TEXT_TER : "var(--nura-sage)";
+
+  return (
+    <Panel style={{ padding: 0, marginBottom: 18, overflow: "hidden" }}>
+      <button
+        onClick={() => setOpen((o) => !o)}
+        style={{
+          width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between",
+          gap: 10, padding: "13px 16px", background: "none", border: "none", cursor: "pointer",
+        }}
+      >
+        <span style={{ fontFamily: SANS, fontSize: 13.5, fontWeight: 600, color: TEXT }}>
+          Bulk import
+        </span>
+        <span style={{ fontFamily: SANS, fontSize: 11.5, color: TEXT_TER }}>
+          {open ? "Hide" : "Add many products at once"}
+        </span>
+      </button>
+
+      {open && (
+        <div style={{ padding: "0 16px 16px", display: "flex", flexDirection: "column", gap: 10 }}>
+          <p style={{ fontFamily: SANS, fontSize: 12, color: TEXT_TER, lineHeight: 1.55, margin: 0 }}>
+            Paste a JSON array of products. Each may carry its own measurements and source links.
+            Category accepts a slug, an id, or the exact category name. Validate first — nothing is
+            written until you press Import.
+          </p>
+
+          <textarea
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            placeholder={BULK_EXAMPLE}
+            spellCheck={false}
+            style={{
+              width: "100%", minHeight: 190, resize: "vertical",
+              background: "var(--nura-bg)", border: `0.5px solid ${BORDER}`, borderRadius: 10,
+              color: TEXT, fontFamily: "var(--font-jetbrains-mono, ui-monospace, monospace)",
+              fontSize: 11.5, lineHeight: 1.55, padding: "11px 12px", outline: "none",
+            }}
+          />
+
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+            <button
+              onClick={() => run(true)}
+              disabled={busy || !text.trim()}
+              style={{
+                padding: "9px 16px", borderRadius: 10, cursor: busy || !text.trim() ? "default" : "pointer",
+                background: "transparent", border: `0.5px solid rgba(${SAGE_RGB},0.5)`,
+                color: "var(--nura-sage)", fontFamily: SANS, fontSize: 12.5, fontWeight: 500,
+                opacity: busy || !text.trim() ? 0.5 : 1,
+              }}
+            >
+              {busy ? "Working…" : "Validate"}
+            </button>
+            <button
+              onClick={() => run(false)}
+              disabled={busy || !text.trim()}
+              className="nura-primary-btn"
+              style={{
+                padding: "9px 18px", borderRadius: 10, cursor: busy || !text.trim() ? "default" : "pointer",
+                background: "var(--nura-sage)", border: "none", color: "var(--nura-sage-bg-on)",
+                fontFamily: SANS, fontSize: 12.5, fontWeight: 600,
+                opacity: busy || !text.trim() ? 0.5 : 1,
+              }}
+            >
+              Import
+            </button>
+            <button
+              onClick={() => setText(BULK_EXAMPLE)}
+              style={{
+                padding: "9px 14px", borderRadius: 10, cursor: "pointer", background: "none",
+                border: `0.5px solid ${BORDER}`, color: TEXT_SEC, fontFamily: SANS, fontSize: 12.5,
+              }}
+            >
+              Load example
+            </button>
+          </div>
+
+          {err && (
+            <div style={{ padding: "10px 12px", background: "rgba(var(--nura-record-rgb),0.08)", border: `0.5px solid rgba(var(--nura-record-rgb),0.4)`, borderRadius: 10 }}>
+              <span style={{ fontFamily: SANS, fontSize: 12, color: DANGER }}>{err}</span>
+            </div>
+          )}
+
+          {tally && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <div style={{ fontFamily: SANS, fontSize: 12, color: TEXT_SEC }}>
+                {wasDryRun ? "Validation only — nothing was saved. " : "Imported. "}
+                {Object.entries(tally).map(([k, v]) => `${v} ${k}`).join(" · ")}
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 4, maxHeight: 240, overflowY: "auto" }}>
+                {rows.map((r, i) => (
+                  <div key={i} style={{ display: "flex", alignItems: "baseline", gap: 8, padding: "6px 9px", background: "var(--nura-bg)", border: `0.5px solid ${BORDER}`, borderRadius: 8 }}>
+                    <span style={{ fontFamily: SANS, fontSize: 9, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: statusColor(r.status), flexShrink: 0, minWidth: 54 }}>
+                      {r.status}
+                    </span>
+                    <span style={{ fontFamily: SANS, fontSize: 12, color: TEXT, flex: 1, minWidth: 0 }}>{r.name}</span>
+                    {typeof r.measurements === "number" && (
+                      <span style={{ fontFamily: SANS, fontSize: 11, color: TEXT_TER, flexShrink: 0 }}>
+                        {r.measurements}m · {r.documents ?? 0}d
+                      </span>
+                    )}
+                    {r.reason && (
+                      <span style={{ fontFamily: SANS, fontSize: 11, color: TEXT_TER, flexShrink: 0, maxWidth: 260, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {r.reason}
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </Panel>
+  );
+}
+
   const openAdd = () => { setEditing(null); setShowModal(true); };
   const openEdit = (p: CatalogProduct) => { setEditing(p); setShowModal(true); };
 
@@ -1577,6 +1768,8 @@ export default function CatalogClient({ initialProducts, categories }: {
             </Panel>
           ))}
         </div>
+
+        {token && <BulkImportPanel token={token} onDone={refresh} />}
 
         <button
           onClick={openAdd}
