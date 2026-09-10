@@ -1566,6 +1566,8 @@ function BulkImportPanel({ token, onDone, categories }: { token: string; onDone:
   const [nuraCat, setNuraCat] = useState("");
   const [count, setCount] = useState("25");
   const [usOnly, setUsOnly] = useState(true);
+  const [updateExisting, setUpdateExisting] = useState(false);
+  const [publishOnImport, setPublishOnImport] = useState(true);
   const [fetching, setFetching] = useState(false);
   const [fetchNote, setFetchNote] = useState("");
   const [text, setText] = useState("");
@@ -1587,6 +1589,7 @@ function BulkImportPanel({ token, onDone, categories }: { token: string; onDone:
           category: nuraCat,
           limit: Math.min(Math.max(parseInt(count, 10) || 25, 1), 200),
           country: usOnly ? "united-states" : undefined,
+          status: publishOnImport ? "published" : "draft",
         }),
       });
       const body = (await res.json()) as {
@@ -1624,7 +1627,7 @@ function BulkImportPanel({ token, onDone, categories }: { token: string; onDone:
       const res = await fetch("/api/admin/catalog/products/bulk", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ products, dry_run: dryRun, update_existing: false }),
+        body: JSON.stringify({ products, dry_run: dryRun, update_existing: updateExisting }),
       });
       const body = (await res.json()) as { error?: string; tally?: Record<string, number>; results?: BulkRowResult[] };
       if (!res.ok) throw new Error(body.error ?? "Import failed");
@@ -1698,6 +1701,30 @@ function BulkImportPanel({ token, onDone, categories }: { token: string; onDone:
               <label style={{ display: "flex", alignItems: "center", gap: 6, fontFamily: SANS, fontSize: 11.5, color: TEXT_SEC, cursor: "pointer" }}>
                 <input type="checkbox" checked={usOnly} onChange={(e) => setUsOnly(e.target.checked)} />
                 US only
+              </label>
+              <label
+                title="Re-import over products that already exist, replacing their measurements instead of skipping them."
+                style={{ display: "flex", alignItems: "center", gap: 6, fontFamily: SANS, fontSize: 11.5, color: TEXT_SEC, cursor: "pointer" }}
+              >
+                <input
+                  type="checkbox"
+                  data-testid="bulk-update-existing"
+                  checked={updateExisting}
+                  onChange={(e) => setUpdateExisting(e.target.checked)}
+                />
+                Update existing
+              </label>
+              <label
+                title="Bring these in live. Uncheck to stage them as drafts first."
+                style={{ display: "flex", alignItems: "center", gap: 6, fontFamily: SANS, fontSize: 11.5, color: TEXT_SEC, cursor: "pointer" }}
+              >
+                <input
+                  type="checkbox"
+                  data-testid="bulk-publish"
+                  checked={publishOnImport}
+                  onChange={(e) => setPublishOnImport(e.target.checked)}
+                />
+                Publish
               </label>
               <button
                 onClick={fetchFromOff}
