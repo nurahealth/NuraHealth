@@ -1545,14 +1545,68 @@ const BULK_EXAMPLE = `[
   }
 ]`;
 
-function BulkImportPanel({ token, onDone }: { token: string; onDone: () => void }) {
+const OFF_CATEGORIES: { value: string; label: string }[] = [
+  { value: "protein-bars", label: "Protein bars" },
+  { value: "cereal-bars", label: "Cereal & snack bars" },
+  { value: "baby-foods", label: "Baby food" },
+  { value: "honeys", label: "Honey" },
+  { value: "salts", label: "Salt" },
+  { value: "coffees", label: "Coffee" },
+  { value: "teas", label: "Tea" },
+  { value: "vegetable-oils", label: "Cooking oils" },
+  { value: "olive-oils", label: "Olive oil" },
+  { value: "breakfast-cereals", label: "Breakfast cereals" },
+  { value: "yogurts", label: "Yogurt" },
+  { value: "plant-based-milks", label: "Plant-based milk" },
+];
+
+function BulkImportPanel({ token, onDone, categories }: { token: string; onDone: () => void; categories: CatalogCategory[] }) {
   const [open, setOpen] = useState(false);
+  const [offCat, setOffCat] = useState("protein-bars");
+  const [nuraCat, setNuraCat] = useState("");
+  const [count, setCount] = useState("25");
+  const [usOnly, setUsOnly] = useState(true);
+  const [fetching, setFetching] = useState(false);
+  const [fetchNote, setFetchNote] = useState("");
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
   const [tally, setTally] = useState<Record<string, number> | null>(null);
   const [rows, setRows] = useState<BulkRowResult[]>([]);
   const [wasDryRun, setWasDryRun] = useState(true);
+
+  const fetchFromOff = async () => {
+    if (!nuraCat) { setErr("Pick which NŪRA category these should land in."); return; }
+    setFetching(true); setErr(""); setFetchNote(""); setTally(null); setRows([]);
+    try {
+      const res = await fetch("/api/admin/catalog/import/openfoodfacts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          off_category: offCat,
+          category: nuraCat,
+          limit: Math.min(Math.max(parseInt(count, 10) || 25, 1), 200),
+          country: usOnly ? "united-states" : undefined,
+        }),
+      });
+      const body = (await res.json()) as {
+        error?: string; products?: unknown[]; available?: number | null;
+        returned?: number; skipped_incomplete?: number;
+      };
+      if (!res.ok) throw new Error(body.error ?? "Fetch failed");
+      setText(JSON.stringify(body.products ?? [], null, 2));
+      setFetchNote(
+        `Loaded ${body.returned ?? 0} products` +
+        (body.available ? ` of ${body.available.toLocaleString()} available` : "") +
+        (body.skipped_incomplete ? ` · skipped ${body.skipped_incomplete} with missing photo or ingredients` : "") +
+        ". Review below, then Validate and Import."
+      );
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Fetch failed");
+    } finally {
+      setFetching(false);
+    }
+  };
 
   const run = async (dryRun: boolean) => {
     setBusy(true); setErr(""); setTally(null); setRows([]);
@@ -1607,8 +1661,59 @@ function BulkImportPanel({ token, onDone }: { token: string; onDone: () => void 
 
       {open && (
         <div style={{ padding: "0 16px 16px", display: "flex", flexDirection: "column", gap: 10 }}>
+          {/* ── Pull from Open Food Facts ───────────────────────────────── */}
+          <div style={{ border: `0.5px solid ${BORDER}`, borderRadius: 10, padding: 12, display: "flex", flexDirection: "column", gap: 9 }}>
+            <div style={{ fontFamily: SANS, fontSize: 12.5, fontWeight: 600, color: TEXT }}>
+              Pull from Open Food Facts
+            </div>
+            <p style={{ fontFamily: SANS, fontSize: 11.5, color: TEXT_TER, lineHeight: 1.5, margin: 0 }}>
+              Real products with brands, photos, ingredients and additives from the open food
+              database. Each one is scored automatically and cited back to its source record.
+            </p>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+              <select
+                value={offCat}
+                onChange={(e) => setOffCat(e.target.value)}
+                style={{ flex: "1 1 150px", background: "var(--nura-bg)", border: `0.5px solid ${BORDER}`, borderRadius: 9, color: TEXT, fontFamily: SANS, fontSize: 12.5, padding: "8px 10px", outline: "none" }}
+              >
+                {OFF_CATEGORIES.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
+              </select>
+              <span style={{ fontFamily: SANS, fontSize: 11.5, color: TEXT_TER }}>into</span>
+              <select
+                value={nuraCat}
+                onChange={(e) => setNuraCat(e.target.value)}
+                style={{ flex: "1 1 170px", background: "var(--nura-bg)", border: `0.5px solid ${BORDER}`, borderRadius: 9, color: nuraCat ? TEXT : TEXT_TER, fontFamily: SANS, fontSize: 12.5, padding: "8px 10px", outline: "none" }}
+              >
+                <option value="">NŪRA category…</option>
+                {categories.filter((c) => c.parent_id).map((c) => (
+                  <option key={c.id} value={c.slug}>{c.name}</option>
+                ))}
+              </select>
+              <input
+                value={count}
+                onChange={(e) => setCount(e.target.value.replace(/[^0-9]/g, "").slice(0, 3))}
+                inputMode="numeric"
+                style={{ width: 62, background: "var(--nura-bg)", border: `0.5px solid ${BORDER}`, borderRadius: 9, color: TEXT, fontFamily: SANS, fontSize: 12.5, padding: "8px 10px", outline: "none", textAlign: "center" }}
+              />
+              <label style={{ display: "flex", alignItems: "center", gap: 6, fontFamily: SANS, fontSize: 11.5, color: TEXT_SEC, cursor: "pointer" }}>
+                <input type="checkbox" checked={usOnly} onChange={(e) => setUsOnly(e.target.checked)} />
+                US only
+              </label>
+              <button
+                onClick={fetchFromOff}
+                disabled={fetching}
+                style={{ padding: "8px 15px", borderRadius: 9, cursor: fetching ? "default" : "pointer", background: `rgba(${SAGE_RGB},0.14)`, border: `0.5px solid rgba(${SAGE_RGB},0.5)`, color: "var(--nura-sage)", fontFamily: SANS, fontSize: 12.5, fontWeight: 500, opacity: fetching ? 0.6 : 1 }}
+              >
+                {fetching ? "Fetching…" : "Fetch"}
+              </button>
+            </div>
+            {fetchNote && (
+              <div style={{ fontFamily: SANS, fontSize: 11.5, color: "var(--nura-sage)" }}>{fetchNote}</div>
+            )}
+          </div>
+
           <p style={{ fontFamily: SANS, fontSize: 12, color: TEXT_TER, lineHeight: 1.55, margin: 0 }}>
-            Paste a JSON array of products. Each may carry its own measurements and source links.
+            Or paste a JSON array of products. Each may carry its own measurements and source links.
             Category accepts a slug, an id, or the exact category name. Validate first — nothing is
             written until you press Import.
           </p>
@@ -1769,7 +1874,7 @@ function BulkImportPanel({ token, onDone }: { token: string; onDone: () => void 
           ))}
         </div>
 
-        {token && <BulkImportPanel token={token} onDone={refresh} />}
+        {token && <BulkImportPanel token={token} onDone={refresh} categories={categories} />}
 
         <button
           onClick={openAdd}
