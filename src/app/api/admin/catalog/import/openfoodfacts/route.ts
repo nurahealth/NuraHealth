@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdminFromRequest, AdminError } from "@/lib/admin";
 import { scoreProduct } from "@/lib/catalog-scoring";
+import { resolveBrandPackshot, resetPackshotCache } from "@/lib/brand-packshot";
 
 // Pull real products from Open Food Facts and map them into the shape the bulk
 // importer expects — name, brand, image, a NŪRA clean-food score with its
@@ -10,7 +11,7 @@ import { scoreProduct } from "@/lib/catalog-scoring";
 // legitimate way to seed thousands of products without hand research.
 
 export const runtime = "nodejs";
-export const maxDuration = 60;
+export const maxDuration = 300;
 
 const OFF_SEARCH = "https://world.openfoodfacts.org/api/v2/search";
 const UA = "NuraHealthApp/1.0 (https://nura-health-three.vercel.app)";
@@ -133,6 +134,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       country?: string;
       status?: string;
       require_complete?: boolean;
+      resolve_images?: boolean;
     };
 
     const offCategory = body.off_category?.trim();
@@ -143,6 +145,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     const limit = Math.min(Math.max(body.limit ?? 25, 1), 200);
     const status = body.status === "published" ? "published" : "draft";
     const requireComplete = body.require_complete !== false;
+    const resolveImages = body.resolve_images !== false;
 
     // Open Food Facts struggles with large single pages, so walk several small
     // pages instead. Each page is retried with backoff before we give up.
@@ -297,12 +300,51 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     // ties and creating near-duplicate products on a re-import.
     scoredAll.sort((a, b) => b.score - a.score || a.key.localeCompare(b.key));
     const seenKeys = new Set<string>();
-    const products: Record<string, unknown>[] = [];
+    const shortlist: typeof scoredAll = [];
     for (const row of scoredAll) {
-      if (products.length >= limit) break;
       if (seenKeys.has(row.key)) continue;
       seenKeys.add(row.key);
-      products.push(row.payload);
+      shortlist.push(row);
+      // Over-fetch: a product whose official packshot cannot be found is
+      // dropped below, so the shortlist has to be deeper than the quota.
+      if (shortlist.length >= limit * 4) break;
+    }
+
+    // ── Swap in the brand's own product photography ────────────────────────
+    // Open Food Facts images are shoppers' snapshots and fail the packshot
+    // gate on import, so a product kept with its OFF image would simply be
+    // skipped later. Resolve the brand's own image instead, and drop what
+    // cannot be resolved rather than shipping a bad photo.
+    resetPackshotCache();
+    const products: Record<string, unknown>[] = [];
+    let unresolved = 0;
+    const resolvedFrom: Record<string, number> = {};
+
+    for (const row of shortlist) {
+      if (products.length >= limit) break;
+      const payload = row.payload as Record<string, unknown>;
+      const brand = typeof payload.brand === "string" ? payload.brand : null;
+      const name = typeof payload.name === "string" ? payload.name : "";
+
+      if (!resolveImages) {
+        products.push(payload);
+        continue;
+      }
+
+      const shot = await resolveBrandPackshot(brand, name);
+      if (!shot) {
+        unresolved++;
+        continue;
+      }
+      resolvedFrom[shot.domain] = (resolvedFrom[shot.domain] ?? 0) + 1;
+      const docs = Array.isArray(payload.documents) ? [...(payload.documents as unknown[])] : [];
+      docs.push({
+        title: `${brand ?? "Brand"} product page`,
+        doc_type: "brand",
+        year: new Date().getFullYear(),
+        source_url: shot.sourcePage,
+      });
+      products.push({ ...payload, image_url: shot.imageUrl, documents: docs });
     }
 
     return NextResponse.json({
@@ -314,6 +356,9 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       page_failures: pageFailures,
       returned: products.length,
       skipped_incomplete: skipped,
+      shortlisted: shortlist.length,
+      unresolved_packshots: unresolved,
+      resolved_from: resolvedFrom,
       products,
     });
   } catch (err) {
