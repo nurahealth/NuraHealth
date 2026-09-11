@@ -228,18 +228,24 @@ export default async function LabProductPage({ params }: { params: Promise<{ slu
   const card: React.CSSProperties = { background: SURFACE, border: `0.5px solid ${BORDER}`, borderRadius: 14 };
 
   return (
-    <NuraPageShell maxWidth={860} desktopMaxWidth={760}>
+    <NuraPageShell maxWidth={860} desktopMaxWidth={980}>
       <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
 
         {/* ── Header card ─────────────────────────────────────────────────── */}
         <div className="nura-card" style={{ ...card, padding: 18 }}>
-          <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
-            {/* Image — generous padding so the bottle sits centered with whitespace around it */}
-            <div style={{ position: "relative", width: 300, maxWidth: "100%", aspectRatio: "1 / 1", flexShrink: 0, borderRadius: 14, overflow: "hidden", background: `rgba(${FG_RGB},0.04)`, border: `0.5px solid ${BORDER}` }}>
-              <div style={{ position: "absolute", inset: 0, padding: "clamp(22px, 11%, 40px)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{ display: "flex", gap: 24, flexWrap: "wrap", alignItems: "flex-start" }}>
+            {/* Image — a fixed square. alignSelf is load-bearing: this is a flex
+                item, and the row's default align-items:stretch would grow it to
+                match the height of the text column beside it, overriding the
+                aspect ratio and leaving the product stranded in a tall panel. */}
+            <div style={{ position: "relative", width: 300, maxWidth: "100%", minHeight: 300, flexShrink: 0, alignSelf: "stretch", borderRadius: 14, overflow: "hidden", background: "transparent" }}>
+              <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
                 {product.image_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={product.image_url} alt={product.name} style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain", display: "block" }} />
+                  // The packshot already carries its own margin, so no padding is
+                  // added here. It is scaled up slightly because this is a hero
+                  // rather than a grid tile — nothing beside it to align to.
+                  <img src={product.image_url} alt={product.name} style={{ width: "100%", aspectRatio: "1 / 1", height: "auto", maxHeight: "100%", objectFit: "contain", display: "block", transform: "scale(1.22)" }} />
                 ) : (
                   <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke={`rgba(${FG_RGB},0.22)`} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                     <rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><path d="M21 15l-5-5L5 21" />
