@@ -16,6 +16,8 @@ export interface ParsedIngredient {
   contains: string[];
   /** Curated note, when one exists for this ingredient. */
   note?: string;
+  /** Why this ingredient is worth flagging, when it is. */
+  concern?: string;
 }
 
 /** Split on separators that sit outside any bracket. */
@@ -103,7 +105,7 @@ export function parseIngredients(raw: string | null | undefined): ParsedIngredie
     if (!key || seen.has(key)) continue;
     seen.add(key);
 
-    out.push({ name, contains, note: INGREDIENT_NOTES[key] });
+    out.push({ name, contains, note: INGREDIENT_NOTES[key], concern: INGREDIENT_CONCERNS[key] });
   }
   return out;
 }
@@ -195,4 +197,72 @@ export const INGREDIENT_NOTES: Record<string, string> = {
   "baking soda": "Sodium bicarbonate; leavening agent.",
   "tocopherols": "Vitamin E compounds used to stop fats going rancid.",
   "rosemary extract": "Natural antioxidant used to keep fats from oxidising.",
+};
+
+// ── Ingredients worth flagging ────────────────────────────────────────────────
+// Reasons a reader might want to know an ingredient is present. Each is a plain
+// factual statement — an added sugar is an added sugar, an allergen is a listed
+// allergen — not a verdict on whether the product is good or bad. Nothing
+// speculative goes in here: if the claim would need a citation to defend, it
+// does not belong.
+export const INGREDIENT_CONCERNS: Record<string, string> = {
+  // Added sugars. The category matters because added sugar counts against
+  // daily limits in a way the sugar naturally present in fruit or dairy
+  // does not.
+  "cane sugar": "Added sugar.",
+  "sugar": "Added sugar.",
+  "brown rice syrup": "Added sugar. Rice-based syrups have also been found to carry inorganic arsenic.",
+  "tapioca syrup": "Added sugar.",
+  "honey": "Added sugar.",
+  "maple syrup": "Added sugar.",
+  "molasses": "Added sugar.",
+  "corn syrup": "Added sugar.",
+  "high fructose corn syrup": "Added sugar.",
+  "glucose syrup": "Added sugar.",
+  "invert sugar": "Added sugar.",
+  "coconut sugar": "Added sugar.",
+  "agave": "Added sugar, and unusually high in fructose.",
+
+  // Sugar alcohols and added fibres — dose-dependent digestive effects.
+  "erythritol": "Sugar alcohol; can cause digestive upset in larger amounts.",
+  "maltitol": "Sugar alcohol; a common cause of bloating and laxative effects.",
+  "sorbitol": "Sugar alcohol; laxative effect above modest amounts.",
+  "xylitol": "Sugar alcohol; digestive upset in larger amounts, and toxic to dogs.",
+  "chicory root fiber": "Added inulin fibre; a frequent cause of bloating and gas.",
+  "soluble corn fiber": "Added fibre rather than fibre naturally present in the food.",
+  "tapioca fiber": "Added fibre rather than fibre naturally present in the food.",
+
+  // Undisclosed and processed components.
+  "natural flavor": "Composition is not disclosed on the label.",
+  "natural flavors": "Composition is not disclosed on the label.",
+  "artificial flavor": "Synthetic flavouring; composition is not disclosed.",
+  "artificial flavors": "Synthetic flavouring; composition is not disclosed.",
+  "palm oil": "Palm oil; high in saturated fat and tied to deforestation.",
+  "palm kernel oil": "High in saturated fat.",
+  "hydrogenated oil": "Hydrogenated fat; a possible source of trans fat.",
+  "partially hydrogenated oil": "Partially hydrogenated fat — the main dietary source of trans fat.",
+  "carrageenan": "Thickener; linked to digestive irritation in some people.",
+  "titanium dioxide": "Whitening agent; no longer permitted as a food additive in the EU.",
+  "bha": "Synthetic preservative; classified as a possible human carcinogen by IARC.",
+  "bht": "Synthetic preservative under ongoing safety review.",
+
+  // Common allergens, stated as allergens rather than as risks.
+  "peanuts": "Major allergen.",
+  "peanut butter": "Contains peanuts, a major allergen.",
+  "almonds": "Tree nut allergen.",
+  "almond butter": "Contains tree nuts.",
+  "cashews": "Tree nut allergen.",
+  "cashew butter": "Contains tree nuts.",
+  "walnuts": "Tree nut allergen.",
+  "pecans": "Tree nut allergen.",
+  "hazelnuts": "Tree nut allergen.",
+  "milk": "Dairy allergen.",
+  "whey protein": "Dairy allergen.",
+  "whey protein isolate": "Dairy allergen.",
+  "milk protein isolate": "Dairy allergen.",
+  "soy protein isolate": "Soy allergen.",
+  "soy lecithin": "Derived from soy, a major allergen.",
+  "egg whites": "Egg allergen.",
+  "wheat": "Contains gluten.",
+  "sesame seeds": "Major allergen.",
 };

@@ -187,6 +187,7 @@ export default async function LabProductPage({ params }: { params: Promise<{ slu
   const contaminants = measurements.filter((m) => m.kind === "contaminant");
   const nutrients = measurements.filter((m) => m.kind === "nutrient");
   const ingredients = parseIngredients(product.description);
+  const flaggedIngredients = ingredients.filter((i) => i.concern);
 
   const documents = (documentRows ?? []) as DocRow[];
   const related = (relatedRows ?? []) as LabProduct[];
@@ -333,21 +334,43 @@ export default async function LabProductPage({ params }: { params: Promise<{ slu
                 ))}
               </div>
 
-              {/* Why this score */}
-              <div style={{ marginTop: 14, padding: 14, background: `rgba(${SAGE_RGB},0.06)`, border: `0.5px solid rgba(${SAGE_RGB},0.18)`, borderRadius: 12 }}>
-                <Eyebrow color={SAGE}>Why this score</Eyebrow>
-                <div style={{ marginTop: 8, fontFamily: SANS, fontSize: 13, color: TEXT_SEC, lineHeight: 1.6 }}>
-                  {product.score_rationale ? (
-                    product.score_rationale
-                  ) : (
-                    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                      <span>Lab report indexed: <span style={{ color: TEXT, fontWeight: 500 }}>{indexed ? "Indexed" : "Not indexed"}</span></span>
-                      <span>Contaminants: <span style={{ color: TEXT, fontWeight: 500 }}>{flaggedContaminants} flagged</span></span>
+            </div>
+          </div>
+
+          {/* ── Why this score ──────────────────────────────────────────────
+              Full width under the hero rather than stacked inside the text
+              column, where it was the tallest element and left the image panel
+              ending well short of it. Carries the rationale and, beneath it,
+              the ingredients in this product a reader may want to know about. */}
+          <div style={{ marginTop: 22, padding: "18px 20px", background: `rgba(${SAGE_RGB},0.06)`, border: `0.5px solid rgba(${SAGE_RGB},0.18)`, borderRadius: 14 }}>
+            <Eyebrow color={SAGE}>Why this score</Eyebrow>
+            <div style={{ marginTop: 9, fontFamily: SANS, fontSize: 14, color: TEXT_SEC, lineHeight: 1.65, maxWidth: 760 }}>
+              {product.score_rationale ? (
+                product.score_rationale
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                  <span>Lab report indexed: <span style={{ color: TEXT, fontWeight: 500 }}>{indexed ? "Indexed" : "Not indexed"}</span></span>
+                  <span>Contaminants: <span style={{ color: TEXT, fontWeight: 500 }}>{flaggedContaminants} flagged</span></span>
+                </div>
+              )}
+            </div>
+
+            {flaggedIngredients.length > 0 && (
+              <div style={{ marginTop: 16, paddingTop: 15, borderTop: `0.5px solid rgba(${SAGE_RGB},0.18)` }}>
+                <Eyebrow color={AMBER}>Ingredients worth knowing about</Eyebrow>
+                <div style={{ marginTop: 10, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "9px 22px" }}>
+                  {flaggedIngredients.map((ing) => (
+                    <div key={ing.name} style={{ display: "flex", gap: 9, alignItems: "baseline" }}>
+                      <span style={{ width: 5, height: 5, borderRadius: 999, background: AMBER, flexShrink: 0, transform: "translateY(-2px)" }} />
+                      <div style={{ minWidth: 0 }}>
+                        <span style={{ fontFamily: SANS, fontSize: 13.5, fontWeight: 600, color: TEXT }}>{ing.name}</span>
+                        <span style={{ fontFamily: SANS, fontSize: 13.5, color: TEXT_TER }}> — {ing.concern}</span>
+                      </div>
                     </div>
-                  )}
+                  ))}
                 </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
 
