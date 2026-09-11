@@ -231,14 +231,17 @@ export default async function LabProductPage({ params }: { params: Promise<{ slu
     <NuraPageShell maxWidth={860} desktopMaxWidth={980}>
       <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
 
-        {/* ── Header card ─────────────────────────────────────────────────── */}
-        <div className="nura-card" style={{ ...card, padding: 18 }}>
-          <div style={{ display: "flex", gap: 24, flexWrap: "wrap", alignItems: "flex-start" }}>
+        {/* ── Header ──────────────────────────────────────────────────────────
+            Deliberately not wrapped in a card. Only the product image gets a
+            panel; the title, summary rows and score sit directly on the page,
+            which keeps the hero from reading as one heavy slab. */}
+        <div>
+          <div style={{ display: "flex", gap: 26, flexWrap: "wrap", alignItems: "flex-start" }}>
             {/* Image — a fixed square. alignSelf is load-bearing: this is a flex
                 item, and the row's default align-items:stretch would grow it to
                 match the height of the text column beside it, overriding the
                 aspect ratio and leaving the product stranded in a tall panel. */}
-            <div style={{ position: "relative", width: 300, maxWidth: "100%", minHeight: 300, flexShrink: 0, alignSelf: "stretch", borderRadius: 14, overflow: "hidden", background: "transparent" }}>
+            <div style={{ position: "relative", width: 300, maxWidth: "100%", aspectRatio: "1 / 1", flexShrink: 0, alignSelf: "flex-start", borderRadius: 16, overflow: "hidden", background: SURFACE, border: `0.5px solid ${BORDER}` }}>
               <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
                 {product.image_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
@@ -280,16 +283,18 @@ export default async function LabProductPage({ params }: { params: Promise<{ slu
               {/* Title row: name/brand/pill + score ring */}
               <div style={{ display: "flex", gap: 16, justifyContent: "space-between", alignItems: "flex-start" }}>
                 <div style={{ minWidth: 0 }}>
-                  {category && (
-                    <span style={{ display: "inline-block", fontFamily: SANS, fontSize: 9, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--nura-accent-label)", background: `rgba(${SAGE_RGB},0.14)`, border: `0.5px solid rgba(${SAGE_RGB},0.3)`, borderRadius: 8, padding: "3px 8px", marginBottom: 10 }}>
-                      {category.name}
-                    </span>
-                  )}
-                  <h1 style={{ fontFamily: SANS, fontSize: "clamp(26px, 4.5vw, 34px)", fontWeight: 600, color: TEXT, margin: "0 0 4px", letterSpacing: "-0.02em", lineHeight: 1.12 }}>
+                  <h1 style={{ fontFamily: SANS, fontSize: "clamp(26px, 4.5vw, 34px)", fontWeight: 600, color: TEXT, margin: "0 0 6px", letterSpacing: "-0.02em", lineHeight: 1.16 }}>
                     {product.name}
                   </h1>
                   {product.brand && (
-                    <div style={{ fontFamily: SANS, fontSize: 14, color: TEXT_SEC }}>{product.brand}</div>
+                    <div style={{ fontFamily: SANS, fontSize: 14, color: TEXT_SEC, textDecoration: "underline", textUnderlineOffset: 3, textDecorationColor: BORDER }}>
+                      {product.brand}
+                    </div>
+                  )}
+                  {category && (
+                    <span style={{ display: "inline-block", marginTop: 12, fontFamily: SANS, fontSize: 9, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--nura-accent-label)", background: `rgba(${SAGE_RGB},0.14)`, border: `0.5px solid rgba(${SAGE_RGB},0.3)`, borderRadius: 8, padding: "3px 8px" }}>
+                      {category.name}
+                    </span>
                   )}
                 </div>
 
@@ -374,11 +379,14 @@ export default async function LabProductPage({ params }: { params: Promise<{ slu
         {/* ── Ingredients & minerals ───────────────────────────────────────── */}
         {nutrients.length > 0 && (
           <CollapsibleSection title="Ingredients & minerals">
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {/* Two columns rather than full-width rows: each entry is a short
+                name plus a value, so a single column leaves most of the line
+                empty and stretches the section down the page. */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 10 }}>
               {nutrients.map((m, i) => {
                 const flagged = (m.risk_count ?? 0) > 0;
                 return (
-                  <div className="nura-card nura-accent-edge" key={`${m.name}-${i}`} style={{ ...card, padding: "14px 16px", borderLeft: `3px solid ${flagged ? AMBER : `rgba(${SAGE_RGB},0.5)`}`, ["--nura-edge" as string]: flagged ? AMBER : `rgba(${SAGE_RGB},0.5)` } as React.CSSProperties}>
+                  <div className="nura-card nura-accent-edge" key={`${m.name}-${i}`} style={{ ...card, padding: "14px 16px", height: "100%", borderLeft: `3px solid ${flagged ? AMBER : `rgba(${SAGE_RGB},0.5)`}`, ["--nura-edge" as string]: flagged ? AMBER : `rgba(${SAGE_RGB},0.5)` } as React.CSSProperties}>
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                         <span style={{ fontFamily: SANS, fontSize: 14, fontWeight: 600, color: TEXT }}>{m.name}</span>
