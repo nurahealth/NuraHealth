@@ -1612,6 +1612,7 @@ function BulkImportPanel({ token, onDone, categories }: { token: string; onDone:
   const [updateExisting, setUpdateExisting] = useState(false);
   const [publishOnImport, setPublishOnImport] = useState(true);
   const [requirePackshot, setRequirePackshot] = useState(true);
+  const [resolveImages, setResolveImages] = useState(true);
   const [fetching, setFetching] = useState(false);
   const [fetchNote, setFetchNote] = useState("");
   const [text, setText] = useState("");
@@ -1634,6 +1635,7 @@ function BulkImportPanel({ token, onDone, categories }: { token: string; onDone:
           limit: Math.min(Math.max(parseInt(count, 10) || 25, 1), 200),
           country: usOnly ? "united-states" : undefined,
           status: publishOnImport ? "published" : "draft",
+          resolve_images: resolveImages,
         }),
       });
       const body = (await res.json()) as {
@@ -1786,6 +1788,18 @@ function BulkImportPanel({ token, onDone, categories }: { token: string; onDone:
                   onChange={(e) => setRequirePackshot(e.target.checked)}
                 />
                 Packshots only
+              </label>
+              <label
+                title="Look up each brand's own product photography. Slow — turn off for a data-only refresh."
+                style={{ display: "flex", alignItems: "center", gap: 6, fontFamily: SANS, fontSize: 11.5, color: TEXT_SEC, cursor: "pointer" }}
+              >
+                <input
+                  type="checkbox"
+                  data-testid="bulk-resolve-images"
+                  checked={resolveImages}
+                  onChange={(e) => setResolveImages(e.target.checked)}
+                />
+                Resolve photos
               </label>
               <button
                 onClick={fetchFromOff}

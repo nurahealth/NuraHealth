@@ -212,6 +212,26 @@ export default async function LabProductPage({ params }: { params: Promise<{ slu
         .map(([k, v]) => [k, typeof v === "object" ? JSON.stringify(v) : String(v)])
     : [];
 
+  // Nutrient readings are stored per 100 g so products can be compared, but a
+  // 52 g bar showing "25 g sugar" reads as 25 g in the bar. Where the serving
+  // weight is known, the per-serving figure leads and the per-100 g figure
+  // stays underneath it as the comparable one.
+  const servingGrams = (() => {
+    const raw = propEntries.find(([k]) => k.toLowerCase() === "serving size")?.[1];
+    const n = raw ? Number((raw.match(/([\d.]+)/) ?? [])[1]) : NaN;
+    return Number.isFinite(n) && n > 0 ? n : null;
+  })();
+
+  /** Convert a per-100 g reading to one serving, keeping sensible precision. */
+  function perServing(m: Measurement): string | null {
+    if (!servingGrams || m.value === null || m.value === undefined) return null;
+    if (!m.unit || !/\/\s*100\s*g/i.test(m.unit)) return null;
+    const scaled = (m.value * servingGrams) / 100;
+    const rounded = scaled >= 100 ? Math.round(scaled) : Number(scaled.toPrecision(3));
+    const baseUnit = m.unit.replace(/\/\s*100\s*g/i, "").trim();
+    return `${rounded} ${baseUnit}`;
+  }
+
   // Count every flagged measurement (risk_count > 0) across all sections, not
   // just the ones grouped under "Contaminants".
   const flaggedContaminants = measurements.filter((m) => (m.risk_count ?? 0) > 0).length;
@@ -448,7 +468,10 @@ export default async function LabProductPage({ params }: { params: Promise<{ slu
               {nutrients.map((m, i) => {
                 const flagged = (m.risk_count ?? 0) > 0;
                 return (
-                  <div className="nura-card nura-accent-edge" key={`${m.name}-${i}`} style={{ ...card, padding: "14px 16px", height: "100%", borderLeft: `3px solid ${flagged ? AMBER : `rgba(${SAGE_RGB},0.5)`}`, ["--nura-edge" as string]: flagged ? AMBER : `rgba(${SAGE_RGB},0.5)` } as React.CSSProperties}>
+                  // No accent edge here. A nutrient reading is not a status, so
+                  // striping every card green says nothing and reads as noise;
+                  // a flagged reading still carries its risk pill.
+                  <div className="nura-card" key={`${m.name}-${i}`} style={{ ...card, padding: "14px 16px", height: "100%" }}>
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                         <span style={{ fontFamily: SANS, fontSize: 14, fontWeight: 600, color: TEXT }}>{m.name}</span>
@@ -458,7 +481,14 @@ export default async function LabProductPage({ params }: { params: Promise<{ slu
                           </span>
                         )}
                       </div>
-                      <span style={{ fontFamily: SANS, fontSize: 13.5, fontWeight: 600, color: TEXT_SEC }}>{valueLabel(m)}</span>
+                      <div style={{ textAlign: "right", flexShrink: 0 }}>
+                        <div style={{ fontFamily: SANS, fontSize: 13.5, fontWeight: 600, color: TEXT }}>
+                          {perServing(m) ?? valueLabel(m)}
+                        </div>
+                        <div style={{ marginTop: 2, fontFamily: SANS, fontSize: 11, color: TEXT_TER, whiteSpace: "nowrap" }}>
+                          {perServing(m) ? `per serving · ${valueLabel(m)}` : "per 100 g"}
+                        </div>
+                      </div>
                     </div>
                     {m.description && (
                       <p style={{ margin: "8px 0 0", fontFamily: SANS, fontSize: 12.5, color: TEXT_TER, lineHeight: 1.55 }}>{m.description}</p>

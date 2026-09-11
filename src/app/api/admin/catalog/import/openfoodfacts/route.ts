@@ -19,6 +19,7 @@ const FIELDS = [
   "code", "product_name", "brands", "image_front_url", "ingredients_text",
   "additives_tags", "nova_group", "nutriscore_grade", "nutriments",
   "labels_tags", "categories_tags_en", "quantity",
+  "serving_size", "serving_quantity",
 ].join(",");
 
 interface OffProduct {
@@ -27,6 +28,8 @@ interface OffProduct {
   brands?: string;
   image_front_url?: string;
   ingredients_text?: string;
+  serving_size?: string;
+  serving_quantity?: number | string;
   additives_tags?: string[];
   nova_group?: number;
   nutriscore_grade?: string;
@@ -217,6 +220,17 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       const image = p.image_front_url?.trim() || null;
       const ingredients = p.ingredients_text?.trim() || null;
 
+      // Serving size matters more than it looks. Every nutrient below is per
+      // 100 g, which is what makes products comparable — but a 52 g bar showing
+      // "25 g sugar" reads as 25 g in the bar when it is really 13 g. Without
+      // the serving weight the figures cannot be stated per unit, and a number
+      // that invites the wrong reading is as bad as a wrong number.
+      const servingQty = Number(p.serving_quantity);
+      const servingFromText = p.serving_size ? Number((p.serving_size.match(/([\d.]+)\s*g/) ?? [])[1]) : NaN;
+      const servingGrams = Number.isFinite(servingQty) && servingQty > 0
+        ? servingQty
+        : (Number.isFinite(servingFromText) && servingFromText > 0 ? servingFromText : null);
+
       if (!name) { skipped++; continue; }
       if (requireComplete && (!brand || !image || !ingredients)) { skipped++; continue; }
       if (MULTIPACK.test(name)) { skipped++; continue; }
@@ -287,6 +301,10 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
           score_label: scored.label,
           score_rationale: scored.rationale,
           lab_tested: false,
+          properties: {
+            ...(servingGrams ? { "Serving size": `${servingGrams} g` } : {}),
+            ...(p.quantity ? { "Package size": p.quantity } : {}),
+          },
           description: ingredients ? `Ingredients: ${ingredients}`.slice(0, 1200) : null,
           measurements,
           documents,

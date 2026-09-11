@@ -184,8 +184,11 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         continue;
       }
 
-      const status = (item.status ?? "draft").toString();
-      if (!VALID_STATUS.has(status)) {
+      // Absent status means "leave it alone", not "draft". Defaulting here
+      // silently unpublished every product touched by a partial update.
+      const statusGiven = item.status !== undefined && item.status !== null && item.status !== "";
+      const status = statusGiven ? String(item.status) : "draft";
+      if (statusGiven && !VALID_STATUS.has(status)) {
         results.push({ name, status: "error", reason: `Invalid status "${status}"` });
         continue;
       }
@@ -251,7 +254,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
             name,
             brand: item.brand?.trim() || null,
             category_id: categoryId,
-            status,
+            ...(statusGiven ? { status } : {}),
             ...extended,
           })
           .eq("id", existingId);
