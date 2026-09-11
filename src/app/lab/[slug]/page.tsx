@@ -231,7 +231,7 @@ export default async function LabProductPage({ params }: { params: Promise<{ slu
   const card: React.CSSProperties = { background: SURFACE, border: `0.5px solid ${BORDER}`, borderRadius: 14 };
 
   return (
-    <NuraPageShell maxWidth={860} desktopMaxWidth={980}>
+    <NuraPageShell maxWidth={860} desktopMaxWidth={1280}>
       <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
 
         {/* ── Header ──────────────────────────────────────────────────────────
@@ -244,7 +244,7 @@ export default async function LabProductPage({ params }: { params: Promise<{ slu
                 item, and the row's default align-items:stretch would grow it to
                 match the height of the text column beside it, overriding the
                 aspect ratio and leaving the product stranded in a tall panel. */}
-            <div style={{ position: "relative", width: 300, maxWidth: "100%", aspectRatio: "1 / 1", flexShrink: 0, alignSelf: "flex-start", borderRadius: 16, overflow: "hidden", background: SURFACE, border: `0.5px solid ${BORDER}` }}>
+            <div style={{ position: "relative", width: 340, maxWidth: "100%", aspectRatio: "1 / 1", flexShrink: 0, alignSelf: "flex-start", borderRadius: 16, overflow: "hidden", background: SURFACE, border: `0.5px solid ${BORDER}` }}>
               <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
                 {product.image_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
@@ -332,11 +332,8 @@ export default async function LabProductPage({ params }: { params: Promise<{ slu
                 ))}
               </div>
 
-              {/* Divider */}
-              <div style={{ borderTop: `0.5px solid ${BORDER}`, marginTop: 6 }} />
-
               {/* Why this score */}
-              <div style={{ marginTop: 16, padding: 14, background: `rgba(${SAGE_RGB},0.06)`, border: `0.5px solid rgba(${SAGE_RGB},0.18)`, borderRadius: 12 }}>
+              <div style={{ marginTop: 14, padding: 14, background: `rgba(${SAGE_RGB},0.06)`, border: `0.5px solid rgba(${SAGE_RGB},0.18)`, borderRadius: 12 }}>
                 <Eyebrow color={SAGE}>Why this score</Eyebrow>
                 <div style={{ marginTop: 8, fontFamily: SANS, fontSize: 13, color: TEXT_SEC, lineHeight: 1.6 }}>
                   {product.score_rationale ? (
