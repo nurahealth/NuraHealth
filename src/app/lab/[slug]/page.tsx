@@ -5,6 +5,7 @@ import NuraPageShell from "@/components/NuraPageShell";
 import ScoreRing from "../ScoreRing";
 import SaveButton from "./SaveButton";
 import CollapsibleSection from "./CollapsibleSection";
+import { parseIngredients } from "@/lib/ingredients";
 import { ProductCard, type LabProduct } from "../LabBrowseClient";
 import {
   ArrowUpRight, FlaskConical, AlertTriangle, Leaf, Droplets, FileText,
@@ -37,6 +38,7 @@ interface ProductRow {
   lab_tested: boolean | null;
   microplastics_present: boolean | null;
   image_url: string | null;
+  description: string | null;
   shop_url: string | null;
   properties: Record<string, unknown> | null;
 }
@@ -120,7 +122,7 @@ export default async function LabProductPage({ params }: { params: Promise<{ slu
   // Product by slug — published only
   const { data: productData } = await supabaseAdmin
     .from("catalog_products")
-    .select("id, slug, name, brand, category_id, score, score_label, score_rationale, lab_tested, microplastics_present, image_url, shop_url, properties")
+    .select("id, slug, name, brand, category_id, score, score_label, score_rationale, lab_tested, microplastics_present, image_url, shop_url, properties, description")
     .eq("slug", slug)
     .eq("status", "published")
     .maybeSingle();
@@ -183,6 +185,7 @@ export default async function LabProductPage({ params }: { params: Promise<{ slu
 
   const contaminants = measurements.filter((m) => m.kind === "contaminant");
   const nutrients = measurements.filter((m) => m.kind === "nutrient");
+  const ingredients = parseIngredients(product.description);
 
   const documents = (documentRows ?? []) as DocRow[];
   const related = (relatedRows ?? []) as LabProduct[];
@@ -404,6 +407,34 @@ export default async function LabProductPage({ params }: { params: Promise<{ slu
                   </div>
                 );
               })}
+            </div>
+          </CollapsibleSection>
+        )}
+
+        {/* ── What's inside ────────────────────────────────────────────────────
+            The product's own declared ingredient list, split into individual
+            entries. Notes come from a curated reference table; an ingredient
+            with no entry shows its name alone rather than an invented claim. */}
+        {ingredients.length > 0 && (
+          <CollapsibleSection title="What's inside">
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 10 }}>
+              {ingredients.map((ing) => (
+                <div className="nura-card" key={ing.name} style={{ ...card, padding: "14px 16px", height: "100%" }}>
+                  <div style={{ fontFamily: SANS, fontSize: 14, fontWeight: 600, color: TEXT, lineHeight: 1.3 }}>
+                    {ing.name}
+                  </div>
+                  {ing.note && (
+                    <p style={{ margin: "6px 0 0", fontFamily: SANS, fontSize: 12.5, color: TEXT_TER, lineHeight: 1.55 }}>
+                      {ing.note}
+                    </p>
+                  )}
+                  {ing.contains.length > 0 && (
+                    <p style={{ margin: "6px 0 0", fontFamily: SANS, fontSize: 12, color: TEXT_TER, lineHeight: 1.5 }}>
+                      Contains {ing.contains.join(", ").toLowerCase()}.
+                    </p>
+                  )}
+                </div>
+              ))}
             </div>
           </CollapsibleSection>
         )}

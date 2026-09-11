@@ -53,6 +53,9 @@ export function buildProductFields(body: Record<string, unknown>): Record<string
   }
 
   if ("score_rationale" in body) out.score_rationale = trimmedOrNull(body.score_rationale);
+  // The declared ingredient list. Importers send this; without it here the
+  // field was silently dropped and "What's inside" had nothing to render.
+  if ("description" in body) out.description = trimmedOrNull(body.description);
   if ("shop_url" in body) out.shop_url = trimmedOrNull(body.shop_url);
   if ("affiliate_url" in body) out.affiliate_url = trimmedOrNull(body.affiliate_url);
   if ("image_url" in body) out.image_url = trimmedOrNull(body.image_url);
