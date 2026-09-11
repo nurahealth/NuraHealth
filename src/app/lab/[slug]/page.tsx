@@ -49,6 +49,7 @@ interface Measurement {
   unit: string | null;
   kind: string | null;
   sort_order: number | null;
+  guideline_limit: number | null;
   value: number | null;
   risk_count: number | null;
 }
@@ -140,7 +141,7 @@ export default async function LabProductPage({ params }: { params: Promise<{ slu
   ] = await Promise.all([
     supabaseAdmin
       .from("catalog_product_measurements")
-      .select("value, risk_count, catalog_measurement_types(name, description, unit, kind, sort_order)")
+      .select("value, risk_count, catalog_measurement_types(name, description, unit, kind, sort_order, guideline_limit)")
       .eq("product_id", product.id),
     supabaseAdmin
       .from("catalog_product_documents")
@@ -170,7 +171,7 @@ export default async function LabProductPage({ params }: { params: Promise<{ slu
 
   // Normalize measurements + sort by the type's sort_order.
   // The embedded relation can come back as an object or a single-element array.
-  type MType = { name: string; description: string | null; unit: string | null; kind: string | null; sort_order: number | null };
+  type MType = { name: string; description: string | null; unit: string | null; kind: string | null; sort_order: number | null; guideline_limit: number | null };
   const measurements: Measurement[] = ((measurementRows ?? []) as unknown as Array<{
     value: number | null;
     risk_count: number | null;
@@ -353,25 +354,63 @@ export default async function LabProductPage({ params }: { params: Promise<{ slu
         {/* ── Contaminants ─────────────────────────────────────────────────── */}
         {contaminants.length > 0 && (
           <CollapsibleSection title="Contaminants">
+            {/* One full-width card per contaminant: name and what it is on the
+                left, the measured amount and the guideline it is judged against
+                on the right, and a bar showing the reading as a fraction of
+                that guideline. A reading with no guideline gets no bar, and one
+                that was never taken says so rather than showing zero — absent
+                and zero are very different claims to make about a contaminant. */}
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              {contaminants.map((m, i) => (
-                <div className="nura-card nura-accent-edge" key={`${m.name}-${i}`} style={{ ...card, padding: "14px 16px", borderLeft: `3px solid ${RED}`, ["--nura-edge" as string]: RED } as React.CSSProperties}>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      <span style={{ fontFamily: SANS, fontSize: 14, fontWeight: 600, color: TEXT }}>{m.name}</span>
-                      {(m.risk_count ?? 0) > 0 && (
-                        <span style={{ fontFamily: SANS, fontSize: 9, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: RED, background: "rgba(var(--nura-danger-rgb),0.12)", border: "0.5px solid rgba(var(--nura-danger-rgb),0.4)", borderRadius: 7, padding: "2px 7px" }}>
-                          {m.risk_count} {m.risk_count === 1 ? "risk" : "risks"}
-                        </span>
-                      )}
+              {contaminants.map((m, i) => {
+                const measured = m.value !== null && m.value !== undefined;
+                const limit = m.guideline_limit;
+                const ratio = measured && limit && limit > 0 ? m.value! / limit : null;
+                const over = ratio !== null ? ratio >= 1 : (m.risk_count ?? 0) > 0;
+                const tone = !measured ? TEXT_TER : over ? AMBER : SAGE;
+                return (
+                  <div
+                    className="nura-card nura-accent-edge"
+                    key={`${m.name}-${i}`}
+                    style={{ ...card, padding: "14px 16px", borderLeft: `3px solid ${tone}`, ["--nura-edge" as string]: tone } as React.CSSProperties}
+                  >
+                    <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16 }}>
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontFamily: SANS, fontSize: 14, fontWeight: 600, color: TEXT }}>{m.name}</div>
+                        {m.description && (
+                          <p style={{ margin: "5px 0 0", fontFamily: SANS, fontSize: 12.5, color: TEXT_TER, lineHeight: 1.55 }}>{m.description}</p>
+                        )}
+                      </div>
+                      <div style={{ flexShrink: 0, textAlign: "right" }}>
+                        <div style={{ fontFamily: SANS, fontSize: 13.5, fontWeight: 700, color: measured ? tone : TEXT_TER, whiteSpace: "nowrap" }}>
+                          {measured ? valueLabel(m) : "Not measured"}
+                        </div>
+                        {limit !== null && limit !== undefined && (
+                          <div style={{ marginTop: 3, fontFamily: SANS, fontSize: 11.5, color: TEXT_TER, whiteSpace: "nowrap" }}>
+                            Guideline {limit}{m.unit ? ` ${m.unit}` : ""}
+                          </div>
+                        )}
+                      </div>
                     </div>
-                    <span style={{ fontFamily: SANS, fontSize: 13.5, fontWeight: 600, color: TEXT_SEC }}>{valueLabel(m)}</span>
+
+                    {/* The bar only means something against a guideline. With no
+                        guideline to divide by there is nothing to fill it to, and
+                        a full bar would read as "at the limit" — so the bar is
+                        omitted rather than drawn at an arbitrary length. */}
+                    {(ratio !== null || !measured) && (
+                      <div style={{ marginTop: 12, height: 6, borderRadius: 999, background: `rgba(${FG_RGB},0.08)`, overflow: "hidden" }}>
+                        <div
+                          style={{
+                            height: "100%",
+                            width: ratio === null ? 6 : `${Math.max(2, Math.min(100, ratio * 100))}%`,
+                            borderRadius: 999,
+                            background: measured ? tone : `rgba(${FG_RGB},0.25)`,
+                          }}
+                        />
+                      </div>
+                    )}
                   </div>
-                  {m.description && (
-                    <p style={{ margin: "8px 0 0", fontFamily: SANS, fontSize: 12.5, color: TEXT_TER, lineHeight: 1.55 }}>{m.description}</p>
-                  )}
-                </div>
-              ))}
+                );
+              })}
             </div>
           </CollapsibleSection>
         )}
