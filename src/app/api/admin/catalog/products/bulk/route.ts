@@ -97,6 +97,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       dry_run?: boolean;
       update_existing?: boolean;
       normalise_images?: boolean;
+      require_packshot?: boolean;
     };
 
     const items = body.products;
@@ -109,6 +110,10 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     const dryRun = body.dry_run === true;
     const updateExisting = body.update_existing === true;
     const normaliseImages = body.normalise_images !== false;
+    // When set, a product whose photo is not studio product photography is
+    // skipped rather than imported. Bulk sources are crowd-sourced, and a
+    // catalogue of strangers' phone snapshots is worse than a smaller one.
+    const requirePackshot = body.require_packshot === true;
 
     // ── Preload lookup tables once, rather than per product ──────────────────
     const [{ data: catRows }, { data: typeRows }, { data: prodRows }] = await Promise.all([
@@ -202,10 +207,13 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       if (!dryRun && normaliseImages && typeof extended.image_url === "string" && extended.image_url) {
         const already = extended.image_url.includes("/catalog-images/");
         if (!already) {
-          const shot = await storePackshot(extended.image_url);
+          const shot = await storePackshot(extended.image_url, { requirePackshot });
           if (shot.ok && shot.url) {
             extended = { ...extended, image_url: shot.url };
-            if (shot.meta?.keyedTint) packshotNote = `keyed ${shot.meta.keyedTint} background to white`;
+            if (shot.meta?.keyedTint) packshotNote = `keyed ${shot.meta.keyedTint} backdrop`;
+          } else if (requirePackshot && shot.meta && !shot.meta.isPackshot) {
+            results.push({ name, status: "skipped", reason: `Image rejected — ${shot.error}` });
+            continue;
           } else {
             packshotNote = `image not normalised (${shot.error}) — kept original`;
           }

@@ -1558,6 +1558,49 @@ const OFF_CATEGORIES: { value: string; label: string }[] = [
   { value: "breakfast-cereals", label: "Breakfast cereals" },
   { value: "yogurts", label: "Yogurt" },
   { value: "plant-based-milks", label: "Plant-based milk" },
+  // Everything below is a food/drink category Open Food Facts actually
+  // indexes. Non-consumable lines — air purifiers, cookware, bedding,
+  // drinkware, clothing — are not in OFF at all and need their own source.
+  { value: "waters", label: "Bottled water" },
+  { value: "sparkling-waters", label: "Sparkling water" },
+  { value: "beverages", label: "Beverages" },
+  { value: "sodas", label: "Soda" },
+  { value: "fruit-juices", label: "Juice" },
+  { value: "energy-drinks", label: "Energy drinks" },
+  { value: "kombucha", label: "Kombucha" },
+  { value: "milks", label: "Dairy milk" },
+  { value: "cheeses", label: "Cheese" },
+  { value: "butters", label: "Butter" },
+  { value: "eggs", label: "Eggs" },
+  { value: "breads", label: "Bread & bakery" },
+  { value: "pastas", label: "Pasta" },
+  { value: "rices", label: "Rice & grains" },
+  { value: "flours", label: "Flour" },
+  { value: "canned-foods", label: "Canned foods" },
+  { value: "soups", label: "Soups" },
+  { value: "sauces", label: "Sauces" },
+  { value: "condiments", label: "Condiments" },
+  { value: "spices", label: "Herbs & spices" },
+  { value: "nuts", label: "Nuts" },
+  { value: "nut-butters", label: "Nut butters" },
+  { value: "dried-fruits", label: "Dried fruit" },
+  { value: "chips", label: "Chips & crisps" },
+  { value: "crackers", label: "Crackers" },
+  { value: "popcorn", label: "Popcorn" },
+  { value: "chocolates", label: "Chocolate" },
+  { value: "biscuits-and-cakes", label: "Cookies & cakes" },
+  { value: "ice-creams", label: "Ice cream & frozen dessert" },
+  { value: "frozen-foods", label: "Frozen foods" },
+  { value: "meats", label: "Meat" },
+  { value: "fishes", label: "Fish & seafood" },
+  { value: "plant-based-meat-substitutes", label: "Meat alternatives" },
+  { value: "tofu", label: "Tofu & tempeh" },
+  { value: "legumes", label: "Beans & legumes" },
+  { value: "syrups", label: "Syrups & sweeteners" },
+  { value: "jams", label: "Jam & preserves" },
+  { value: "dietary-supplements", label: "Supplements" },
+  { value: "protein-powders", label: "Protein powder" },
+  { value: "electrolyte-drinks", label: "Electrolyte drinks" },
 ];
 
 function BulkImportPanel({ token, onDone, categories }: { token: string; onDone: () => void; categories: CatalogCategory[] }) {
@@ -1568,6 +1611,7 @@ function BulkImportPanel({ token, onDone, categories }: { token: string; onDone:
   const [usOnly, setUsOnly] = useState(true);
   const [updateExisting, setUpdateExisting] = useState(false);
   const [publishOnImport, setPublishOnImport] = useState(true);
+  const [requirePackshot, setRequirePackshot] = useState(true);
   const [fetching, setFetching] = useState(false);
   const [fetchNote, setFetchNote] = useState("");
   const [text, setText] = useState("");
@@ -1627,7 +1671,12 @@ function BulkImportPanel({ token, onDone, categories }: { token: string; onDone:
       const res = await fetch("/api/admin/catalog/products/bulk", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ products, dry_run: dryRun, update_existing: updateExisting }),
+        body: JSON.stringify({
+          products,
+          dry_run: dryRun,
+          update_existing: updateExisting,
+          require_packshot: requirePackshot,
+        }),
       });
       const body = (await res.json()) as { error?: string; tally?: Record<string, number>; results?: BulkRowResult[] };
       if (!res.ok) throw new Error(body.error ?? "Import failed");
@@ -1725,6 +1774,18 @@ function BulkImportPanel({ token, onDone, categories }: { token: string; onDone:
                   onChange={(e) => setPublishOnImport(e.target.checked)}
                 />
                 Publish
+              </label>
+              <label
+                title="Skip any product whose photo is a snapshot rather than studio product photography."
+                style={{ display: "flex", alignItems: "center", gap: 6, fontFamily: SANS, fontSize: 11.5, color: TEXT_SEC, cursor: "pointer" }}
+              >
+                <input
+                  type="checkbox"
+                  data-testid="bulk-require-packshot"
+                  checked={requirePackshot}
+                  onChange={(e) => setRequirePackshot(e.target.checked)}
+                />
+                Packshots only
               </label>
               <button
                 onClick={fetchFromOff}

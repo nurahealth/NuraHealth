@@ -29,11 +29,23 @@ const KEY_TOLERANCE = 26;
 // Alpha above which a pixel counts as product when measuring the bounding box.
 const SOLID = 24;
 
+export interface PackshotMeta {
+  sourceW: number;
+  sourceH: number;
+  keyedTint: string | null;
+  /** Fraction of the source the product occupies once the backdrop is removed. */
+  coverage: number;
+  /** Whether this looks like studio product photography rather than a snapshot. */
+  isPackshot: boolean;
+  /** Why the gate rejected it, when it did. */
+  rejected?: string;
+}
+
 export interface PackshotResult {
   ok: boolean;
   url?: string;
   error?: string;
-  meta?: { sourceW: number; sourceH: number; keyedTint: string | null };
+  meta?: PackshotMeta;
 }
 
 interface RGB { r: number; g: number; b: number }
@@ -95,7 +107,7 @@ function boundingBox(data: Buffer, width: number, height: number) {
 }
 
 export async function normalisePackshot(sourceUrl: string): Promise<
-  | { buffer: Buffer; meta: { sourceW: number; sourceH: number; keyedTint: string | null } }
+  | { buffer: Buffer; meta: PackshotMeta }
   | { error: string }
 > {
   let input: Buffer;
@@ -137,16 +149,38 @@ export async function normalisePackshot(sourceUrl: string): Promise<
     const opaqueCorners = pts.filter(([x, y]) => alphaAt(x, y) > SOLID);
 
     let keyedTint: string | null = null;
+    // Three possible backdrops. Already transparent (the brand cut it out —
+    // the ideal case), a flat colour we can key away, or a real scene we
+    // cannot. The first two are product photography; the third is a snapshot.
+    let backdrop: "transparent" | "keyed" | "scene" =
+      opaqueCorners.length === 0 ? "transparent" : "scene";
     if (opaqueCorners.length) {
       const c0 = at(...opaqueCorners[0]);
       if (opaqueCorners.every(([x, y]) => near(at(x, y), c0, 14))) {
         keyBackdrop(data, info.width, info.height, c0);
         keyedTint = `rgb(${c0.r},${c0.g},${c0.b})`;
+        backdrop = "keyed";
       }
     }
 
     const box = boundingBox(data, info.width, info.height);
     if (!box) return { error: "image is entirely background" };
+
+    // ── Is this actually product photography? ──────────────────────────────
+    // Studio packshots sit on a flat backdrop, so the corners agree and the
+    // backdrop keys away cleanly, leaving the product occupying part of the
+    // frame. A snapshot — a bar on a carpet, in someone's hand, on a table —
+    // has corners that disagree, nothing keys, and the "product" ends up being
+    // the entire image. Those two facts separate the two cases reliably and
+    // cheaply, which matters because the alternative is a catalogue full of
+    // other people's phone photos.
+    const coverage = (box.width * box.height) / (info.width * info.height);
+    let rejected: string | undefined;
+    if (backdrop === "scene") rejected = "background is a scene, not a flat backdrop";
+    else if (backdrop === "keyed" && coverage > 0.92) {
+      rejected = "product fills the frame — likely a photo, not a packshot";
+    }
+    const isPackshot = !rejected;
 
     const cropped = await sharp(data, {
       raw: { width: info.width, height: info.height, channels: 4 },
@@ -196,16 +230,26 @@ export async function normalisePackshot(sourceUrl: string): Promise<
       .png({ compressionLevel: 9 })
       .toBuffer();
 
-    return { buffer, meta: { sourceW, sourceH, keyedTint } };
+    return { buffer, meta: { sourceW, sourceH, keyedTint, coverage, isPackshot, rejected } };
   } catch (e) {
     return { error: e instanceof Error ? e.message : "processing failed" };
   }
 }
 
-/** Normalise a source image and store it in the public catalog-images bucket. */
-export async function storePackshot(sourceUrl: string): Promise<PackshotResult> {
+/**
+ * Normalise a source image and store it in the public catalog-images bucket.
+ * With `requirePackshot`, an image that does not look like studio product
+ * photography is refused rather than stored.
+ */
+export async function storePackshot(
+  sourceUrl: string,
+  opts: { requirePackshot?: boolean } = {}
+): Promise<PackshotResult> {
   const out = await normalisePackshot(sourceUrl);
   if ("error" in out) return { ok: false, error: out.error };
+  if (opts.requirePackshot && !out.meta.isPackshot) {
+    return { ok: false, error: out.meta.rejected ?? "not a packshot", meta: out.meta };
+  }
 
   const path = `products/${crypto.randomUUID()}.png`;
   const { error } = await supabaseAdmin.storage
