@@ -133,6 +133,7 @@ export default function LabBrowseClient({ categories, products }: {
   products: LabProduct[];
 }) {
   const [selected, setSelected] = useState<string>(ALL);
+  const [view, setView] = useState<"products" | "browse">("products");
 
   // Parent groups (top-level categories), ordered
   const parents = useMemo(
@@ -165,6 +166,39 @@ export default function LabBrowseClient({ categories, products }: {
     return m;
   }, [categories]);
 
+  // Category cards. Each shows the best-scoring product in that category (or
+  // anything beneath it) as its face, the way a shelf tag shows one product.
+  // Only categories that actually hold something are shown — an empty card
+  // promises a shelf that is not there.
+  const categoryCards = useMemo(() => {
+    const byId = new Map(categories.map((c) => [c.id, c]));
+    const ancestors = (id: string): string[] => {
+      const out: string[] = [];
+      let cur = byId.get(id);
+      const seen = new Set<string>();
+      while (cur && !seen.has(cur.id)) {
+        seen.add(cur.id);
+        out.push(cur.id);
+        cur = cur.parent_id ? byId.get(cur.parent_id) : undefined;
+      }
+      return out;
+    };
+    const best = new Map<string, LabProduct>();
+    for (const p of products) {
+      if (!p.category_id) continue;
+      for (const id of ancestors(p.category_id)) {
+        const cur = best.get(id);
+        if (!cur || (p.score ?? -1) > (cur.score ?? -1)) best.set(id, p);
+      }
+    }
+    // Leaf categories only — the parents are navigation, not shelves.
+    const hasChildren = new Set(categories.filter((c) => c.parent_id).map((c) => c.parent_id!));
+    return categories
+      .filter((c) => !hasChildren.has(c.id) && best.has(c.id))
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .map((c) => ({ category: c, hero: best.get(c.id)! }));
+  }, [categories, products]);
+
   const visible = useMemo(() => {
     if (selected === ALL) return products;
     return products.filter((p) => p.category_id && rootOf.get(p.category_id) === selected);
@@ -179,8 +213,89 @@ export default function LabBrowseClient({ categories, products }: {
         .lab-card:hover { background: var(--nura-surface-elevated); border-color: rgba(var(--nura-sage-rgb),0.35); transform: translateY(-2px); }
         .lab-chip-row { scrollbar-width: none; }
         .lab-chip-row::-webkit-scrollbar { display: none; }
+        .lab-cat-card:hover .lab-cat-arrow { opacity: 1; transform: translateX(0); }
       `}</style>
 
+      {/* View toggle */}
+      <div style={{ display: "flex", justifyContent: "center", marginBottom: 30 }}>
+        <div
+          role="tablist"
+          style={{ display: "inline-flex", padding: 3, borderRadius: 999, background: SURFACE, border: `0.5px solid ${BORDER}` }}
+        >
+          {([["products", "Products"], ["browse", "Browse all"]] as const).map(([key, label]) => {
+            const active = view === key;
+            return (
+              <button
+                key={key}
+                role="tab"
+                aria-selected={active}
+                onClick={() => setView(key)}
+                style={{
+                  padding: "8px 20px", borderRadius: 999, border: "none", cursor: "pointer",
+                  background: active ? SAGE : "transparent",
+                  color: active ? SAGE_ON : TEXT_SEC,
+                  fontFamily: SANS, fontSize: 12.5, fontWeight: 600, letterSpacing: "0.03em",
+                  transition: "background 180ms, color 180ms",
+                }}
+              >
+                {label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {view === "products" && (
+        <div>
+          <div style={{ textAlign: "center", marginBottom: 34 }}>
+            <h1 style={{ fontFamily: SANS, fontSize: "clamp(28px, 4.5vw, 36px)", fontWeight: 600, color: TEXT, margin: "0 0 10px", letterSpacing: "-0.02em", lineHeight: 1.1 }}>
+              Top rated products
+            </h1>
+            <p style={{ fontFamily: SANS, fontSize: 14.5, color: TEXT_SEC, margin: "0 0 8px", lineHeight: 1.55 }}>
+              The cleanest products in each category, ranked on what is actually in them.
+            </p>
+            <Link href="/lab/how-we-score" style={{ fontFamily: SANS, fontSize: 13, color: SAGE, textDecoration: "none" }}>
+              How we score
+            </Link>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 300px), 1fr))", gap: 14 }}>
+            {categoryCards.map(({ category, hero }) => (
+              <Link
+                key={category.id}
+                href={`/lab/category/${category.slug}`}
+                className="lab-card lab-cat-card"
+                style={{
+                  position: "relative", display: "flex", flexDirection: "column", justifyContent: "flex-end",
+                  minHeight: 172, padding: "18px 20px 16px",
+                  background: SURFACE, border: `0.5px solid ${BORDER}`, borderRadius: 18,
+                  textDecoration: "none", color: "inherit", overflow: "hidden",
+                }}
+              >
+                {hero.image_url && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={hero.image_url}
+                    alt={hero.name}
+                    loading="lazy"
+                    style={{ position: "absolute", top: 14, left: "50%", transform: "translateX(-50%)", height: 104, width: 104, objectFit: "contain", display: "block" }}
+                  />
+                )}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+                  <span style={{ fontFamily: SANS, fontSize: 16.5, fontWeight: 600, color: TEXT, letterSpacing: "-0.01em" }}>
+                    {category.name}
+                  </span>
+                  <span className="lab-cat-arrow" aria-hidden style={{ color: TEXT_TER, fontSize: 16, opacity: 0, transition: "opacity 160ms, transform 160ms", transform: "translateX(-4px)" }}>
+                    ›
+                  </span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {view === "browse" && (<>
       {/* Header */}
       <div style={{ marginBottom: 18 }}>
         <span style={{ fontFamily: SANS, fontSize: 10, fontWeight: 600, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--nura-accent-label)" }}>
@@ -239,6 +354,7 @@ export default function LabBrowseClient({ categories, products }: {
           ))}
         </div>
       )}
+      </>)}
     </div>
   );
 }
