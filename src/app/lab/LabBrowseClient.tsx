@@ -274,7 +274,7 @@ export default function LabBrowseClient({ categories, products }: {
                 className="lab-card lab-cat-card"
                 style={{
                   position: "relative", display: "flex", flexDirection: "column", justifyContent: "flex-end",
-                  minHeight: 172, padding: "18px 20px 16px",
+                  minHeight: 204, padding: "18px 20px 16px",
                   background: SURFACE, border: `0.5px solid ${BORDER}`, borderRadius: 18,
                   textDecoration: "none", color: "inherit", overflow: "hidden",
                 }}
@@ -285,7 +285,7 @@ export default function LabBrowseClient({ categories, products }: {
                     src={image}
                     alt={alt}
                     loading="lazy"
-                    style={{ position: "absolute", top: 18, left: "50%", transform: "translateX(-50%)", height: 100, width: 100, objectFit: "contain", display: "block" }}
+                    style={{ position: "absolute", top: 6, left: "50%", transform: "translateX(-50%) scale(1.18)", transformOrigin: "top center", height: 138, width: 138, objectFit: "contain", display: "block" }}
                   />
                 )}
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
