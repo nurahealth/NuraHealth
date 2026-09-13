@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import ScoreRing from "./ScoreRing";
+import { categoryHeroImage } from "@/lib/category-heroes";
 
 // ── Design tokens (locked NŪRA system) ─────────────────────────────────────────
 const TEXT = "var(--nura-text-primary)";
@@ -168,8 +169,8 @@ export default function LabBrowseClient({ categories, products }: {
 
   // Category cards. Each shows the best-scoring product in that category (or
   // anything beneath it) as its face, the way a shelf tag shows one product.
-  // Only categories that actually hold something are shown — an empty card
-  // promises a shelf that is not there.
+  // A category with nothing scored yet still gets a card, faced by a
+  // curated flagship packshot, so the full range is visible from day one.
   const categoryCards = useMemo(() => {
     const byId = new Map(categories.map((c) => [c.id, c]));
     const ancestors = (id: string): string[] => {
@@ -194,9 +195,18 @@ export default function LabBrowseClient({ categories, products }: {
     // Leaf categories only — the parents are navigation, not shelves.
     const hasChildren = new Set(categories.filter((c) => c.parent_id).map((c) => c.parent_id!));
     return categories
-      .filter((c) => !hasChildren.has(c.id) && best.has(c.id))
+      .filter((c) => !hasChildren.has(c.id))
       .sort((a, b) => a.name.localeCompare(b.name))
-      .map((c) => ({ category: c, hero: best.get(c.id)! }));
+      .map((c) => {
+        const hero = best.get(c.id) ?? null;
+        return {
+          category: c,
+          image: hero?.image_url ?? categoryHeroImage(c.slug),
+          alt: hero?.name ?? c.name,
+          count: products.filter((p) => p.category_id && ancestors(p.category_id).includes(c.id)).length,
+        };
+      })
+      .filter((c) => c.image);
   }, [categories, products]);
 
   const visible = useMemo(() => {
@@ -260,25 +270,25 @@ export default function LabBrowseClient({ categories, products }: {
           </div>
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 300px), 1fr))", gap: 14 }}>
-            {categoryCards.map(({ category, hero }) => (
+            {categoryCards.map(({ category, image, alt }) => (
               <Link
                 key={category.id}
                 href={`/lab/category/${category.slug}`}
                 className="lab-card lab-cat-card"
                 style={{
                   position: "relative", display: "flex", flexDirection: "column", justifyContent: "flex-end",
-                  minHeight: 172, padding: "18px 20px 16px",
+                  minHeight: 184, padding: "18px 20px 16px",
                   background: SURFACE, border: `0.5px solid ${BORDER}`, borderRadius: 18,
                   textDecoration: "none", color: "inherit", overflow: "hidden",
                 }}
               >
-                {hero.image_url && (
+                {image && (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
-                    src={hero.image_url}
-                    alt={hero.name}
+                    src={image}
+                    alt={alt}
                     loading="lazy"
-                    style={{ position: "absolute", top: 14, left: "50%", transform: "translateX(-50%)", height: 104, width: 104, objectFit: "contain", display: "block" }}
+                    style={{ position: "absolute", top: 14, left: "50%", transform: "translateX(-50%)", height: 118, width: 118, objectFit: "contain", display: "block" }}
                   />
                 )}
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
