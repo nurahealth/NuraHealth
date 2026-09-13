@@ -193,8 +193,13 @@ export default function LabBrowseClient({ categories, products }: {
       }
     }
     return PRODUCTS_GRID.map((entry) => {
-      const cat = bySlug.get(entry.slug);
-      const hero = cat ? best.get(cat.id) ?? null : null;
+      const slugs = [entry.slug, ...(entry.also ?? [])];
+      let hero: LabProduct | null = null;
+      for (const sl of slugs) {
+        const cat = bySlug.get(sl);
+        const b = cat ? best.get(cat.id) : undefined;
+        if (b && (!hero || (b.score ?? -1) > (hero.score ?? -1))) hero = b;
+      }
       return {
         key: entry.slug,
         label: entry.label,

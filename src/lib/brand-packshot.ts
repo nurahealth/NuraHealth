@@ -12,7 +12,9 @@
 // image cannot be found is better skipped than shown with a bad one.
 
 const UA = "NURA-catalog/1.0 (+https://nura.health)";
-const TIMEOUT_MS = 12000;
+// Short on purpose: a storefront that has not answered in five seconds is
+// not going to, and an import run touches dozens of them.
+const TIMEOUT_MS = 5000;
 
 /** Brands whose storefront domain is not derivable from the brand name. */
 const BRAND_DOMAINS: Record<string, string> = {
@@ -86,7 +88,6 @@ export function brandDomains(brand: string): string[] {
   const hyphen = brand.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
   const out = [`${slug}.com`];
   if (hyphen !== slug) out.push(`${hyphen}.com`);
-  out.push(`eat${slug}.com`, `drink${slug}.com`, `${slug}.co`);
   return out;
 }
 
@@ -139,6 +140,8 @@ async function getJson(url: string): Promise<unknown | null> {
 
 // One storefront is queried once per import run, not once per product.
 const catalogueCache = new Map<string, ShopifyProduct[] | null>();
+// Brands with no reachable storefront — skipped for the rest of the run.
+const noStorefront = new Set<string>();
 
 async function shopifyCatalogue(domain: string): Promise<ShopifyProduct[] | null> {
   if (catalogueCache.has(domain)) return catalogueCache.get(domain)!;
@@ -177,9 +180,13 @@ export async function resolveBrandPackshot(
   if (!brand || !productName) return null;
   const minScore = opts.minScore ?? 0.6;
 
+  const brandKey = brand.trim().toLowerCase();
+  if (noStorefront.has(brandKey)) return null;
+  let anyCatalogue = false;
   for (const domain of brandDomains(brand)) {
     const catalogue = await shopifyCatalogue(domain);
     if (!catalogue) continue;
+    anyCatalogue = true;
 
     let best: { p: ShopifyProduct; score: number } | null = null;
     for (const p of catalogue) {
@@ -200,10 +207,12 @@ export async function resolveBrandPackshot(
       score: Number(best.score.toFixed(2)),
     };
   }
+  if (!anyCatalogue) noStorefront.add(brandKey);
   return null;
 }
 
 /** Clear the per-run storefront cache. */
 export function resetPackshotCache(): void {
   catalogueCache.clear();
+  noStorefront.clear();
 }

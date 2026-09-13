@@ -23,8 +23,14 @@ export default async function LabCategoryPage({ params }: { params: Promise<{ sl
   const current = cats.find((c) => c.slug === slug);
   if (!current) notFound();
 
-  // A parent category shows everything underneath it as well.
+  // A parent category shows everything underneath it as well, and a grid
+  // entry can pull in sibling categories that belong on the same shelf.
+  const entry = PRODUCTS_GRID.find((g) => g.slug === slug);
   const ids = new Set<string>([current.id]);
+  for (const extra of entry?.also ?? []) {
+    const c = cats.find((x) => x.slug === extra);
+    if (c) ids.add(c.id);
+  }
   let grew = true;
   while (grew) {
     grew = false;

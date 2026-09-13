@@ -81,7 +81,7 @@ export function categoryHeroImage(slug: string): string | null {
 // order. Each maps to a catalogue category (a parent covers everything beneath
 // it). The catalogue itself holds more categories than this — those are for
 // admin and browsing, not for this grid.
-export const PRODUCTS_GRID: { label: string; slug: string; heroSlug?: string }[] = [
+export const PRODUCTS_GRID: { label: string; slug: string; heroSlug?: string; also?: string[] }[] = [
   { label: "Bottled water", slug: "bottled-water" },
   { label: "Air Purifiers", slug: "air-purifiers-filters" },
   { label: "Baby Care", slug: "baby-care" },
@@ -110,8 +110,8 @@ export const PRODUCTS_GRID: { label: string; slug: string; heroSlug?: string }[]
   { label: "Personal Care", slug: "personal-care" },
   { label: "Pet Care", slug: "pet-care" },
   { label: "Produce", slug: "produce" },
-  { label: "Snacks", slug: "protein-snack-bars" },
-  { label: "Spreads", slug: "spreads" },
+  { label: "Snacks", slug: "protein-snack-bars", also: ["snacks-chips"] },
+  { label: "Spreads", slug: "spreads", also: ["nut-butters"] },
   { label: "Supplements", slug: "supplements", heroSlug: "greens-powders" },
   { label: "Sweeteners", slug: "honey-sweeteners" },
   { label: "Toothcare", slug: "oral-care" },
