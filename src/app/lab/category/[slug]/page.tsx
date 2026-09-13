@@ -4,6 +4,7 @@ import { createSupabaseServerClient } from "@/lib/supabase-server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import NuraPageShell from "@/components/NuraPageShell";
 import { ProductCard, type LabCategory, type LabProduct } from "../../LabBrowseClient";
+import { PRODUCTS_GRID } from "@/lib/category-heroes";
 
 const TEXT = "var(--nura-text-primary)";
 const TEXT_SEC = "var(--nura-text-secondary)";
@@ -40,6 +41,8 @@ export default async function LabCategoryPage({ params }: { params: Promise<{ sl
     .order("score", { ascending: false, nullsFirst: false });
   const list = (products ?? []) as LabProduct[];
   const parent = current.parent_id ? cats.find((c) => c.id === current.parent_id) : null;
+  // The page carries the same name the grid card did.
+  const title = PRODUCTS_GRID.find((g) => g.slug === slug)?.label ?? current.name;
 
   return (
     <NuraPageShell maxWidth={1040} desktopMaxWidth={1280}>
@@ -52,7 +55,7 @@ export default async function LabCategoryPage({ params }: { params: Promise<{ sl
           ← All products{parent ? ` · ${parent.name}` : ""}
         </Link>
         <h1 style={{ fontFamily: SANS, fontSize: "clamp(28px, 4.5vw, 36px)", fontWeight: 600, color: TEXT, margin: "10px 0 6px", letterSpacing: "-0.02em", lineHeight: 1.1 }}>
-          {current.name}
+          {title}
         </h1>
         <p style={{ fontFamily: SANS, fontSize: 14, color: TEXT_SEC, margin: 0 }}>
           {list.length} {list.length === 1 ? "product" : "products"}, ranked by score.

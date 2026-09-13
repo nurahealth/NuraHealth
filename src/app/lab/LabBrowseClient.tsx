@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import ScoreRing from "./ScoreRing";
-import { categoryHeroImage } from "@/lib/category-heroes";
+import { categoryHeroImage, PRODUCTS_GRID } from "@/lib/category-heroes";
 
 // ── Design tokens (locked NŪRA system) ─────────────────────────────────────────
 const TEXT = "var(--nura-text-primary)";
@@ -167,12 +167,12 @@ export default function LabBrowseClient({ categories, products }: {
     return m;
   }, [categories]);
 
-  // Category cards. Each shows the best-scoring product in that category (or
-  // anything beneath it) as its face, the way a shelf tag shows one product.
-  // A category with nothing scored yet still gets a card, faced by a
-  // curated flagship packshot, so the full range is visible from day one.
+  // Category cards: the fixed list from the reference, each faced by the
+  // best-scoring product in that category (or beneath it), falling back to
+  // its curated flagship packshot until it has products of its own.
   const categoryCards = useMemo(() => {
     const byId = new Map(categories.map((c) => [c.id, c]));
+    const bySlug = new Map(categories.map((c) => [c.slug, c]));
     const ancestors = (id: string): string[] => {
       const out: string[] = [];
       let cur = byId.get(id);
@@ -192,21 +192,17 @@ export default function LabBrowseClient({ categories, products }: {
         if (!cur || (p.score ?? -1) > (cur.score ?? -1)) best.set(id, p);
       }
     }
-    // Leaf categories only — the parents are navigation, not shelves.
-    const hasChildren = new Set(categories.filter((c) => c.parent_id).map((c) => c.parent_id!));
-    return categories
-      .filter((c) => !hasChildren.has(c.id))
-      .sort((a, b) => a.name.localeCompare(b.name))
-      .map((c) => {
-        const hero = best.get(c.id) ?? null;
-        return {
-          category: c,
-          image: hero?.image_url ?? categoryHeroImage(c.slug),
-          alt: hero?.name ?? c.name,
-          count: products.filter((p) => p.category_id && ancestors(p.category_id).includes(c.id)).length,
-        };
-      })
-      .filter((c) => c.image);
+    return PRODUCTS_GRID.map((entry) => {
+      const cat = bySlug.get(entry.slug);
+      const hero = cat ? best.get(cat.id) ?? null : null;
+      return {
+        key: entry.slug,
+        label: entry.label,
+        slug: entry.slug,
+        image: hero?.image_url ?? categoryHeroImage(entry.heroSlug ?? entry.slug),
+        alt: hero?.name ?? entry.label,
+      };
+    }).filter((c) => c.image);
   }, [categories, products]);
 
   const visible = useMemo(() => {
@@ -224,6 +220,7 @@ export default function LabBrowseClient({ categories, products }: {
         .lab-chip-row { scrollbar-width: none; }
         .lab-chip-row::-webkit-scrollbar { display: none; }
         .lab-cat-card:hover .lab-cat-arrow { opacity: 1; transform: translateX(0); }
+        @media (max-width: 560px) { .lab-cat-grid { grid-template-columns: 1fr !important; } }
       `}</style>
 
       {/* View toggle */}
@@ -258,26 +255,26 @@ export default function LabBrowseClient({ categories, products }: {
       {view === "products" && (
         <div>
           <div style={{ textAlign: "center", marginBottom: 34 }}>
-            <h1 style={{ fontFamily: SANS, fontSize: "clamp(28px, 4.5vw, 36px)", fontWeight: 600, color: TEXT, margin: "0 0 10px", letterSpacing: "-0.02em", lineHeight: 1.1 }}>
-              Top rated products
+            <h1 style={{ fontFamily: SANS, fontSize: "clamp(26px, 4vw, 32px)", fontWeight: 500, color: TEXT, margin: "0 0 10px", letterSpacing: "-0.01em", lineHeight: 1.15 }}>
+              Top Rated Products
             </h1>
-            <p style={{ fontFamily: SANS, fontSize: 14.5, color: TEXT_SEC, margin: "0 0 8px", lineHeight: 1.55 }}>
-              The cleanest products in each category, ranked on what is actually in them.
+            <p style={{ fontFamily: SANS, fontSize: 15, color: TEXT_SEC, margin: "0 0 8px", lineHeight: 1.55 }}>
+              The healthiest products ranked based on the latest science.
             </p>
             <Link href="/lab/how-we-score" style={{ fontFamily: SANS, fontSize: 13, color: SAGE, textDecoration: "none" }}>
               How we score
             </Link>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 300px), 1fr))", gap: 14 }}>
-            {categoryCards.map(({ category, image, alt }) => (
+          <div className="lab-cat-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, maxWidth: 900, margin: "0 auto" }}>
+            {categoryCards.map(({ key, label, slug, image, alt }) => (
               <Link
-                key={category.id}
-                href={`/lab/category/${category.slug}`}
+                key={key}
+                href={`/lab/category/${slug}`}
                 className="lab-card lab-cat-card"
                 style={{
                   position: "relative", display: "flex", flexDirection: "column", justifyContent: "flex-end",
-                  minHeight: 184, padding: "18px 20px 16px",
+                  minHeight: 172, padding: "18px 20px 16px",
                   background: SURFACE, border: `0.5px solid ${BORDER}`, borderRadius: 18,
                   textDecoration: "none", color: "inherit", overflow: "hidden",
                 }}
@@ -288,12 +285,12 @@ export default function LabBrowseClient({ categories, products }: {
                     src={image}
                     alt={alt}
                     loading="lazy"
-                    style={{ position: "absolute", top: 14, left: "50%", transform: "translateX(-50%)", height: 118, width: 118, objectFit: "contain", display: "block" }}
+                    style={{ position: "absolute", top: 18, left: "50%", transform: "translateX(-50%)", height: 100, width: 100, objectFit: "contain", display: "block" }}
                   />
                 )}
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
                   <span style={{ fontFamily: SANS, fontSize: 16.5, fontWeight: 600, color: TEXT, letterSpacing: "-0.01em" }}>
-                    {category.name}
+                    {label}
                   </span>
                   <span className="lab-cat-arrow" aria-hidden style={{ color: TEXT_TER, fontSize: 16, opacity: 0, transition: "opacity 160ms, transform 160ms", transform: "translateX(-4px)" }}>
                     ›

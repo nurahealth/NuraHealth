@@ -75,3 +75,45 @@ export function categoryHeroImage(slug: string): string | null {
   const f = FILES[slug];
   return f ? BUCKET + f : null;
 }
+
+// ── The Products grid ─────────────────────────────────────────────────────────
+// Exactly the categories in the reference, with exactly those names, in that
+// order. Each maps to a catalogue category (a parent covers everything beneath
+// it). The catalogue itself holds more categories than this — those are for
+// admin and browsing, not for this grid.
+export const PRODUCTS_GRID: { label: string; slug: string; heroSlug?: string }[] = [
+  { label: "Bottled water", slug: "bottled-water" },
+  { label: "Air Purifiers", slug: "air-purifiers-filters" },
+  { label: "Baby Care", slug: "baby-care" },
+  { label: "Baby Food", slug: "baby-food" },
+  { label: "Bakery", slug: "bakery" },
+  { label: "Bedding & Sleep", slug: "bedding-sleep" },
+  { label: "Beverages", slug: "beverages" },
+  { label: "Cleaning Supplies", slug: "cleaning-products" },
+  { label: "Clothes", slug: "clothes" },
+  { label: "Condiments", slug: "condiments" },
+  { label: "Cookware", slug: "cookware" },
+  { label: "Dairy", slug: "dairy" },
+  { label: "Dessert", slug: "dessert" },
+  { label: "Drinkware", slug: "drinkware" },
+  { label: "Eggs", slug: "eggs" },
+  { label: "Fast Food", slug: "fast-food" },
+  { label: "Feminine Care", slug: "feminine-care" },
+  { label: "Food Prep", slug: "food-prep" },
+  { label: "Fragrances", slug: "fragrances" },
+  { label: "Frozen", slug: "frozen" },
+  { label: "Home Essentials", slug: "home-essentials" },
+  { label: "Kids Food", slug: "kids-food" },
+  { label: "Meat & Seafood", slug: "meat-seafood" },
+  { label: "Medicine", slug: "medicine" },
+  { label: "Pantry", slug: "pantry" },
+  { label: "Personal Care", slug: "personal-care" },
+  { label: "Pet Care", slug: "pet-care" },
+  { label: "Produce", slug: "produce" },
+  { label: "Snacks", slug: "protein-snack-bars" },
+  { label: "Spreads", slug: "spreads" },
+  { label: "Supplements", slug: "supplements", heroSlug: "greens-powders" },
+  { label: "Sweeteners", slug: "honey-sweeteners" },
+  { label: "Toothcare", slug: "oral-care" },
+  { label: "Water filters", slug: "water-filters" },
+];
