@@ -1,0 +1,2518 @@
+{
+ "_about": "Produce: 20 branded items. Official brand packshots (brand sites/CDNs only). Residue picture = USDA PDP crop-level (disclosed on every card as not brand-specific); nutrition = FoodData Central. Deterministic score, formula in each rationale. No EWG. Import: POST /api/admin/catalog/products/bulk {products, update_existing:true, require_packshot:true}. Built 2026-09-18.",
+ "products": [
+  {
+   "name": "Strawberries",
+   "brand": "Driscoll's",
+   "category": "produce",
+   "status": "published",
+   "image_url": "https://edge.sitecorecloud.io/driscollsin7a07-driscolls1bc6-prod99c8-40a3/media/Project/driscolls/us/Images/Pages/berries/strawberry/StrawberryProductDetailPage_compressedjpeg-item-v-600113491.jpeg",
+   "score": 52,
+   "score_label": "HIGH RESIDUE",
+   "score_rationale": "Computed from USDA Pesticide Data Program crop-level retail sampling (2016): 95 − 0.30×(% samples with residues: 94.9) − 0.20×(distinct pesticides, capped 50: 50) − (violation rate %, capped 10: 4.9). Residue picture is USDA crop-level testing of conventional strawberries at U.S. retail (2016, 530 samples) — not a lab test of this specific brand. Brand-level testing comes with our lab program. Nutrition from USDA FoodData Central. Government data only.",
+   "lab_tested": false,
+   "description": "94.9% of USDA retail samples carried at least one detectable pesticide residue, across 76 different pesticides. 26 presumptive tolerance violations (3 over tolerance; 23 residues with no established tolerance). Going organic makes the biggest difference on strawberries; washing thoroughly helps. Organic option: Driscoll's Organic Strawberries. Still a nutritious whole food — choose the cleaner version, don't skip produce.",
+   "properties": {
+    "Data basis": "USDA PDP 2016 · 530 retail samples · crop-level",
+    "Form": "Fresh · nutrition per 100 g, raw",
+    "Organic option": "Driscoll's Organic Strawberries"
+   },
+   "measurements": [
+    {
+     "type": "Samples with pesticide residues",
+     "kind": "contaminant",
+     "unit": "%",
+     "value": 94.9,
+     "description": "USDA crop-level retail testing, 2016 — not brand-specific",
+     "sort_order": 1
+    },
+    {
+     "type": "Distinct pesticides detected",
+     "kind": "contaminant",
+     "unit": "count",
+     "value": 76,
+     "description": "Across 530 samples of the crop",
+     "sort_order": 2
+    },
+    {
+     "type": "Presumptive tolerance violations",
+     "kind": "contaminant",
+     "unit": "samples",
+     "value": 26,
+     "description": "26 presumptive tolerance violations (3 over tolerance; 23 residues with no established tolerance)",
+     "sort_order": 3,
+     "risk_count": 1
+    },
+    {
+     "type": "Calories",
+     "kind": "nutrient",
+     "unit": "kcal",
+     "value": 32,
+     "description": "Per 100 g, raw",
+     "sort_order": 4
+    },
+    {
+     "type": "Sugars",
+     "kind": "nutrient",
+     "unit": "g",
+     "value": 4.89,
+     "description": "Per 100 g, raw",
+     "sort_order": 5
+    },
+    {
+     "type": "Fiber",
+     "kind": "nutrient",
+     "unit": "g",
+     "value": 2.0,
+     "description": "Per 100 g, raw",
+     "sort_order": 6
+    },
+    {
+     "type": "Protein",
+     "kind": "nutrient",
+     "unit": "g",
+     "value": 0.67,
+     "description": "Per 100 g, raw",
+     "sort_order": 7
+    },
+    {
+     "type": "Sodium",
+     "kind": "nutrient",
+     "unit": "mg",
+     "value": 1,
+     "description": "Per 100 g, raw",
+     "sort_order": 8
+    },
+    {
+     "type": "Vitamin C",
+     "kind": "nutrient",
+     "unit": "mg",
+     "value": 58.8,
+     "description": "Per 100 g, raw",
+     "sort_order": 9
+    },
+    {
+     "type": "Potassium",
+     "kind": "nutrient",
+     "unit": "mg",
+     "value": 153,
+     "description": "Per 100 g, raw",
+     "sort_order": 10
+    }
+   ],
+   "documents": [
+    {
+     "title": "USDA Pesticide Data Program — Annual Summary",
+     "doc_type": "report",
+     "year": 2016,
+     "source_url": "https://www.ams.usda.gov/sites/default/files/media/PDPAnnualSummary.pdf"
+    },
+    {
+     "title": "USDA PDP Database — commodity results",
+     "doc_type": "report",
+     "year": 2016,
+     "source_url": "https://apps.ams.usda.gov/pdp"
+    },
+    {
+     "title": "USDA FoodData Central — FDC 167762",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://fdc.nal.usda.gov/food-details/167762/nutrients"
+    },
+    {
+     "title": "Driscoll's — official product page",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://www.driscolls.com/Berries/Strawberries"
+    }
+   ]
+  },
+  {
+   "name": "Baby Spinach 5 oz",
+   "brand": "Fresh Express",
+   "category": "produce",
+   "status": "published",
+   "image_url": "https://www.freshexpress.com/wp-content/uploads/2025/05/FEX25_TenderLeaf_BabySpinach_Bag_5oz_71040_US_FRONT-scaled.png",
+   "score": 46,
+   "score_label": "HIGH RESIDUE",
+   "score_rationale": "Computed from USDA Pesticide Data Program crop-level retail sampling (2016): 95 − 0.30×(% samples with residues: 95.6) − 0.20×(distinct pesticides, capped 50: 50) − (violation rate %, capped 10: 10.0). Residue picture is USDA crop-level testing of conventional spinach at U.S. retail (2016, 707 samples) — not a lab test of this specific brand. Brand-level testing comes with our lab program. Nutrition from USDA FoodData Central. Government data only.",
+   "lab_tested": false,
+   "description": "95.6% of USDA retail samples carried at least one detectable pesticide residue, across 78 different pesticides. 125 presumptive tolerance violations (16 over tolerance; 111 residues with no established tolerance). Going organic makes the biggest difference on spinach; washing thoroughly helps. Organic option: Fresh Express Organic Baby Spinach. Still a nutritious whole food — choose the cleaner version, don't skip produce.",
+   "properties": {
+    "Data basis": "USDA PDP 2016 · 707 retail samples · crop-level",
+    "Form": "Fresh · nutrition per 100 g, raw",
+    "Organic option": "Fresh Express Organic Baby Spinach"
+   },
+   "measurements": [
+    {
+     "type": "Samples with pesticide residues",
+     "kind": "contaminant",
+     "unit": "%",
+     "value": 95.6,
+     "description": "USDA crop-level retail testing, 2016 — not brand-specific",
+     "sort_order": 1
+    },
+    {
+     "type": "Distinct pesticides detected",
+     "kind": "contaminant",
+     "unit": "count",
+     "value": 78,
+     "description": "Across 707 samples of the crop",
+     "sort_order": 2
+    },
+    {
+     "type": "Presumptive tolerance violations",
+     "kind": "contaminant",
+     "unit": "samples",
+     "value": 125,
+     "description": "125 presumptive tolerance violations (16 over tolerance; 111 residues with no established tolerance)",
+     "sort_order": 3,
+     "risk_count": 1
+    },
+    {
+     "type": "Calories",
+     "kind": "nutrient",
+     "unit": "kcal",
+     "value": 23,
+     "description": "Per 100 g, raw",
+     "sort_order": 4
+    },
+    {
+     "type": "Sugars",
+     "kind": "nutrient",
+     "unit": "g",
+     "value": 0.42,
+     "description": "Per 100 g, raw",
+     "sort_order": 5
+    },
+    {
+     "type": "Fiber",
+     "kind": "nutrient",
+     "unit": "g",
+     "value": 2.2,
+     "description": "Per 100 g, raw",
+     "sort_order": 6
+    },
+    {
+     "type": "Protein",
+     "kind": "nutrient",
+     "unit": "g",
+     "value": 2.86,
+     "description": "Per 100 g, raw",
+     "sort_order": 7
+    },
+    {
+     "type": "Sodium",
+     "kind": "nutrient",
+     "unit": "mg",
+     "value": 79,
+     "description": "Per 100 g, raw",
+     "sort_order": 8
+    },
+    {
+     "type": "Vitamin C",
+     "kind": "nutrient",
+     "unit": "mg",
+     "value": 28.1,
+     "description": "Per 100 g, raw",
+     "sort_order": 9
+    },
+    {
+     "type": "Potassium",
+     "kind": "nutrient",
+     "unit": "mg",
+     "value": 558,
+     "description": "Per 100 g, raw",
+     "sort_order": 10
+    }
+   ],
+   "documents": [
+    {
+     "title": "USDA Pesticide Data Program — Annual Summary",
+     "doc_type": "report",
+     "year": 2016,
+     "source_url": "https://www.ams.usda.gov/sites/default/files/media/PDPAnnualSummary.pdf"
+    },
+    {
+     "title": "USDA PDP Database — commodity results",
+     "doc_type": "report",
+     "year": 2016,
+     "source_url": "https://apps.ams.usda.gov/pdp"
+    },
+    {
+     "title": "USDA FoodData Central — FDC 168462",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://fdc.nal.usda.gov/food-details/168462/nutrients"
+    },
+    {
+     "title": "Fresh Express — official product page",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://www.freshexpress.com/products/salad-greens/baby-spinach"
+    }
+   ]
+  },
+  {
+   "name": "Chopped Kale 16 oz",
+   "brand": "Taylor Farms",
+   "category": "produce",
+   "status": "published",
+   "image_url": "https://www.taylorfarms.com/wp-content/uploads/2021/04/Website-Product-Image-27.png",
+   "score": 50,
+   "score_label": "HIGH RESIDUE",
+   "score_rationale": "Computed from USDA Pesticide Data Program crop-level retail sampling (2018): 95 − 0.30×(% samples with residues: 95.8) − 0.20×(distinct pesticides, capped 50: 50) − (violation rate %, capped 10: 6.6). Residue picture is USDA crop-level testing of conventional kale at U.S. retail (2018, 707 samples) — not a lab test of this specific brand. Brand-level testing comes with our lab program. Nutrition from USDA FoodData Central. Government data only.",
+   "lab_tested": false,
+   "description": "95.8% of USDA retail samples carried at least one detectable pesticide residue, across 71 different pesticides. 47 presumptive tolerance violations (19 over tolerance, incl. permethrin; 30 with no established tolerance). Going organic makes the biggest difference on kale; washing thoroughly helps. Still a nutritious whole food — choose the cleaner version, don't skip produce.",
+   "properties": {
+    "Data basis": "USDA PDP 2018 · 707 retail samples · crop-level",
+    "Form": "Fresh · nutrition per 100 g, raw"
+   },
+   "measurements": [
+    {
+     "type": "Samples with pesticide residues",
+     "kind": "contaminant",
+     "unit": "%",
+     "value": 95.8,
+     "description": "USDA crop-level retail testing, 2018 — not brand-specific",
+     "sort_order": 1
+    },
+    {
+     "type": "Distinct pesticides detected",
+     "kind": "contaminant",
+     "unit": "count",
+     "value": 71,
+     "description": "Across 707 samples of the crop",
+     "sort_order": 2
+    },
+    {
+     "type": "Presumptive tolerance violations",
+     "kind": "contaminant",
+     "unit": "samples",
+     "value": 47,
+     "description": "47 presumptive tolerance violations (19 over tolerance, incl. permethrin; 30 with no established tolerance)",
+     "sort_order": 3,
+     "risk_count": 1
+    },
+    {
+     "type": "Calories",
+     "kind": "nutrient",
+     "unit": "kcal",
+     "value": 35,
+     "description": "Per 100 g, raw",
+     "sort_order": 4
+    },
+    {
+     "type": "Sugars",
+     "kind": "nutrient",
+     "unit": "g",
+     "value": 0.99,
+     "description": "Per 100 g, raw",
+     "sort_order": 5
+    },
+    {
+     "type": "Fiber",
+     "kind": "nutrient",
+     "unit": "g",
+     "value": 4.1,
+     "description": "Per 100 g, raw",
+     "sort_order": 6
+    },
+    {
+     "type": "Protein",
+     "kind": "nutrient",
+     "unit": "g",
+     "value": 2.92,
+     "description": "Per 100 g, raw",
+     "sort_order": 7
+    },
+    {
+     "type": "Sodium",
+     "kind": "nutrient",
+     "unit": "mg",
+     "value": 53,
+     "description": "Per 100 g, raw",
+     "sort_order": 8
+    },
+    {
+     "type": "Vitamin C",
+     "kind": "nutrient",
+     "unit": "mg",
+     "value": 93.4,
+     "description": "Per 100 g, raw",
+     "sort_order": 9
+    },
+    {
+     "type": "Potassium",
+     "kind": "nutrient",
+     "unit": "mg",
+     "value": 348,
+     "description": "Per 100 g, raw",
+     "sort_order": 10
+    }
+   ],
+   "documents": [
+    {
+     "title": "USDA Pesticide Data Program — Annual Summary",
+     "doc_type": "report",
+     "year": 2018,
+     "source_url": "https://www.ams.usda.gov/sites/default/files/media/PDPAnnualSummary.pdf"
+    },
+    {
+     "title": "USDA PDP Database — commodity results",
+     "doc_type": "report",
+     "year": 2018,
+     "source_url": "https://apps.ams.usda.gov/pdp"
+    },
+    {
+     "title": "USDA FoodData Central — FDC 168421",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://fdc.nal.usda.gov/food-details/168421/nutrients"
+    },
+    {
+     "title": "Taylor Farms — official product page",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://www.taylorfarms.com/products/chopped-kale/"
+    }
+   ]
+  },
+  {
+   "name": "Cotton Candy Grapes",
+   "brand": "Grapery",
+   "category": "produce",
+   "status": "published",
+   "image_url": "https://grapery.biz/images/bags/CottonCandy.jpg",
+   "score": 55,
+   "score_label": "MODERATE RESIDUE",
+   "score_rationale": "Computed from USDA Pesticide Data Program crop-level retail sampling (2023): 95 − 0.30×(% samples with residues: 96.2) − 0.20×(distinct pesticides, capped 50: 50) − (violation rate %, capped 10: 1.3). Residue picture is USDA crop-level testing of conventional grapes at U.S. retail (2023, 709 samples) — not a lab test of this specific brand. Brand-level testing comes with our lab program. Nutrition from USDA FoodData Central. Government data only.",
+   "lab_tested": false,
+   "description": "96.2% of USDA retail samples carried at least one detectable pesticide residue, across 73 different pesticides. 9 samples over an established tolerance (imidacloprid, acetamiprid). Most residues sit below EPA tolerances; wash well and peel where practical.",
+   "properties": {
+    "Data basis": "USDA PDP 2023 · 709 retail samples · crop-level",
+    "Form": "Fresh · nutrition per 100 g, raw"
+   },
+   "measurements": [
+    {
+     "type": "Samples with pesticide residues",
+     "kind": "contaminant",
+     "unit": "%",
+     "value": 96.2,
+     "description": "USDA crop-level retail testing, 2023 — not brand-specific",
+     "sort_order": 1
+    },
+    {
+     "type": "Distinct pesticides detected",
+     "kind": "contaminant",
+     "unit": "count",
+     "value": 73,
+     "description": "Across 709 samples of the crop",
+     "sort_order": 2
+    },
+    {
+     "type": "Presumptive tolerance violations",
+     "kind": "contaminant",
+     "unit": "samples",
+     "value": 9,
+     "description": "9 samples over an established tolerance (imidacloprid, acetamiprid)",
+     "sort_order": 3,
+     "risk_count": 0
+    },
+    {
+     "type": "Calories",
+     "kind": "nutrient",
+     "unit": "kcal",
+     "value": 69,
+     "description": "Per 100 g, raw",
+     "sort_order": 4
+    },
+    {
+     "type": "Sugars",
+     "kind": "nutrient",
+     "unit": "g",
+     "value": 15.5,
+     "description": "Per 100 g, raw",
+     "sort_order": 5
+    },
+    {
+     "type": "Fiber",
+     "kind": "nutrient",
+     "unit": "g",
+     "value": 0.9,
+     "description": "Per 100 g, raw",
+     "sort_order": 6
+    },
+    {
+     "type": "Protein",
+     "kind": "nutrient",
+     "unit": "g",
+     "value": 0.72,
+     "description": "Per 100 g, raw",
+     "sort_order": 7
+    },
+    {
+     "type": "Sodium",
+     "kind": "nutrient",
+     "unit": "mg",
+     "value": 2,
+     "description": "Per 100 g, raw",
+     "sort_order": 8
+    },
+    {
+     "type": "Vitamin C",
+     "kind": "nutrient",
+     "unit": "mg",
+     "value": 3.2,
+     "description": "Per 100 g, raw",
+     "sort_order": 9
+    },
+    {
+     "type": "Potassium",
+     "kind": "nutrient",
+     "unit": "mg",
+     "value": 191,
+     "description": "Per 100 g, raw",
+     "sort_order": 10
+    }
+   ],
+   "documents": [
+    {
+     "title": "USDA Pesticide Data Program — Annual Summary",
+     "doc_type": "report",
+     "year": 2023,
+     "source_url": "https://www.ams.usda.gov/sites/default/files/media/PDPAnnualSummary.pdf"
+    },
+    {
+     "title": "USDA PDP Database — commodity results",
+     "doc_type": "report",
+     "year": 2023,
+     "source_url": "https://apps.ams.usda.gov/pdp"
+    },
+    {
+     "title": "USDA FoodData Central — FDC 174683",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://fdc.nal.usda.gov/food-details/174683/nutrients"
+    },
+    {
+     "title": "Grapery — official product page",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://grapery.biz/"
+    }
+   ]
+  },
+  {
+   "name": "Apples (Honeycrisp, Fuji, Gala)",
+   "brand": "Rainier Fruit",
+   "category": "produce",
+   "status": "published",
+   "image_url": "https://rainierfruit.com/wp-content/uploads/2021/12/Rainier-Fruit-Apple.png",
+   "score": 56,
+   "score_label": "MODERATE RESIDUE",
+   "score_rationale": "Computed from USDA Pesticide Data Program crop-level retail sampling (2024): 95 − 0.30×(% samples with residues: 94.3) − 0.20×(distinct pesticides, capped 50: 49) − (violation rate %, capped 10: 0.4). Residue picture is USDA crop-level testing of conventional apples at U.S. retail (2024, 704 samples) — not a lab test of this specific brand. Brand-level testing comes with our lab program. Nutrition from USDA FoodData Central. Government data only.",
+   "lab_tested": false,
+   "description": "94.3% of USDA retail samples carried at least one detectable pesticide residue, across 49 different pesticides. 3 presumptive tolerance violations, all residues with no established tolerance (chlorpropham). Most residues sit below EPA tolerances; wash well and peel where practical. Organic option: Rainier Organics Apples.",
+   "properties": {
+    "Data basis": "USDA PDP 2024 · 704 retail samples · crop-level",
+    "Form": "Fresh · nutrition per 100 g, raw",
+    "Organic option": "Rainier Organics Apples"
+   },
+   "measurements": [
+    {
+     "type": "Samples with pesticide residues",
+     "kind": "contaminant",
+     "unit": "%",
+     "value": 94.3,
+     "description": "USDA crop-level retail testing, 2024 — not brand-specific",
+     "sort_order": 1
+    },
+    {
+     "type": "Distinct pesticides detected",
+     "kind": "contaminant",
+     "unit": "count",
+     "value": 49,
+     "description": "Across 704 samples of the crop",
+     "sort_order": 2
+    },
+    {
+     "type": "Presumptive tolerance violations",
+     "kind": "contaminant",
+     "unit": "samples",
+     "value": 3,
+     "description": "3 presumptive tolerance violations, all residues with no established tolerance (chlorpropham)",
+     "sort_order": 3,
+     "risk_count": 0
+    },
+    {
+     "type": "Calories",
+     "kind": "nutrient",
+     "unit": "kcal",
+     "value": 52,
+     "description": "Per 100 g, raw",
+     "sort_order": 4
+    },
+    {
+     "type": "Sugars",
+     "kind": "nutrient",
+     "unit": "g",
+     "value": 10.4,
+     "description": "Per 100 g, raw",
+     "sort_order": 5
+    },
+    {
+     "type": "Fiber",
+     "kind": "nutrient",
+     "unit": "g",
+     "value": 2.4,
+     "description": "Per 100 g, raw",
+     "sort_order": 6
+    },
+    {
+     "type": "Protein",
+     "kind": "nutrient",
+     "unit": "g",
+     "value": 0.26,
+     "description": "Per 100 g, raw",
+     "sort_order": 7
+    },
+    {
+     "type": "Sodium",
+     "kind": "nutrient",
+     "unit": "mg",
+     "value": 1,
+     "description": "Per 100 g, raw",
+     "sort_order": 8
+    },
+    {
+     "type": "Vitamin C",
+     "kind": "nutrient",
+     "unit": "mg",
+     "value": 4.6,
+     "description": "Per 100 g, raw",
+     "sort_order": 9
+    },
+    {
+     "type": "Potassium",
+     "kind": "nutrient",
+     "unit": "mg",
+     "value": 107,
+     "description": "Per 100 g, raw",
+     "sort_order": 10
+    }
+   ],
+   "documents": [
+    {
+     "title": "USDA Pesticide Data Program — Annual Summary",
+     "doc_type": "report",
+     "year": 2024,
+     "source_url": "https://www.ams.usda.gov/sites/default/files/media/PDPAnnualSummary.pdf"
+    },
+    {
+     "title": "USDA PDP Database — commodity results",
+     "doc_type": "report",
+     "year": 2024,
+     "source_url": "https://apps.ams.usda.gov/pdp"
+    },
+    {
+     "title": "USDA FoodData Central — FDC 171688",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://fdc.nal.usda.gov/food-details/171688/nutrients"
+    },
+    {
+     "title": "Rainier Fruit — official product page",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://rainierfruit.com/apples"
+    }
+   ]
+  },
+  {
+   "name": "Peaches",
+   "brand": "HMC Farms",
+   "category": "produce",
+   "status": "published",
+   "image_url": "https://s3.us-west-2.amazonaws.com/static.hmcfarms.com/wp-content/uploads/2024/04/01194940/HMC_Peach_Hero-Banner_2x.png",
+   "score": 52,
+   "score_label": "HIGH RESIDUE",
+   "score_rationale": "Computed from USDA Pesticide Data Program crop-level retail sampling (2022): 95 − 0.30×(% samples with residues: 97.9) − 0.20×(distinct pesticides, capped 50: 50) − (violation rate %, capped 10: 3.8). Residue picture is USDA crop-level testing of conventional peaches at U.S. retail (2022, 419 samples) — not a lab test of this specific brand. Brand-level testing comes with our lab program. Nutrition from USDA FoodData Central. Government data only.",
+   "lab_tested": false,
+   "description": "97.9% of USDA retail samples carried at least one detectable pesticide residue, across 55 different pesticides. 16 presumptive tolerance violations (4 over tolerance; 12 with no established tolerance). Going organic makes the biggest difference on peaches; washing thoroughly helps. Organic option: HMC Farms Organic Peaches. Still a nutritious whole food — choose the cleaner version, don't skip produce.",
+   "properties": {
+    "Data basis": "USDA PDP 2022 · 419 retail samples · crop-level",
+    "Form": "Fresh · nutrition per 100 g, raw",
+    "Organic option": "HMC Farms Organic Peaches"
+   },
+   "measurements": [
+    {
+     "type": "Samples with pesticide residues",
+     "kind": "contaminant",
+     "unit": "%",
+     "value": 97.9,
+     "description": "USDA crop-level retail testing, 2022 — not brand-specific",
+     "sort_order": 1
+    },
+    {
+     "type": "Distinct pesticides detected",
+     "kind": "contaminant",
+     "unit": "count",
+     "value": 55,
+     "description": "Across 419 samples of the crop",
+     "sort_order": 2
+    },
+    {
+     "type": "Presumptive tolerance violations",
+     "kind": "contaminant",
+     "unit": "samples",
+     "value": 16,
+     "description": "16 presumptive tolerance violations (4 over tolerance; 12 with no established tolerance)",
+     "sort_order": 3,
+     "risk_count": 1
+    },
+    {
+     "type": "Calories",
+     "kind": "nutrient",
+     "unit": "kcal",
+     "value": 39,
+     "description": "Per 100 g, raw",
+     "sort_order": 4
+    },
+    {
+     "type": "Sugars",
+     "kind": "nutrient",
+     "unit": "g",
+     "value": 8.39,
+     "description": "Per 100 g, raw",
+     "sort_order": 5
+    },
+    {
+     "type": "Fiber",
+     "kind": "nutrient",
+     "unit": "g",
+     "value": 1.5,
+     "description": "Per 100 g, raw",
+     "sort_order": 6
+    },
+    {
+     "type": "Protein",
+     "kind": "nutrient",
+     "unit": "g",
+     "value": 0.91,
+     "description": "Per 100 g, raw",
+     "sort_order": 7
+    },
+    {
+     "type": "Sodium",
+     "kind": "nutrient",
+     "unit": "mg",
+     "value": 0,
+     "description": "Per 100 g, raw",
+     "sort_order": 8
+    },
+    {
+     "type": "Vitamin C",
+     "kind": "nutrient",
+     "unit": "mg",
+     "value": 6.6,
+     "description": "Per 100 g, raw",
+     "sort_order": 9
+    },
+    {
+     "type": "Potassium",
+     "kind": "nutrient",
+     "unit": "mg",
+     "value": 190,
+     "description": "Per 100 g, raw",
+     "sort_order": 10
+    }
+   ],
+   "documents": [
+    {
+     "title": "USDA Pesticide Data Program — Annual Summary",
+     "doc_type": "report",
+     "year": 2022,
+     "source_url": "https://www.ams.usda.gov/sites/default/files/media/PDPAnnualSummary.pdf"
+    },
+    {
+     "title": "USDA PDP Database — commodity results",
+     "doc_type": "report",
+     "year": 2022,
+     "source_url": "https://apps.ams.usda.gov/pdp"
+    },
+    {
+     "title": "USDA FoodData Central — FDC 169928",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://fdc.nal.usda.gov/food-details/169928/nutrients"
+    },
+    {
+     "title": "HMC Farms — official product page",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://www.hmcfarms.com/our-fruit/peaches/"
+    }
+   ]
+  },
+  {
+   "name": "Nectarines",
+   "brand": "HMC Farms",
+   "category": "produce",
+   "status": "published",
+   "image_url": "https://s3.us-west-2.amazonaws.com/static.hmcfarms.com/wp-content/uploads/2024/03/21010421/HMC_Nectarine.png",
+   "score": 45,
+   "score_label": "HIGH RESIDUE",
+   "score_rationale": "Computed from USDA Pesticide Data Program crop-level retail sampling (2015): 95 − 0.30×(% samples with residues: 99.7) − 0.20×(distinct pesticides, capped 50: 50) − (violation rate %, capped 10: 9.7). Residue picture is USDA crop-level testing of conventional nectarines at U.S. retail (2015, 578 samples) — not a lab test of this specific brand. Brand-level testing comes with our lab program. Nutrition from USDA FoodData Central. Government data only.",
+   "lab_tested": false,
+   "description": "99.7% of USDA retail samples carried at least one detectable pesticide residue, across 63 different pesticides. 56 presumptive tolerance violations, all residues with no established tolerance. Going organic makes the biggest difference on nectarines; washing thoroughly helps. Organic option: HMC Farms Organic Nectarines. Still a nutritious whole food — choose the cleaner version, don't skip produce.",
+   "properties": {
+    "Data basis": "USDA PDP 2015 · 578 retail samples · crop-level",
+    "Form": "Fresh · nutrition per 100 g, raw",
+    "Organic option": "HMC Farms Organic Nectarines"
+   },
+   "measurements": [
+    {
+     "type": "Samples with pesticide residues",
+     "kind": "contaminant",
+     "unit": "%",
+     "value": 99.7,
+     "description": "USDA crop-level retail testing, 2015 — not brand-specific",
+     "sort_order": 1
+    },
+    {
+     "type": "Distinct pesticides detected",
+     "kind": "contaminant",
+     "unit": "count",
+     "value": 63,
+     "description": "Across 578 samples of the crop",
+     "sort_order": 2
+    },
+    {
+     "type": "Presumptive tolerance violations",
+     "kind": "contaminant",
+     "unit": "samples",
+     "value": 56,
+     "description": "56 presumptive tolerance violations, all residues with no established tolerance",
+     "sort_order": 3,
+     "risk_count": 1
+    },
+    {
+     "type": "Calories",
+     "kind": "nutrient",
+     "unit": "kcal",
+     "value": 44,
+     "description": "Per 100 g, raw",
+     "sort_order": 4
+    },
+    {
+     "type": "Sugars",
+     "kind": "nutrient",
+     "unit": "g",
+     "value": 7.89,
+     "description": "Per 100 g, raw",
+     "sort_order": 5
+    },
+    {
+     "type": "Fiber",
+     "kind": "nutrient",
+     "unit": "g",
+     "value": 1.7,
+     "description": "Per 100 g, raw",
+     "sort_order": 6
+    },
+    {
+     "type": "Protein",
+     "kind": "nutrient",
+     "unit": "g",
+     "value": 1.06,
+     "description": "Per 100 g, raw",
+     "sort_order": 7
+    },
+    {
+     "type": "Sodium",
+     "kind": "nutrient",
+     "unit": "mg",
+     "value": 0,
+     "description": "Per 100 g, raw",
+     "sort_order": 8
+    },
+    {
+     "type": "Vitamin C",
+     "kind": "nutrient",
+     "unit": "mg",
+     "value": 5.4,
+     "description": "Per 100 g, raw",
+     "sort_order": 9
+    },
+    {
+     "type": "Potassium",
+     "kind": "nutrient",
+     "unit": "mg",
+     "value": 201,
+     "description": "Per 100 g, raw",
+     "sort_order": 10
+    }
+   ],
+   "documents": [
+    {
+     "title": "USDA Pesticide Data Program — Annual Summary",
+     "doc_type": "report",
+     "year": 2015,
+     "source_url": "https://www.ams.usda.gov/sites/default/files/media/PDPAnnualSummary.pdf"
+    },
+    {
+     "title": "USDA PDP Database — commodity results",
+     "doc_type": "report",
+     "year": 2015,
+     "source_url": "https://apps.ams.usda.gov/pdp"
+    },
+    {
+     "title": "USDA FoodData Central — FDC 169914",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://fdc.nal.usda.gov/food-details/169914/nutrients"
+    },
+    {
+     "title": "HMC Farms — official product page",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://www.hmcfarms.com/our-fruit/nectarines/"
+    }
+   ]
+  },
+  {
+   "name": "Pears (Bartlett, Anjou, Bosc)",
+   "brand": "Rainier Fruit",
+   "category": "produce",
+   "status": "published",
+   "image_url": "https://rainierfruit.com/wp-content/uploads/2021/10/Rainier-Fruit-Pears.png",
+   "score": 57,
+   "score_label": "MODERATE RESIDUE",
+   "score_rationale": "Computed from USDA Pesticide Data Program crop-level retail sampling (2022): 95 − 0.30×(% samples with residues: 91.5) − 0.20×(distinct pesticides, capped 50: 50) − (violation rate %, capped 10: 0.1). Residue picture is USDA crop-level testing of conventional pears at U.S. retail (2022, 708 samples) — not a lab test of this specific brand. Brand-level testing comes with our lab program. Nutrition from USDA FoodData Central. Government data only.",
+   "lab_tested": false,
+   "description": "91.5% of USDA retail samples carried at least one detectable pesticide residue, across 55 different pesticides. 1 presumptive tolerance violation (tolylfluanid, no established tolerance). Most residues sit below EPA tolerances; wash well and peel where practical.",
+   "properties": {
+    "Data basis": "USDA PDP 2022 · 708 retail samples · crop-level",
+    "Form": "Fresh · nutrition per 100 g, raw"
+   },
+   "measurements": [
+    {
+     "type": "Samples with pesticide residues",
+     "kind": "contaminant",
+     "unit": "%",
+     "value": 91.5,
+     "description": "USDA crop-level retail testing, 2022 — not brand-specific",
+     "sort_order": 1
+    },
+    {
+     "type": "Distinct pesticides detected",
+     "kind": "contaminant",
+     "unit": "count",
+     "value": 55,
+     "description": "Across 708 samples of the crop",
+     "sort_order": 2
+    },
+    {
+     "type": "Presumptive tolerance violations",
+     "kind": "contaminant",
+     "unit": "samples",
+     "value": 1,
+     "description": "1 presumptive tolerance violation (tolylfluanid, no established tolerance)",
+     "sort_order": 3,
+     "risk_count": 0
+    },
+    {
+     "type": "Calories",
+     "kind": "nutrient",
+     "unit": "kcal",
+     "value": 57,
+     "description": "Per 100 g, raw",
+     "sort_order": 4
+    },
+    {
+     "type": "Sugars",
+     "kind": "nutrient",
+     "unit": "g",
+     "value": 9.75,
+     "description": "Per 100 g, raw",
+     "sort_order": 5
+    },
+    {
+     "type": "Fiber",
+     "kind": "nutrient",
+     "unit": "g",
+     "value": 3.1,
+     "description": "Per 100 g, raw",
+     "sort_order": 6
+    },
+    {
+     "type": "Protein",
+     "kind": "nutrient",
+     "unit": "g",
+     "value": 0.36,
+     "description": "Per 100 g, raw",
+     "sort_order": 7
+    },
+    {
+     "type": "Sodium",
+     "kind": "nutrient",
+     "unit": "mg",
+     "value": 1,
+     "description": "Per 100 g, raw",
+     "sort_order": 8
+    },
+    {
+     "type": "Vitamin C",
+     "kind": "nutrient",
+     "unit": "mg",
+     "value": 4.3,
+     "description": "Per 100 g, raw",
+     "sort_order": 9
+    },
+    {
+     "type": "Potassium",
+     "kind": "nutrient",
+     "unit": "mg",
+     "value": 116,
+     "description": "Per 100 g, raw",
+     "sort_order": 10
+    }
+   ],
+   "documents": [
+    {
+     "title": "USDA Pesticide Data Program — Annual Summary",
+     "doc_type": "report",
+     "year": 2022,
+     "source_url": "https://www.ams.usda.gov/sites/default/files/media/PDPAnnualSummary.pdf"
+    },
+    {
+     "title": "USDA PDP Database — commodity results",
+     "doc_type": "report",
+     "year": 2022,
+     "source_url": "https://apps.ams.usda.gov/pdp"
+    },
+    {
+     "title": "USDA FoodData Central — FDC 169118",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://fdc.nal.usda.gov/food-details/169118/nutrients"
+    },
+    {
+     "title": "Rainier Fruit — official product page",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://rainierfruit.com/pears"
+    }
+   ]
+  },
+  {
+   "name": "Dark Sweet Cherries",
+   "brand": "Stemilt",
+   "category": "produce",
+   "status": "published",
+   "image_url": "https://www.stemilt.com/wp-content/uploads/2026/05/Dark-Sweet-dual-stack-2.png",
+   "score": 59,
+   "score_label": "MODERATE RESIDUE",
+   "score_rationale": "Computed from USDA Pesticide Data Program crop-level retail sampling (2016): 95 − 0.30×(% samples with residues: 96.7) − 0.20×(distinct pesticides, capped 50: 16) − (violation rate %, capped 10: 3.3). Residue picture is USDA crop-level testing of conventional cherries at U.S. retail (2016, 30 samples) — not a lab test of this specific brand. Brand-level testing comes with our lab program. Nutrition from USDA FoodData Central. Government data only.",
+   "lab_tested": false,
+   "description": "96.7% of USDA retail samples carried at least one detectable pesticide residue, across 16 different pesticides. 1 sample over an established tolerance (deltamethrin); small 30-sample rotation year. Most residues sit below EPA tolerances; wash well and peel where practical. Organic option: Stemilt Artisan Organics Dark Sweet Cherries.",
+   "properties": {
+    "Data basis": "USDA PDP 2016 · 30 retail samples · crop-level",
+    "Form": "Fresh · nutrition per 100 g, raw",
+    "Organic option": "Stemilt Artisan Organics Dark Sweet Cherries"
+   },
+   "measurements": [
+    {
+     "type": "Samples with pesticide residues",
+     "kind": "contaminant",
+     "unit": "%",
+     "value": 96.7,
+     "description": "USDA crop-level retail testing, 2016 — not brand-specific",
+     "sort_order": 1
+    },
+    {
+     "type": "Distinct pesticides detected",
+     "kind": "contaminant",
+     "unit": "count",
+     "value": 16,
+     "description": "Across 30 samples of the crop",
+     "sort_order": 2
+    },
+    {
+     "type": "Presumptive tolerance violations",
+     "kind": "contaminant",
+     "unit": "samples",
+     "value": 1,
+     "description": "1 sample over an established tolerance (deltamethrin); small 30-sample rotation year",
+     "sort_order": 3,
+     "risk_count": 1
+    },
+    {
+     "type": "Calories",
+     "kind": "nutrient",
+     "unit": "kcal",
+     "value": 63,
+     "description": "Per 100 g, raw",
+     "sort_order": 4
+    },
+    {
+     "type": "Sugars",
+     "kind": "nutrient",
+     "unit": "g",
+     "value": 12.8,
+     "description": "Per 100 g, raw",
+     "sort_order": 5
+    },
+    {
+     "type": "Fiber",
+     "kind": "nutrient",
+     "unit": "g",
+     "value": 2.1,
+     "description": "Per 100 g, raw",
+     "sort_order": 6
+    },
+    {
+     "type": "Protein",
+     "kind": "nutrient",
+     "unit": "g",
+     "value": 1.06,
+     "description": "Per 100 g, raw",
+     "sort_order": 7
+    },
+    {
+     "type": "Sodium",
+     "kind": "nutrient",
+     "unit": "mg",
+     "value": 0,
+     "description": "Per 100 g, raw",
+     "sort_order": 8
+    },
+    {
+     "type": "Vitamin C",
+     "kind": "nutrient",
+     "unit": "mg",
+     "value": 7.0,
+     "description": "Per 100 g, raw",
+     "sort_order": 9
+    },
+    {
+     "type": "Potassium",
+     "kind": "nutrient",
+     "unit": "mg",
+     "value": 222,
+     "description": "Per 100 g, raw",
+     "sort_order": 10
+    }
+   ],
+   "documents": [
+    {
+     "title": "USDA Pesticide Data Program — Annual Summary",
+     "doc_type": "report",
+     "year": 2016,
+     "source_url": "https://www.ams.usda.gov/sites/default/files/media/PDPAnnualSummary.pdf"
+    },
+    {
+     "title": "USDA PDP Database — commodity results",
+     "doc_type": "report",
+     "year": 2016,
+     "source_url": "https://apps.ams.usda.gov/pdp"
+    },
+    {
+     "title": "USDA FoodData Central — FDC 171719",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://fdc.nal.usda.gov/food-details/171719/nutrients"
+    },
+    {
+     "title": "Stemilt — official product page",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://www.stemilt.com/fruits/cherries/dark-sweet-cherries/"
+    }
+   ]
+  },
+  {
+   "name": "Blueberries",
+   "brand": "Driscoll's",
+   "category": "produce",
+   "status": "published",
+   "image_url": "https://edge.sitecorecloud.io/driscollsin7a07-driscolls1bc6-prod99c8-40a3/media/Project/driscolls/us/Images/Pages/berries/blueberry/PIM1blue-on-wood-1506470101.jpg",
+   "score": 57,
+   "score_label": "MODERATE RESIDUE",
+   "score_rationale": "Computed from USDA Pesticide Data Program crop-level retail sampling (2022): 95 − 0.30×(% samples with residues: 84.0) − 0.20×(distinct pesticides, capped 50: 50) − (violation rate %, capped 10: 2.5). Residue picture is USDA crop-level testing of conventional blueberries at U.S. retail (2022, 482 samples) — not a lab test of this specific brand. Brand-level testing comes with our lab program. Nutrition from USDA FoodData Central. Government data only.",
+   "lab_tested": false,
+   "description": "84.0% of USDA retail samples carried at least one detectable pesticide residue, across 51 different pesticides. 12 presumptive tolerance violations (2 over tolerance; 10 with no established tolerance). Most residues sit below EPA tolerances; wash well and peel where practical. Organic option: Driscoll's Organic Blueberries.",
+   "properties": {
+    "Data basis": "USDA PDP 2022 · 482 retail samples · crop-level",
+    "Form": "Fresh · nutrition per 100 g, raw",
+    "Organic option": "Driscoll's Organic Blueberries"
+   },
+   "measurements": [
+    {
+     "type": "Samples with pesticide residues",
+     "kind": "contaminant",
+     "unit": "%",
+     "value": 84.0,
+     "description": "USDA crop-level retail testing, 2022 — not brand-specific",
+     "sort_order": 1
+    },
+    {
+     "type": "Distinct pesticides detected",
+     "kind": "contaminant",
+     "unit": "count",
+     "value": 51,
+     "description": "Across 482 samples of the crop",
+     "sort_order": 2
+    },
+    {
+     "type": "Presumptive tolerance violations",
+     "kind": "contaminant",
+     "unit": "samples",
+     "value": 12,
+     "description": "12 presumptive tolerance violations (2 over tolerance; 10 with no established tolerance)",
+     "sort_order": 3,
+     "risk_count": 1
+    },
+    {
+     "type": "Calories",
+     "kind": "nutrient",
+     "unit": "kcal",
+     "value": 57,
+     "description": "Per 100 g, raw",
+     "sort_order": 4
+    },
+    {
+     "type": "Sugars",
+     "kind": "nutrient",
+     "unit": "g",
+     "value": 9.96,
+     "description": "Per 100 g, raw",
+     "sort_order": 5
+    },
+    {
+     "type": "Fiber",
+     "kind": "nutrient",
+     "unit": "g",
+     "value": 2.4,
+     "description": "Per 100 g, raw",
+     "sort_order": 6
+    },
+    {
+     "type": "Protein",
+     "kind": "nutrient",
+     "unit": "g",
+     "value": 0.74,
+     "description": "Per 100 g, raw",
+     "sort_order": 7
+    },
+    {
+     "type": "Sodium",
+     "kind": "nutrient",
+     "unit": "mg",
+     "value": 1,
+     "description": "Per 100 g, raw",
+     "sort_order": 8
+    },
+    {
+     "type": "Vitamin C",
+     "kind": "nutrient",
+     "unit": "mg",
+     "value": 9.7,
+     "description": "Per 100 g, raw",
+     "sort_order": 9
+    },
+    {
+     "type": "Potassium",
+     "kind": "nutrient",
+     "unit": "mg",
+     "value": 77,
+     "description": "Per 100 g, raw",
+     "sort_order": 10
+    }
+   ],
+   "documents": [
+    {
+     "title": "USDA Pesticide Data Program — Annual Summary",
+     "doc_type": "report",
+     "year": 2022,
+     "source_url": "https://www.ams.usda.gov/sites/default/files/media/PDPAnnualSummary.pdf"
+    },
+    {
+     "title": "USDA PDP Database — commodity results",
+     "doc_type": "report",
+     "year": 2022,
+     "source_url": "https://apps.ams.usda.gov/pdp"
+    },
+    {
+     "title": "USDA FoodData Central — FDC 171711",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://fdc.nal.usda.gov/food-details/171711/nutrients"
+    },
+    {
+     "title": "Driscoll's — official product page",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://www.driscolls.com/Berries/blueberries"
+    }
+   ]
+  },
+  {
+   "name": "Snipped Green Beans 12 oz",
+   "brand": "Pero Family Farms",
+   "category": "produce",
+   "status": "published",
+   "image_url": "https://www.perofamilyfarms.com/wp-content/uploads/2022/02/org_green_beans_12oz.png",
+   "score": 50,
+   "score_label": "HIGH RESIDUE",
+   "score_rationale": "Computed from USDA Pesticide Data Program crop-level retail sampling (2022): 95 − 0.30×(% samples with residues: 83.2) − 0.20×(distinct pesticides, capped 50: 50) − (violation rate %, capped 10: 10.0). Residue picture is USDA crop-level testing of conventional green beans at U.S. retail (2022, 530 samples) — not a lab test of this specific brand. Brand-level testing comes with our lab program. Nutrition from USDA FoodData Central. Government data only.",
+   "lab_tested": false,
+   "description": "83.2% of USDA retail samples carried at least one detectable pesticide residue, across 78 different pesticides. 88 presumptive tolerance violations (38 over tolerance; incl. methamidophos and acephate, not permitted on this crop). Going organic makes the biggest difference on green beans; washing thoroughly helps. Organic option: Pero Family Farms Organic Snipped Green Beans. Still a nutritious whole food — choose the cleaner version, don't skip produce.",
+   "properties": {
+    "Data basis": "USDA PDP 2022 · 530 retail samples · crop-level",
+    "Form": "Fresh · nutrition per 100 g, raw",
+    "Organic option": "Pero Family Farms Organic Snipped Green Beans"
+   },
+   "measurements": [
+    {
+     "type": "Samples with pesticide residues",
+     "kind": "contaminant",
+     "unit": "%",
+     "value": 83.2,
+     "description": "USDA crop-level retail testing, 2022 — not brand-specific",
+     "sort_order": 1
+    },
+    {
+     "type": "Distinct pesticides detected",
+     "kind": "contaminant",
+     "unit": "count",
+     "value": 78,
+     "description": "Across 530 samples of the crop",
+     "sort_order": 2
+    },
+    {
+     "type": "Presumptive tolerance violations",
+     "kind": "contaminant",
+     "unit": "samples",
+     "value": 88,
+     "description": "88 presumptive tolerance violations (38 over tolerance; incl. methamidophos and acephate, not permitted on this crop)",
+     "sort_order": 3,
+     "risk_count": 1
+    },
+    {
+     "type": "Calories",
+     "kind": "nutrient",
+     "unit": "kcal",
+     "value": 31,
+     "description": "Per 100 g, raw",
+     "sort_order": 4
+    },
+    {
+     "type": "Sugars",
+     "kind": "nutrient",
+     "unit": "g",
+     "value": 3.26,
+     "description": "Per 100 g, raw",
+     "sort_order": 5
+    },
+    {
+     "type": "Fiber",
+     "kind": "nutrient",
+     "unit": "g",
+     "value": 2.7,
+     "description": "Per 100 g, raw",
+     "sort_order": 6
+    },
+    {
+     "type": "Protein",
+     "kind": "nutrient",
+     "unit": "g",
+     "value": 1.83,
+     "description": "Per 100 g, raw",
+     "sort_order": 7
+    },
+    {
+     "type": "Sodium",
+     "kind": "nutrient",
+     "unit": "mg",
+     "value": 6,
+     "description": "Per 100 g, raw",
+     "sort_order": 8
+    },
+    {
+     "type": "Vitamin C",
+     "kind": "nutrient",
+     "unit": "mg",
+     "value": 12.2,
+     "description": "Per 100 g, raw",
+     "sort_order": 9
+    },
+    {
+     "type": "Potassium",
+     "kind": "nutrient",
+     "unit": "mg",
+     "value": 211,
+     "description": "Per 100 g, raw",
+     "sort_order": 10
+    }
+   ],
+   "documents": [
+    {
+     "title": "USDA Pesticide Data Program — Annual Summary",
+     "doc_type": "report",
+     "year": 2022,
+     "source_url": "https://www.ams.usda.gov/sites/default/files/media/PDPAnnualSummary.pdf"
+    },
+    {
+     "title": "USDA PDP Database — commodity results",
+     "doc_type": "report",
+     "year": 2022,
+     "source_url": "https://apps.ams.usda.gov/pdp"
+    },
+    {
+     "title": "USDA FoodData Central — FDC 169961",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://fdc.nal.usda.gov/food-details/169961/nutrients"
+    },
+    {
+     "title": "Pero Family Farms — official product page",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://www.perofamilyfarms.com/product/snipped-green-beans/"
+    }
+   ]
+  },
+  {
+   "name": "Bell Peppers (Green, Yellow, Red, Orange)",
+   "brand": "Pero Family Farms",
+   "category": "produce",
+   "status": "published",
+   "image_url": "https://www.perofamilyfarms.com/wp-content/uploads/2022/02/organic_bell-peppers-4-set.png",
+   "score": 56,
+   "score_label": "MODERATE RESIDUE",
+   "score_rationale": "Computed from USDA Pesticide Data Program crop-level retail sampling (2021): 95 − 0.30×(% samples with residues: 89.6) − 0.20×(distinct pesticides, capped 50: 50) − (violation rate %, capped 10: 2.4). Residue picture is USDA crop-level testing of conventional bell peppers at U.S. retail (2021, 328 samples) — not a lab test of this specific brand. Brand-level testing comes with our lab program. Nutrition from USDA FoodData Central. Government data only.",
+   "lab_tested": false,
+   "description": "89.6% of USDA retail samples carried at least one detectable pesticide residue, across 66 different pesticides. 8 presumptive tolerance violations, all residues with no established tolerance. Most residues sit below EPA tolerances; wash well and peel where practical. Organic option: Pero Family Farms Organic Bell Peppers.",
+   "properties": {
+    "Data basis": "USDA PDP 2021 · 328 retail samples · crop-level",
+    "Form": "Fresh · nutrition per 100 g, raw",
+    "Organic option": "Pero Family Farms Organic Bell Peppers"
+   },
+   "measurements": [
+    {
+     "type": "Samples with pesticide residues",
+     "kind": "contaminant",
+     "unit": "%",
+     "value": 89.6,
+     "description": "USDA crop-level retail testing, 2021 — not brand-specific",
+     "sort_order": 1
+    },
+    {
+     "type": "Distinct pesticides detected",
+     "kind": "contaminant",
+     "unit": "count",
+     "value": 66,
+     "description": "Across 328 samples of the crop",
+     "sort_order": 2
+    },
+    {
+     "type": "Presumptive tolerance violations",
+     "kind": "contaminant",
+     "unit": "samples",
+     "value": 8,
+     "description": "8 presumptive tolerance violations, all residues with no established tolerance",
+     "sort_order": 3,
+     "risk_count": 1
+    },
+    {
+     "type": "Calories",
+     "kind": "nutrient",
+     "unit": "kcal",
+     "value": 20,
+     "description": "Per 100 g, raw",
+     "sort_order": 4
+    },
+    {
+     "type": "Sugars",
+     "kind": "nutrient",
+     "unit": "g",
+     "value": 2.4,
+     "description": "Per 100 g, raw",
+     "sort_order": 5
+    },
+    {
+     "type": "Fiber",
+     "kind": "nutrient",
+     "unit": "g",
+     "value": 1.7,
+     "description": "Per 100 g, raw",
+     "sort_order": 6
+    },
+    {
+     "type": "Protein",
+     "kind": "nutrient",
+     "unit": "g",
+     "value": 0.86,
+     "description": "Per 100 g, raw",
+     "sort_order": 7
+    },
+    {
+     "type": "Sodium",
+     "kind": "nutrient",
+     "unit": "mg",
+     "value": 3,
+     "description": "Per 100 g, raw",
+     "sort_order": 8
+    },
+    {
+     "type": "Vitamin C",
+     "kind": "nutrient",
+     "unit": "mg",
+     "value": 80.4,
+     "description": "Per 100 g, raw",
+     "sort_order": 9
+    },
+    {
+     "type": "Potassium",
+     "kind": "nutrient",
+     "unit": "mg",
+     "value": 175,
+     "description": "Per 100 g, raw",
+     "sort_order": 10
+    }
+   ],
+   "documents": [
+    {
+     "title": "USDA Pesticide Data Program — Annual Summary",
+     "doc_type": "report",
+     "year": 2021,
+     "source_url": "https://www.ams.usda.gov/sites/default/files/media/PDPAnnualSummary.pdf"
+    },
+    {
+     "title": "USDA PDP Database — commodity results",
+     "doc_type": "report",
+     "year": 2021,
+     "source_url": "https://apps.ams.usda.gov/pdp"
+    },
+    {
+     "title": "USDA FoodData Central — FDC 170427",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://fdc.nal.usda.gov/food-details/170427/nutrients"
+    },
+    {
+     "title": "Pero Family Farms — official product page",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://www.perofamilyfarms.com/product/bell-peppers-green-yellow-red-orange/"
+    }
+   ]
+  },
+  {
+   "name": "Celery Sticks 1.25 lb",
+   "brand": "Dandy",
+   "category": "produce",
+   "status": "published",
+   "image_url": "https://www.dudafresh.com/hubfs/p-main-celery%20stick%201.25%20lb%20main.jpg",
+   "score": 57,
+   "score_label": "MODERATE RESIDUE",
+   "score_rationale": "Computed from USDA Pesticide Data Program crop-level retail sampling (2023): 95 − 0.30×(% samples with residues: 84.8) − 0.20×(distinct pesticides, capped 50: 50) − (violation rate %, capped 10: 2.6). Residue picture is USDA crop-level testing of conventional celery at U.S. retail (2023, 349 samples) — not a lab test of this specific brand. Brand-level testing comes with our lab program. Nutrition from USDA FoodData Central. Government data only.",
+   "lab_tested": false,
+   "description": "84.8% of USDA retail samples carried at least one detectable pesticide residue, across 55 different pesticides. 9 presumptive tolerance violations (3 over tolerance, incl. chlorpyrifos). Most residues sit below EPA tolerances; wash well and peel where practical. Organic option: Dandy Organic Celery Sticks.",
+   "properties": {
+    "Data basis": "USDA PDP 2023 · 349 retail samples · crop-level",
+    "Form": "Fresh · nutrition per 100 g, raw",
+    "Organic option": "Dandy Organic Celery Sticks"
+   },
+   "measurements": [
+    {
+     "type": "Samples with pesticide residues",
+     "kind": "contaminant",
+     "unit": "%",
+     "value": 84.8,
+     "description": "USDA crop-level retail testing, 2023 — not brand-specific",
+     "sort_order": 1
+    },
+    {
+     "type": "Distinct pesticides detected",
+     "kind": "contaminant",
+     "unit": "count",
+     "value": 55,
+     "description": "Across 349 samples of the crop",
+     "sort_order": 2
+    },
+    {
+     "type": "Presumptive tolerance violations",
+     "kind": "contaminant",
+     "unit": "samples",
+     "value": 9,
+     "description": "9 presumptive tolerance violations (3 over tolerance, incl. chlorpyrifos)",
+     "sort_order": 3,
+     "risk_count": 1
+    },
+    {
+     "type": "Calories",
+     "kind": "nutrient",
+     "unit": "kcal",
+     "value": 14,
+     "description": "Per 100 g, raw",
+     "sort_order": 4
+    },
+    {
+     "type": "Sugars",
+     "kind": "nutrient",
+     "unit": "g",
+     "value": 1.34,
+     "description": "Per 100 g, raw",
+     "sort_order": 5
+    },
+    {
+     "type": "Fiber",
+     "kind": "nutrient",
+     "unit": "g",
+     "value": 1.6,
+     "description": "Per 100 g, raw",
+     "sort_order": 6
+    },
+    {
+     "type": "Protein",
+     "kind": "nutrient",
+     "unit": "g",
+     "value": 0.69,
+     "description": "Per 100 g, raw",
+     "sort_order": 7
+    },
+    {
+     "type": "Sodium",
+     "kind": "nutrient",
+     "unit": "mg",
+     "value": 80,
+     "description": "Per 100 g, raw",
+     "sort_order": 8
+    },
+    {
+     "type": "Vitamin C",
+     "kind": "nutrient",
+     "unit": "mg",
+     "value": 3.1,
+     "description": "Per 100 g, raw",
+     "sort_order": 9
+    },
+    {
+     "type": "Potassium",
+     "kind": "nutrient",
+     "unit": "mg",
+     "value": 260,
+     "description": "Per 100 g, raw",
+     "sort_order": 10
+    }
+   ],
+   "documents": [
+    {
+     "title": "USDA Pesticide Data Program — Annual Summary",
+     "doc_type": "report",
+     "year": 2023,
+     "source_url": "https://www.ams.usda.gov/sites/default/files/media/PDPAnnualSummary.pdf"
+    },
+    {
+     "title": "USDA PDP Database — commodity results",
+     "doc_type": "report",
+     "year": 2023,
+     "source_url": "https://apps.ams.usda.gov/pdp"
+    },
+    {
+     "title": "USDA FoodData Central — FDC 169988",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://fdc.nal.usda.gov/food-details/169988/nutrients"
+    },
+    {
+     "title": "Dandy — official product page",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://www.dudafresh.com/products/celery-sticks-1.25-lb-bag"
+    }
+   ]
+  },
+  {
+   "name": "Little Duos Creamer Potatoes 1.5 lb",
+   "brand": "The Little Potato Company",
+   "category": "produce",
+   "status": "published",
+   "image_url": "https://www.littlepotatoes.com/wp-content/uploads/2023/02/Little-Duos_1.5-lbs-US_Front_cropped.webp",
+   "score": 62,
+   "score_label": "MODERATE RESIDUE",
+   "score_rationale": "Computed from USDA Pesticide Data Program crop-level retail sampling (2024): 95 − 0.30×(% samples with residues: 98.3) − 0.20×(distinct pesticides, capped 50: 17) − (violation rate %, capped 10: 0.0). Residue picture is USDA crop-level testing of conventional potatoes at U.S. retail (2024, 177 samples) — not a lab test of this specific brand. Brand-level testing comes with our lab program. Nutrition from USDA FoodData Central. Government data only.",
+   "lab_tested": false,
+   "description": "98.3% of USDA retail samples carried at least one detectable pesticide residue, across 17 different pesticides. 0 presumptive tolerance violations in the 2024 samples. Most residues sit below EPA tolerances; wash well and peel where practical.",
+   "properties": {
+    "Data basis": "USDA PDP 2024 · 177 retail samples · crop-level",
+    "Form": "Fresh · nutrition per 100 g, raw"
+   },
+   "measurements": [
+    {
+     "type": "Samples with pesticide residues",
+     "kind": "contaminant",
+     "unit": "%",
+     "value": 98.3,
+     "description": "USDA crop-level retail testing, 2024 — not brand-specific",
+     "sort_order": 1
+    },
+    {
+     "type": "Distinct pesticides detected",
+     "kind": "contaminant",
+     "unit": "count",
+     "value": 17,
+     "description": "Across 177 samples of the crop",
+     "sort_order": 2
+    },
+    {
+     "type": "Presumptive tolerance violations",
+     "kind": "contaminant",
+     "unit": "samples",
+     "value": 0,
+     "description": "0 presumptive tolerance violations in the 2024 samples",
+     "sort_order": 3,
+     "risk_count": 0
+    },
+    {
+     "type": "Calories",
+     "kind": "nutrient",
+     "unit": "kcal",
+     "value": 77,
+     "description": "Per 100 g, raw",
+     "sort_order": 4
+    },
+    {
+     "type": "Sugars",
+     "kind": "nutrient",
+     "unit": "g",
+     "value": 0.82,
+     "description": "Per 100 g, raw",
+     "sort_order": 5
+    },
+    {
+     "type": "Fiber",
+     "kind": "nutrient",
+     "unit": "g",
+     "value": 2.1,
+     "description": "Per 100 g, raw",
+     "sort_order": 6
+    },
+    {
+     "type": "Protein",
+     "kind": "nutrient",
+     "unit": "g",
+     "value": 2.05,
+     "description": "Per 100 g, raw",
+     "sort_order": 7
+    },
+    {
+     "type": "Sodium",
+     "kind": "nutrient",
+     "unit": "mg",
+     "value": 6,
+     "description": "Per 100 g, raw",
+     "sort_order": 8
+    },
+    {
+     "type": "Vitamin C",
+     "kind": "nutrient",
+     "unit": "mg",
+     "value": 19.7,
+     "description": "Per 100 g, raw",
+     "sort_order": 9
+    },
+    {
+     "type": "Potassium",
+     "kind": "nutrient",
+     "unit": "mg",
+     "value": 425,
+     "description": "Per 100 g, raw",
+     "sort_order": 10
+    }
+   ],
+   "documents": [
+    {
+     "title": "USDA Pesticide Data Program — Annual Summary",
+     "doc_type": "report",
+     "year": 2024,
+     "source_url": "https://www.ams.usda.gov/sites/default/files/media/PDPAnnualSummary.pdf"
+    },
+    {
+     "title": "USDA PDP Database — commodity results",
+     "doc_type": "report",
+     "year": 2024,
+     "source_url": "https://apps.ams.usda.gov/pdp"
+    },
+    {
+     "title": "USDA FoodData Central — FDC 170026",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://fdc.nal.usda.gov/food-details/170026/nutrients"
+    },
+    {
+     "title": "The Little Potato Company — official product page",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://www.littlepotatoes.com/product/little-duos/"
+    }
+   ]
+  },
+  {
+   "name": "Cherubs Grape Tomatoes 10 oz",
+   "brand": "NatureSweet",
+   "category": "produce",
+   "status": "published",
+   "image_url": "https://naturesweet.com/wp-content/uploads/2022/07/Cherubs-1200x630-1.png",
+   "score": 49,
+   "score_label": "HIGH RESIDUE",
+   "score_rationale": "Computed from USDA Pesticide Data Program crop-level retail sampling (2023): 95 − 0.30×(% samples with residues: 86.4) − 0.20×(distinct pesticides, capped 50: 50) − (violation rate %, capped 10: 10.0). Residue picture is USDA crop-level testing of conventional tomatoes at U.S. retail (2023, 708 samples) — not a lab test of this specific brand. Brand-level testing comes with our lab program. Nutrition from USDA FoodData Central. Government data only.",
+   "lab_tested": false,
+   "description": "86.4% of USDA retail samples carried at least one detectable pesticide residue, across 95 different pesticides. 76 presumptive tolerance violations (4 over tolerance; 72 with no established tolerance). Going organic makes the biggest difference on tomatoes; washing thoroughly helps. Still a nutritious whole food — choose the cleaner version, don't skip produce.",
+   "properties": {
+    "Data basis": "USDA PDP 2023 · 708 retail samples · crop-level",
+    "Form": "Fresh · nutrition per 100 g, raw"
+   },
+   "measurements": [
+    {
+     "type": "Samples with pesticide residues",
+     "kind": "contaminant",
+     "unit": "%",
+     "value": 86.4,
+     "description": "USDA crop-level retail testing, 2023 — not brand-specific",
+     "sort_order": 1
+    },
+    {
+     "type": "Distinct pesticides detected",
+     "kind": "contaminant",
+     "unit": "count",
+     "value": 95,
+     "description": "Across 708 samples of the crop",
+     "sort_order": 2
+    },
+    {
+     "type": "Presumptive tolerance violations",
+     "kind": "contaminant",
+     "unit": "samples",
+     "value": 76,
+     "description": "76 presumptive tolerance violations (4 over tolerance; 72 with no established tolerance)",
+     "sort_order": 3,
+     "risk_count": 1
+    },
+    {
+     "type": "Calories",
+     "kind": "nutrient",
+     "unit": "kcal",
+     "value": 18,
+     "description": "Per 100 g, raw",
+     "sort_order": 4
+    },
+    {
+     "type": "Sugars",
+     "kind": "nutrient",
+     "unit": "g",
+     "value": 2.63,
+     "description": "Per 100 g, raw",
+     "sort_order": 5
+    },
+    {
+     "type": "Fiber",
+     "kind": "nutrient",
+     "unit": "g",
+     "value": 1.2,
+     "description": "Per 100 g, raw",
+     "sort_order": 6
+    },
+    {
+     "type": "Protein",
+     "kind": "nutrient",
+     "unit": "g",
+     "value": 0.88,
+     "description": "Per 100 g, raw",
+     "sort_order": 7
+    },
+    {
+     "type": "Sodium",
+     "kind": "nutrient",
+     "unit": "mg",
+     "value": 5,
+     "description": "Per 100 g, raw",
+     "sort_order": 8
+    },
+    {
+     "type": "Vitamin C",
+     "kind": "nutrient",
+     "unit": "mg",
+     "value": 13.7,
+     "description": "Per 100 g, raw",
+     "sort_order": 9
+    },
+    {
+     "type": "Potassium",
+     "kind": "nutrient",
+     "unit": "mg",
+     "value": 237,
+     "description": "Per 100 g, raw",
+     "sort_order": 10
+    }
+   ],
+   "documents": [
+    {
+     "title": "USDA Pesticide Data Program — Annual Summary",
+     "doc_type": "report",
+     "year": 2023,
+     "source_url": "https://www.ams.usda.gov/sites/default/files/media/PDPAnnualSummary.pdf"
+    },
+    {
+     "title": "USDA PDP Database — commodity results",
+     "doc_type": "report",
+     "year": 2023,
+     "source_url": "https://apps.ams.usda.gov/pdp"
+    },
+    {
+     "title": "USDA FoodData Central — FDC 170457",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://fdc.nal.usda.gov/food-details/170457/nutrients"
+    },
+    {
+     "title": "NatureSweet — official product page",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://naturesweet.com/products/cherubs/"
+    }
+   ]
+  },
+  {
+   "name": "ONE SWEET Long English Cucumbers",
+   "brand": "SUNSET",
+   "category": "produce",
+   "status": "published",
+   "image_url": "https://www.sunsetgrown.com/wp-content/uploads/2020/10/OneSweetCucumbers_Packaging_001-2-300x277.png",
+   "score": 55,
+   "score_label": "MODERATE RESIDUE",
+   "score_rationale": "Computed from USDA Pesticide Data Program crop-level retail sampling (2024): 95 − 0.30×(% samples with residues: 84.9) − 0.20×(distinct pesticides, capped 50: 50) − (violation rate %, capped 10: 4.8). Residue picture is USDA crop-level testing of conventional cucumbers at U.S. retail (2024, 708 samples) — not a lab test of this specific brand. Brand-level testing comes with our lab program. Nutrition from USDA FoodData Central. Government data only.",
+   "lab_tested": false,
+   "description": "84.9% of USDA retail samples carried at least one detectable pesticide residue, across 87 different pesticides. 34 presumptive tolerance violations (5 over tolerance; 30 with no established tolerance). Most residues sit below EPA tolerances; wash well and peel where practical. Organic option: SUNSET Organic Mini Cucumbers.",
+   "properties": {
+    "Data basis": "USDA PDP 2024 · 708 retail samples · crop-level",
+    "Form": "Fresh · nutrition per 100 g, raw",
+    "Organic option": "SUNSET Organic Mini Cucumbers"
+   },
+   "measurements": [
+    {
+     "type": "Samples with pesticide residues",
+     "kind": "contaminant",
+     "unit": "%",
+     "value": 84.9,
+     "description": "USDA crop-level retail testing, 2024 — not brand-specific",
+     "sort_order": 1
+    },
+    {
+     "type": "Distinct pesticides detected",
+     "kind": "contaminant",
+     "unit": "count",
+     "value": 87,
+     "description": "Across 708 samples of the crop",
+     "sort_order": 2
+    },
+    {
+     "type": "Presumptive tolerance violations",
+     "kind": "contaminant",
+     "unit": "samples",
+     "value": 34,
+     "description": "34 presumptive tolerance violations (5 over tolerance; 30 with no established tolerance)",
+     "sort_order": 3,
+     "risk_count": 1
+    },
+    {
+     "type": "Calories",
+     "kind": "nutrient",
+     "unit": "kcal",
+     "value": 15,
+     "description": "Per 100 g, raw",
+     "sort_order": 4
+    },
+    {
+     "type": "Sugars",
+     "kind": "nutrient",
+     "unit": "g",
+     "value": 1.67,
+     "description": "Per 100 g, raw",
+     "sort_order": 5
+    },
+    {
+     "type": "Fiber",
+     "kind": "nutrient",
+     "unit": "g",
+     "value": 0.5,
+     "description": "Per 100 g, raw",
+     "sort_order": 6
+    },
+    {
+     "type": "Protein",
+     "kind": "nutrient",
+     "unit": "g",
+     "value": 0.65,
+     "description": "Per 100 g, raw",
+     "sort_order": 7
+    },
+    {
+     "type": "Sodium",
+     "kind": "nutrient",
+     "unit": "mg",
+     "value": 2,
+     "description": "Per 100 g, raw",
+     "sort_order": 8
+    },
+    {
+     "type": "Vitamin C",
+     "kind": "nutrient",
+     "unit": "mg",
+     "value": 2.8,
+     "description": "Per 100 g, raw",
+     "sort_order": 9
+    },
+    {
+     "type": "Potassium",
+     "kind": "nutrient",
+     "unit": "mg",
+     "value": 147,
+     "description": "Per 100 g, raw",
+     "sort_order": 10
+    }
+   ],
+   "documents": [
+    {
+     "title": "USDA Pesticide Data Program — Annual Summary",
+     "doc_type": "report",
+     "year": 2024,
+     "source_url": "https://www.ams.usda.gov/sites/default/files/media/PDPAnnualSummary.pdf"
+    },
+    {
+     "title": "USDA PDP Database — commodity results",
+     "doc_type": "report",
+     "year": 2024,
+     "source_url": "https://apps.ams.usda.gov/pdp"
+    },
+    {
+     "title": "USDA FoodData Central — FDC 168409",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://fdc.nal.usda.gov/food-details/168409/nutrients"
+    },
+    {
+     "title": "SUNSET — official product page",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://www.sunsetgrown.com/our-produce/cucumbers/"
+    }
+   ]
+  },
+  {
+   "name": "Iceberg Garden 12 oz",
+   "brand": "Fresh Express",
+   "category": "produce",
+   "status": "published",
+   "image_url": "https://www.freshexpress.com/wp-content/uploads/2025/05/FEX25_Garden_IcebergGarden_Bag_12oz_71074_US_FRONT-scaled.png",
+   "score": 69,
+   "score_label": "MODERATE RESIDUE",
+   "score_rationale": "Computed from USDA Pesticide Data Program crop-level retail sampling (2024): 95 − 0.30×(% samples with residues: 53.5) − 0.20×(distinct pesticides, capped 50: 50) − (violation rate %, capped 10: 0.4). Residue picture is USDA crop-level testing of conventional lettuce at U.S. retail (2024, 708 samples) — not a lab test of this specific brand. Brand-level testing comes with our lab program. Nutrition from USDA FoodData Central. Government data only.",
+   "lab_tested": false,
+   "description": "53.5% of USDA retail samples carried at least one detectable pesticide residue, across 51 different pesticides. 3 presumptive tolerance violations, all residues with no established tolerance. Most residues sit below EPA tolerances; wash well and peel where practical.",
+   "properties": {
+    "Data basis": "USDA PDP 2024 · 708 retail samples · crop-level",
+    "Form": "Fresh · nutrition per 100 g, raw"
+   },
+   "measurements": [
+    {
+     "type": "Samples with pesticide residues",
+     "kind": "contaminant",
+     "unit": "%",
+     "value": 53.5,
+     "description": "USDA crop-level retail testing, 2024 — not brand-specific",
+     "sort_order": 1
+    },
+    {
+     "type": "Distinct pesticides detected",
+     "kind": "contaminant",
+     "unit": "count",
+     "value": 51,
+     "description": "Across 708 samples of the crop",
+     "sort_order": 2
+    },
+    {
+     "type": "Presumptive tolerance violations",
+     "kind": "contaminant",
+     "unit": "samples",
+     "value": 3,
+     "description": "3 presumptive tolerance violations, all residues with no established tolerance",
+     "sort_order": 3,
+     "risk_count": 0
+    },
+    {
+     "type": "Calories",
+     "kind": "nutrient",
+     "unit": "kcal",
+     "value": 14,
+     "description": "Per 100 g, raw",
+     "sort_order": 4
+    },
+    {
+     "type": "Sugars",
+     "kind": "nutrient",
+     "unit": "g",
+     "value": 1.97,
+     "description": "Per 100 g, raw",
+     "sort_order": 5
+    },
+    {
+     "type": "Fiber",
+     "kind": "nutrient",
+     "unit": "g",
+     "value": 1.2,
+     "description": "Per 100 g, raw",
+     "sort_order": 6
+    },
+    {
+     "type": "Protein",
+     "kind": "nutrient",
+     "unit": "g",
+     "value": 0.9,
+     "description": "Per 100 g, raw",
+     "sort_order": 7
+    },
+    {
+     "type": "Sodium",
+     "kind": "nutrient",
+     "unit": "mg",
+     "value": 10,
+     "description": "Per 100 g, raw",
+     "sort_order": 8
+    },
+    {
+     "type": "Vitamin C",
+     "kind": "nutrient",
+     "unit": "mg",
+     "value": 2.8,
+     "description": "Per 100 g, raw",
+     "sort_order": 9
+    },
+    {
+     "type": "Potassium",
+     "kind": "nutrient",
+     "unit": "mg",
+     "value": 141,
+     "description": "Per 100 g, raw",
+     "sort_order": 10
+    }
+   ],
+   "documents": [
+    {
+     "title": "USDA Pesticide Data Program — Annual Summary",
+     "doc_type": "report",
+     "year": 2024,
+     "source_url": "https://www.ams.usda.gov/sites/default/files/media/PDPAnnualSummary.pdf"
+    },
+    {
+     "title": "USDA PDP Database — commodity results",
+     "doc_type": "report",
+     "year": 2024,
+     "source_url": "https://apps.ams.usda.gov/pdp"
+    },
+    {
+     "title": "USDA FoodData Central — FDC 169248",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://fdc.nal.usda.gov/food-details/169248/nutrients"
+    },
+    {
+     "title": "Fresh Express — official product page",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://www.freshexpress.com/products/garden/iceberg-garden"
+    }
+   ]
+  },
+  {
+   "name": "Whole Carrots (USDA Organic)",
+   "brand": "Cal-Organic Farms",
+   "category": "produce",
+   "status": "published",
+   "image_url": "https://calorganicfarms.com/wp-content/uploads/2018/01/Cello-Carrots-on-Wood-small.jpg",
+   "score": 77,
+   "score_label": "LOW RESIDUE",
+   "score_rationale": "Computed from USDA Pesticide Data Program crop-level retail sampling (2022): 95 − 0.30×(% samples with residues: 49.7) − 0.20×(distinct pesticides, capped 50: 14) − (violation rate %, capped 10: 0.0). Residue picture is USDA crop-level testing of conventional carrots at U.S. retail (2022, 177 samples) — not a lab test of this specific brand. Brand-level testing comes with our lab program. Nutrition from USDA FoodData Central. Government data only.",
+   "lab_tested": false,
+   "description": "49.7% of USDA retail samples carried at least one detectable pesticide residue, across 14 different pesticides. 0 presumptive tolerance violations in the 2022 samples. NOTE: this product is USDA Organic — the figures above describe the conventional crop; organic rules prohibit most synthetic pesticides, so the organic version typically carries far fewer residues.",
+   "properties": {
+    "Data basis": "USDA PDP 2022 · 177 retail samples · crop-level",
+    "Form": "Fresh · nutrition per 100 g, raw",
+    "Certification": "USDA Organic (whole line)"
+   },
+   "measurements": [
+    {
+     "type": "Samples with pesticide residues",
+     "kind": "contaminant",
+     "unit": "%",
+     "value": 49.7,
+     "description": "USDA crop-level retail testing, 2022 — not brand-specific",
+     "sort_order": 1
+    },
+    {
+     "type": "Distinct pesticides detected",
+     "kind": "contaminant",
+     "unit": "count",
+     "value": 14,
+     "description": "Across 177 samples of the crop",
+     "sort_order": 2
+    },
+    {
+     "type": "Presumptive tolerance violations",
+     "kind": "contaminant",
+     "unit": "samples",
+     "value": 0,
+     "description": "0 presumptive tolerance violations in the 2022 samples",
+     "sort_order": 3,
+     "risk_count": 0
+    },
+    {
+     "type": "Calories",
+     "kind": "nutrient",
+     "unit": "kcal",
+     "value": 41,
+     "description": "Per 100 g, raw",
+     "sort_order": 4
+    },
+    {
+     "type": "Sugars",
+     "kind": "nutrient",
+     "unit": "g",
+     "value": 4.74,
+     "description": "Per 100 g, raw",
+     "sort_order": 5
+    },
+    {
+     "type": "Fiber",
+     "kind": "nutrient",
+     "unit": "g",
+     "value": 2.8,
+     "description": "Per 100 g, raw",
+     "sort_order": 6
+    },
+    {
+     "type": "Protein",
+     "kind": "nutrient",
+     "unit": "g",
+     "value": 0.93,
+     "description": "Per 100 g, raw",
+     "sort_order": 7
+    },
+    {
+     "type": "Sodium",
+     "kind": "nutrient",
+     "unit": "mg",
+     "value": 69,
+     "description": "Per 100 g, raw",
+     "sort_order": 8
+    },
+    {
+     "type": "Vitamin C",
+     "kind": "nutrient",
+     "unit": "mg",
+     "value": 5.9,
+     "description": "Per 100 g, raw",
+     "sort_order": 9
+    },
+    {
+     "type": "Potassium",
+     "kind": "nutrient",
+     "unit": "mg",
+     "value": 320,
+     "description": "Per 100 g, raw",
+     "sort_order": 10
+    }
+   ],
+   "documents": [
+    {
+     "title": "USDA Pesticide Data Program — Annual Summary",
+     "doc_type": "report",
+     "year": 2022,
+     "source_url": "https://www.ams.usda.gov/sites/default/files/media/PDPAnnualSummary.pdf"
+    },
+    {
+     "title": "USDA PDP Database — commodity results",
+     "doc_type": "report",
+     "year": 2022,
+     "source_url": "https://apps.ams.usda.gov/pdp"
+    },
+    {
+     "title": "USDA FoodData Central — FDC 170393",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://fdc.nal.usda.gov/food-details/170393/nutrients"
+    },
+    {
+     "title": "Cal-Organic Farms — official product page",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://calorganicfarms.com/products/cello-carrots/"
+    }
+   ]
+  },
+  {
+   "name": "Hass Avocados",
+   "brand": "Mission",
+   "category": "produce",
+   "status": "published",
+   "image_url": "https://missionproduce.com/wp-content/uploads/2025/08/Mission_FtdImg_Product-Avocados.jpg",
+   "score": 87,
+   "score_label": "VERY CLEAN",
+   "score_rationale": "Computed from USDA Pesticide Data Program crop-level retail sampling (2024): 95 − 0.30×(% samples with residues: 11.9) − 0.20×(distinct pesticides, capped 50: 17) − (violation rate %, capped 10: 1.1). Residue picture is USDA crop-level testing of conventional avocados at U.S. retail (2024, 706 samples) — not a lab test of this specific brand. Brand-level testing comes with our lab program. Nutrition from USDA FoodData Central. Government data only.",
+   "lab_tested": false,
+   "description": "11.9% of USDA retail samples carried at least one detectable pesticide residue, across 17 different pesticides. 8 presumptive tolerance violations (1 over tolerance; 7 with no established tolerance). One of the cleanest choices in the produce aisle — conventional is fine here.",
+   "properties": {
+    "Data basis": "USDA PDP 2024 · 706 retail samples · crop-level",
+    "Form": "Fresh · nutrition per 100 g, raw",
+    "Organic option": "Mission Organic Avocados"
+   },
+   "measurements": [
+    {
+     "type": "Samples with pesticide residues",
+     "kind": "contaminant",
+     "unit": "%",
+     "value": 11.9,
+     "description": "USDA crop-level retail testing, 2024 — not brand-specific",
+     "sort_order": 1
+    },
+    {
+     "type": "Distinct pesticides detected",
+     "kind": "contaminant",
+     "unit": "count",
+     "value": 17,
+     "description": "Across 706 samples of the crop",
+     "sort_order": 2
+    },
+    {
+     "type": "Presumptive tolerance violations",
+     "kind": "contaminant",
+     "unit": "samples",
+     "value": 8,
+     "description": "8 presumptive tolerance violations (1 over tolerance; 7 with no established tolerance)",
+     "sort_order": 3,
+     "risk_count": 0
+    },
+    {
+     "type": "Calories",
+     "kind": "nutrient",
+     "unit": "kcal",
+     "value": 160,
+     "description": "Per 100 g, raw",
+     "sort_order": 4
+    },
+    {
+     "type": "Sugars",
+     "kind": "nutrient",
+     "unit": "g",
+     "value": 0.66,
+     "description": "Per 100 g, raw",
+     "sort_order": 5
+    },
+    {
+     "type": "Fiber",
+     "kind": "nutrient",
+     "unit": "g",
+     "value": 6.7,
+     "description": "Per 100 g, raw",
+     "sort_order": 6
+    },
+    {
+     "type": "Protein",
+     "kind": "nutrient",
+     "unit": "g",
+     "value": 2.0,
+     "description": "Per 100 g, raw",
+     "sort_order": 7
+    },
+    {
+     "type": "Sodium",
+     "kind": "nutrient",
+     "unit": "mg",
+     "value": 7,
+     "description": "Per 100 g, raw",
+     "sort_order": 8
+    },
+    {
+     "type": "Vitamin C",
+     "kind": "nutrient",
+     "unit": "mg",
+     "value": 10.0,
+     "description": "Per 100 g, raw",
+     "sort_order": 9
+    },
+    {
+     "type": "Potassium",
+     "kind": "nutrient",
+     "unit": "mg",
+     "value": 485,
+     "description": "Per 100 g, raw",
+     "sort_order": 10
+    }
+   ],
+   "documents": [
+    {
+     "title": "USDA Pesticide Data Program — Annual Summary",
+     "doc_type": "report",
+     "year": 2024,
+     "source_url": "https://www.ams.usda.gov/sites/default/files/media/PDPAnnualSummary.pdf"
+    },
+    {
+     "title": "USDA PDP Database — commodity results",
+     "doc_type": "report",
+     "year": 2024,
+     "source_url": "https://apps.ams.usda.gov/pdp"
+    },
+    {
+     "title": "USDA FoodData Central — FDC 171705",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://fdc.nal.usda.gov/food-details/171705/nutrients"
+    },
+    {
+     "title": "Mission — official product page",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://missionproduce.com/avocados/"
+    }
+   ]
+  },
+  {
+   "name": "Bicolor Corn 4 ct",
+   "brand": "Green Giant Fresh",
+   "category": "produce",
+   "status": "published",
+   "image_url": "https://greengiantfresh.com/wp-content/uploads/2017/09/Corn-cobs-4ct-BI-color-Tray.png",
+   "score": 85,
+   "score_label": "VERY CLEAN",
+   "score_rationale": "Computed from USDA Pesticide Data Program crop-level retail sampling (2024): 95 − 0.30×(% samples with residues: 10.0) − 0.20×(distinct pesticides, capped 50: 22) − (violation rate %, capped 10: 2.8). Residue picture is USDA crop-level testing of conventional sweet corn at U.S. retail (2024, 607 samples) — not a lab test of this specific brand. Brand-level testing comes with our lab program. Nutrition from USDA FoodData Central. Government data only.",
+   "lab_tested": false,
+   "description": "10.0% of USDA retail samples carried at least one detectable pesticide residue, across 22 different pesticides. 17 presumptive tolerance violations (3 over tolerance; 14 with no established tolerance). One of the cleanest choices in the produce aisle — conventional is fine here.",
+   "properties": {
+    "Data basis": "USDA PDP 2024 · 607 retail samples · crop-level",
+    "Form": "Fresh · nutrition per 100 g, raw"
+   },
+   "measurements": [
+    {
+     "type": "Samples with pesticide residues",
+     "kind": "contaminant",
+     "unit": "%",
+     "value": 10.0,
+     "description": "USDA crop-level retail testing, 2024 — not brand-specific",
+     "sort_order": 1
+    },
+    {
+     "type": "Distinct pesticides detected",
+     "kind": "contaminant",
+     "unit": "count",
+     "value": 22,
+     "description": "Across 607 samples of the crop",
+     "sort_order": 2
+    },
+    {
+     "type": "Presumptive tolerance violations",
+     "kind": "contaminant",
+     "unit": "samples",
+     "value": 17,
+     "description": "17 presumptive tolerance violations (3 over tolerance; 14 with no established tolerance)",
+     "sort_order": 3,
+     "risk_count": 1
+    },
+    {
+     "type": "Calories",
+     "kind": "nutrient",
+     "unit": "kcal",
+     "value": 86,
+     "description": "Per 100 g, raw",
+     "sort_order": 4
+    },
+    {
+     "type": "Sugars",
+     "kind": "nutrient",
+     "unit": "g",
+     "value": 6.26,
+     "description": "Per 100 g, raw",
+     "sort_order": 5
+    },
+    {
+     "type": "Fiber",
+     "kind": "nutrient",
+     "unit": "g",
+     "value": 2.0,
+     "description": "Per 100 g, raw",
+     "sort_order": 6
+    },
+    {
+     "type": "Protein",
+     "kind": "nutrient",
+     "unit": "g",
+     "value": 3.27,
+     "description": "Per 100 g, raw",
+     "sort_order": 7
+    },
+    {
+     "type": "Sodium",
+     "kind": "nutrient",
+     "unit": "mg",
+     "value": 15,
+     "description": "Per 100 g, raw",
+     "sort_order": 8
+    },
+    {
+     "type": "Vitamin C",
+     "kind": "nutrient",
+     "unit": "mg",
+     "value": 6.8,
+     "description": "Per 100 g, raw",
+     "sort_order": 9
+    },
+    {
+     "type": "Potassium",
+     "kind": "nutrient",
+     "unit": "mg",
+     "value": 270,
+     "description": "Per 100 g, raw",
+     "sort_order": 10
+    }
+   ],
+   "documents": [
+    {
+     "title": "USDA Pesticide Data Program — Annual Summary",
+     "doc_type": "report",
+     "year": 2024,
+     "source_url": "https://www.ams.usda.gov/sites/default/files/media/PDPAnnualSummary.pdf"
+    },
+    {
+     "title": "USDA PDP Database — commodity results",
+     "doc_type": "report",
+     "year": 2024,
+     "source_url": "https://apps.ams.usda.gov/pdp"
+    },
+    {
+     "title": "USDA FoodData Central — FDC 169998",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://fdc.nal.usda.gov/food-details/169998/nutrients"
+    },
+    {
+     "title": "Green Giant Fresh — official product page",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://greengiantfresh.com/products/corn-bicolor/"
+    }
+   ]
+  }
+ ]
+}
