@@ -1,0 +1,910 @@
+{
+ "_about": "Meat & Seafood: 17 branded items. Source-based deterministic rubric (printed in every rationale); figures from FDA/USDA/peer-reviewed journals; naturopathic/ancestral framing carried by the copy, numbers carried by institutions. Force of Nature = category hero. Built 2026-09-24.",
+ "products": [
+  {
+   "name": "Grass Fed Ground Beef 85/15",
+   "brand": "Force of Nature",
+   "category": "meat-seafood",
+   "status": "published",
+   "image_url": "https://forceofnature.com/cdn/shop/files/FON-regen-beef-pdp-hero-2026.jpg?v=1781555339",
+   "score": 85,
+   "score_label": "EXCEPTIONAL SOURCE",
+   "score_rationale": "Source-based rubric, same math for every card: base 60 · +20 wild-caught or 100% grass-fed & finished · +12 USDA Organic or pasture-raised (+8 when stacked on grass-fed) · +5 verified third-party certification · +5 regenerative certification · +4 documented antibiotic-free · −8 farmed fish · −4 synthetic color added · −4 omega-ratio flag · −12 cured/processed · −12/−30 FDA mercury Good/Avoid tier. Every point traces to a label claim, certification, or government/journal data — no vibes. Brand-level lab testing comes with our lab program.",
+   "lab_tested": false,
+   "description": "100% grass-fed and grass-finished on regenerative ranchland — the standard the ancestral-nutrition world has argued for all along, and the published numbers back it: ~1.5:1 omega-6-to-omega-3 ratio (vs ~7.7:1 grain-fed), 2–3× the CLA, ~3× the vitamin E, ~7× the beta-carotene (Daley 2010, Nutrition Journal). No feedlot, no implants — feedlot cattle account for the largest share (41%) of America's medically important farm antibiotics. LABEL DECODER: 'No added hormones' on chicken or pork is pure marketing — federal law bans hormones in ALL U.S. poultry and pork, and the label is legally required to admit it. On beef, hormone implants ARE legal and common in feedlots. And 'grass-fed' lost its federal definition in 2016 — without third-party certification, it's a self-declared claim.",
+   "properties": {
+    "Sourcing": "100% grass-fed & finished · regenerative",
+    "Why it scores high": "Certified regenerative + grass-finished — the two claims that survived the 2016 label collapse"
+   },
+   "measurements": [
+    {
+     "type": "Omega-6 : omega-3 ratio",
+     "kind": "property",
+     "unit": "ratio",
+     "value": 1.53,
+     "description": "Grass-fed beef averages ~1.5:1 vs ~7.7:1 grain-fed (Daley 2010) — the ancestral-diet range",
+     "sort_order": 1,
+     "risk_count": 0
+    },
+    {
+     "type": "CLA advantage",
+     "kind": "property",
+     "unit": "x",
+     "value": 2.5,
+     "description": "Conjugated linoleic acid runs 2–3× higher in grass-fed ruminants (Daley 2010)",
+     "sort_order": 2,
+     "risk_count": 0
+    },
+    {
+     "type": "Vitamin E advantage",
+     "kind": "property",
+     "unit": "x",
+     "value": 3.0,
+     "description": "Alpha-tocopherol ~3× higher in pasture-fed beef (Daley 2010)",
+     "sort_order": 3,
+     "risk_count": 0
+    }
+   ],
+   "documents": [
+    {
+     "title": "Daley et al. 2010 — grass-fed vs grain-fed nutrient review, Nutrition Journal",
+     "doc_type": "report",
+     "year": 2010,
+     "source_url": "https://link.springer.com/article/10.1186/1475-2891-9-10"
+    },
+    {
+     "title": "FDA — steroid hormone implants in food animals",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://www.fda.gov/animal-veterinary/product-safety-information/steroid-hormone-implants-used-growth-food-producing-animals"
+    },
+    {
+     "title": "USDA FSIS — meat & poultry labeling terms",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://www.fsis.usda.gov/food-safety/safe-food-handling-and-preparation/food-safety-basics/meat-and-poultry-labeling-terms"
+    },
+    {
+     "title": "Federal Register 2016 — withdrawal of the U.S. grass-fed standard",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://www.federalregister.gov/documents/2016/01/12/2016-00440/withdrawal-of-united-states-standards-for-livestock-and-meat-marketing-claims"
+    },
+    {
+     "title": "Force of Nature — regenerative sourcing standard",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://forceofnature.com/products/regenerative-ground-beef"
+    }
+   ]
+  },
+  {
+   "name": "Grass Fed Beef Ancestral Blend",
+   "brand": "Force of Nature",
+   "category": "meat-seafood",
+   "status": "published",
+   "image_url": "https://forceofnature.com/cdn/shop/files/FON-ancestral-beef-pdp-NewLook-2026.jpg?v=1781554831",
+   "score": 85,
+   "score_label": "EXCEPTIONAL SOURCE",
+   "score_rationale": "Source-based rubric, same math for every card: base 60 · +20 wild-caught or 100% grass-fed & finished · +12 USDA Organic or pasture-raised (+8 when stacked on grass-fed) · +5 verified third-party certification · +5 regenerative certification · +4 documented antibiotic-free · −8 farmed fish · −4 synthetic color added · −4 omega-ratio flag · −12 cured/processed · −12/−30 FDA mercury Good/Avoid tier. Every point traces to a label claim, certification, or government/journal data — no vibes. Brand-level lab testing comes with our lab program.",
+   "lab_tested": false,
+   "description": "Ground beef with liver and heart folded in — nose-to-tail eating in one package, the way ancestral and functional-medicine nutrition has long recommended for B12, retinol, copper and CoQ10. Same regenerative, grass-finished sourcing. LABEL DECODER: 'No added hormones' on chicken or pork is pure marketing — federal law bans hormones in ALL U.S. poultry and pork, and the label is legally required to admit it. On beef, hormone implants ARE legal and common in feedlots. And 'grass-fed' lost its federal definition in 2016 — without third-party certification, it's a self-declared claim.",
+   "properties": {
+    "Sourcing": "Grass-fed & finished · regenerative · includes liver & heart"
+   },
+   "measurements": [
+    {
+     "type": "Omega-6 : omega-3 ratio",
+     "kind": "property",
+     "unit": "ratio",
+     "value": 1.53,
+     "description": "Grass-fed beef averages ~1.5:1 vs ~7.7:1 grain-fed (Daley 2010) — the ancestral-diet range",
+     "sort_order": 1,
+     "risk_count": 0
+    },
+    {
+     "type": "CLA advantage",
+     "kind": "property",
+     "unit": "x",
+     "value": 2.5,
+     "description": "Conjugated linoleic acid runs 2–3× higher in grass-fed ruminants (Daley 2010)",
+     "sort_order": 2,
+     "risk_count": 0
+    },
+    {
+     "type": "Vitamin E advantage",
+     "kind": "property",
+     "unit": "x",
+     "value": 3.0,
+     "description": "Alpha-tocopherol ~3× higher in pasture-fed beef (Daley 2010)",
+     "sort_order": 3,
+     "risk_count": 0
+    }
+   ],
+   "documents": [
+    {
+     "title": "Daley et al. 2010 — grass-fed vs grain-fed nutrient review, Nutrition Journal",
+     "doc_type": "report",
+     "year": 2010,
+     "source_url": "https://link.springer.com/article/10.1186/1475-2891-9-10"
+    },
+    {
+     "title": "FDA — steroid hormone implants in food animals",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://www.fda.gov/animal-veterinary/product-safety-information/steroid-hormone-implants-used-growth-food-producing-animals"
+    },
+    {
+     "title": "USDA FSIS — meat & poultry labeling terms",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://www.fsis.usda.gov/food-safety/safe-food-handling-and-preparation/food-safety-basics/meat-and-poultry-labeling-terms"
+    },
+    {
+     "title": "Federal Register 2016 — withdrawal of the U.S. grass-fed standard",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://www.federalregister.gov/documents/2016/01/12/2016-00440/withdrawal-of-united-states-standards-for-livestock-and-meat-marketing-claims"
+    },
+    {
+     "title": "Force of Nature — ancestral blend",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://forceofnature.com/products/regenerative-beef-ancestral-blend"
+    }
+   ]
+  },
+  {
+   "name": "Grass Fed Bison Ancestral Blend",
+   "brand": "Force of Nature",
+   "category": "meat-seafood",
+   "status": "published",
+   "image_url": "https://forceofnature.com/cdn/shop/files/FON-ancestral-beef-pdp-NewLook-2026_1.jpg?v=1781555027",
+   "score": 85,
+   "score_label": "EXCEPTIONAL SOURCE",
+   "score_rationale": "Source-based rubric, same math for every card: base 60 · +20 wild-caught or 100% grass-fed & finished · +12 USDA Organic or pasture-raised (+8 when stacked on grass-fed) · +5 verified third-party certification · +5 regenerative certification · +4 documented antibiotic-free · −8 farmed fish · −4 synthetic color added · −4 omega-ratio flag · −12 cured/processed · −12/−30 FDA mercury Good/Avoid tier. Every point traces to a label claim, certification, or government/journal data — no vibes. Brand-level lab testing comes with our lab program.",
+   "lab_tested": false,
+   "description": "Grass-fed bison with liver and heart — among the leanest, most nutrient-dense red meats you can buy, from regenerative ranches. LABEL DECODER: 'No added hormones' on chicken or pork is pure marketing — federal law bans hormones in ALL U.S. poultry and pork, and the label is legally required to admit it. On beef, hormone implants ARE legal and common in feedlots. And 'grass-fed' lost its federal definition in 2016 — without third-party certification, it's a self-declared claim.",
+   "properties": {
+    "Sourcing": "Grass-fed & finished · regenerative · includes liver & heart"
+   },
+   "measurements": [
+    {
+     "type": "Omega-6 : omega-3 ratio",
+     "kind": "property",
+     "unit": "ratio",
+     "value": 1.53,
+     "description": "Grass-fed beef averages ~1.5:1 vs ~7.7:1 grain-fed (Daley 2010) — the ancestral-diet range",
+     "sort_order": 1,
+     "risk_count": 0
+    },
+    {
+     "type": "CLA advantage",
+     "kind": "property",
+     "unit": "x",
+     "value": 2.5,
+     "description": "Conjugated linoleic acid runs 2–3× higher in grass-fed ruminants (Daley 2010)",
+     "sort_order": 2,
+     "risk_count": 0
+    },
+    {
+     "type": "Vitamin E advantage",
+     "kind": "property",
+     "unit": "x",
+     "value": 3.0,
+     "description": "Alpha-tocopherol ~3× higher in pasture-fed beef (Daley 2010)",
+     "sort_order": 3,
+     "risk_count": 0
+    }
+   ],
+   "documents": [
+    {
+     "title": "Daley et al. 2010 — grass-fed vs grain-fed nutrient review, Nutrition Journal",
+     "doc_type": "report",
+     "year": 2010,
+     "source_url": "https://link.springer.com/article/10.1186/1475-2891-9-10"
+    },
+    {
+     "title": "FDA — steroid hormone implants in food animals",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://www.fda.gov/animal-veterinary/product-safety-information/steroid-hormone-implants-used-growth-food-producing-animals"
+    },
+    {
+     "title": "USDA FSIS — meat & poultry labeling terms",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://www.fsis.usda.gov/food-safety/safe-food-handling-and-preparation/food-safety-basics/meat-and-poultry-labeling-terms"
+    },
+    {
+     "title": "Federal Register 2016 — withdrawal of the U.S. grass-fed standard",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://www.federalregister.gov/documents/2016/01/12/2016-00440/withdrawal-of-united-states-standards-for-livestock-and-meat-marketing-claims"
+    }
+   ]
+  },
+  {
+   "name": "Grass Fed Venison Ancestral Blend",
+   "brand": "Force of Nature",
+   "category": "meat-seafood",
+   "status": "published",
+   "image_url": "https://forceofnature.com/cdn/shop/files/FON-ancestral-venison-pdp-NewLook-2026.jpg?v=1781555100",
+   "score": 85,
+   "score_label": "EXCEPTIONAL SOURCE",
+   "score_rationale": "Source-based rubric, same math for every card: base 60 · +20 wild-caught or 100% grass-fed & finished · +12 USDA Organic or pasture-raised (+8 when stacked on grass-fed) · +5 verified third-party certification · +5 regenerative certification · +4 documented antibiotic-free · −8 farmed fish · −4 synthetic color added · −4 omega-ratio flag · −12 cured/processed · −12/−30 FDA mercury Good/Avoid tier. Every point traces to a label claim, certification, or government/journal data — no vibes. Brand-level lab testing comes with our lab program.",
+   "lab_tested": false,
+   "description": "Venison ancestral blend — wild-type nutrition, regenerative sourcing, liver and heart included. LABEL DECODER: 'No added hormones' on chicken or pork is pure marketing — federal law bans hormones in ALL U.S. poultry and pork, and the label is legally required to admit it. On beef, hormone implants ARE legal and common in feedlots. And 'grass-fed' lost its federal definition in 2016 — without third-party certification, it's a self-declared claim.",
+   "properties": {
+    "Sourcing": "Grass-fed · regenerative · includes liver & heart"
+   },
+   "measurements": [
+    {
+     "type": "Omega-6 : omega-3 ratio",
+     "kind": "property",
+     "unit": "ratio",
+     "value": 1.53,
+     "description": "Grass-fed beef averages ~1.5:1 vs ~7.7:1 grain-fed (Daley 2010) — the ancestral-diet range",
+     "sort_order": 1,
+     "risk_count": 0
+    },
+    {
+     "type": "CLA advantage",
+     "kind": "property",
+     "unit": "x",
+     "value": 2.5,
+     "description": "Conjugated linoleic acid runs 2–3× higher in grass-fed ruminants (Daley 2010)",
+     "sort_order": 2,
+     "risk_count": 0
+    },
+    {
+     "type": "Vitamin E advantage",
+     "kind": "property",
+     "unit": "x",
+     "value": 3.0,
+     "description": "Alpha-tocopherol ~3× higher in pasture-fed beef (Daley 2010)",
+     "sort_order": 3,
+     "risk_count": 0
+    }
+   ],
+   "documents": [
+    {
+     "title": "Daley et al. 2010 — grass-fed vs grain-fed nutrient review, Nutrition Journal",
+     "doc_type": "report",
+     "year": 2010,
+     "source_url": "https://link.springer.com/article/10.1186/1475-2891-9-10"
+    },
+    {
+     "title": "FDA — steroid hormone implants in food animals",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://www.fda.gov/animal-veterinary/product-safety-information/steroid-hormone-implants-used-growth-food-producing-animals"
+    },
+    {
+     "title": "USDA FSIS — meat & poultry labeling terms",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://www.fsis.usda.gov/food-safety/safe-food-handling-and-preparation/food-safety-basics/meat-and-poultry-labeling-terms"
+    },
+    {
+     "title": "Federal Register 2016 — withdrawal of the U.S. grass-fed standard",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://www.federalregister.gov/documents/2016/01/12/2016-00440/withdrawal-of-united-states-standards-for-livestock-and-meat-marketing-claims"
+    }
+   ]
+  },
+  {
+   "name": "100% Grass Fed Ground Beef 85/15",
+   "brand": "Grass Run Farms",
+   "category": "meat-seafood",
+   "status": "published",
+   "image_url": "https://grassrunfarms.com/wp-content/uploads/2021/06/2026-GRF-85-Ground-Beef-Brick-Front-Mockup.png",
+   "score": 80,
+   "score_label": "STRONG SOURCE",
+   "score_rationale": "Source-based rubric, same math for every card: base 60 · +20 wild-caught or 100% grass-fed & finished · +12 USDA Organic or pasture-raised (+8 when stacked on grass-fed) · +5 verified third-party certification · +5 regenerative certification · +4 documented antibiotic-free · −8 farmed fish · −4 synthetic color added · −4 omega-ratio flag · −12 cured/processed · −12/−30 FDA mercury Good/Avoid tier. Every point traces to a label claim, certification, or government/journal data — no vibes. Brand-level lab testing comes with our lab program.",
+   "lab_tested": false,
+   "description": "100% grass-fed, born and pasture-raised in the USA. The omega and micronutrient advantages of grass finishing are published science, not marketing. LABEL DECODER: 'No added hormones' on chicken or pork is pure marketing — federal law bans hormones in ALL U.S. poultry and pork, and the label is legally required to admit it. On beef, hormone implants ARE legal and common in feedlots. And 'grass-fed' lost its federal definition in 2016 — without third-party certification, it's a self-declared claim.",
+   "properties": {
+    "Sourcing": "100% grass-fed · U.S. pasture-raised"
+   },
+   "measurements": [
+    {
+     "type": "Omega-6 : omega-3 ratio",
+     "kind": "property",
+     "unit": "ratio",
+     "value": 1.53,
+     "description": "Grass-fed beef averages ~1.5:1 vs ~7.7:1 grain-fed (Daley 2010) — the ancestral-diet range",
+     "sort_order": 1,
+     "risk_count": 0
+    },
+    {
+     "type": "CLA advantage",
+     "kind": "property",
+     "unit": "x",
+     "value": 2.5,
+     "description": "Conjugated linoleic acid runs 2–3× higher in grass-fed ruminants (Daley 2010)",
+     "sort_order": 2,
+     "risk_count": 0
+    },
+    {
+     "type": "Vitamin E advantage",
+     "kind": "property",
+     "unit": "x",
+     "value": 3.0,
+     "description": "Alpha-tocopherol ~3× higher in pasture-fed beef (Daley 2010)",
+     "sort_order": 3,
+     "risk_count": 0
+    }
+   ],
+   "documents": [
+    {
+     "title": "Daley et al. 2010 — grass-fed vs grain-fed nutrient review, Nutrition Journal",
+     "doc_type": "report",
+     "year": 2010,
+     "source_url": "https://link.springer.com/article/10.1186/1475-2891-9-10"
+    },
+    {
+     "title": "FDA — steroid hormone implants in food animals",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://www.fda.gov/animal-veterinary/product-safety-information/steroid-hormone-implants-used-growth-food-producing-animals"
+    },
+    {
+     "title": "USDA FSIS — meat & poultry labeling terms",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://www.fsis.usda.gov/food-safety/safe-food-handling-and-preparation/food-safety-basics/meat-and-poultry-labeling-terms"
+    },
+    {
+     "title": "Federal Register 2016 — withdrawal of the U.S. grass-fed standard",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://www.federalregister.gov/documents/2016/01/12/2016-00440/withdrawal-of-united-states-standards-for-livestock-and-meat-marketing-claims"
+    }
+   ]
+  },
+  {
+   "name": "Organic Grass-Fed Ground Beef 93/7",
+   "brand": "Marketside",
+   "category": "meat-seafood",
+   "status": "published",
+   "image_url": "https://i5.walmartimages.com/seo/Marketside-Organic-Grass-Fed-Ground-Beef-93-Lean-7-Fat-1-lb_90f1391e-541a-4010-a21d-2a439dd089c9.87c8a2027082f272c95399d5c976c47a.jpeg",
+   "score": 93,
+   "score_label": "EXCEPTIONAL SOURCE",
+   "score_rationale": "Source-based rubric, same math for every card: base 60 · +20 wild-caught or 100% grass-fed & finished · +12 USDA Organic or pasture-raised (+8 when stacked on grass-fed) · +5 verified third-party certification · +5 regenerative certification · +4 documented antibiotic-free · −8 farmed fish · −4 synthetic color added · −4 omega-ratio flag · −12 cured/processed · −12/−30 FDA mercury Good/Avoid tier. Every point traces to a label claim, certification, or government/journal data — no vibes. Brand-level lab testing comes with our lab program.",
+   "lab_tested": false,
+   "description": "The strongest label stack a supermarket shelf offers: USDA Organic (a real, audited certification) ON TOP of 100% grass-fed. Organic means certified organic feed, no antibiotics, no added hormones, audited yearly — it patches the hole the 2016 grass-fed-label withdrawal left. LABEL DECODER: 'No added hormones' on chicken or pork is pure marketing — federal law bans hormones in ALL U.S. poultry and pork, and the label is legally required to admit it. On beef, hormone implants ARE legal and common in feedlots. And 'grass-fed' lost its federal definition in 2016 — without third-party certification, it's a self-declared claim.",
+   "properties": {
+    "Sourcing": "USDA Organic + 100% grass-fed",
+    "Certification": "USDA Organic (audited)"
+   },
+   "measurements": [
+    {
+     "type": "Omega-6 : omega-3 ratio",
+     "kind": "property",
+     "unit": "ratio",
+     "value": 1.53,
+     "description": "Grass-fed beef averages ~1.5:1 vs ~7.7:1 grain-fed (Daley 2010) — the ancestral-diet range",
+     "sort_order": 1,
+     "risk_count": 0
+    },
+    {
+     "type": "CLA advantage",
+     "kind": "property",
+     "unit": "x",
+     "value": 2.5,
+     "description": "Conjugated linoleic acid runs 2–3× higher in grass-fed ruminants (Daley 2010)",
+     "sort_order": 2,
+     "risk_count": 0
+    },
+    {
+     "type": "Vitamin E advantage",
+     "kind": "property",
+     "unit": "x",
+     "value": 3.0,
+     "description": "Alpha-tocopherol ~3× higher in pasture-fed beef (Daley 2010)",
+     "sort_order": 3,
+     "risk_count": 0
+    }
+   ],
+   "documents": [
+    {
+     "title": "Daley et al. 2010 — grass-fed vs grain-fed nutrient review, Nutrition Journal",
+     "doc_type": "report",
+     "year": 2010,
+     "source_url": "https://link.springer.com/article/10.1186/1475-2891-9-10"
+    },
+    {
+     "title": "FDA — steroid hormone implants in food animals",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://www.fda.gov/animal-veterinary/product-safety-information/steroid-hormone-implants-used-growth-food-producing-animals"
+    },
+    {
+     "title": "USDA FSIS — meat & poultry labeling terms",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://www.fsis.usda.gov/food-safety/safe-food-handling-and-preparation/food-safety-basics/meat-and-poultry-labeling-terms"
+    },
+    {
+     "title": "Federal Register 2016 — withdrawal of the U.S. grass-fed standard",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://www.federalregister.gov/documents/2016/01/12/2016-00440/withdrawal-of-united-states-standards-for-livestock-and-meat-marketing-claims"
+    }
+   ]
+  },
+  {
+   "name": "All Natural 80/20 Ground Beef Chuck",
+   "brand": "Walmart",
+   "category": "meat-seafood",
+   "status": "published",
+   "image_url": "https://i5.walmartimages.com/seo/80-Lean-20-Fat-Ground-Beef-Chuck-2-25-lb-Tray-Fresh-All-Natural_ec76dc83-de83-4ff7-abfd-7795d114e0fc.0ced917a386fa36cd291bf4c0bd1f3f4.jpeg",
+   "score": 60,
+   "score_label": "DECENT",
+   "score_rationale": "Source-based rubric, same math for every card: base 60 · +20 wild-caught or 100% grass-fed & finished · +12 USDA Organic or pasture-raised (+8 when stacked on grass-fed) · +5 verified third-party certification · +5 regenerative certification · +4 documented antibiotic-free · −8 farmed fish · −4 synthetic color added · −4 omega-ratio flag · −12 cured/processed · −12/−30 FDA mercury Good/Avoid tier. Every point traces to a label claim, certification, or government/journal data — no vibes. Brand-level lab testing comes with our lab program.",
+   "lab_tested": false,
+   "description": "Conventional grain-finished beef. 'All natural' legally means only minimally processed with no additives — it says nothing about feed, antibiotics, or hormone implants, all standard in feedlot production. Omega-6:omega-3 averages ~7.7:1 vs ~1.5:1 for grass-fed. LABEL DECODER: 'No added hormones' on chicken or pork is pure marketing — federal law bans hormones in ALL U.S. poultry and pork, and the label is legally required to admit it. On beef, hormone implants ARE legal and common in feedlots. And 'grass-fed' lost its federal definition in 2016 — without third-party certification, it's a self-declared claim.",
+   "properties": {
+    "Sourcing": "Conventional · grain-finished (typical feedlot)"
+   },
+   "measurements": [
+    {
+     "type": "Omega-6 : omega-3 ratio",
+     "kind": "property",
+     "unit": "ratio",
+     "value": 7.65,
+     "description": "Grain-finished beef averages ~7.7:1 vs ~1.5:1 grass-fed (Daley 2010)",
+     "sort_order": 1,
+     "risk_count": 1
+    }
+   ],
+   "documents": [
+    {
+     "title": "Daley et al. 2010 — grass-fed vs grain-fed nutrient review, Nutrition Journal",
+     "doc_type": "report",
+     "year": 2010,
+     "source_url": "https://link.springer.com/article/10.1186/1475-2891-9-10"
+    },
+    {
+     "title": "FDA — steroid hormone implants in food animals",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://www.fda.gov/animal-veterinary/product-safety-information/steroid-hormone-implants-used-growth-food-producing-animals"
+    },
+    {
+     "title": "USDA FSIS — meat & poultry labeling terms",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://www.fsis.usda.gov/food-safety/safe-food-handling-and-preparation/food-safety-basics/meat-and-poultry-labeling-terms"
+    },
+    {
+     "title": "Federal Register 2016 — withdrawal of the U.S. grass-fed standard",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://www.federalregister.gov/documents/2016/01/12/2016-00440/withdrawal-of-united-states-standards-for-livestock-and-meat-marketing-claims"
+    },
+    {
+     "title": "FDA — 2023 antimicrobial sales in food animals",
+     "doc_type": "report",
+     "year": 2023,
+     "source_url": "https://www.fda.gov/animal-veterinary/cvm-updates/fda-releases-annual-summary-sales-and-distribution-antimicrobials-2023-use-food-producing-animals"
+    }
+   ]
+  },
+  {
+   "name": "Organic Chicken Breast Fillets",
+   "brand": "Just Bare",
+   "category": "meat-seafood",
+   "status": "published",
+   "image_url": "https://justbarechicken.com/wp-content/uploads/2025/10/7df1a333e1393ca634da6234d6ca223e45c226dc-6.webp",
+   "score": 81,
+   "score_label": "STRONG SOURCE",
+   "score_rationale": "Source-based rubric, same math for every card: base 60 · +20 wild-caught or 100% grass-fed & finished · +12 USDA Organic or pasture-raised (+8 when stacked on grass-fed) · +5 verified third-party certification · +5 regenerative certification · +4 documented antibiotic-free · −8 farmed fish · −4 synthetic color added · −4 omega-ratio flag · −12 cured/processed · −12/−30 FDA mercury Good/Avoid tier. Every point traces to a label claim, certification, or government/journal data — no vibes. Brand-level lab testing comes with our lab program.",
+   "lab_tested": false,
+   "description": "USDA Organic chicken: 100% organic feed, no antibiotics ever, outdoor access, audited. And the truth nobody prints: 'no added hormones' is meaningless on ANY chicken — hormones are federally banned in all U.S. poultry, and that label is legally required to admit it. Organic and antibiotic-free are the claims that actually distinguish. LABEL DECODER: 'No added hormones' on chicken or pork is pure marketing — federal law bans hormones in ALL U.S. poultry and pork, and the label is legally required to admit it. On beef, hormone implants ARE legal and common in feedlots. And 'grass-fed' lost its federal definition in 2016 — without third-party certification, it's a self-declared claim.",
+   "properties": {
+    "Sourcing": "USDA Organic · no antibiotics ever",
+    "Certification": "USDA Organic (audited)"
+   },
+   "measurements": [],
+   "documents": [
+    {
+     "title": "USDA AMS — organic livestock requirements",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://www.ams.usda.gov/sites/default/files/media/Organic%20Livestock%20Requirements.pdf"
+    },
+    {
+     "title": "USDA FSIS — labeling terms (the hormone-ban disclaimer rule)",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://www.fsis.usda.gov/food-safety/safe-food-handling-and-preparation/food-safety-basics/meat-and-poultry-labeling-terms"
+    }
+   ]
+  },
+  {
+   "name": "Atlantic Salmon Portions (farmed)",
+   "brand": "MOWI",
+   "category": "meat-seafood",
+   "status": "published",
+   "image_url": "https://mowisalmon.us/wp-content/uploads/sites/3/2022/04/MW_GHK_BAP_AtlSalmon_Portions_Plain_SkinOn_FNF_FW_2x6oz.png",
+   "score": 49,
+   "score_label": "COMPROMISED",
+   "score_rationale": "Source-based rubric, same math for every card: base 60 · +20 wild-caught or 100% grass-fed & finished · +12 USDA Organic or pasture-raised (+8 when stacked on grass-fed) · +5 verified third-party certification · +5 regenerative certification · +4 documented antibiotic-free · −8 farmed fish · −4 synthetic color added · −4 omega-ratio flag · −12 cured/processed · −12/−30 FDA mercury Good/Avoid tier. Every point traces to a label claim, certification, or government/journal data — no vibes. Brand-level lab testing comes with our lab program.",
+   "lab_tested": false,
+   "description": "Farm-raised Atlantic salmon. FARMED VS WILD, THE CURRENT TRUTH: farmed salmon's pink is synthetic astaxanthin added to the feed — U.S. law requires 'color added' on the label. Its omega-6-to-omega-3 ratio runs about 14 times worse than wild (0.7 vs 0.05). And antibiotic use depends on where it's farmed: Chile has used ~500 times more antibiotics per tonne than Norway. The old '10x more PCBs' claim is outdated — feed changed, and current European data shows wild Atlantic salmon now carries MORE dioxins and mercury than farmed. We tell it as the data reads today. BAP certification and Norwegian-style practice are the better end of farming — but wild sockeye needs no color additive and carries the ancestral omega ratio on its own.",
+   "properties": {
+    "Sourcing": "Farm-raised · BAP certified",
+    "Check the label": "'Color added' — required by 21 CFR 73.35"
+   },
+   "measurements": [
+    {
+     "type": "Mercury (FDA mean, salmon)",
+     "kind": "contaminant",
+     "unit": "ppm",
+     "value": 0.022,
+     "description": "FDA commercial-fish survey mean for salmon — a 'Best Choice' species",
+     "sort_order": 1,
+     "risk_count": 0
+    },
+    {
+     "type": "Omega-6 : omega-3 ratio",
+     "kind": "property",
+     "unit": "ratio",
+     "value": 0.7,
+     "description": "Farmed Atlantic ~0.7 vs wild Atlantic ~0.05 (Jensen 2020) — ~14× higher",
+     "sort_order": 2,
+     "risk_count": 1
+    },
+    {
+     "type": "EPA+DHA",
+     "kind": "nutrient",
+     "unit": "g",
+     "value": 1.91,
+     "description": "Per 100 g — farmed is fattier, so absolute omega-3 is high; the ratio is the problem",
+     "sort_order": 3,
+     "risk_count": 0
+    }
+   ],
+   "documents": [
+    {
+     "title": "Jensen et al. 2020 — farmed vs wild Atlantic salmon, Foods",
+     "doc_type": "report",
+     "year": 2020,
+     "source_url": "https://www.mdpi.com/2304-8158/9/12/1901"
+    },
+    {
+     "title": "USDA ARS — retail salmon nutrient analysis",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://www.ars.usda.gov/ARSUserFiles/80400525/Articles/EB07_Salmon.pdf"
+    },
+    {
+     "title": "21 CFR 73.35 — astaxanthin color additive in salmonid feed",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://www.ecfr.gov/current/title-21/chapter-I/subchapter-A/part-73/subpart-A/section-73.35"
+    },
+    {
+     "title": "Hites et al. 2004 — the original farmed-salmon contaminant study, Science",
+     "doc_type": "report",
+     "year": 2004,
+     "source_url": "https://www.science.org/doi/10.1126/science.1091447"
+    },
+    {
+     "title": "Frontiers in Microbiology — antibiotic use in Chilean salmon farming",
+     "doc_type": "report",
+     "year": 2018,
+     "source_url": "https://www.frontiersin.org/journals/microbiology/articles/10.3389/fmicb.2018.01284/full"
+    },
+    {
+     "title": "FDA — advice about eating fish",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://www.fda.gov/food/consumers/advice-about-eating-fish"
+    }
+   ]
+  },
+  {
+   "name": "Atlantic Salmon Fillet (farmed, antibiotic-free)",
+   "brand": "Marketside",
+   "category": "meat-seafood",
+   "status": "published",
+   "image_url": "https://i5.walmartimages.com/seo/Marketside-Skinless-Atlantic-Salmon-Fillet-0-95-1-2-lb_770f71e9-d3c1-4070-bf3d-58f9d3d89475.b08f6dc4611d11f630541d4261421cd2.jpeg",
+   "score": 53,
+   "score_label": "COMPROMISED",
+   "score_rationale": "Source-based rubric, same math for every card: base 60 · +20 wild-caught or 100% grass-fed & finished · +12 USDA Organic or pasture-raised (+8 when stacked on grass-fed) · +5 verified third-party certification · +5 regenerative certification · +4 documented antibiotic-free · −8 farmed fish · −4 synthetic color added · −4 omega-ratio flag · −12 cured/processed · −12/−30 FDA mercury Good/Avoid tier. Every point traces to a label claim, certification, or government/journal data — no vibes. Brand-level lab testing comes with our lab program.",
+   "lab_tested": false,
+   "description": "Farm-raised Atlantic salmon, raised without antibiotics (the claim that matters most in aquaculture) and BAP 4-star certified. FARMED VS WILD, THE CURRENT TRUTH: farmed salmon's pink is synthetic astaxanthin added to the feed — U.S. law requires 'color added' on the label. Its omega-6-to-omega-3 ratio runs about 14 times worse than wild (0.7 vs 0.05). And antibiotic use depends on where it's farmed: Chile has used ~500 times more antibiotics per tonne than Norway. The old '10x more PCBs' claim is outdated — feed changed, and current European data shows wild Atlantic salmon now carries MORE dioxins and mercury than farmed. We tell it as the data reads today.",
+   "properties": {
+    "Sourcing": "Farm-raised · antibiotic-free · BAP 4-star",
+    "Check the label": "'Color added' — required by 21 CFR 73.35"
+   },
+   "measurements": [
+    {
+     "type": "Mercury (FDA mean, salmon)",
+     "kind": "contaminant",
+     "unit": "ppm",
+     "value": 0.022,
+     "description": "FDA commercial-fish survey mean for salmon — a 'Best Choice' species",
+     "sort_order": 1,
+     "risk_count": 0
+    },
+    {
+     "type": "Omega-6 : omega-3 ratio",
+     "kind": "property",
+     "unit": "ratio",
+     "value": 0.7,
+     "description": "Farmed Atlantic ~0.7 vs wild Atlantic ~0.05 (Jensen 2020)",
+     "sort_order": 2,
+     "risk_count": 1
+    }
+   ],
+   "documents": [
+    {
+     "title": "Jensen et al. 2020 — farmed vs wild Atlantic salmon, Foods",
+     "doc_type": "report",
+     "year": 2020,
+     "source_url": "https://www.mdpi.com/2304-8158/9/12/1901"
+    },
+    {
+     "title": "21 CFR 73.35 — astaxanthin color additive",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://www.ecfr.gov/current/title-21/chapter-I/subchapter-A/part-73/subpart-A/section-73.35"
+    },
+    {
+     "title": "Frontiers — antibiotic use in Chilean salmon farming",
+     "doc_type": "report",
+     "year": 2018,
+     "source_url": "https://www.frontiersin.org/journals/microbiology/articles/10.3389/fmicb.2018.01284/full"
+    }
+   ]
+  },
+  {
+   "name": "Wild Alaska Sockeye Salmon Fillets",
+   "brand": "Marketside",
+   "category": "meat-seafood",
+   "status": "published",
+   "image_url": "https://i5.walmartimages.com/seo/Marketside-Wild-Caught-Skin-On-Alaska-Sockeye-Salmon-Fillets-12-oz-Frozen_61a144d4-c4bf-48e4-84ea-ecdad78fb2bf.31e0e2dd049e84c8b26a80b6fb01c386.jpeg",
+   "score": 80,
+   "score_label": "STRONG SOURCE",
+   "score_rationale": "Source-based rubric, same math for every card: base 60 · +20 wild-caught or 100% grass-fed & finished · +12 USDA Organic or pasture-raised (+8 when stacked on grass-fed) · +5 verified third-party certification · +5 regenerative certification · +4 documented antibiotic-free · −8 farmed fish · −4 synthetic color added · −4 omega-ratio flag · −12 cured/processed · −12/−30 FDA mercury Good/Avoid tier. Every point traces to a label claim, certification, or government/journal data — no vibes. Brand-level lab testing comes with our lab program.",
+   "lab_tested": false,
+   "description": "Wild-caught Alaska sockeye — the salmon the naturopathic world means when it says eat salmon. The deep red is natural astaxanthin from its actual diet (no 'color added' label needed), the omega profile is the ancestral one, and salmon sits in the FDA's lowest-mercury tier. FARMED VS WILD, THE CURRENT TRUTH: farmed salmon's pink is synthetic astaxanthin added to the feed — U.S. law requires 'color added' on the label. Its omega-6-to-omega-3 ratio runs about 14 times worse than wild (0.7 vs 0.05). And antibiotic use depends on where it's farmed: Chile has used ~500 times more antibiotics per tonne than Norway. The old '10x more PCBs' claim is outdated — feed changed, and current European data shows wild Atlantic salmon now carries MORE dioxins and mercury than farmed. We tell it as the data reads today.",
+   "properties": {
+    "Sourcing": "Wild-caught · Alaska sockeye"
+   },
+   "measurements": [
+    {
+     "type": "Mercury (FDA mean, salmon)",
+     "kind": "contaminant",
+     "unit": "ppm",
+     "value": 0.022,
+     "description": "FDA commercial-fish survey mean for salmon — a 'Best Choice' species",
+     "sort_order": 1,
+     "risk_count": 0
+    }
+   ],
+   "documents": [
+    {
+     "title": "FDA — mercury levels in commercial fish",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://www.fda.gov/food/environmental-contaminants-food/mercury-levels-commercial-fish-and-shellfish-1990-2012"
+    },
+    {
+     "title": "FDA — advice about eating fish",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://www.fda.gov/food/consumers/advice-about-eating-fish"
+    }
+   ]
+  },
+  {
+   "name": "Wild Sardines in Water",
+   "brand": "Wild Planet",
+   "category": "meat-seafood",
+   "status": "published",
+   "image_url": "https://cdn.shopify.com/s/files/1/0603/5439/6408/files/WP_Sardines_Water-SS_Horizontal.jpg?v=1785536103",
+   "score": 80,
+   "score_label": "STRONG SOURCE",
+   "score_rationale": "Source-based rubric, same math for every card: base 60 · +20 wild-caught or 100% grass-fed & finished · +12 USDA Organic or pasture-raised (+8 when stacked on grass-fed) · +5 verified third-party certification · +5 regenerative certification · +4 documented antibiotic-free · −8 farmed fish · −4 synthetic color added · −4 omega-ratio flag · −12 cured/processed · −12/−30 FDA mercury Good/Avoid tier. Every point traces to a label claim, certification, or government/journal data — no vibes. Brand-level lab testing comes with our lab program.",
+   "lab_tested": false,
+   "description": "Wild-caught sardines — one of the highest omega-3, lowest-mercury fish in the ocean (FDA mean 0.013 ppm, near the bottom of the entire table). Small fish, short lives, almost no time to accumulate contaminants: the naturopathic logic, confirmed by the FDA's own numbers.",
+   "properties": {
+    "Sourcing": "Wild-caught · sustainably caught"
+   },
+   "measurements": [
+    {
+     "type": "Mercury (FDA mean, sardines)",
+     "kind": "contaminant",
+     "unit": "ppm",
+     "value": 0.013,
+     "description": "One of the lowest of any commercial fish",
+     "sort_order": 1,
+     "risk_count": 0
+    }
+   ],
+   "documents": [
+    {
+     "title": "FDA — mercury levels in commercial fish",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://www.fda.gov/food/environmental-contaminants-food/mercury-levels-commercial-fish-and-shellfish-1990-2012"
+    }
+   ]
+  },
+  {
+   "name": "Raw Peeled Shrimp 2 lb (farmed)",
+   "brand": "Great Value",
+   "category": "meat-seafood",
+   "status": "published",
+   "image_url": "https://i5.walmartimages.com/seo/Great-Value-Frozen-Raw-Large-Peeled-Deveined-Tail-off-Shrimp-2-lb-31-40-Count-per-lb-Value-Bag_8193bb19-a518-466a-b4f7-149bb833dd0f.75e0871a8225c55d9057bb058ee11bb0.jpeg",
+   "score": 52,
+   "score_label": "COMPROMISED",
+   "score_rationale": "Source-based rubric, same math for every card: base 60 · +20 wild-caught or 100% grass-fed & finished · +12 USDA Organic or pasture-raised (+8 when stacked on grass-fed) · +5 verified third-party certification · +5 regenerative certification · +4 documented antibiotic-free · −8 farmed fish · −4 synthetic color added · −4 omega-ratio flag · −12 cured/processed · −12/−30 FDA mercury Good/Avoid tier. Every point traces to a label claim, certification, or government/journal data — no vibes. Brand-level lab testing comes with our lab program.",
+   "lab_tested": false,
+   "description": "Farm-raised imported shrimp — the default at this price. Mercury is a non-issue for shrimp (FDA mean 0.009 ppm), but imported farmed shrimp is where FDA import screens most often find banned-antibiotic residues, and the bag rarely says which country's farm it came from. Wild U.S. Gulf shrimp costs a little more and answers every one of those questions.",
+   "properties": {
+    "Sourcing": "Farm-raised · imported"
+   },
+   "measurements": [
+    {
+     "type": "Mercury (FDA mean, shrimp)",
+     "kind": "contaminant",
+     "unit": "ppm",
+     "value": 0.009,
+     "description": "Among the lowest of any seafood",
+     "sort_order": 1,
+     "risk_count": 0
+    }
+   ],
+   "documents": [
+    {
+     "title": "FDA — mercury levels in commercial fish",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://www.fda.gov/food/environmental-contaminants-food/mercury-levels-commercial-fish-and-shellfish-1990-2012"
+    }
+   ]
+  },
+  {
+   "name": "Wild Caught US Gulf Shrimp",
+   "brand": "Walmart",
+   "category": "meat-seafood",
+   "status": "published",
+   "image_url": "https://i5.walmartimages.com/seo/Frozen-Wild-Caught-US-Gulf-Shrimp-31-40-Peeled-Deveined-All-Natural-16-oz-bag_62108fed-cc08-4b90-83ff-9f1c160dd502.c12af784f0d14bb00285c71ea1b626c2.jpeg",
+   "score": 80,
+   "score_label": "STRONG SOURCE",
+   "score_rationale": "Source-based rubric, same math for every card: base 60 · +20 wild-caught or 100% grass-fed & finished · +12 USDA Organic or pasture-raised (+8 when stacked on grass-fed) · +5 verified third-party certification · +5 regenerative certification · +4 documented antibiotic-free · −8 farmed fish · −4 synthetic color added · −4 omega-ratio flag · −12 cured/processed · −12/−30 FDA mercury Good/Avoid tier. Every point traces to a label claim, certification, or government/journal data — no vibes. Brand-level lab testing comes with our lab program.",
+   "lab_tested": false,
+   "description": "Wild-caught in U.S. Gulf waters — no farm, no feed, no antibiotic question, and shrimp's mercury is near zero (FDA mean 0.009 ppm). The clean pick of the shrimp case.",
+   "properties": {
+    "Sourcing": "Wild-caught · U.S. Gulf of Mexico"
+   },
+   "measurements": [
+    {
+     "type": "Mercury (FDA mean, shrimp)",
+     "kind": "contaminant",
+     "unit": "ppm",
+     "value": 0.009,
+     "description": "Among the lowest of any seafood",
+     "sort_order": 1,
+     "risk_count": 0
+    }
+   ],
+   "documents": [
+    {
+     "title": "FDA — mercury levels in commercial fish",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://www.fda.gov/food/environmental-contaminants-food/mercury-levels-commercial-fish-and-shellfish-1990-2012"
+    }
+   ]
+  },
+  {
+   "name": "Frozen Tilapia Fillets 2 lb (farmed)",
+   "brand": "Great Value",
+   "category": "meat-seafood",
+   "status": "published",
+   "image_url": "https://i5.walmartimages.com/seo/Great-Value-Frozen-Tilapia-Skinless-Boneless-Fillets-2-lb-Bag_750c9994-5b6e-47d4-9d9a-9ae621552300.fd48420acaf6e3a884951321179d7016.jpeg",
+   "score": 57,
+   "score_label": "DECENT",
+   "score_rationale": "Source-based rubric, same math for every card: base 60 · +20 wild-caught or 100% grass-fed & finished · +12 USDA Organic or pasture-raised (+8 when stacked on grass-fed) · +5 verified third-party certification · +5 regenerative certification · +4 documented antibiotic-free · −8 farmed fish · −4 synthetic color added · −4 omega-ratio flag · −12 cured/processed · −12/−30 FDA mercury Good/Avoid tier. Every point traces to a label claim, certification, or government/journal data — no vibes. Brand-level lab testing comes with our lab program.",
+   "lab_tested": false,
+   "description": "Farm-raised tilapia, BAP certified. Mercury is genuinely minimal (FDA mean 0.013 ppm) — but tilapia is also one of the lowest omega-3 fish you can buy, so it delivers little of what makes fish worth eating. Fine protein; don't count it as your 'fatty fish' serving — sardines or wild salmon do that job.",
+   "properties": {
+    "Sourcing": "Farm-raised · BAP certified"
+   },
+   "measurements": [
+    {
+     "type": "Mercury (FDA mean, tilapia)",
+     "kind": "contaminant",
+     "unit": "ppm",
+     "value": 0.013,
+     "description": "Very low — a 'Best Choice' species",
+     "sort_order": 1,
+     "risk_count": 0
+    }
+   ],
+   "documents": [
+    {
+     "title": "FDA — mercury levels in commercial fish",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://www.fda.gov/food/environmental-contaminants-food/mercury-levels-commercial-fish-and-shellfish-1990-2012"
+    }
+   ]
+  },
+  {
+   "name": "Ground Lamb 80/20",
+   "brand": "Marketside",
+   "category": "meat-seafood",
+   "status": "published",
+   "image_url": "https://i5.walmartimages.com/seo/Marketside-Ground-Lamb-80-20-1-lb_c96dfc84-77cb-4191-94da-6079263f44da.99a6c344905912367d9e5dada19c8484.jpeg",
+   "score": 60,
+   "score_label": "DECENT",
+   "score_rationale": "Source-based rubric, same math for every card: base 60 · +20 wild-caught or 100% grass-fed & finished · +12 USDA Organic or pasture-raised (+8 when stacked on grass-fed) · +5 verified third-party certification · +5 regenerative certification · +4 documented antibiotic-free · −8 farmed fish · −4 synthetic color added · −4 omega-ratio flag · −12 cured/processed · −12/−30 FDA mercury Good/Avoid tier. Every point traces to a label claim, certification, or government/journal data — no vibes. Brand-level lab testing comes with our lab program.",
+   "lab_tested": false,
+   "description": "Ground lamb — much of the world's lamb is substantially pasture-raised by default, but this label makes no grass-fed claim, so we score only what's on the package. LABEL DECODER: 'No added hormones' on chicken or pork is pure marketing — federal law bans hormones in ALL U.S. poultry and pork, and the label is legally required to admit it. On beef, hormone implants ARE legal and common in feedlots. And 'grass-fed' lost its federal definition in 2016 — without third-party certification, it's a self-declared claim.",
+   "properties": {
+    "Sourcing": "No feeding claim on label"
+   },
+   "measurements": [],
+   "documents": [
+    {
+     "title": "Daley et al. 2010 — grass-fed vs grain-fed nutrient review, Nutrition Journal",
+     "doc_type": "report",
+     "year": 2010,
+     "source_url": "https://link.springer.com/article/10.1186/1475-2891-9-10"
+    },
+    {
+     "title": "FDA — steroid hormone implants in food animals",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://www.fda.gov/animal-veterinary/product-safety-information/steroid-hormone-implants-used-growth-food-producing-animals"
+    },
+    {
+     "title": "USDA FSIS — meat & poultry labeling terms",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://www.fsis.usda.gov/food-safety/safe-food-handling-and-preparation/food-safety-basics/meat-and-poultry-labeling-terms"
+    },
+    {
+     "title": "Federal Register 2016 — withdrawal of the U.S. grass-fed standard",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://www.federalregister.gov/documents/2016/01/12/2016-00440/withdrawal-of-united-states-standards-for-livestock-and-meat-marketing-claims"
+    }
+   ]
+  },
+  {
+   "name": "Applewood Smoked Uncured Bacon",
+   "brand": "Niman Ranch",
+   "category": "meat-seafood",
+   "status": "published",
+   "image_url": "https://www.perduefarms.com/dw/image/v2/bdqm_prd/on/demandware.static/-/Sites-masterCatalog_perdue/default/dw73d1c3c7/images/product-images/7029_niman_ranch_applewood_smoked_uncured_bacon_pkfv.png?sw=1000&sh=1000",
+   "score": 69,
+   "score_label": "DECENT",
+   "score_rationale": "Source-based rubric, same math for every card: base 60 · +20 wild-caught or 100% grass-fed & finished · +12 USDA Organic or pasture-raised (+8 when stacked on grass-fed) · +5 verified third-party certification · +5 regenerative certification · +4 documented antibiotic-free · −8 farmed fish · −4 synthetic color added · −4 omega-ratio flag · −12 cured/processed · −12/−30 FDA mercury Good/Avoid tier. Every point traces to a label claim, certification, or government/journal data — no vibes. Brand-level lab testing comes with our lab program.",
+   "lab_tested": false,
+   "description": "The best-raised bacon on a mainstream shelf: pasture/deep-bedded pork, no antibiotics or hormones ever, Certified Humane. Scored down like every cured meat — 'uncured' bacon is cured with celery-powder nitrates, which your body treats the same as regular nitrites. Great sourcing; still bacon.",
+   "properties": {
+    "Sourcing": "Pasture-raised · Certified Humane · no antibiotics ever",
+    "Honesty note": "'Uncured' = celery-powder cured — same nitrates"
+   },
+   "measurements": [],
+   "documents": [
+    {
+     "title": "USDA FSIS — labeling terms",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://www.fsis.usda.gov/food-safety/safe-food-handling-and-preparation/food-safety-basics/meat-and-poultry-labeling-terms"
+    }
+   ]
+  }
+ ]
+}
