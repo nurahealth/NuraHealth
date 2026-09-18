@@ -375,6 +375,19 @@ export default async function LabProductPage({ params }: { params: Promise<{ slu
               )}
             </div>
 
+            {product.description && !/^\s*ingredients?\s*:/i.test(product.description) && (
+              <div style={{ marginTop: 16, paddingTop: 15, borderTop: `0.5px solid rgba(${SAGE_RGB},0.18)` }}>
+                <Eyebrow color={SAGE}>The breakdown</Eyebrow>
+                <div style={{ marginTop: 9, display: "flex", flexDirection: "column", gap: 10, maxWidth: 760 }}>
+                  {product.description
+                    .split(/(?= THE STICKER TRICK:| WHERE IT'S GROWN MATTERS:| NOTE:)/)
+                    .map((seg, i) => (
+                      <p key={i} style={{ margin: 0, fontFamily: SANS, fontSize: 14, color: TEXT_SEC, lineHeight: 1.65 }}>{seg.trim()}</p>
+                    ))}
+                </div>
+              </div>
+            )}
+
             {flaggedIngredients.length > 0 && (
               <div style={{ marginTop: 16, paddingTop: 15, borderTop: `0.5px solid rgba(${SAGE_RGB},0.18)` }}>
                 <Eyebrow color={AMBER}>Ingredients worth knowing about</Eyebrow>
