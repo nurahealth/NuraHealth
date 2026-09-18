@@ -1,5 +1,5 @@
 {
- "_about": "Meat & Seafood: 17 branded items. Source-based deterministic rubric (printed in every rationale); figures from FDA/USDA/peer-reviewed journals; naturopathic/ancestral framing carried by the copy, numbers carried by institutions. Force of Nature = category hero. Built 2026-09-24.",
+ "_about": "Meat & Seafood: 30 branded items over 2 waves (plus 8 canned-fish via the curated barcode path). Source-based deterministic rubric (printed in every rationale); figures from FDA/USDA/peer-reviewed journals; naturopathic/ancestral framing carried by the copy, numbers carried by institutions. Force of Nature = category hero. Built 2026-09-24.",
  "products": [
   {
    "name": "Grass Fed Ground Beef 85/15",
@@ -903,6 +903,505 @@
      "doc_type": "report",
      "year": null,
      "source_url": "https://www.fsis.usda.gov/food-safety/safe-food-handling-and-preparation/food-safety-basics/meat-and-poultry-labeling-terms"
+    }
+   ]
+  },
+  {
+   "name": "Organic 85/15 Grass Fed Ground Beef",
+   "brand": "Thousand Hills",
+   "category": "meat-seafood",
+   "status": "published",
+   "image_url": "https://thousandhillslifetimegrazed.com/cdn/shop/files/organic-85-15-grass-fed-ground-beef-1.png",
+   "score": 93,
+   "score_label": "EXCEPTIONAL SOURCE",
+   "score_rationale": "Source-based rubric, same math for every card: base 60 · +20 wild-caught or 100% grass-fed & finished · +12 USDA Organic or pasture-raised (+8 stacked on grass-fed) · +5 verified third-party certification · +4 documented antibiotic-free · −8 farmed fish · −12 cured/deli/processed · mercury tiers −12/−30. Every point traces to a label claim, certification, or government/journal data.",
+   "lab_tested": false,
+   "description": "Lifetime-grazed, USDA Organic AND 100% grass-fed — the full stack. Regenerative grazing on healthy soils, the model the ancestral-nutrition world has championed. LABEL DECODER: 'No added hormones' on chicken or pork is pure marketing — federal law bans hormones in ALL U.S. poultry and pork, and the label is legally required to admit it. On beef, hormone implants ARE legal and common in feedlots. And 'grass-fed' lost its federal definition in 2016 — without third-party certification, it's a self-declared claim.",
+   "properties": {
+    "Sourcing": "100% grass-fed · USDA Organic · lifetime grazed"
+   },
+   "measurements": [
+    {
+     "type": "Omega-6 : omega-3 ratio",
+     "kind": "property",
+     "unit": "ratio",
+     "value": 1.53,
+     "description": "Grass-fed beef averages ~1.5:1 vs ~7.7:1 grain-fed (Daley 2010)",
+     "sort_order": 1
+    },
+    {
+     "type": "CLA advantage",
+     "kind": "property",
+     "unit": "x",
+     "value": 2.5,
+     "description": "CLA 2–3× higher in grass-fed ruminants (Daley 2010)",
+     "sort_order": 2
+    }
+   ],
+   "documents": [
+    {
+     "title": "Daley et al. 2010 — grass-fed nutrient review",
+     "doc_type": "report",
+     "year": 2010,
+     "source_url": "https://link.springer.com/article/10.1186/1475-2891-9-10"
+    },
+    {
+     "title": "USDA FSIS — labeling terms",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://www.fsis.usda.gov/food-safety/safe-food-handling-and-preparation/food-safety-basics/meat-and-poultry-labeling-terms"
+    },
+    {
+     "title": "Federal Register 2016 — grass-fed standard withdrawal",
+     "doc_type": "report",
+     "year": 2016,
+     "source_url": "https://www.federalregister.gov/documents/2016/01/12/2016-00440/withdrawal-of-united-states-standards-for-livestock-and-meat-marketing-claims"
+    },
+    {
+     "title": "USDA AMS — organic livestock requirements",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://www.ams.usda.gov/sites/default/files/media/Organic%20Livestock%20Requirements.pdf"
+    }
+   ]
+  },
+  {
+   "name": "Grassfed Ground Beef 90/10",
+   "brand": "White Oak Pastures",
+   "category": "meat-seafood",
+   "status": "published",
+   "image_url": "https://whiteoakpastures.com/cdn/shop/products/Grassfed-Ground-Beef-9010.jpg",
+   "score": 80,
+   "score_label": "STRONG SOURCE",
+   "score_rationale": "Source-based rubric, same math for every card: base 60 · +20 wild-caught or 100% grass-fed & finished · +12 USDA Organic or pasture-raised (+8 stacked on grass-fed) · +5 verified third-party certification · +4 documented antibiotic-free · −8 farmed fish · −12 cured/deli/processed · mercury tiers −12/−30. Every point traces to a label claim, certification, or government/journal data.",
+   "lab_tested": false,
+   "description": "Grass-fed and grass-finished from a single regenerative farm in Bland, Georgia — one of the most respected names in the regenerative movement. No third-party certification on the label, which is the only thing keeping it out of the top tier. LABEL DECODER: 'No added hormones' on chicken or pork is pure marketing — federal law bans hormones in ALL U.S. poultry and pork, and the label is legally required to admit it. On beef, hormone implants ARE legal and common in feedlots. And 'grass-fed' lost its federal definition in 2016 — without third-party certification, it's a self-declared claim.",
+   "properties": {
+    "Sourcing": "Grass-fed & finished · single-farm regenerative"
+   },
+   "measurements": [
+    {
+     "type": "Omega-6 : omega-3 ratio",
+     "kind": "property",
+     "unit": "ratio",
+     "value": 1.53,
+     "description": "Grass-fed beef averages ~1.5:1 vs ~7.7:1 grain-fed (Daley 2010)",
+     "sort_order": 1
+    },
+    {
+     "type": "CLA advantage",
+     "kind": "property",
+     "unit": "x",
+     "value": 2.5,
+     "description": "CLA 2–3× higher in grass-fed ruminants (Daley 2010)",
+     "sort_order": 2
+    }
+   ],
+   "documents": [
+    {
+     "title": "Daley et al. 2010 — grass-fed nutrient review",
+     "doc_type": "report",
+     "year": 2010,
+     "source_url": "https://link.springer.com/article/10.1186/1475-2891-9-10"
+    },
+    {
+     "title": "USDA FSIS — labeling terms",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://www.fsis.usda.gov/food-safety/safe-food-handling-and-preparation/food-safety-basics/meat-and-poultry-labeling-terms"
+    },
+    {
+     "title": "Federal Register 2016 — grass-fed standard withdrawal",
+     "doc_type": "report",
+     "year": 2016,
+     "source_url": "https://www.federalregister.gov/documents/2016/01/12/2016-00440/withdrawal-of-united-states-standards-for-livestock-and-meat-marketing-claims"
+    }
+   ]
+  },
+  {
+   "name": "Grass-Fed Beef Burger Patties",
+   "brand": "Teton Waters Ranch",
+   "category": "meat-seafood",
+   "status": "published",
+   "image_url": "https://tetonwatersranch.com/wp-content/uploads/2026/07/Teton-Waters-Ranch-Beef-Burgers.png",
+   "score": 89,
+   "score_label": "EXCEPTIONAL SOURCE",
+   "score_rationale": "Source-based rubric, same math for every card: base 60 · +20 wild-caught or 100% grass-fed & finished · +12 USDA Organic or pasture-raised (+8 stacked on grass-fed) · +5 verified third-party certification · +4 documented antibiotic-free · −8 farmed fish · −12 cured/deli/processed · mercury tiers −12/−30. Every point traces to a label claim, certification, or government/journal data.",
+   "lab_tested": false,
+   "description": "100% grass-fed and finished, Certified Humane, never antibiotics or hormones. Burger-ready without the feedlot. LABEL DECODER: 'No added hormones' on chicken or pork is pure marketing — federal law bans hormones in ALL U.S. poultry and pork, and the label is legally required to admit it. On beef, hormone implants ARE legal and common in feedlots. And 'grass-fed' lost its federal definition in 2016 — without third-party certification, it's a self-declared claim.",
+   "properties": {
+    "Sourcing": "Grass-fed & finished · Certified Humane · no antibiotics"
+   },
+   "measurements": [
+    {
+     "type": "Omega-6 : omega-3 ratio",
+     "kind": "property",
+     "unit": "ratio",
+     "value": 1.53,
+     "description": "Grass-fed beef averages ~1.5:1 vs ~7.7:1 grain-fed (Daley 2010)",
+     "sort_order": 1
+    },
+    {
+     "type": "CLA advantage",
+     "kind": "property",
+     "unit": "x",
+     "value": 2.5,
+     "description": "CLA 2–3× higher in grass-fed ruminants (Daley 2010)",
+     "sort_order": 2
+    }
+   ],
+   "documents": [
+    {
+     "title": "Daley et al. 2010 — grass-fed nutrient review",
+     "doc_type": "report",
+     "year": 2010,
+     "source_url": "https://link.springer.com/article/10.1186/1475-2891-9-10"
+    },
+    {
+     "title": "USDA FSIS — labeling terms",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://www.fsis.usda.gov/food-safety/safe-food-handling-and-preparation/food-safety-basics/meat-and-poultry-labeling-terms"
+    },
+    {
+     "title": "Federal Register 2016 — grass-fed standard withdrawal",
+     "doc_type": "report",
+     "year": 2016,
+     "source_url": "https://www.federalregister.gov/documents/2016/01/12/2016-00440/withdrawal-of-united-states-standards-for-livestock-and-meat-marketing-claims"
+    }
+   ]
+  },
+  {
+   "name": "Organic Ground Beef 85/15",
+   "brand": "SunFed Ranch",
+   "category": "meat-seafood",
+   "status": "published",
+   "image_url": "https://sunfedranch.com/wp-content/uploads/8515-sunfed-organic-ground-beef.png",
+   "score": 93,
+   "score_label": "EXCEPTIONAL SOURCE",
+   "score_rationale": "Source-based rubric, same math for every card: base 60 · +20 wild-caught or 100% grass-fed & finished · +12 USDA Organic or pasture-raised (+8 stacked on grass-fed) · +5 verified third-party certification · +4 documented antibiotic-free · −8 farmed fish · −12 cured/deli/processed · mercury tiers −12/−30. Every point traces to a label claim, certification, or government/journal data.",
+   "lab_tested": false,
+   "description": "100% grass-fed and finished, USDA Organic, free-range on American family ranches. LABEL DECODER: 'No added hormones' on chicken or pork is pure marketing — federal law bans hormones in ALL U.S. poultry and pork, and the label is legally required to admit it. On beef, hormone implants ARE legal and common in feedlots. And 'grass-fed' lost its federal definition in 2016 — without third-party certification, it's a self-declared claim.",
+   "properties": {
+    "Sourcing": "Grass-fed & finished · USDA Organic · American ranches"
+   },
+   "measurements": [
+    {
+     "type": "Omega-6 : omega-3 ratio",
+     "kind": "property",
+     "unit": "ratio",
+     "value": 1.53,
+     "description": "Grass-fed beef averages ~1.5:1 vs ~7.7:1 grain-fed (Daley 2010)",
+     "sort_order": 1
+    },
+    {
+     "type": "CLA advantage",
+     "kind": "property",
+     "unit": "x",
+     "value": 2.5,
+     "description": "CLA 2–3× higher in grass-fed ruminants (Daley 2010)",
+     "sort_order": 2
+    }
+   ],
+   "documents": [
+    {
+     "title": "Daley et al. 2010 — grass-fed nutrient review",
+     "doc_type": "report",
+     "year": 2010,
+     "source_url": "https://link.springer.com/article/10.1186/1475-2891-9-10"
+    },
+    {
+     "title": "USDA FSIS — labeling terms",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://www.fsis.usda.gov/food-safety/safe-food-handling-and-preparation/food-safety-basics/meat-and-poultry-labeling-terms"
+    },
+    {
+     "title": "Federal Register 2016 — grass-fed standard withdrawal",
+     "doc_type": "report",
+     "year": 2016,
+     "source_url": "https://www.federalregister.gov/documents/2016/01/12/2016-00440/withdrawal-of-united-states-standards-for-livestock-and-meat-marketing-claims"
+    },
+    {
+     "title": "USDA AMS — organic livestock requirements",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://www.ams.usda.gov/sites/default/files/media/Organic%20Livestock%20Requirements.pdf"
+    }
+   ]
+  },
+  {
+   "name": "Organic Ground Beef 85/15",
+   "brand": "Trader Joe's",
+   "category": "meat-seafood",
+   "status": "published",
+   "image_url": "https://www.traderjoes.com/content/dam/trjo/products/m20801/92558.png",
+   "score": 77,
+   "score_label": "STRONG SOURCE",
+   "score_rationale": "Source-based rubric, same math for every card: base 60 · +20 wild-caught or 100% grass-fed & finished · +12 USDA Organic or pasture-raised (+8 stacked on grass-fed) · +5 verified third-party certification · +4 documented antibiotic-free · −8 farmed fish · −12 cured/deli/processed · mercury tiers −12/−30. Every point traces to a label claim, certification, or government/journal data.",
+   "lab_tested": false,
+   "description": "USDA Organic ground beef at a store-brand price — organic means certified feed, no antibiotics, no added hormones, audited yearly. The label doesn't claim 100% grass-fed, so it doesn't score the grass bonus. LABEL DECODER: 'No added hormones' on chicken or pork is pure marketing — federal law bans hormones in ALL U.S. poultry and pork, and the label is legally required to admit it. On beef, hormone implants ARE legal and common in feedlots. And 'grass-fed' lost its federal definition in 2016 — without third-party certification, it's a self-declared claim.",
+   "properties": {
+    "Sourcing": "USDA Organic · no grass-fed claim on label"
+   },
+   "measurements": [],
+   "documents": [
+    {
+     "title": "Daley et al. 2010 — grass-fed nutrient review",
+     "doc_type": "report",
+     "year": 2010,
+     "source_url": "https://link.springer.com/article/10.1186/1475-2891-9-10"
+    },
+    {
+     "title": "USDA FSIS — labeling terms",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://www.fsis.usda.gov/food-safety/safe-food-handling-and-preparation/food-safety-basics/meat-and-poultry-labeling-terms"
+    },
+    {
+     "title": "Federal Register 2016 — grass-fed standard withdrawal",
+     "doc_type": "report",
+     "year": 2016,
+     "source_url": "https://www.federalregister.gov/documents/2016/01/12/2016-00440/withdrawal-of-united-states-standards-for-livestock-and-meat-marketing-claims"
+    },
+    {
+     "title": "USDA AMS — organic livestock requirements",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://www.ams.usda.gov/sites/default/files/media/Organic%20Livestock%20Requirements.pdf"
+    }
+   ]
+  },
+  {
+   "name": "Grass-Fed Organic Ground Beef",
+   "brand": "Member's Mark",
+   "category": "meat-seafood",
+   "status": "published",
+   "image_url": "https://i5.samsclubimages.com/asr/c3e4d70f-a1a4-42c7-88a3-a38c4297d26b.104cdca144230fd6bb8f7dca95d34f9e.jpeg",
+   "score": 93,
+   "score_label": "EXCEPTIONAL SOURCE",
+   "score_rationale": "Source-based rubric, same math for every card: base 60 · +20 wild-caught or 100% grass-fed & finished · +12 USDA Organic or pasture-raised (+8 stacked on grass-fed) · +5 verified third-party certification · +4 documented antibiotic-free · −8 farmed fish · −12 cured/deli/processed · mercury tiers −12/−30. Every point traces to a label claim, certification, or government/journal data.",
+   "lab_tested": false,
+   "description": "Warehouse-club price on the full stack: 100% grass-fed, USDA Organic, no antibiotics or added hormones. Proof the good version doesn't have to be boutique. LABEL DECODER: 'No added hormones' on chicken or pork is pure marketing — federal law bans hormones in ALL U.S. poultry and pork, and the label is legally required to admit it. On beef, hormone implants ARE legal and common in feedlots. And 'grass-fed' lost its federal definition in 2016 — without third-party certification, it's a self-declared claim.",
+   "properties": {
+    "Sourcing": "100% grass-fed · USDA Organic"
+   },
+   "measurements": [
+    {
+     "type": "Omega-6 : omega-3 ratio",
+     "kind": "property",
+     "unit": "ratio",
+     "value": 1.53,
+     "description": "Grass-fed beef averages ~1.5:1 vs ~7.7:1 grain-fed (Daley 2010)",
+     "sort_order": 1
+    },
+    {
+     "type": "CLA advantage",
+     "kind": "property",
+     "unit": "x",
+     "value": 2.5,
+     "description": "CLA 2–3× higher in grass-fed ruminants (Daley 2010)",
+     "sort_order": 2
+    }
+   ],
+   "documents": [
+    {
+     "title": "Daley et al. 2010 — grass-fed nutrient review",
+     "doc_type": "report",
+     "year": 2010,
+     "source_url": "https://link.springer.com/article/10.1186/1475-2891-9-10"
+    },
+    {
+     "title": "USDA FSIS — labeling terms",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://www.fsis.usda.gov/food-safety/safe-food-handling-and-preparation/food-safety-basics/meat-and-poultry-labeling-terms"
+    },
+    {
+     "title": "Federal Register 2016 — grass-fed standard withdrawal",
+     "doc_type": "report",
+     "year": 2016,
+     "source_url": "https://www.federalregister.gov/documents/2016/01/12/2016-00440/withdrawal-of-united-states-standards-for-livestock-and-meat-marketing-claims"
+    },
+    {
+     "title": "USDA AMS — organic livestock requirements",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://www.ams.usda.gov/sites/default/files/media/Organic%20Livestock%20Requirements.pdf"
+    }
+   ]
+  },
+  {
+   "name": "Organic Oven Roasted Chicken Breast (sliced)",
+   "brand": "Applegate Organics",
+   "category": "meat-seafood",
+   "status": "published",
+   "image_url": "https://dylzm7u8zqclv.cloudfront.net/2023/08/03/23/03/52/6fca5dda-e6fa-49b4-a8a4-45418c4560b8/Applegate-Organic-Oven-Roasted-Chicken-Sliced-Front.png",
+   "score": 69,
+   "score_label": "DECENT",
+   "score_rationale": "Source-based rubric, same math for every card: base 60 · +20 wild-caught or 100% grass-fed & finished · +12 USDA Organic or pasture-raised (+8 stacked on grass-fed) · +5 verified third-party certification · +4 documented antibiotic-free · −8 farmed fish · −12 cured/deli/processed · mercury tiers −12/−30. Every point traces to a label claim, certification, or government/journal data.",
+   "lab_tested": false,
+   "description": "The cleanest version of deli chicken: USDA Organic, no antibiotics ever, humanely raised, no chemical nitrates. Still deli meat — processed meat carries a score penalty no sourcing can erase. LABEL DECODER: 'No added hormones' on chicken or pork is pure marketing — federal law bans hormones in ALL U.S. poultry and pork, and the label is legally required to admit it. On beef, hormone implants ARE legal and common in feedlots. And 'grass-fed' lost its federal definition in 2016 — without third-party certification, it's a self-declared claim.",
+   "properties": {
+    "Sourcing": "USDA Organic · no antibiotics ever · deli/processed"
+   },
+   "measurements": [],
+   "documents": [
+    {
+     "title": "USDA AMS — organic livestock requirements",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://www.ams.usda.gov/sites/default/files/media/Organic%20Livestock%20Requirements.pdf"
+    }
+   ]
+  },
+  {
+   "name": "93% Lean Ground Turkey",
+   "brand": "Farm to Family by Butterball",
+   "category": "meat-seafood",
+   "status": "published",
+   "image_url": "https://www.butterball.com/farmtofamily/sites/farmtofamily/files/styles/large/public/2023-05/ground-turkey_0.png",
+   "score": 69,
+   "score_label": "DECENT",
+   "score_rationale": "Source-based rubric, same math for every card: base 60 · +20 wild-caught or 100% grass-fed & finished · +12 USDA Organic or pasture-raised (+8 stacked on grass-fed) · +5 verified third-party certification · +4 documented antibiotic-free · −8 farmed fish · −12 cured/deli/processed · mercury tiers −12/−30. Every point traces to a label claim, certification, or government/journal data.",
+   "lab_tested": false,
+   "description": "No antibiotics ever, American Humane Certified. Remember: 'no added hormones' on ANY turkey is a federally mandated disclaimer of a universal ban — the antibiotic claim is the one that means something. LABEL DECODER: 'No added hormones' on chicken or pork is pure marketing — federal law bans hormones in ALL U.S. poultry and pork, and the label is legally required to admit it. On beef, hormone implants ARE legal and common in feedlots. And 'grass-fed' lost its federal definition in 2016 — without third-party certification, it's a self-declared claim.",
+   "properties": {
+    "Sourcing": "No antibiotics ever · American Humane Certified"
+   },
+   "measurements": [],
+   "documents": [
+    {
+     "title": "USDA FSIS — labeling terms",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://www.fsis.usda.gov/food-safety/safe-food-handling-and-preparation/food-safety-basics/meat-and-poultry-labeling-terms"
+    }
+   ]
+  },
+  {
+   "name": "Boneless Skinless Chicken Breasts",
+   "brand": "Bell & Evans",
+   "category": "meat-seafood",
+   "status": "published",
+   "image_url": "https://www.bellandevans.com/wp-content/uploads/UP-RWA-BS-Breast-FB.jpg",
+   "score": 64,
+   "score_label": "DECENT",
+   "score_rationale": "Source-based rubric, same math for every card: base 60 · +20 wild-caught or 100% grass-fed & finished · +12 USDA Organic or pasture-raised (+8 stacked on grass-fed) · +5 verified third-party certification · +4 documented antibiotic-free · −8 farmed fish · −12 cured/deli/processed · mercury tiers −12/−30. Every point traces to a label claim, certification, or government/journal data.",
+   "lab_tested": false,
+   "description": "Raised without antibiotics and 100% air-chilled — air chilling means no chlorinated water bath and no absorbed water weight (water-chilled birds can legally retain water; the label must disclose it). LABEL DECODER: 'No added hormones' on chicken or pork is pure marketing — federal law bans hormones in ALL U.S. poultry and pork, and the label is legally required to admit it. On beef, hormone implants ARE legal and common in feedlots. And 'grass-fed' lost its federal definition in 2016 — without third-party certification, it's a self-declared claim.",
+   "properties": {
+    "Sourcing": "No antibiotics · 100% air-chilled"
+   },
+   "measurements": [],
+   "documents": [
+    {
+     "title": "USDA FSIS — labeling terms",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://www.fsis.usda.gov/food-safety/safe-food-handling-and-preparation/food-safety-basics/meat-and-poultry-labeling-terms"
+    },
+    {
+     "title": "9 CFR 441.10 — retained-water disclosure",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://www.ecfr.gov/current/title-9/chapter-III/subchapter-E/part-441/section-441.10"
+    }
+   ]
+  },
+  {
+   "name": "Organic Applewood Smoked Uncured Bacon",
+   "brand": "North Country Smokehouse",
+   "category": "meat-seafood",
+   "status": "published",
+   "image_url": "https://ncsmokehouse.com/wp-content/uploads/2024/04/26143-OG-8oz-Applewood-Bacon-Fro.webp",
+   "score": 69,
+   "score_label": "DECENT",
+   "score_rationale": "Source-based rubric, same math for every card: base 60 · +20 wild-caught or 100% grass-fed & finished · +12 USDA Organic or pasture-raised (+8 stacked on grass-fed) · +5 verified third-party certification · +4 documented antibiotic-free · −8 farmed fish · −12 cured/deli/processed · mercury tiers −12/−30. Every point traces to a label claim, certification, or government/journal data.",
+   "lab_tested": false,
+   "description": "USDA Organic, Certified Humane, antibiotic-free bacon — the best-sourced version of a processed meat. 'Uncured' still means cured with celery-powder nitrates; the penalty stands. LABEL DECODER: 'No added hormones' on chicken or pork is pure marketing — federal law bans hormones in ALL U.S. poultry and pork, and the label is legally required to admit it. On beef, hormone implants ARE legal and common in feedlots. And 'grass-fed' lost its federal definition in 2016 — without third-party certification, it's a self-declared claim.",
+   "properties": {
+    "Sourcing": "USDA Organic · Certified Humane · cured/processed"
+   },
+   "measurements": [],
+   "documents": [
+    {
+     "title": "USDA AMS — organic livestock requirements",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://www.ams.usda.gov/sites/default/files/media/Organic%20Livestock%20Requirements.pdf"
+    }
+   ]
+  },
+  {
+   "name": "Organic Turkey Bacon",
+   "brand": "Applegate Organics",
+   "category": "meat-seafood",
+   "status": "published",
+   "image_url": "https://dylzm7u8zqclv.cloudfront.net/2020/06/22/12/58/32/9c876533-482b-4c1c-b2ae-5fbdfced5c01/Organic%20Turkey%20Bacon_Front.png",
+   "score": 69,
+   "score_label": "DECENT",
+   "score_rationale": "Source-based rubric, same math for every card: base 60 · +20 wild-caught or 100% grass-fed & finished · +12 USDA Organic or pasture-raised (+8 stacked on grass-fed) · +5 verified third-party certification · +4 documented antibiotic-free · −8 farmed fish · −12 cured/deli/processed · mercury tiers −12/−30. Every point traces to a label claim, certification, or government/journal data.",
+   "lab_tested": false,
+   "description": "Organic, humanely raised, no antibiotics ever — and leaner than pork bacon. Processed-meat penalty applies all the same.",
+   "properties": {
+    "Sourcing": "USDA Organic · no antibiotics ever · processed"
+   },
+   "measurements": [],
+   "documents": [
+    {
+     "title": "USDA AMS — organic livestock requirements",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://www.ams.usda.gov/sites/default/files/media/Organic%20Livestock%20Requirements.pdf"
+    }
+   ]
+  },
+  {
+   "name": "No Sugar Added Hickory Smoked Bacon",
+   "brand": "Pederson's Natural Farms",
+   "category": "meat-seafood",
+   "status": "published",
+   "image_url": "https://pedersonsnatural.com/cdn/shop/files/PED_Bacon_NoSugar_Front_3D_Render_1.png",
+   "score": 48,
+   "score_label": "COMPROMISED",
+   "score_rationale": "Source-based rubric, same math for every card: base 60 · +20 wild-caught or 100% grass-fed & finished · +12 USDA Organic or pasture-raised (+8 stacked on grass-fed) · +5 verified third-party certification · +4 documented antibiotic-free · −8 farmed fish · −12 cured/deli/processed · mercury tiers −12/−30. Every point traces to a label claim, certification, or government/journal data.",
+   "lab_tested": false,
+   "description": "No sugar, Whole30-approved, humanely-raised claim — but no third-party certification and no antibiotic-free claim on the label, and it's still cured processed meat. Our rubric scores the label, not the vibe.",
+   "properties": {
+    "Sourcing": "Humanely-raised claim (uncertified) · cured/processed"
+   },
+   "measurements": [],
+   "documents": [
+    {
+     "title": "USDA FSIS — labeling terms",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://www.fsis.usda.gov/food-safety/safe-food-handling-and-preparation/food-safety-basics/meat-and-poultry-labeling-terms"
+    }
+   ]
+  },
+  {
+   "name": "Organic Fresh Ground Turkey 93/7",
+   "brand": "Diestel Family Ranch",
+   "category": "meat-seafood",
+   "status": "published",
+   "image_url": "https://diestelturkey.com/cdn/shop/files/FreshGroundTurkey1.png",
+   "score": 81,
+   "score_label": "STRONG SOURCE",
+   "score_rationale": "Source-based rubric, same math for every card: base 60 · +20 wild-caught or 100% grass-fed & finished · +12 USDA Organic or pasture-raised (+8 stacked on grass-fed) · +5 verified third-party certification · +4 documented antibiotic-free · −8 farmed fish · −12 cured/deli/processed · mercury tiers −12/−30. Every point traces to a label claim, certification, or government/journal data.",
+   "lab_tested": false,
+   "description": "USDA Organic, Animal Welfare Certified (GAP), no antibiotics ever, slow-grown with year-round outdoor access. Two ingredients: organic turkey, organic vinegar. LABEL DECODER: 'No added hormones' on chicken or pork is pure marketing — federal law bans hormones in ALL U.S. poultry and pork, and the label is legally required to admit it. On beef, hormone implants ARE legal and common in feedlots. And 'grass-fed' lost its federal definition in 2016 — without third-party certification, it's a self-declared claim.",
+   "properties": {
+    "Sourcing": "USDA Organic · GAP certified · no antibiotics ever"
+   },
+   "measurements": [],
+   "documents": [
+    {
+     "title": "USDA AMS — organic livestock requirements",
+     "doc_type": "report",
+     "year": null,
+     "source_url": "https://www.ams.usda.gov/sites/default/files/media/Organic%20Livestock%20Requirements.pdf"
     }
    ]
   }

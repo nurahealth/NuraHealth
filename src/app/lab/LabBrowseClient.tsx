@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import ScoreRing from "./ScoreRing";
-import { categoryHeroImage, PRODUCTS_GRID } from "@/lib/category-heroes";
+import { categoryHeroImage, HERO_OVERRIDES, PRODUCTS_GRID } from "@/lib/category-heroes";
 
 // ── Design tokens (locked NŪRA system) ─────────────────────────────────────────
 const TEXT = "var(--nura-text-primary)";
@@ -204,7 +204,7 @@ export default function LabBrowseClient({ categories, products }: {
         key: entry.slug,
         label: entry.label,
         slug: entry.slug,
-        image: hero?.image_url ?? categoryHeroImage(entry.heroSlug ?? entry.slug),
+        image: HERO_OVERRIDES[entry.slug] ?? hero?.image_url ?? categoryHeroImage(entry.heroSlug ?? entry.slug),
         alt: hero?.name ?? entry.label,
       };
     }).filter((c) => c.image);

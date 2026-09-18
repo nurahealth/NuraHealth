@@ -79,6 +79,15 @@ export function categoryHeroImage(slug: string): string | null {
   return f.startsWith("http") ? f : BUCKET + f;
 }
 
+
+// ── Explicit browse-card overrides ───────────────────────────────────────────
+// A category listed here always shows THIS image on the browse grid, beating
+// the top-scoring product's packshot. Austin's call: Force of Nature fronts
+// Meat & Seafood.
+export const HERO_OVERRIDES: Record<string, string> = {
+  "meat-seafood": "https://forceofnature.com/cdn/shop/files/FON-regen-beef-pdp-hero-2026.jpg?v=1781555339",
+};
+
 // ── The Products grid ─────────────────────────────────────────────────────────
 // Exactly the categories in the reference, with exactly those names, in that
 // order. Each maps to a catalogue category (a parent covers everything beneath
