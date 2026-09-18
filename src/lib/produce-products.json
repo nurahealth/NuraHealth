@@ -6,7 +6,7 @@
    "brand": "Driscoll's",
    "category": "produce",
    "status": "published",
-   "image_url": "https://edge.sitecorecloud.io/driscollsin7a07-driscolls1bc6-prod99c8-40a3/media/Project/driscolls/us/Images/Pages/berries/strawberry/StrawberryProductDetailPage_compressedjpeg-item-v-600113491.jpeg",
+   "image_url": "https://edge.sitecorecloud.io/driscollsin7a07-driscolls1bc6-prod99c8-40a3/media/Project/driscolls/us/Images/Pages/berries/strawberry/Tile-Photos-Web-(1).png",
    "score": 52,
    "score_label": "HIGH RESIDUE",
    "score_rationale": "Computed from USDA Pesticide Data Program crop-level retail sampling (2016): 95 − 0.30×(% samples with residues: 94.9) − 0.20×(distinct pesticides, capped 50: 50) − (violation rate %, capped 10: 4.9). Residue picture is USDA crop-level testing of conventional strawberries at U.S. retail (2016, 530 samples) — not a lab test of this specific brand. Brand-level testing comes with our lab program. Nutrition from USDA FoodData Central. Government data only.",
@@ -383,7 +383,7 @@
    "brand": "Grapery",
    "category": "produce",
    "status": "published",
-   "image_url": "https://grapery.biz/images/bags/CottonCandy.jpg",
+   "image_url": null,
    "score": 55,
    "score_label": "MODERATE RESIDUE",
    "score_rationale": "Computed from USDA Pesticide Data Program crop-level retail sampling (2023): 95 − 0.30×(% samples with residues: 96.2) − 0.20×(distinct pesticides, capped 50: 50) − (violation rate %, capped 10: 1.3). Residue picture is USDA crop-level testing of conventional grapes at U.S. retail (2023, 709 samples) — not a lab test of this specific brand. Brand-level testing comes with our lab program. Nutrition from USDA FoodData Central. Government data only.",
@@ -391,7 +391,8 @@
    "description": "96.2% of USDA retail samples carried at least one detectable pesticide residue, across 73 different pesticides. 9 samples over an established tolerance (imidacloprid, acetamiprid). Most residues sit below EPA tolerances; wash well and peel where practical.",
    "properties": {
     "Data basis": "USDA PDP 2023 · 709 retail samples · crop-level",
-    "Form": "Fresh · nutrition per 100 g, raw"
+    "Form": "Fresh · nutrition per 100 g, raw",
+    "Image": "Pending — no compliant flat packshot exists on any grape brand's own site"
    },
    "measurements": [
     {
@@ -634,7 +635,7 @@
    "brand": "HMC Farms",
    "category": "produce",
    "status": "published",
-   "image_url": "https://s3.us-west-2.amazonaws.com/static.hmcfarms.com/wp-content/uploads/2024/04/01194940/HMC_Peach_Hero-Banner_2x.png",
+   "image_url": "https://s3.us-west-2.amazonaws.com/static.hmcfarms.com/wp-content/uploads/2024/03/21004827/HMC_Peach.png",
    "score": 52,
    "score_label": "HIGH RESIDUE",
    "score_rationale": "Computed from USDA Pesticide Data Program crop-level retail sampling (2022): 95 − 0.30×(% samples with residues: 97.9) − 0.20×(distinct pesticides, capped 50: 50) − (violation rate %, capped 10: 3.8). Residue picture is USDA crop-level testing of conventional peaches at U.S. retail (2022, 419 samples) — not a lab test of this specific brand. Brand-level testing comes with our lab program. Nutrition from USDA FoodData Central. Government data only.",
@@ -1137,7 +1138,7 @@
    "brand": "Driscoll's",
    "category": "produce",
    "status": "published",
-   "image_url": "https://edge.sitecorecloud.io/driscollsin7a07-driscolls1bc6-prod99c8-40a3/media/Project/driscolls/us/Images/Pages/berries/blueberry/PIM1blue-on-wood-1506470101.jpg",
+   "image_url": "https://edge.sitecorecloud.io/driscollsin7a07-driscolls1bc6-prod99c8-40a3/media/Project/driscolls/us/Images/Pages/about/Our-Practices/where-we-grow/Tile-Photos-Web-(10).png",
    "score": 57,
    "score_label": "MODERATE RESIDUE",
    "score_rationale": "Computed from USDA Pesticide Data Program crop-level retail sampling (2022): 95 − 0.30×(% samples with residues: 84.0) − 0.20×(distinct pesticides, capped 50: 50) − (violation rate %, capped 10: 2.5). Residue picture is USDA crop-level testing of conventional blueberries at U.S. retail (2022, 482 samples) — not a lab test of this specific brand. Brand-level testing comes with our lab program. Nutrition from USDA FoodData Central. Government data only.",
@@ -1515,7 +1516,7 @@
    "brand": "Dandy",
    "category": "produce",
    "status": "published",
-   "image_url": "https://www.dudafresh.com/hubfs/p-main-celery%20stick%201.25%20lb%20main.jpg",
+   "image_url": "https://www.dudafresh.com/hs-fs/hubfs/images/ip-main-celery-sticks-1-point-25-lb.webp",
    "score": 57,
    "score_label": "MODERATE RESIDUE",
    "score_rationale": "Computed from USDA Pesticide Data Program crop-level retail sampling (2023): 95 − 0.30×(% samples with residues: 84.8) − 0.20×(distinct pesticides, capped 50: 50) − (violation rate %, capped 10: 2.6). Residue picture is USDA crop-level testing of conventional celery at U.S. retail (2023, 349 samples) — not a lab test of this specific brand. Brand-level testing comes with our lab program. Nutrition from USDA FoodData Central. Government data only.",
@@ -1762,11 +1763,11 @@
    ]
   },
   {
-   "name": "Cherubs Grape Tomatoes 10 oz",
-   "brand": "NatureSweet",
+   "name": "Campari Tomatoes",
+   "brand": "SUNSET",
    "category": "produce",
    "status": "published",
-   "image_url": "https://naturesweet.com/wp-content/uploads/2022/07/Cherubs-1200x630-1.png",
+   "image_url": "https://www.sunsetgrown.com/wp-content/uploads/2020/09/multiple-tomatoes-1.png",
    "score": 49,
    "score_label": "HIGH RESIDUE",
    "score_rationale": "Computed from USDA Pesticide Data Program crop-level retail sampling (2023): 95 − 0.30×(% samples with residues: 86.4) − 0.20×(distinct pesticides, capped 50: 50) − (violation rate %, capped 10: 10.0). Residue picture is USDA crop-level testing of conventional tomatoes at U.S. retail (2023, 708 samples) — not a lab test of this specific brand. Brand-level testing comes with our lab program. Nutrition from USDA FoodData Central. Government data only.",
@@ -1879,10 +1880,10 @@
      "source_url": "https://fdc.nal.usda.gov/food-details/170457/nutrients"
     },
     {
-     "title": "NatureSweet — official product page",
+     "title": "SUNSET — official product page",
      "doc_type": "report",
      "year": null,
-     "source_url": "https://naturesweet.com/products/cherubs/"
+     "source_url": "https://www.sunsetgrown.com/our-produce/tomatoes/campari/"
     }
    ]
   },
@@ -2138,20 +2139,19 @@
    ]
   },
   {
-   "name": "Whole Carrots (USDA Organic)",
-   "brand": "Cal-Organic Farms",
+   "name": "Baby Carrots 1 lb",
+   "brand": "Green Giant Fresh",
    "category": "produce",
    "status": "published",
-   "image_url": "https://calorganicfarms.com/wp-content/uploads/2018/01/Cello-Carrots-on-Wood-small.jpg",
+   "image_url": "https://greengiantfresh.com/wp-content/uploads/2017/09/Baby-Carrots-1-lb.jpg",
    "score": 77,
    "score_label": "LOW RESIDUE",
    "score_rationale": "Computed from USDA Pesticide Data Program crop-level retail sampling (2022): 95 − 0.30×(% samples with residues: 49.7) − 0.20×(distinct pesticides, capped 50: 14) − (violation rate %, capped 10: 0.0). Residue picture is USDA crop-level testing of conventional carrots at U.S. retail (2022, 177 samples) — not a lab test of this specific brand. Brand-level testing comes with our lab program. Nutrition from USDA FoodData Central. Government data only.",
    "lab_tested": false,
-   "description": "49.7% of USDA retail samples carried at least one detectable pesticide residue, across 14 different pesticides. 0 presumptive tolerance violations in the 2022 samples. NOTE: this product is USDA Organic — the figures above describe the conventional crop; organic rules prohibit most synthetic pesticides, so the organic version typically carries far fewer residues.",
+   "description": "49.7% of USDA retail samples carried at least one detectable pesticide residue, across 14 different pesticides. 0 presumptive tolerance violations in the 2022 samples. One of the cleanest choices in the produce aisle — conventional is fine here.",
    "properties": {
     "Data basis": "USDA PDP 2022 · 177 retail samples · crop-level",
-    "Form": "Fresh · nutrition per 100 g, raw",
-    "Certification": "USDA Organic (whole line)"
+    "Form": "Fresh · nutrition per 100 g, raw"
    },
    "measurements": [
     {
@@ -2256,10 +2256,10 @@
      "source_url": "https://fdc.nal.usda.gov/food-details/170393/nutrients"
     },
     {
-     "title": "Cal-Organic Farms — official product page",
+     "title": "Green Giant Fresh — official product page",
      "doc_type": "report",
      "year": null,
-     "source_url": "https://calorganicfarms.com/products/cello-carrots/"
+     "source_url": "https://greengiantfresh.com/products/baby-carrots/"
     }
    ]
   },
@@ -2268,7 +2268,7 @@
    "brand": "Mission",
    "category": "produce",
    "status": "published",
-   "image_url": "https://missionproduce.com/wp-content/uploads/2025/08/Mission_FtdImg_Product-Avocados.jpg",
+   "image_url": "https://missionproduce.com/wp-content/uploads/2025/03/Avo-Top-Down-24ct-PLU.png",
    "score": 87,
    "score_label": "VERY CLEAN",
    "score_rationale": "Computed from USDA Pesticide Data Program crop-level retail sampling (2024): 95 − 0.30×(% samples with residues: 11.9) − 0.20×(distinct pesticides, capped 50: 17) − (violation rate %, capped 10: 1.1). Residue picture is USDA crop-level testing of conventional avocados at U.S. retail (2024, 706 samples) — not a lab test of this specific brand. Brand-level testing comes with our lab program. Nutrition from USDA FoodData Central. Government data only.",
