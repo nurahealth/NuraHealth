@@ -186,7 +186,12 @@ export default async function LabProductPage({ params }: { params: Promise<{ slu
 
   const contaminants = measurements.filter((m) => m.kind === "contaminant");
   const nutrients = measurements.filter((m) => m.kind === "nutrient");
-  const ingredients = parseIngredients(product.description);
+  // Only parse a real ingredient declaration (bulk imports store "Ingredients: ...").
+  // Hand-written prose descriptions carry their own THE INGREDIENTS / THE FLAGS
+  // sections and must not be shredded into fake ingredient chips.
+  const ingredients = /^\s*ingredients?\s*:/i.test(product.description ?? "")
+    ? parseIngredients(product.description)
+    : [];
   const flaggedIngredients = ingredients.filter((i) => i.concern);
 
   const documents = (documentRows ?? []) as DocRow[];
