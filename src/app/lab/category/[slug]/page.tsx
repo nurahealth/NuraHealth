@@ -9,6 +9,7 @@ import { PRODUCTS_GRID } from "@/lib/category-heroes";
 const TEXT = "var(--nura-text-primary)";
 const TEXT_SEC = "var(--nura-text-secondary)";
 const SANS = "var(--font-inter), system-ui, sans-serif";
+const SERIF = "'DM Serif Display', Georgia, serif";
 
 export default async function LabCategoryPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -60,7 +61,7 @@ export default async function LabCategoryPage({ params }: { params: Promise<{ sl
         <Link href="/lab" style={{ fontFamily: SANS, fontSize: 12.5, color: TEXT_SEC, textDecoration: "none" }}>
           ← All products{parent ? ` · ${parent.name}` : ""}
         </Link>
-        <h1 style={{ fontFamily: SANS, fontSize: "clamp(28px, 4.5vw, 36px)", fontWeight: 600, color: TEXT, margin: "10px 0 6px", letterSpacing: "-0.02em", lineHeight: 1.1 }}>
+        <h1 style={{ fontFamily: SERIF, fontSize: "clamp(29px, 4.5vw, 38px)", fontWeight: 500, color: TEXT, margin: "10px 0 6px", letterSpacing: "-0.01em", lineHeight: 1.12 }}>
           {title}
         </h1>
         <p style={{ fontFamily: SANS, fontSize: 14, color: TEXT_SEC, margin: 0 }}>

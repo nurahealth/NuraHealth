@@ -22,6 +22,7 @@ const SAGE_ON = "var(--nura-sage-bg-on)";
 const SAGE_RGB = "var(--nura-sage-rgb)";
 const FG_RGB = "var(--nura-fg-rgb)";
 const SANS = "var(--font-inter), system-ui, sans-serif";
+const SERIF = "'DM Serif Display', Georgia, serif";
 const AMBER = "var(--nura-watch)";
 const RED = "var(--nura-danger)";
 
@@ -313,7 +314,7 @@ export default async function LabProductPage({ params }: { params: Promise<{ slu
               {/* Title row: name/brand/pill + score ring */}
               <div style={{ display: "flex", gap: 16, justifyContent: "space-between", alignItems: "flex-start" }}>
                 <div style={{ minWidth: 0 }}>
-                  <h1 style={{ fontFamily: SANS, fontSize: "clamp(26px, 4.5vw, 34px)", fontWeight: 600, color: TEXT, margin: "0 0 6px", letterSpacing: "-0.02em", lineHeight: 1.16 }}>
+                  <h1 style={{ fontFamily: SERIF, fontSize: "clamp(27px, 4.5vw, 36px)", fontWeight: 500, color: TEXT, margin: "0 0 6px", letterSpacing: "-0.01em", lineHeight: 1.18 }}>
                     {product.name}
                   </h1>
                   {product.brand && (
