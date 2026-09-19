@@ -659,6 +659,9 @@ function ScoreLedger({ text }: { text: string }) {
   );
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      <p style={{ margin: "0 0 2px", fontFamily: SANS, fontSize: 12.5, color: TEXT_TER, lineHeight: 1.5 }}>
+        Points added and taken away — they add up to the score, out of 100.
+      </p>
       <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
         {chip(`rgba(${SAGE_RGB},0.10)`, TEXT_SEC, "60")}
         <span>Every food here starts with 60 points.</span>
