@@ -371,7 +371,7 @@ export default async function LabProductPage({ params }: { params: Promise<{ slu
             <Eyebrow color={SAGE}>Why this score</Eyebrow>
             <div style={{ marginTop: 9, fontFamily: SANS, fontSize: 14, color: TEXT_SEC, lineHeight: 1.65, maxWidth: 760 }}>
               {product.score_rationale ? (
-                product.score_rationale
+                <ScoreLedger text={product.score_rationale} />
               ) : (
                 <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                   <span>Lab report indexed: <span style={{ color: TEXT, fontWeight: 500 }}>{indexed ? "Indexed" : "Not indexed"}</span></span>
@@ -632,5 +632,53 @@ export default async function LabProductPage({ params }: { params: Promise<{ slu
         @media (max-width: 480px) { .lab-props-grid { grid-template-columns: 1fr; } }
       `}</style>
     </NuraPageShell>
+  );
+}
+
+// ── Score ledger ──────────────────────────────────────────────────────────────
+// Renders the standard plain-language rationale ("Every food here starts with
+// 60 points. +20 — reason. ... Add it up: XX. Verdict.") as a point-by-point
+// ledger a reader can scan. Any rationale that doesn't match the format falls
+// back to plain text, so produce/legacy cards are unaffected.
+function ScoreLedger({ text }: { text: string }) {
+  const m = text.match(/^Every food here starts with 60 points\.\s*([\s\S]*?)Add it up:\s*(\d+)\.\s*([\s\S]*)$/);
+  if (!m) return <>{text}</>;
+  const [, body, total, verdictRaw] = m;
+  const verdict = verdictRaw.trim();
+  const RED = "#c05a4e";
+  const parts = body.split(/(?=[+\u2212-]\d+\s+\u2014)/).map((x) => x.trim()).filter(Boolean);
+  const rows: { plus: boolean; num: string; reason: string }[] = [];
+  let note = "";
+  for (const part of parts) {
+    const mm = part.match(/^([+\u2212-])(\d+)\s+\u2014\s*([\s\S]*)$/);
+    if (mm) rows.push({ plus: mm[1] === "+", num: mm[2], reason: mm[3].trim().replace(/\.$/, "") });
+    else note += (note ? " " : "") + part;
+  }
+  const chip = (bg: string, fg: string, label: string) => (
+    <span style={{ flexShrink: 0, minWidth: 44, textAlign: "center" as const, fontFamily: SANS, fontSize: 13, fontWeight: 700, color: fg, background: bg, borderRadius: 8, padding: "3px 8px" }}>{label}</span>
+  );
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
+        {chip(`rgba(${SAGE_RGB},0.10)`, TEXT_SEC, "60")}
+        <span>Every food here starts with 60 points.</span>
+      </div>
+      {note && (
+        <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
+          {chip("transparent", TEXT_SEC, "·")}
+          <span>{note}</span>
+        </div>
+      )}
+      {rows.map((r, i) => (
+        <div key={i} style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
+          {chip(r.plus ? `rgba(${SAGE_RGB},0.14)` : "rgba(192,90,78,0.14)", r.plus ? SAGE : RED, `${r.plus ? "+" : "\u2212"}${r.num}`)}
+          <span>{r.reason}.</span>
+        </div>
+      ))}
+      <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginTop: 2, paddingTop: 8, borderTop: `0.5px solid rgba(${SAGE_RGB},0.18)` }}>
+        {chip(`rgba(${SAGE_RGB},0.18)`, TEXT, `= ${total}`)}
+        <span style={{ color: TEXT, fontWeight: 500 }}>{verdict}</span>
+      </div>
+    </div>
   );
 }
