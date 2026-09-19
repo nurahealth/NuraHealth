@@ -386,9 +386,29 @@ export default async function LabProductPage({ params }: { params: Promise<{ slu
                 <div style={{ marginTop: 9, display: "flex", flexDirection: "column", gap: 10, maxWidth: 760 }}>
                   {product.description
                     .split(/(?= THE STICKER TRICK:| WHERE IT'S GROWN MATTERS:| NOTE:| THE INGREDIENTS:| THE FLAGS:)/)
-                    .map((seg, i) => (
-                      <p key={i} style={{ margin: 0, fontFamily: SANS, fontSize: 14, color: TEXT_SEC, lineHeight: 1.65 }}>{seg.trim()}</p>
-                    ))}
+                    .map((seg, i) => {
+                      const m = seg.trim().match(/^(THE STICKER TRICK|WHERE IT'S GROWN MATTERS|NOTE|THE INGREDIENTS|THE FLAGS):\s*([\s\S]*)$/);
+                      if (m) {
+                        const labels: Record<string, string> = {
+                          "THE STICKER TRICK": "The sticker trick",
+                          "WHERE IT'S GROWN MATTERS": "Where it's grown matters",
+                          "NOTE": "Note",
+                          "THE INGREDIENTS": "The ingredients",
+                          "THE FLAGS": "The flags",
+                        };
+                        const isFlags = m[1] === "THE FLAGS";
+                        const cleanFlags = isFlags && /^none\b/i.test(m[2].trim());
+                        return (
+                          <div key={i} style={{ marginTop: 6 }}>
+                            <Eyebrow color={isFlags && !cleanFlags ? AMBER : SAGE}>{labels[m[1]] ?? m[1]}</Eyebrow>
+                            <p style={{ margin: "7px 0 0", fontFamily: SANS, fontSize: 14, color: TEXT_SEC, lineHeight: 1.65 }}>{m[2].trim()}</p>
+                          </div>
+                        );
+                      }
+                      return (
+                        <p key={i} style={{ margin: 0, fontFamily: SANS, fontSize: 14, color: TEXT_SEC, lineHeight: 1.65 }}>{seg.trim()}</p>
+                      );
+                    })}
                 </div>
               </div>
             )}
