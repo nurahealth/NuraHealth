@@ -28,6 +28,17 @@ const MAX_AREA = 0.2;
 const KEY_TOLERANCE = 26;
 // Alpha above which a pixel counts as product when measuring the bounding box.
 const SOLID = 24;
+// Model used for background removal. The medium model cuts noticeably cleaner
+// edges on packaging than the small one. Keep in sync with next.config.ts,
+// which ships only this model's files with the server functions.
+const BG_MODEL = "medium" as const;
+// A cutout whose subject covers less than this fraction of the frame lost the
+// product; more than the upper bound, and it removed nothing.
+const CUTOUT_MIN = 0.03;
+const CUTOUT_MAX = 0.97;
+// Inputs are capped before inference — the model works at ~1024 px anyway,
+// and a 4000 px phone photo is a lot of memory for nothing.
+const CUTOUT_INPUT_MAX = 2000;
 
 export interface PackshotMeta {
   sourceW: number;
@@ -39,6 +50,10 @@ export interface PackshotMeta {
   isPackshot: boolean;
   /** Why the gate rejected it, when it did. */
   rejected?: string;
+  /** The classifier rejected it, so the background was removed by the model. */
+  cutout?: boolean;
+  /** Fraction of the cutout frame the model kept as subject. */
+  subjectCoverage?: number;
 }
 
 export interface PackshotResult {
@@ -106,11 +121,8 @@ function boundingBox(data: Buffer, width: number, height: number) {
   return { left, top, width: right - left + 1, height: bottom - top + 1 };
 }
 
-export async function normalisePackshot(sourceUrl: string): Promise<
-  | { buffer: Buffer; meta: PackshotMeta }
-  | { error: string }
-> {
-  let input: Buffer;
+
+async function fetchImage(sourceUrl: string): Promise<Buffer | { error: string }> {
   try {
     const res = await fetch(sourceUrl, {
       headers: { "User-Agent": "NURA-catalog/1.0 (+https://nura.health)" },
@@ -119,10 +131,124 @@ export async function normalisePackshot(sourceUrl: string): Promise<
     if (!res.ok) return { error: `source returned ${res.status}` };
     const type = res.headers.get("content-type") ?? "";
     if (!type.startsWith("image/")) return { error: `source is ${type || "not an image"}` };
-    input = Buffer.from(await res.arrayBuffer());
+    return Buffer.from(await res.arrayBuffer());
   } catch (e) {
     return { error: e instanceof Error ? e.message : "fetch failed" };
   }
+}
+
+/**
+ * Cut the subject out of a photo with a real scene behind it.
+ *
+ * Flat-backdrop keying cannot help here — there is no single colour to key —
+ * so the ONNX segmentation model separates product from background. It is
+ * imported dynamically: the model and runtime are server-only and large, and
+ * must never be pulled into a client bundle or loaded by routes that don't
+ * process images.
+ */
+async function removeBackgroundCutout(input: Buffer): Promise<
+  | { data: Buffer; info: { width: number; height: number }; subjectCoverage: number }
+  | { error: string }
+> {
+  try {
+    const png = await sharp(input, { failOn: "none" })
+      .resize(CUTOUT_INPUT_MAX, CUTOUT_INPUT_MAX, { fit: "inside", withoutEnlargement: true })
+      .png()
+      .toBuffer();
+    const { removeBackground } = await import("@imgly/background-removal-node");
+    const blob = await removeBackground(new Blob([new Uint8Array(png)], { type: "image/png" }), {
+      model: BG_MODEL,
+      output: { format: "image/png" },
+    });
+    const { data, info } = await sharp(Buffer.from(await blob.arrayBuffer()))
+      .ensureAlpha()
+      .toColourspace("srgb")
+      .raw()
+      .toBuffer({ resolveWithObject: true });
+
+    // Sanity check. The model always returns *something*; a cutout that kept
+    // a sliver, or kept the whole frame, is a failure dressed as a result.
+    let solid = 0;
+    for (let i = 3; i < data.length; i += 4) if (data[i] >= SOLID) solid++;
+    const subjectCoverage = solid / (info.width * info.height);
+    const pct = `${(subjectCoverage * 100).toFixed(1)}%`;
+    if (subjectCoverage < CUTOUT_MIN) return { error: `background removal kept almost nothing (${pct} subject)` };
+    if (subjectCoverage > CUTOUT_MAX) return { error: `background removal removed almost nothing (${pct} subject)` };
+    return { data, info, subjectCoverage };
+  } catch (e) {
+    return { error: `background removal failed: ${e instanceof Error ? e.message : "unknown error"}` };
+  }
+}
+
+/** Trim to the product, size it, and centre it on the transparent canvas. */
+async function fitToCanvas(
+  data: Buffer,
+  info: { width: number; height: number },
+  box: { left: number; top: number; width: number; height: number }
+): Promise<Buffer> {
+  const cropped = await sharp(data, {
+    raw: { width: info.width, height: info.height, channels: 4 },
+  })
+    .extract(box)
+    .png()
+    .toBuffer();
+
+  // Size the product, then pad out to the canvas.
+  //
+  // Two constraints. It must fit inside the inner box so it never touches the
+  // tile edge. And its area must not exceed a ceiling: fitting purely by
+  // bounding box makes a wide bar span the full width and read far heavier
+  // than a tall bottle of the same height, so anything over the ceiling is
+  // scaled down until it carries the same optical weight.
+  const inner = Math.round(CANVAS * (1 - PAD * 2));
+  const fitScale = Math.min(inner / box.width, inner / box.height);
+  let w = box.width * fitScale;
+  let h = box.height * fitScale;
+  const areaFraction = (w * h) / (CANVAS * CANVAS);
+  if (areaFraction > MAX_AREA) {
+    const k = Math.sqrt(MAX_AREA / areaFraction);
+    w *= k;
+    h *= k;
+  }
+  w = Math.max(1, Math.round(w));
+  h = Math.max(1, Math.round(h));
+
+  const fitted = await sharp(cropped)
+    .resize(w, h, { fit: "fill" })
+    .png()
+    .toBuffer();
+
+  // Centre it by padding to the canvas. Note this is an extend, not a second
+  // resize: resizing again here would scale the product back up to fill the
+  // canvas and destroy the margin we just created.
+  const left = Math.floor((CANVAS - w) / 2);
+  const top = Math.floor((CANVAS - h) / 2);
+  return sharp(fitted)
+    .extend({
+      left,
+      right: CANVAS - w - left,
+      top,
+      bottom: CANVAS - h - top,
+      background: { r: 0, g: 0, b: 0, alpha: 0 },
+    })
+    .png({ compressionLevel: 9 })
+    .toBuffer();
+}
+
+/**
+ * Turn any source image into a transparent-background product cutout.
+ *
+ * Studio packshots (transparent, or on a flat backdrop that keys away) take
+ * the cheap exact path. Anything the classifier calls a photo is cut out by
+ * the segmentation model instead. There is no third outcome: the result is
+ * a transparent cutout or an error — never the original photo.
+ */
+export async function normalisePackshot(sourceUrl: string): Promise<
+  | { buffer: Buffer; meta: PackshotMeta }
+  | { error: string; meta?: PackshotMeta }
+> {
+  const input = await fetchImage(sourceUrl);
+  if (!Buffer.isBuffer(input)) return input;
 
   try {
     const meta = await sharp(input, { failOn: "none" }).metadata();
@@ -164,7 +290,6 @@ export async function normalisePackshot(sourceUrl: string): Promise<
     }
 
     const box = boundingBox(data, info.width, info.height);
-    if (!box) return { error: "image is entirely background" };
 
     // ── Is this actually product photography? ──────────────────────────────
     // Studio packshots sit on a flat backdrop, so the corners agree and the
@@ -172,90 +297,52 @@ export async function normalisePackshot(sourceUrl: string): Promise<
     // frame. A snapshot — a bar on a carpet, in someone's hand, on a table —
     // has corners that disagree, nothing keys, and the "product" ends up being
     // the entire image. Those two facts separate the two cases reliably and
-    // cheaply, which matters because the alternative is a catalogue full of
-    // other people's phone photos.
-    const coverage = (box.width * box.height) / (info.width * info.height);
+    // cheaply.
+    const coverage = box ? (box.width * box.height) / (info.width * info.height) : 0;
     let rejected: string | undefined;
-    if (backdrop === "scene") rejected = "background is a scene, not a flat backdrop";
+    if (!box) rejected = "image is entirely background";
+    else if (backdrop === "scene") rejected = "background is a scene, not a flat backdrop";
     else if (backdrop === "keyed" && coverage > 0.92) {
       rejected = "product fills the frame — likely a photo, not a packshot";
     }
-    const isPackshot = !rejected;
 
-    const cropped = await sharp(data, {
-      raw: { width: info.width, height: info.height, channels: 4 },
-    })
-      .extract(box)
-      .png()
-      .toBuffer();
-
-    // Size the product, then pad out to the canvas.
-    //
-    // Two constraints. It must fit inside the inner box so it never touches the
-    // tile edge. And its area must not exceed a ceiling: fitting purely by
-    // bounding box makes a wide bar span the full width and read far heavier
-    // than a tall bottle of the same height, so anything over the ceiling is
-    // scaled down until it carries the same optical weight.
-    const inner = Math.round(CANVAS * (1 - PAD * 2));
-    const fitScale = Math.min(inner / box.width, inner / box.height);
-    let w = box.width * fitScale;
-    let h = box.height * fitScale;
-    const areaFraction = (w * h) / (CANVAS * CANVAS);
-    if (areaFraction > MAX_AREA) {
-      const k = Math.sqrt(MAX_AREA / areaFraction);
-      w *= k;
-      h *= k;
+    if (!rejected && box) {
+      const buffer = await fitToCanvas(data, info, box);
+      return { buffer, meta: { sourceW, sourceH, keyedTint, coverage, isPackshot: true } };
     }
-    w = Math.max(1, Math.round(w));
-    h = Math.max(1, Math.round(h));
 
-    const fitted = await sharp(cropped)
-      .resize(w, h, { fit: "fill" })
-      .png()
-      .toBuffer();
+    // ── Not a packshot: cut the product out of the photo ───────────────────
+    // Starts again from the original pixels — a partial key from the flat-
+    // backdrop pass would only confuse the model.
+    const base: PackshotMeta = { sourceW, sourceH, keyedTint: null, coverage, isPackshot: false, rejected };
+    const cut = await removeBackgroundCutout(input);
+    if ("error" in cut) return { error: cut.error, meta: { ...base, cutout: false } };
+    const cutBox = boundingBox(cut.data, cut.info.width, cut.info.height);
+    if (!cutBox) return { error: "background removal left no subject", meta: { ...base, cutout: false } };
 
-    // Centre it by padding to the canvas. Note this is an extend, not a second
-    // resize: resizing again here would scale the product back up to fill the
-    // canvas and destroy the margin we just created.
-    const left = Math.floor((CANVAS - w) / 2);
-    const top = Math.floor((CANVAS - h) / 2);
-    const buffer = await sharp(fitted)
-      .extend({
-        left,
-        right: CANVAS - w - left,
-        top,
-        bottom: CANVAS - h - top,
-        background: { r: 0, g: 0, b: 0, alpha: 0 },
-      })
-      .png({ compressionLevel: 9 })
-      .toBuffer();
-
-    return { buffer, meta: { sourceW, sourceH, keyedTint, coverage, isPackshot, rejected } };
+    const buffer = await fitToCanvas(cut.data, cut.info, cutBox);
+    return { buffer, meta: { ...base, cutout: true, subjectCoverage: cut.subjectCoverage } };
   } catch (e) {
     return { error: e instanceof Error ? e.message : "processing failed" };
   }
 }
 
 /**
- * Normalise a source image and store it in the public catalog-images bucket.
- * With `requirePackshot`, an image that does not look like studio product
- * photography is refused rather than stored.
+ * Normalise a source image and store the transparent cutout in the public
+ * catalog-images bucket. Nothing but a cutout is ever stored: when neither
+ * keying nor background removal produces a clean one, this fails and stores
+ * nothing, and the caller decides between dropping the image and dropping the
+ * product.
  */
-export async function storePackshot(
-  sourceUrl: string,
-  opts: { requirePackshot?: boolean } = {}
-): Promise<PackshotResult> {
+export async function storePackshot(sourceUrl: string): Promise<PackshotResult> {
   const out = await normalisePackshot(sourceUrl);
-  if ("error" in out) return { ok: false, error: out.error };
-  if (opts.requirePackshot && !out.meta.isPackshot) {
-    return { ok: false, error: out.meta.rejected ?? "not a packshot", meta: out.meta };
-  }
+  if ("error" in out) return { ok: false, error: out.error, meta: out.meta };
 
   const path = `products/${crypto.randomUUID()}.png`;
   const { error } = await supabaseAdmin.storage
     .from("catalog-images")
     .upload(path, out.buffer, { contentType: "image/png", upsert: false });
-  if (error) return { ok: false, error: `upload failed: ${error.message}` };
+  if (error) return { ok: false, error: `upload failed: ${error.message}`, meta: out.meta };
 
   const { data } = supabaseAdmin.storage.from("catalog-images").getPublicUrl(path);
   return { ok: true, url: data.publicUrl, meta: out.meta };

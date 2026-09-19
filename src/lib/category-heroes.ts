@@ -85,7 +85,7 @@ export function categoryHeroImage(slug: string): string | null {
 // the top-scoring product's packshot. Austin's call: Force of Nature fronts
 // Meat & Seafood.
 export const HERO_OVERRIDES: Record<string, string> = {
-  "meat-seafood": "https://forceofnature.com/cdn/shop/files/FON-regen-beef-pdp-hero-2026.jpg?v=1781555339",
+  "meat-seafood": "https://obkhzgvhxjdgbihuglrx.supabase.co/storage/v1/object/public/catalog-images/products/8f8348fe-1d79-47e2-ac18-d9db6eb1826d.png", // FON transparent cutout (stored)
 };
 
 // ── The Products grid ─────────────────────────────────────────────────────────
