@@ -45,7 +45,7 @@ const FILES: Record<string, string> = {
   "honey-sweeteners": "5f5e561a-a5ed-420f-b9d2-54ffe2844c59.png",
   "kids-food": "7ce47657-c622-498d-9f91-75b471871beb.png",
   "magnesium": "b8ae6d1a-a92f-4be0-ac29-3d1c63306464.png",
-  "meat-seafood": "https://forceofnature.com/cdn/shop/files/FON-regen-beef-pdp-hero-2026.jpg?v=1781555339", // Force of Nature hero
+  "meat-seafood": "https://obkhzgvhxjdgbihuglrx.supabase.co/storage/v1/object/public/catalog-images/products/8f8348fe-1d79-47e2-ac18-d9db6eb1826d.png", // Force of Nature hero
   "medicinal-mushrooms": "0426b439-b5a4-4a4e-9590-af1eff7a79d3.png",
   "medicine": "1da60489-343c-4702-888e-7aa4bb29b2f2.png",
   "moisturizers-serums": "56d5bdcd-506f-4549-8856-dfb1d69006a0.png",
