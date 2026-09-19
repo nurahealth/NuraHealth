@@ -1,0 +1,1056 @@
+[
+ {
+  "category": "dairy",
+  "name": "Organic A2/A2 Whole Milk",
+  "brand": "Alexandre Family Farm",
+  "score": 92,
+  "score_label": "TOP SHELF",
+  "score_rationale": "Every food here starts with 60 points. +12 — it's certified organic — and an inspector checks. +10 — the animals lived on pasture eating grass — the way dairy is supposed to start. +5 — the whole label is a handful of real foods you can picture. +5 — an outside group verifies what's on the label. Add it up: 92. Top shelf — dairy done right.",
+  "description": "Alexandre Family Farm does this the honest way, and the label proves it. THE INGREDIENTS: Organic Whole Milk. THE FLAGS: None — this label is clean. Real dairy (or real plants), nothing hiding.",
+  "properties": {
+   "Sourcing": "USDA Organic · grass-fed / pasture-raised · Regenerative Organic Certified · Certified Humane"
+  },
+  "status": "published",
+  "source_urls": [
+   "https://alexandrefamilyfarm.com/products/eco-dairy-a2-a2-organic-4-whole-milk"
+  ],
+  "image_url": "https://alexandrefamilyfarm.com/cdn/shop/files/112425_AlexandreEcoDairyA2_A2Organic4_WholeMilk_59ozUHT_98x.png?v=1768937484"
+ },
+ {
+  "category": "dairy",
+  "name": "Grassmilk Organic Grassfed Whole Milk",
+  "brand": "Organic Valley",
+  "score": 87,
+  "score_label": "TOP SHELF",
+  "score_rationale": "Every food here starts with 60 points. +12 — it's certified organic — and an inspector checks. +10 — the animals lived on pasture eating grass — the way dairy is supposed to start. +5 — the whole label is a handful of real foods you can picture. Add it up: 87. Top shelf — dairy done right.",
+  "description": "Organic Valley does this the honest way, and the label proves it. THE INGREDIENTS: Organic Grade A Milk, Vitamin D3. THE FLAGS: None — this label is clean. Real dairy (or real plants), nothing hiding.",
+  "properties": {
+   "Sourcing": "USDA Organic · grass-fed / pasture-raised"
+  },
+  "status": "published",
+  "source_urls": [
+   "https://www.organicvalley.coop/products/grassmilk-whole-milk"
+  ],
+  "image_url": "https://www.kroger.com/product/images/large/front/0009396600585"
+ },
+ {
+  "category": "dairy",
+  "name": "Organic Whole Milk",
+  "brand": "Organic Valley",
+  "score": 87,
+  "score_label": "TOP SHELF",
+  "score_rationale": "Every food here starts with 60 points. +12 — it's certified organic — and an inspector checks. +10 — the animals lived on pasture eating grass — the way dairy is supposed to start. +5 — the whole label is a handful of real foods you can picture. Add it up: 87. Top shelf — dairy done right.",
+  "description": "Organic Valley does this the honest way, and the label proves it. THE INGREDIENTS: Organic Grade A Milk, Vitamin D3. THE FLAGS: None — this label is clean. Real dairy (or real plants), nothing hiding.",
+  "properties": {
+   "Sourcing": "USDA Organic · grass-fed / pasture-raised"
+  },
+  "status": "published",
+  "source_urls": [
+   "https://www.kroger.com/p/organic-valley-whole-milk-half-gallon/0009396600439"
+  ],
+  "image_url": "https://www.kroger.com/product/images/large/front/0009396600439"
+ },
+ {
+  "category": "dairy",
+  "name": "Organic 100% Grass-Fed Whole Milk",
+  "brand": "Maple Hill",
+  "score": 87,
+  "score_label": "TOP SHELF",
+  "score_rationale": "Every food here starts with 60 points. +12 — it's certified organic — and an inspector checks. +10 — the animals lived on pasture eating grass — the way dairy is supposed to start. +5 — the whole label is a handful of real foods you can picture. Add it up: 87. Top shelf — dairy done right.",
+  "description": "Maple Hill does this the honest way, and the label proves it. THE INGREDIENTS: Organic Whole Milk. THE FLAGS: None — this label is clean. Real dairy (or real plants), nothing hiding.",
+  "properties": {
+   "Sourcing": "USDA Organic · grass-fed / pasture-raised"
+  },
+  "status": "published",
+  "source_urls": [
+   "https://www.kroger.com/p/maple-hill-organic-100-grassfed-whole-milk/0085508800546"
+  ],
+  "image_url": "https://www.kroger.com/product/images/large/front/0085508800546"
+ },
+ {
+  "category": "dairy",
+  "name": "100% Grass-Fed Whole Milk Plain Yogurt",
+  "brand": "Maple Hill",
+  "score": 87,
+  "score_label": "TOP SHELF",
+  "score_rationale": "Every food here starts with 60 points. +12 — it's certified organic — and an inspector checks. +10 — the animals lived on pasture eating grass — the way dairy is supposed to start. +5 — the whole label is a handful of real foods you can picture. Add it up: 87. Top shelf — dairy done right.",
+  "description": "Maple Hill does this the honest way, and the label proves it. THE INGREDIENTS: Organic Whole Milk, Live & Active Cultures. THE FLAGS: None — this label is clean. Real dairy (or real plants), nothing hiding.",
+  "properties": {
+   "Sourcing": "USDA Organic · grass-fed / pasture-raised"
+  },
+  "status": "published",
+  "source_urls": [
+   "https://maplehill.com"
+  ],
+  "image_url": "https://static.wixstatic.com/media/25a7ac_3a84688569504bbfa57db85f204a0530~mv2.jpg/v1/fill/w_1450,h_1450,q_90,enc_avif,quality_auto/25a7ac_3a84688569504bbfa57db85f204a0530~mv2.jpg"
+ },
+ {
+  "category": "dairy",
+  "name": "Organic Valley Salted Butter",
+  "brand": "Organic Valley",
+  "score": 87,
+  "score_label": "TOP SHELF",
+  "score_rationale": "Every food here starts with 60 points. +12 — it's certified organic — and an inspector checks. +10 — the animals lived on pasture eating grass — the way dairy is supposed to start. +5 — the whole label is a handful of real foods you can picture. Add it up: 87. Top shelf — dairy done right.",
+  "description": "Organic Valley does this the honest way, and the label proves it. THE INGREDIENTS: Pasteurized Organic Sweet Cream (Milk), Salt. THE FLAGS: None — this label is clean. Real dairy (or real plants), nothing hiding.",
+  "properties": {
+   "Sourcing": "USDA Organic · grass-fed / pasture-raised"
+  },
+  "status": "published",
+  "source_urls": [
+   "https://organicvalley.coop/products/salted-butter"
+  ],
+  "image_url": "https://www.kroger.com/product/images/xlarge/front/0009396633000"
+ },
+ {
+  "category": "dairy",
+  "name": "Raw Sharp Cheddar",
+  "brand": "Organic Valley",
+  "score": 87,
+  "score_label": "TOP SHELF",
+  "score_rationale": "Every food here starts with 60 points. +12 — it's certified organic — and an inspector checks. +10 — the animals lived on pasture eating grass — the way dairy is supposed to start. +5 — the whole label is a handful of real foods you can picture. Add it up: 87. Top shelf — dairy done right.",
+  "description": "Organic Valley does this the honest way, and the label proves it. THE INGREDIENTS: Organic Cultured Unpasteurized Milk, Salt, Vegetarian Enzyme. THE FLAGS: None — this label is clean. Real dairy (or real plants), nothing hiding.",
+  "properties": {
+   "Sourcing": "USDA Organic · grass-fed / pasture-raised"
+  },
+  "status": "published",
+  "source_urls": [
+   "https://organicvalley.coop/products/sharp-cheddar-cheese-block"
+  ],
+  "image_url": "https://www.kroger.com/product/images/xlarge/front/0009396611320"
+ },
+ {
+  "category": "dairy",
+  "name": "MALK Organic Unsweetened Almond Milk",
+  "brand": "MALK",
+  "score": 82,
+  "score_label": "STRONG",
+  "score_rationale": "Every food here starts with 60 points. +12 — it's certified organic — and an inspector checks. +5 — the whole label is a handful of real foods you can picture. +5 — an outside group verifies what's on the label. Add it up: 82. A strong pick.",
+  "description": "MALK does this the honest way, and the label proves it. THE INGREDIENTS: Filtered Water, Organic Almonds, Himalayan Pink Salt. THE FLAGS: None — this label is clean. Real dairy (or real plants), nothing hiding.",
+  "properties": {
+   "Sourcing": "USDA Organic · Certified Gluten-Free"
+  },
+  "status": "published",
+  "source_urls": [
+   "https://malkorganics.com/products/almond-milk"
+  ],
+  "image_url": "https://malkorganics.com/cdn/shop/files/Almond_Unsweetened_01.png?v=1747855442&width=2048"
+ },
+ {
+  "category": "dairy",
+  "name": "Organic Unsweetened Soy Milk",
+  "brand": "Westsoy",
+  "score": 82,
+  "score_label": "STRONG",
+  "score_rationale": "Every food here starts with 60 points. +12 — it's certified organic — and an inspector checks. +5 — the whole label is a handful of real foods you can picture. +5 — an outside group verifies what's on the label. Add it up: 82. A strong pick.",
+  "description": "Westsoy does this the honest way, and the label proves it. THE INGREDIENTS: Organic Soymilk (Water, Organic Soybeans). THE FLAGS: None — this label is clean. Real dairy (or real plants), nothing hiding.",
+  "properties": {
+   "Sourcing": "USDA Organic · Non-GMO Project"
+  },
+  "status": "published",
+  "source_urls": [
+   "https://www.wholefoodsmarket.com/grocery/product/west-life-westsoy-soy-milk-original-unsweetened-organic-64-fl-oz-b0046hfgne"
+  ],
+  "image_url": "https://m.media-amazon.com/images/I/81rF7AB32IL._FMwebp__SR600,600_.jpg"
+ },
+ {
+  "category": "dairy",
+  "name": "Whole Milk",
+  "brand": "Horizon Organic",
+  "score": 77,
+  "score_label": "STRONG",
+  "score_rationale": "Every food here starts with 60 points. +12 — it's certified organic — and an inspector checks. +5 — the whole label is a handful of real foods you can picture. Add it up: 77. A strong pick.",
+  "description": "Horizon Organic does this the honest way, and the label proves it. THE INGREDIENTS: Grade A Organic Milk, Vitamin D3. THE FLAGS: None — this label is clean. Real dairy (or real plants), nothing hiding.",
+  "properties": {
+   "Sourcing": "USDA Organic"
+  },
+  "status": "published",
+  "source_urls": [
+   "https://horizon.com/organic-dairy-products/organic-milk/organic-whole-milk/"
+  ],
+  "image_url": "https://horizon.com/wp-content/uploads/Whole-Milk-Half-Gallon_Product-Detail-image.png"
+ },
+ {
+  "category": "dairy",
+  "name": "Organic Cream Top Whole Milk",
+  "brand": "Straus Family Creamery",
+  "score": 77,
+  "score_label": "STRONG",
+  "score_rationale": "Every food here starts with 60 points. +12 — it's certified organic — and an inspector checks. +5 — the whole label is a handful of real foods you can picture. Add it up: 77. A strong pick.",
+  "description": "Straus Family Creamery does this the honest way, and the label proves it. THE INGREDIENTS: Pasteurized Organic Milk. THE FLAGS: None — this label is clean. Real dairy (or real plants), nothing hiding.",
+  "properties": {
+   "Sourcing": "USDA Organic"
+  },
+  "status": "published",
+  "source_urls": [
+   "https://www.strausfamilycreamery.com/products/milk-and-cream/organic-cream-top-whole-milk/"
+  ],
+  "image_url": "https://www.strausfamilycreamery.com/wp-content/uploads/2026/01/wholemilk_1000x1000_halfgallon-1.png"
+ },
+ {
+  "category": "dairy",
+  "name": "Three Trees Organic Unsweetened Almond Milk",
+  "brand": "Three Trees",
+  "score": 77,
+  "score_label": "STRONG",
+  "score_rationale": "Every food here starts with 60 points. +12 — it's certified organic — and an inspector checks. +5 — the whole label is a handful of real foods you can picture. Add it up: 77. A strong pick.",
+  "description": "Three Trees does this the honest way, and the label proves it. THE INGREDIENTS: Filtered water, organic almonds, French grey salt. THE FLAGS: None — this label is clean. Real dairy (or real plants), nothing hiding.",
+  "properties": {
+   "Sourcing": "USDA Organic"
+  },
+  "status": "published",
+  "source_urls": [
+   "https://www.threetrees.com/almond-milk-organic-unsweetened"
+  ],
+  "image_url": "https://static1.squarespace.com/static/67b8d972aafa2e09271b7495/t/67d481733893f6044d430030/1741980026100/ALM_Original.jpg?format=1500w"
+ },
+ {
+  "category": "dairy",
+  "name": "Organic Plain Skyr",
+  "brand": "Painterland Sisters",
+  "score": 77,
+  "score_label": "STRONG",
+  "score_rationale": "Every food here starts with 60 points. +12 — it's certified organic — and an inspector checks. +5 — the whole label is a handful of real foods you can picture. Add it up: 77. A strong pick.",
+  "description": "Painterland Sisters does this the honest way, and the label proves it. THE INGREDIENTS: Organic Skyr Yogurt (Pasteurized Organic Whole Milk, Live Active Cultures, Lactase Enzyme). THE FLAGS: None — this label is clean. Real dairy (or real plants), nothing hiding.",
+  "properties": {
+   "Sourcing": "USDA Organic"
+  },
+  "status": "published",
+  "source_urls": [
+   "https://painterlandsisters.com"
+  ],
+  "image_url": "https://painterlandsisters.com/cdn/shop/files/24ozPlain.png?v=1739216807"
+ },
+ {
+  "category": "dairy",
+  "name": "Half & Half",
+  "brand": "Horizon Organic",
+  "score": 77,
+  "score_label": "STRONG",
+  "score_rationale": "Every food here starts with 60 points. +12 — it's certified organic — and an inspector checks. +5 — the whole label is a handful of real foods you can picture. Add it up: 77. A strong pick.",
+  "description": "Horizon Organic does this the honest way, and the label proves it. THE INGREDIENTS: Grade A Organic Milk, Grade A Organic Cream. THE FLAGS: None — this label is clean. Real dairy (or real plants), nothing hiding.",
+  "properties": {
+   "Sourcing": "USDA Organic"
+  },
+  "status": "published",
+  "source_urls": [
+   "https://hannaford.com"
+  ],
+  "image_url": "https://horizon.com/wp-content/uploads/horizon-organic-half-and-half.png"
+ },
+ {
+  "category": "dairy",
+  "name": "Organic European Style Salted Butter",
+  "brand": "Straus Family Creamery",
+  "score": 77,
+  "score_label": "STRONG",
+  "score_rationale": "Every food here starts with 60 points. +12 — it's certified organic — and an inspector checks. +5 — the whole label is a handful of real foods you can picture. Add it up: 77. A strong pick.",
+  "description": "Straus Family Creamery does this the honest way, and the label proves it. THE INGREDIENTS: Certified Organic Pasteurized Cream (Milk) and Salt. THE FLAGS: None — this label is clean. Real dairy (or real plants), nothing hiding.",
+  "properties": {
+   "Sourcing": "USDA Organic"
+  },
+  "status": "published",
+  "source_urls": [
+   "https://strausfamilycreamery.com"
+  ],
+  "image_url": "https://www.strausfamilycreamery.com/wp-content/uploads/2026/02/butter_lightlysalted_1000x1000_1lb.png"
+ },
+ {
+  "category": "dairy",
+  "name": "Pure Irish Salted Butter",
+  "brand": "Kerrygold",
+  "score": 75,
+  "score_label": "STRONG",
+  "score_rationale": "Every food here starts with 60 points. +10 — the animals lived on pasture eating grass — the way dairy is supposed to start. +5 — the whole label is a handful of real foods you can picture. Add it up: 75. A strong pick.",
+  "description": "Kerrygold does this the honest way, and the label proves it. THE INGREDIENTS: Pasteurized cream, salt. THE FLAGS: None — this label is clean. Real dairy (or real plants), nothing hiding.",
+  "properties": {
+   "Sourcing": "grass-fed / pasture-raised"
+  },
+  "status": "published",
+  "source_urls": [
+   "https://kerrygoldusa.com/products/salted-butter"
+  ],
+  "image_url": "https://www.kerrygoldusa.com/wp-content/uploads/2017/09/Salted-227g_Front.jpg"
+ },
+ {
+  "category": "dairy",
+  "name": "Pasture-Raised Sea Salted Butter",
+  "brand": "Vital Farms",
+  "score": 75,
+  "score_label": "STRONG",
+  "score_rationale": "Every food here starts with 60 points. +10 — the animals lived on pasture eating grass — the way dairy is supposed to start. +5 — the whole label is a handful of real foods you can picture. Add it up: 75. A strong pick.",
+  "description": "Vital Farms does this the honest way, and the label proves it. THE INGREDIENTS: Pasteurized Cream (Milk), Salt. THE FLAGS: None — this label is clean. Real dairy (or real plants), nothing hiding.",
+  "properties": {
+   "Sourcing": "grass-fed / pasture-raised"
+  },
+  "status": "published",
+  "source_urls": [
+   "https://bakersplus.com"
+  ],
+  "image_url": "https://cdn.vitalfarms.com/wp-content/uploads/2025/10/2509-stick-refresh_43725-misc-sizes-salted-8oz-300x300-1.png"
+ },
+ {
+  "category": "dairy",
+  "name": "Dubliner Cheese",
+  "brand": "Kerrygold",
+  "score": 75,
+  "score_label": "STRONG",
+  "score_rationale": "Every food here starts with 60 points. +10 — the animals lived on pasture eating grass — the way dairy is supposed to start. +5 — the whole label is a handful of real foods you can picture. Add it up: 75. A strong pick.",
+  "description": "Kerrygold does this the honest way, and the label proves it. THE INGREDIENTS: Pasteurized Milk, Salt, Cheese Cultures, Enzymes. THE FLAGS: None — this label is clean. Real dairy (or real plants), nothing hiding.",
+  "properties": {
+   "Sourcing": "grass-fed / pasture-raised"
+  },
+  "status": "published",
+  "source_urls": [
+   "https://kerrygoldusa.com/products/dubliner-cheese"
+  ],
+  "image_url": "https://www.kerrygoldusa.com/wp-content/uploads/2017/09/Dubliner_FRONT-2.png"
+ },
+ {
+  "category": "dairy",
+  "name": "Whole Milk Plain Yogurt",
+  "brand": "Stonyfield Organic",
+  "score": 73,
+  "score_label": "STRONG",
+  "score_rationale": "Every food here starts with 60 points. +12 — it's certified organic — and an inspector checks. +5 — an outside group verifies what's on the label. −4 — gums and stabilizers fake a texture real dairy has on its own. Add it up: 73. A strong pick.",
+  "description": "A middle-of-the-road label: real base ingredients with compromises worth knowing. THE INGREDIENTS: Cultured Pasteurized Organic Whole Milk, Pectin, Vitamin D3. THE FLAGS: Pectin — A fruit-derived thickener — the mildest one there is, but it's why this isn't a one-ingredient yogurt.",
+  "properties": {
+   "Sourcing": "USDA Organic · Non-GMO Project"
+  },
+  "status": "published",
+  "source_urls": [
+   "https://stonyfield.com"
+  ],
+  "image_url": "https://images.openfoodfacts.org/images/products/005/215/900/0011/front_en.34.full.jpg"
+ },
+ {
+  "category": "dairy",
+  "name": "Milked Almonds Unsweetened",
+  "brand": "Elmhurst",
+  "score": 70,
+  "score_label": "STRONG",
+  "score_rationale": "Every food here starts with 60 points. +5 — the whole label is a handful of real foods you can picture. +5 — an outside group verifies what's on the label. Add it up: 70. A strong pick.",
+  "description": "Elmhurst does this the honest way, and the label proves it. THE INGREDIENTS: Filtered Water, Almonds. THE FLAGS: None — this label is clean. Real dairy (or real plants), nothing hiding.",
+  "properties": {
+   "Sourcing": "Non-GMO Project"
+  },
+  "status": "published",
+  "source_urls": [
+   "https://elmhurst1925.com/products/unsweetened-milked-almonds"
+  ],
+  "image_url": "https://elmhurst1925.com/cdn/shop/files/1_USAlmond_ProductPage_PackFront_a8ebc9c0-47f8-4bd2-a161-87791d3341c6.jpg?v=1763568800"
+ },
+ {
+  "category": "dairy",
+  "name": "Total 5% Plain Greek Yogurt",
+  "brand": "FAGE",
+  "score": 70,
+  "score_label": "STRONG",
+  "score_rationale": "Every food here starts with 60 points. +5 — the whole label is a handful of real foods you can picture. +5 — an outside group verifies what's on the label. Add it up: 70. A strong pick.",
+  "description": "FAGE does this the honest way, and the label proves it. THE INGREDIENTS: Grade A Pasteurized Skimmed Milk and Cream, Live Active Yogurt Cultures (L. Bulgaricus, S. Thermophilus, L. Acidophilus, Bifidus, L. Casei). THE FLAGS: None — this label is clean. Real dairy (or real plants), nothing hiding.",
+  "properties": {
+   "Sourcing": "Non-GMO Project"
+  },
+  "status": "published",
+  "source_urls": [
+   "https://usa.fage"
+  ],
+  "image_url": "https://usa.fage/sites/usa.fage/files/styles/nutrition_section/public/32OZ-5_percent_Fage_productRender_21-11-17_v02_0.png?itok=AMaox2X8"
+ },
+ {
+  "category": "dairy",
+  "name": "Organic Coconut Milk Beverage Unsweetened",
+  "brand": "So Delicious",
+  "score": 69,
+  "score_label": "DECENT",
+  "score_rationale": "Every food here starts with 60 points. +12 — it's certified organic — and an inspector checks. +5 — an outside group verifies what's on the label. −4 — gums and stabilizers fake a texture real dairy has on its own. −4 — it carries added phosphate salts. Add it up: 69. Okay, with trade-offs.",
+  "description": "A middle-of-the-road label: real base ingredients with compromises worth knowing. THE INGREDIENTS: Organic Coconutmilk (Filtered Water, Organic Coconut Cream), Contains 2% or Less of: Vitamin and Mineral Blend, Organic Sunflower Lecithin, Gellan Gum, Organic Locust Bean Gum, Sea Salt. THE FLAGS: Calcium + magnesium phosphate (mineral blend) — Phosphate salts in the fortification blend. Sunflower lecithin + gellan gum + locust bean gum — Emulsifier and two gums keeping it blended.",
+  "properties": {
+   "Sourcing": "USDA Organic · Non-GMO Project · Certified Gluten-Free"
+  },
+  "status": "published",
+  "source_urls": [
+   "https://www.sodeliciousdairyfree.com/dairy-free-foods/plant-based-beverages/coconutmilk/organic-unsweetened-original-64oz/"
+  ],
+  "image_url": "https://www.sodeliciousdairyfree.com/wp-content/uploads/2019/02/shelf-stable-original-unsweetened-coconutmilk-organic-64oz.png"
+ },
+ {
+  "category": "dairy",
+  "name": "Heavy Whipping Cream",
+  "brand": "Organic Valley",
+  "score": 68,
+  "score_label": "DECENT",
+  "score_rationale": "Every food here starts with 60 points. +12 — it's certified organic — and an inspector checks. −4 — gums and stabilizers fake a texture real dairy has on its own. Add it up: 68. Okay, with trade-offs.",
+  "description": "A middle-of-the-road label: real base ingredients with compromises worth knowing. THE INGREDIENTS: Organic Grade A Cream (Milk), Gellan Gum. THE FLAGS: Gellan gum — One gum to keep the cream stable — the only thing here besides cream.",
+  "properties": {
+   "Sourcing": "USDA Organic"
+  },
+  "status": "published",
+  "source_urls": [
+   "https://organicvalley.coop"
+  ],
+  "image_url": "https://images.openfoodfacts.org/images/products/009/396/600/0344/front_en.5.full.jpg"
+ },
+ {
+  "category": "dairy",
+  "name": "Whole Ultra-Filtered Milk",
+  "brand": "Fairlife",
+  "score": 65,
+  "score_label": "DECENT",
+  "score_rationale": "Every food here starts with 60 points. +5 — the whole label is a handful of real foods you can picture. Add it up: 65. Okay, with trade-offs.",
+  "description": "A middle-of-the-road label: real base ingredients with compromises worth knowing. THE INGREDIENTS: Ultra-Filtered Milk, Lactase Enzyme, Vitamin A Palmitate, Vitamin D3. THE FLAGS: None — this label is clean. Real dairy (or real plants), nothing hiding.",
+  "properties": {
+   "Sourcing": "conventional"
+  },
+  "status": "published",
+  "source_urls": [
+   "https://fairlife.com/ultra-filtered-milk/whole-milk/"
+  ],
+  "image_url": "https://fairlife.com/wp-content/uploads/2023/01/ufm-52oz-whole-product.webp"
+ },
+ {
+  "category": "dairy",
+  "name": "a2 Whole Milk",
+  "brand": "The a2 Milk Company",
+  "score": 65,
+  "score_label": "DECENT",
+  "score_rationale": "Every food here starts with 60 points. +5 — the whole label is a handful of real foods you can picture. Add it up: 65. Okay, with trade-offs.",
+  "description": "A middle-of-the-road label: real base ingredients with compromises worth knowing. THE INGREDIENTS: Milk, Vitamin D3. THE FLAGS: None — this label is clean. Real dairy (or real plants), nothing hiding.",
+  "properties": {
+   "Sourcing": "conventional"
+  },
+  "status": "published",
+  "source_urls": [
+   "https://www.heb.com/product-detail/a2-milk-whole-milk/1953832"
+  ],
+  "image_url": "https://images.heb.com/is/image/HEBGrocery/001953832-1"
+ },
+ {
+  "category": "dairy",
+  "name": "Whole Lactose-Free Milk",
+  "brand": "Lactaid",
+  "score": 65,
+  "score_label": "DECENT",
+  "score_rationale": "Every food here starts with 60 points. +5 — the whole label is a handful of real foods you can picture. Add it up: 65. Okay, with trade-offs.",
+  "description": "A middle-of-the-road label: real base ingredients with compromises worth knowing. THE INGREDIENTS: Milk, Lactase Enzyme, Vitamin D3. THE FLAGS: None — this label is clean. Real dairy (or real plants), nothing hiding.",
+  "properties": {
+   "Sourcing": "conventional"
+  },
+  "status": "published",
+  "source_urls": [
+   "https://www.lactaid.com/products/lactaid-whole-milk"
+  ],
+  "image_url": "https://images.ctfassets.net/naglem4vigsd/3wZhNcbrVbKCZRMdv7u43U/d08a8429d4325f76e2202e2f9000c6a2/hg_whole_front_0-en-us?fm=webp&w=1200"
+ },
+ {
+  "category": "dairy",
+  "name": "Whole Vitamin D Milk",
+  "brand": "Great Value",
+  "score": 65,
+  "score_label": "DECENT",
+  "score_rationale": "Every food here starts with 60 points. +5 — the whole label is a handful of real foods you can picture. Add it up: 65. Okay, with trade-offs.",
+  "description": "A middle-of-the-road label: real base ingredients with compromises worth knowing. THE INGREDIENTS: Milk, Vitamin D3. THE FLAGS: None — this label is clean. Real dairy (or real plants), nothing hiding.",
+  "properties": {
+   "Sourcing": "conventional"
+  },
+  "status": "published",
+  "source_urls": [
+   "https://world.openfoodfacts.org/product/0078742351865"
+  ],
+  "image_url": "https://images.openfoodfacts.org/images/products/007/874/235/1865/front_en.138.400.jpg"
+ },
+ {
+  "category": "dairy",
+  "name": "Nonfat Plain Greek Yogurt",
+  "brand": "Chobani",
+  "score": 65,
+  "score_label": "DECENT",
+  "score_rationale": "Every food here starts with 60 points. +5 — the whole label is a handful of real foods you can picture. Add it up: 65. Okay, with trade-offs.",
+  "description": "A middle-of-the-road label: real base ingredients with compromises worth knowing. THE INGREDIENTS: Cultured Nonfat Milk. 6 Live and Active Cultures: S. Thermophilus, L. Bulgaricus, L. Acidophilus, Bifidus, L. Casei, and L. Rhamnosus. THE FLAGS: None — this label is clean. Real dairy (or real plants), nothing hiding.",
+  "properties": {
+   "Sourcing": "conventional"
+  },
+  "status": "published",
+  "source_urls": [
+   "https://shop.heinens.com"
+  ],
+  "image_url": "https://images.ctfassets.net/01to7kbtr3az/7iv0269L8tc2b6WTSr7jaN/75f4c57af36f114d4cd23f08f56ebc14/32oz-PlainNonFat.png"
+ },
+ {
+  "category": "dairy",
+  "name": "4% Whole Milk Skyr Plain",
+  "brand": "Siggi's",
+  "score": 65,
+  "score_label": "DECENT",
+  "score_rationale": "Every food here starts with 60 points. +5 — the whole label is a handful of real foods you can picture. Add it up: 65. Okay, with trade-offs.",
+  "description": "A middle-of-the-road label: real base ingredients with compromises worth knowing. THE INGREDIENTS: Cultured Pasteurized Whole Milk. Live Active Cultures: S. thermophilus, L. delbrueckii subsp. bulgaricus, B. lactis, L. acidophilus, L. delbrueckii subsp. lactis. THE FLAGS: None — this label is clean. Real dairy (or real plants), nothing hiding.",
+  "properties": {
+   "Sourcing": "conventional"
+  },
+  "status": "published",
+  "source_urls": [
+   "https://siggis.com"
+  ],
+  "image_url": "https://siggis.com/wp-content/uploads/2024/07/siggis_4_24oz_Plain@2x.png"
+ },
+ {
+  "category": "dairy",
+  "name": "Whole Milk Classic Cottage Cheese",
+  "brand": "Good Culture",
+  "score": 65,
+  "score_label": "DECENT",
+  "score_rationale": "Every food here starts with 60 points. +5 — the whole label is a handful of real foods you can picture. Add it up: 65. Okay, with trade-offs.",
+  "description": "A middle-of-the-road label: real base ingredients with compromises worth knowing. THE INGREDIENTS: Skim Milk, Whole Milk, Cream, Sea Salt, Live and Active Cultures. THE FLAGS: None — this label is clean. Real dairy (or real plants), nothing hiding.",
+  "properties": {
+   "Sourcing": "conventional"
+  },
+  "status": "published",
+  "source_urls": [
+   "https://goodculture.com"
+  ],
+  "image_url": "https://goodculture.com/wp-content/uploads/2025/01/16oz_simply4cc_front-e1776909377520.png"
+ },
+ {
+  "category": "dairy",
+  "name": "4% Cottage Cheese",
+  "brand": "Daisy",
+  "score": 65,
+  "score_label": "DECENT",
+  "score_rationale": "Every food here starts with 60 points. +5 — the whole label is a handful of real foods you can picture. Add it up: 65. Okay, with trade-offs.",
+  "description": "A middle-of-the-road label: real base ingredients with compromises worth knowing. THE INGREDIENTS: Cultured Skim Milk, Cream, Salt. THE FLAGS: None — this label is clean. Real dairy (or real plants), nothing hiding.",
+  "properties": {
+   "Sourcing": "conventional"
+  },
+  "status": "published",
+  "source_urls": [
+   "https://giantfood.com"
+  ],
+  "image_url": "https://www.daisybrand.com/wp-content/uploads/2026/01/cc-product-group-4p-v3.png"
+ },
+ {
+  "category": "dairy",
+  "name": "Sour Cream",
+  "brand": "Daisy",
+  "score": 65,
+  "score_label": "DECENT",
+  "score_rationale": "Every food here starts with 60 points. +5 — the whole label is a handful of real foods you can picture. Add it up: 65. Okay, with trade-offs.",
+  "description": "A middle-of-the-road label: real base ingredients with compromises worth knowing. THE INGREDIENTS: Cultured Cream. THE FLAGS: None — this label is clean. Real dairy (or real plants), nothing hiding.",
+  "properties": {
+   "Sourcing": "conventional"
+  },
+  "status": "published",
+  "source_urls": [
+   "https://kroger.com"
+  ],
+  "image_url": "https://www.daisybrand.com/wp-content/uploads/2023/07/regular-sc-family-copy-1.png"
+ },
+ {
+  "category": "dairy",
+  "name": "Land O'Lakes Salted Butter",
+  "brand": "Land O'Lakes",
+  "score": 65,
+  "score_label": "DECENT",
+  "score_rationale": "Every food here starts with 60 points. +5 — the whole label is a handful of real foods you can picture. Add it up: 65. Okay, with trade-offs.",
+  "description": "A middle-of-the-road label: real base ingredients with compromises worth knowing. THE INGREDIENTS: Sweet Cream, Salt. THE FLAGS: None — this label is clean. Real dairy (or real plants), nothing hiding.",
+  "properties": {
+   "Sourcing": "conventional"
+  },
+  "status": "published",
+  "source_urls": [
+   "https://landolakes.com/products/butter-spreads/salted-butter"
+  ],
+  "image_url": "https://stordflolretailpd.blob.core.windows.net/df-us/lolretail/media/lolr-media/products/2022_salted_butter_product_400x400.png?ext=.png"
+ },
+ {
+  "category": "dairy",
+  "name": "Sweet Cream Salted Butter",
+  "brand": "Great Value",
+  "score": 65,
+  "score_label": "DECENT",
+  "score_rationale": "Every food here starts with 60 points. +5 — the whole label is a handful of real foods you can picture. Add it up: 65. Okay, with trade-offs.",
+  "description": "A middle-of-the-road label: real base ingredients with compromises worth knowing. THE INGREDIENTS: Cream, Salt. THE FLAGS: None — this label is clean. Real dairy (or real plants), nothing hiding.",
+  "properties": {
+   "Sourcing": "conventional"
+  },
+  "status": "published",
+  "source_urls": [
+   "https://world.openfoodfacts.org/product/0078742025926"
+  ],
+  "image_url": "https://images.openfoodfacts.org/images/products/007/874/202/5926/front_en.38.full.jpg"
+ },
+ {
+  "category": "dairy",
+  "name": "Seriously Sharp Cheddar",
+  "brand": "Cabot",
+  "score": 65,
+  "score_label": "DECENT",
+  "score_rationale": "Every food here starts with 60 points. +5 — the whole label is a handful of real foods you can picture. Add it up: 65. Okay, with trade-offs.",
+  "description": "A middle-of-the-road label: real base ingredients with compromises worth knowing. THE INGREDIENTS: Fresh Pasteurized Milk, Cheese Cultures, Salt, Enzymes. THE FLAGS: None — this label is clean. Real dairy (or real plants), nothing hiding.",
+  "properties": {
+   "Sourcing": "conventional"
+  },
+  "status": "published",
+  "source_urls": [
+   "https://kroger.com"
+  ],
+  "image_url": "https://cabotcreamery.com/cdn/shop/files/image_0dde6e36-c84e-4569-959a-d56e0844bb98_1024x.png?v=1788891584"
+ },
+ {
+  "category": "dairy",
+  "name": "Fresh Mozzarella",
+  "brand": "BelGioioso",
+  "score": 65,
+  "score_label": "DECENT",
+  "score_rationale": "Every food here starts with 60 points. +5 — the whole label is a handful of real foods you can picture. Add it up: 65. Okay, with trade-offs.",
+  "description": "A middle-of-the-road label: real base ingredients with compromises worth knowing. THE INGREDIENTS: Cultured pasteurized milk, salt, lactic acid, enzymes. THE FLAGS: None — this label is clean. Real dairy (or real plants), nothing hiding.",
+  "properties": {
+   "Sourcing": "conventional"
+  },
+  "status": "published",
+  "source_urls": [
+   "https://belgioioso.com/products/fresh-mozzarella"
+  ],
+  "image_url": "https://images.openfoodfacts.org/images/products/003/114/291/0353/front_en.3.400.jpg"
+ },
+ {
+  "category": "dairy",
+  "name": "Original Snack Cheese",
+  "brand": "Babybel",
+  "score": 65,
+  "score_label": "DECENT",
+  "score_rationale": "Every food here starts with 60 points. +5 — the whole label is a handful of real foods you can picture. Add it up: 65. Okay, with trade-offs.",
+  "description": "A middle-of-the-road label: real base ingredients with compromises worth knowing. THE INGREDIENTS: Pasteurized cultured milk, salt, microbial enzymes. THE FLAGS: None — this label is clean. Real dairy (or real plants), nothing hiding.",
+  "properties": {
+   "Sourcing": "conventional"
+  },
+  "status": "published",
+  "source_urls": [
+   "https://babybel.com/product/babybel-original-cheese"
+  ],
+  "image_url": "https://babybel.com/wp-content/uploads/2023/02/img_babybel_original_cello.png"
+ },
+ {
+  "category": "dairy",
+  "name": "Cultured Vegan Butter Salted",
+  "brand": "Miyoko's Creamery",
+  "score": 60,
+  "score_label": "DECENT",
+  "score_rationale": "Every food here starts with 60 points. +12 — it's certified organic — and an inspector checks. −8 — there's refined industrial oil where cream should be. −4 — it leans on flavorings the label doesn't have to explain. Add it up: 60. Okay, with trade-offs.",
+  "description": "A middle-of-the-road label: real base ingredients with compromises worth knowing. THE INGREDIENTS: Organic Coconut Oil, Organic Cultured Cashew Milk (Filtered Water, Organic Cashews, Cultures), Filtered Water, Organic Sunflower Oil, Organic Sunflower Lecithin, Sea Salt, Natural Flavors. THE FLAGS: Organic sunflower oil — A seed oil rides along behind the coconut oil — organic, but still sunflower. Natural flavors — Undisclosed flavoring.",
+  "properties": {
+   "Sourcing": "USDA Organic"
+  },
+  "status": "published",
+  "source_urls": [
+   "https://miyokos.com/products/european-style-plant-milk-butter-salted"
+  ],
+  "image_url": "https://www.miyokos.com/cdn/shop/products/Salted_Euro_PDP.webp?v=1681782938"
+ },
+ {
+  "category": "dairy",
+  "name": "Medium Cheddar Cheese",
+  "brand": "Tillamook",
+  "score": 60,
+  "score_label": "DECENT",
+  "score_rationale": "Every food here starts with 60 points. Add it up: 60. Okay, with trade-offs.",
+  "description": "A middle-of-the-road label: real base ingredients with compromises worth knowing. THE INGREDIENTS: Cultured Milk, Salt, Enzymes, Annatto (color). THE FLAGS: Annatto (color) — The orange is annatto, a natural seed color — cheddar is naturally white.",
+  "properties": {
+   "Sourcing": "conventional"
+  },
+  "status": "published",
+  "source_urls": [
+   "https://tillamook.com/products/cheese/medium-cheddar-block"
+  ],
+  "image_url": "https://images.openfoodfacts.org/images/products/007/283/000/7115/front_en.5.full.jpg"
+ },
+ {
+  "category": "dairy",
+  "name": "Sliced Colby-Jack",
+  "brand": "Sargento",
+  "score": 60,
+  "score_label": "DECENT",
+  "score_rationale": "Every food here starts with 60 points. Add it up: 60. Okay, with trade-offs.",
+  "description": "A middle-of-the-road label: real base ingredients with compromises worth knowing. THE INGREDIENTS: Pasteurized Milk, Cheese Culture, Salt, Enzymes, Annatto (Vegetable Color). THE FLAGS: Annatto (vegetable color) — Natural color for the orange half. These slices skip the starch coatings and mold inhibitors that shredded cheese carries.",
+  "properties": {
+   "Sourcing": "conventional"
+  },
+  "status": "published",
+  "source_urls": [
+   "https://sargento.com"
+  ],
+  "image_url": "https://www.sargento.com/assets/20109_SL_ClbyJck_16oz_5504956_Frnt.png"
+ },
+ {
+  "category": "dairy",
+  "name": "2% Lowfat Small Curd Cottage Cheese",
+  "brand": "Breakstone's",
+  "score": 56,
+  "score_label": "DECENT",
+  "score_rationale": "Every food here starts with 60 points. −4 — refined starch is doing a job the milk should do. Add it up: 56. Okay, with trade-offs.",
+  "description": "A middle-of-the-road label: real base ingredients with compromises worth knowing. THE INGREDIENTS: Cultured Pasteurized Skim Milk and Cream, Tapioca Starch, Salt, Vitamin A Palmitate. THE FLAGS: Tapioca starch — Refined starch filler — Daisy proves cottage cheese doesn't need it.",
+  "properties": {
+   "Sourcing": "conventional"
+  },
+  "status": "published",
+  "source_urls": [
+   "https://bakersplus.com"
+  ],
+  "image_url": "https://breakstones.com/wp-content/uploads/2023/08/cottage-cheese_2_small-curd_16oz_tile.png"
+ },
+ {
+  "category": "dairy",
+  "name": "Creamy Original Swiss Wedges",
+  "brand": "The Laughing Cow",
+  "score": 56,
+  "score_label": "DECENT",
+  "score_rationale": "Every food here starts with 60 points. −4 — it carries added phosphate salts. Add it up: 56. Okay, with trade-offs.",
+  "description": "A middle-of-the-road label: real base ingredients with compromises worth knowing. THE INGREDIENTS: Cheddar and Semisoft Cheese (Pasteurized Cultured Milk and Part-Skim Milk, Salt, Enzymes), Whey, Milk Protein Concentrate, Butter (Cream), Water, Skim Milk, Sodium Polyphosphate, Less Than 2% of Each: Tricalcium Phosphate, Citric Acid, Milk Fat, Salt, Vitamins. THE FLAGS: Sodium polyphosphate + tricalcium phosphate — Phosphate melting salts that keep the wedge spreadable.",
+  "properties": {
+   "Sourcing": "conventional"
+  },
+  "status": "published",
+  "source_urls": [
+   "https://thelaughingcow.com/product/creamy-original-wedges"
+  ],
+  "image_url": "https://www.thelaughingcow.com/wp-content/uploads/2019/10/featured-original-8pc-2025.png"
+ },
+ {
+  "category": "dairy",
+  "name": "Original Oat Milk",
+  "brand": "Oatly",
+  "score": 53,
+  "score_label": "COMPROMISED",
+  "score_rationale": "Every food here starts with 60 points. +5 — an outside group verifies what's on the label. −8 — there's refined industrial oil where cream should be. −4 — it carries added phosphate salts. Add it up: 53. Compromised — read the flags before you buy.",
+  "description": "The front of the pack sells one story; the back tells another. THE INGREDIENTS: Oat base (water, oats). Contains 2% or less of: low erucic acid rapeseed oil, dipotassium phosphate, calcium carbonate, tricalcium phosphate, sea salt, dicalcium phosphate, riboflavin, vitamin A acetate, vitamin D2, vitamin B12. THE FLAGS: Low erucic acid rapeseed oil — Rapeseed (canola) oil added for creaminess — a refined seed oil in your 'milk'. Dipotassium + tricalcium + dicalcium phosphate — Three phosphate salts for stability and fortification — added inorganic phosphorus.",
+  "properties": {
+   "Sourcing": "Certified Gluten-Free"
+  },
+  "status": "published",
+  "source_urls": [
+   "https://www.oatly.com/en-us/products/chilled-oatmilk/chilled-oatmilk-64-oz"
+  ],
+  "image_url": "https://assets.oatly.com/m/e4d1a733e7aac36/w1920-WEB-63002-Oatly-Oatmilk-Original-Gabletop-64oz-Right-3500x3500-transparent.png"
+ },
+ {
+  "category": "dairy",
+  "name": "Oat Barista Blend Oatmilk",
+  "brand": "Califia Farms",
+  "score": 53,
+  "score_label": "COMPROMISED",
+  "score_rationale": "Every food here starts with 60 points. +5 — an outside group verifies what's on the label. −8 — there's refined industrial oil where cream should be. −4 — it carries added phosphate salts. Add it up: 53. Compromised — read the flags before you buy.",
+  "description": "The front of the pack sells one story; the back tells another. THE INGREDIENTS: Oatmilk (Water, Oats), Sunflower Oil, Minerals (Dipotassium Phosphate, Calcium Carbonate, Tricalcium Phosphate), Sea Salt. THE FLAGS: Sunflower oil — Sunflower oil for foam and body — a refined seed oil. Dipotassium + tricalcium phosphate — Phosphate salts that stop it curdling in coffee — added inorganic phosphorus.",
+  "properties": {
+   "Sourcing": "Non-GMO Project"
+  },
+  "status": "published",
+  "source_urls": [
+   "https://www.califiafarms.com/products/oat-barista-blend/"
+  ],
+  "image_url": "https://www.califiafarms.com/.netlify/images?url=https%3A%2F%2Fimages.salsify.com%2Fimage%2Fupload%2Fs--lQi7SE_m--%2Ff_png%2Cq_auto%3Alow%2Cfl_lossy%2Fw_2560%2Ch_2560%2Cc_fit%2Fi8ces0eaqbbxgvoocm2n.jpg&q=80&format=auto"
+ },
+ {
+  "category": "dairy",
+  "name": "Triple Zero Vanilla Greek Yogurt",
+  "brand": "Oikos",
+  "score": 52,
+  "score_label": "COMPROMISED",
+  "score_rationale": "Every food here starts with 60 points. +5 — an outside group verifies what's on the label. −4 — it leans on flavorings the label doesn't have to explain. −4 — refined starch is doing a job the milk should do. −5 — the sweetness comes from zero-calorie sweeteners instead of food. Add it up: 52. Compromised — read the flags before you buy.",
+  "description": "The front of the pack sells one story; the back tells another. THE INGREDIENTS: Cultured Grade A Non Fat Milk, Water, Contains Less Than 1% Of: Natural Flavors, Tapioca Starch, Stevia Leaf Extract, Lemon Juice Concentrate, Sea Salt, Vitamin D3. Yogurt Cultures: S. Thermophilus & L. Bulgaricus. THE FLAGS: Stevia leaf extract — Zero-calorie sweetener — plant-derived, but sweetness without sugar is still engineered sweetness. Natural flavors — Undisclosed flavoring. Tapioca starch — Refined starch thickener.",
+  "properties": {
+   "Sourcing": "Certified Gluten-Free"
+  },
+  "status": "published",
+  "source_urls": [
+   "https://oikos.com"
+  ],
+  "image_url": "https://smartmedia.digital4danone.com/is/image/danonecs/triple-zero-vanilla?$Transparent$"
+ },
+ {
+  "category": "dairy",
+  "name": "Original Unsweetened Creamer",
+  "brand": "Nutpods",
+  "score": 52,
+  "score_label": "COMPROMISED",
+  "score_rationale": "Every food here starts with 60 points. −4 — gums and stabilizers fake a texture real dairy has on its own. −4 — it carries added phosphate salts. Add it up: 52. Compromised — read the flags before you buy.",
+  "description": "The front of the pack sells one story; the back tells another. THE INGREDIENTS: Water, Coconut Cream, Almonds, Acacia Gum, Dipotassium Phosphate, Sunflower Lecithin, Sea Salt, Gellan Gum. THE FLAGS: Acacia + gellan gum + sunflower lecithin — Gums and emulsifier for the creamy body. Dipotassium phosphate — Phosphate salt to stop curdling in coffee.",
+  "properties": {
+   "Sourcing": "conventional"
+  },
+  "status": "published",
+  "source_urls": [
+   "https://nutpods.com"
+  ],
+  "image_url": "https://www.nutpods.com/cdn/shop/files/11.2oz-Original-R5-Front-SMALL.png?v=1775058001"
+ },
+ {
+  "category": "dairy",
+  "name": "Silk Original Almond Milk",
+  "brand": "Silk",
+  "score": 51,
+  "score_label": "COMPROMISED",
+  "score_rationale": "Every food here starts with 60 points. +5 — an outside group verifies what's on the label. −4 — it leans on flavorings the label doesn't have to explain. −6 — there's added sugar. −4 — gums and stabilizers fake a texture real dairy has on its own. Add it up: 51. Compromised — read the flags before you buy.",
+  "description": "The front of the pack sells one story; the back tells another. THE INGREDIENTS: Almondmilk (Water, Almonds), Cane Sugar, Contains 2% or Less of: Vitamin and Mineral Blend, Sea Salt, Gellan Gum, Ascorbic Acid, Natural Flavor. THE FLAGS: Cane sugar — Sweetened — about 7g of added sugar per cup. Gellan gum — Gum that thickens and stops separation. Natural flavor — Undisclosed flavoring.",
+  "properties": {
+   "Sourcing": "Non-GMO Project"
+  },
+  "status": "published",
+  "source_urls": [
+   "https://www.silk.com/plant-based-products/almondmilk/original-almondmilk/"
+  ],
+  "image_url": "https://www.silk.com/wp-content/uploads/silk-Original-almondmilk-2.png"
+ },
+ {
+  "category": "dairy",
+  "name": "Blue Diamond Almond Breeze Original Almond Milk",
+  "brand": "Blue Diamond Almond Breeze",
+  "score": 50,
+  "score_label": "COMPROMISED",
+  "score_rationale": "Every food here starts with 60 points. −6 — there's added sugar. −4 — gums and stabilizers fake a texture real dairy has on its own. Add it up: 50. Compromised — read the flags before you buy.",
+  "description": "The front of the pack sells one story; the back tells another. THE INGREDIENTS: Almondmilk (Filtered Water, Almonds), Cane Sugar, Calcium Carbonate, Sea Salt, Potassium Citrate, Sunflower Lecithin, Gellan Gum, Vitamin A Palmitate, Vitamin D2, D-Alpha-Tocopherol. THE FLAGS: Cane sugar — Sweetened — about 7g of added sugar per cup. Sunflower lecithin + gellan gum — Emulsifier and gum keeping it blended and thick.",
+  "properties": {
+   "Sourcing": "conventional"
+  },
+  "status": "published",
+  "source_urls": [
+   "https://www.heb.com/product-detail/blue-diamond-almond-breeze-original-almond-milk/1292293"
+  ],
+  "image_url": "https://images.heb.com/is/image/HEBGrocery/001292293-1"
+ },
+ {
+  "category": "dairy",
+  "name": "Original Cream Cheese",
+  "brand": "Philadelphia",
+  "score": 50,
+  "score_label": "COMPROMISED",
+  "score_rationale": "Every food here starts with 60 points. −6 — it's kept shelf-stable with synthetic preservatives. −4 — gums and stabilizers fake a texture real dairy has on its own. Add it up: 50. Compromised — read the flags before you buy.",
+  "description": "The front of the pack sells one story; the back tells another. THE INGREDIENTS: Pasteurized Milk and Cream, Whey Protein Concentrate, Whey, Salt, Carob Bean Gum, Xanthan Gum, Guar Gum, Sorbic Acid (as a preservative), Vitamin A Palmitate, Cheese Culture. THE FLAGS: Carob bean + xanthan + guar gum — Three gums building the texture that cream and culture used to build alone. Sorbic acid — Synthetic mold-inhibiting preservative.",
+  "properties": {
+   "Sourcing": "conventional"
+  },
+  "status": "published",
+  "source_urls": [
+   "https://world.openfoodfacts.org/product/0021000612154"
+  ],
+  "image_url": "https://images.openfoodfacts.org/images/products/002/100/061/2154/front_en.44.full.jpg"
+ },
+ {
+  "category": "dairy",
+  "name": "Oat Milk Plain",
+  "brand": "Chobani",
+  "score": 48,
+  "score_label": "COMPROMISED",
+  "score_rationale": "Every food here starts with 60 points. −8 — there's refined industrial oil where cream should be. −4 — gums and stabilizers fake a texture real dairy has on its own. Add it up: 48. Compromised — read the flags before you buy.",
+  "description": "The front of the pack sells one story; the back tells another. THE INGREDIENTS: Oat Blend (Water, Whole Grain Oats), Contains 2% or Less of: Rapeseed Oil, Sea Salt, Vitamin D2 (Yeast Extract), Calcium Carbonate, Gellan Gum. THE FLAGS: Rapeseed oil — Rapeseed (canola) oil for creamy texture — a refined seed oil. Gellan gum — Gum that keeps the oat milk from separating.",
+  "properties": {
+   "Sourcing": "conventional"
+  },
+  "status": "published",
+  "source_urls": [
+   "https://www.kroger.com/p/chobani-oat-plain-plant-based-milk/0081829001698"
+  ],
+  "image_url": "https://www.kroger.com/product/images/large/front/0081829001698"
+ },
+ {
+  "category": "dairy",
+  "name": "Country Crock Original Spread",
+  "brand": "Country Crock",
+  "score": 48,
+  "score_label": "COMPROMISED",
+  "score_rationale": "Every food here starts with 60 points. −8 — there's refined industrial oil where cream should be. −4 — it leans on flavorings the label doesn't have to explain. Add it up: 48. Compromised — read the flags before you buy.",
+  "description": "The front of the pack sells one story; the back tells another. THE INGREDIENTS: Purified Water, Soybean Oil, Palm Kernel And Palm Oil, Salt, Lecithin (Soy), Vinegar, Natural Flavors, Vitamin A Palmitate, Beta Carotene (Color). THE FLAGS: Soybean oil (+ palm blend) — This isn't butter — it's water and soybean oil shaped like butter. Natural flavors — The butter taste is a flavoring. Beta carotene (color) — Natural colorant for the butter-yellow look.",
+  "properties": {
+   "Sourcing": "conventional"
+  },
+  "status": "published",
+  "source_urls": [
+   "https://countrycrock.com"
+  ],
+  "image_url": "https://www.countrycrock.com/en-us/-/media/Project/Upfield/Brands/Country-Crock/Country-Crock/Assets/Products/Original-Buttery-Spreads-New/Country-Crock-Original-45oz_Front-Top.png?rev=4c71af53464a4314b19a8cb50e609fd6"
+ },
+ {
+  "category": "dairy",
+  "name": "I Can't Believe It's Not Butter Original Spread",
+  "brand": "I Can't Believe It's Not Butter",
+  "score": 48,
+  "score_label": "COMPROMISED",
+  "score_rationale": "Every food here starts with 60 points. −8 — there's refined industrial oil where cream should be. −4 — it leans on flavorings the label doesn't have to explain. Add it up: 48. Compromised — read the flags before you buy.",
+  "description": "The front of the pack sells one story; the back tells another. THE INGREDIENTS: Water, Oils (Soybean, Palm Kernel, Palm), Salt, Lecithin (Soy), Natural Flavors, Lactic Acid, Vitamins (E, D2, A, B12), Beta Carotene (Color). THE FLAGS: Soybean oil (+ palm blend) — Believe it: water and soybean oil, not butter. Natural flavors — The butter taste is a flavoring. Beta carotene (color) — Natural colorant.",
+  "properties": {
+   "Sourcing": "conventional"
+  },
+  "status": "published",
+  "source_urls": [
+   "https://icantbelieveitsnotbutter.com"
+  ],
+  "image_url": "https://www.icantbelieveitsnotbutter.com/en/-/media/Project/Upfield/Brands/ICBIN/ICBIN-US/Assets/New-images-2025/product-images/Original/01001_Tub_15oz_Original_Disclaimer10001-(1).png?rev=6f6d4aa309f94219913ef9207a85f8cc"
+ },
+ {
+  "category": "dairy",
+  "name": "Vanilla Blended Greek Yogurt",
+  "brand": "Chobani",
+  "score": 46,
+  "score_label": "COMPROMISED",
+  "score_rationale": "Every food here starts with 60 points. −4 — it leans on flavorings the label doesn't have to explain. −6 — there's added sugar. −4 — gums and stabilizers fake a texture real dairy has on its own. Add it up: 46. Compromised — read the flags before you buy.",
+  "description": "The front of the pack sells one story; the back tells another. THE INGREDIENTS: Cultured Nonfat Milk, Cane Sugar, Water, Natural Flavors, Fruit Pectin, Guar Gum, Locust Bean Gum, Vanilla Extract, Lemon Juice Concentrate, 6 Live and Active Cultures. THE FLAGS: Cane sugar — Added sugar is the second ingredient, right after milk. Natural flavors — Undisclosed flavoring on top of the listed vanilla extract. Pectin + guar gum + locust bean gum — Three thickeners doing what strained yogurt does on its own.",
+  "properties": {
+   "Sourcing": "conventional"
+  },
+  "status": "published",
+  "source_urls": [
+   "https://www.heb.com"
+  ],
+  "image_url": "https://images.ctfassets.net/01to7kbtr3az/x5m9LXq6u3l7ZCrHmaMDO/705e02c85f11e86561ce03d87cb2f45a/VN_GRK_32oz_1024x512_metadata.png"
+ },
+ {
+  "category": "dairy",
+  "name": "Singles American",
+  "brand": "Kraft",
+  "score": 46,
+  "score_label": "COMPROMISED",
+  "score_rationale": "Every food here starts with 60 points. −6 — it's kept shelf-stable with synthetic preservatives. −4 — gums and stabilizers fake a texture real dairy has on its own. −4 — it carries added phosphate salts. Add it up: 46. Compromised — read the flags before you buy.",
+  "description": "The front of the pack sells one story; the back tells another. THE INGREDIENTS: Cheddar Cheese (Cultured Milk, Salt, Enzymes), Skim Milk, Milkfat, Milk, Milk Protein Concentrate, Whey, Calcium Phosphate, Sodium Phosphate, Contains less than 2% of Modified Food Starch, Salt, Lactic Acid, Oleoresin Paprika (Color), Natamycin, Enzymes, Cheese Culture, Annatto (Color). THE FLAGS: Sodium + calcium phosphate — Phosphate melting salts — that's what makes a 'cheese product' instead of cheese. Modified food starch — Starch filler standing in for more cheese. Natamycin — An antifungal mold inhibitor. Paprika + annatto (color) — Natural colors for the orange.",
+  "properties": {
+   "Sourcing": "conventional"
+  },
+  "status": "published",
+  "source_urls": [
+   "https://www.ewg.org/foodscores/products/021000604715"
+  ],
+  "image_url": "https://images.openfoodfacts.org/images/products/002/100/060/4715/front_en.23.full.jpg"
+ },
+ {
+  "category": "dairy",
+  "name": "Vanilla Greek Lowfat Yogurt",
+  "brand": "Two Good",
+  "score": 43,
+  "score_label": "COMPROMISED",
+  "score_rationale": "Every food here starts with 60 points. −4 — it leans on flavorings the label doesn't have to explain. −4 — refined starch is doing a job the milk should do. −5 — the sweetness comes from zero-calorie sweeteners instead of food. −4 — gums and stabilizers fake a texture real dairy has on its own. Add it up: 43. Compromised — read the flags before you buy.",
+  "description": "The front of the pack sells one story; the back tells another. THE INGREDIENTS: Cultured Grade A Ultra-Filtered Non Fat Milk, Cultured Grade A Reduced Fat Milk, Water, Less Than 1%: Tapioca Starch, Natural Flavors, Lemon Juice Concentrate, Gellan Gum, Fruit & Vegetable Juice Concentrate (For Color), Stevia Extract, Sea Salt, Vanilla Bean Specks, Vitamin D3, Active Yogurt Cultures. THE FLAGS: Stevia extract — The sweetness is a zero-calorie sweetener — stevia is plant-derived, the gentler kind, but it trains the same sweet tooth. Tapioca starch — Refined starch thickener. Natural flavors — Undisclosed flavoring. Gellan gum — Gum for texture.",
+  "properties": {
+   "Sourcing": "conventional"
+  },
+  "status": "published",
+  "source_urls": [
+   "https://www.ewg.org/foodscores/products/036632039200"
+  ],
+  "image_url": "https://www.heytoogoodandco.com/wp-content/uploads/too-good-and-co-vanilla-yogurt-cultured-ultra-filtered-low-fat-milk-blended-cup.webp"
+ },
+ {
+  "category": "dairy",
+  "name": "Original Strawberry Yogurt",
+  "brand": "Yoplait",
+  "score": 42,
+  "score_label": "COMPROMISED",
+  "score_rationale": "Every food here starts with 60 points. −4 — it leans on flavorings the label doesn't have to explain. −6 — there's added sugar. −4 — refined starch is doing a job the milk should do. −4 — gums and stabilizers fake a texture real dairy has on its own. Add it up: 42. Compromised — read the flags before you buy.",
+  "description": "The front of the pack sells one story; the back tells another. THE INGREDIENTS: Cultured Grade A Low Fat Milk, Sugar, Strawberries, Modified Food Starch, Water. Contains 1% or less of: Kosher Gelatin, Corn Starch, Carmine (for color), Pectin, Natural Flavor, Vitamin A Acetate, Vitamin D3. THE FLAGS: Sugar — Added sugar is the second ingredient — ahead of the strawberries. Modified food starch + corn starch — Two refined starches thickening what the milk should. Carmine (for color) — The pink is carmine — a natural red made from cochineal insects. Not a dye, but worth knowing. Kosher gelatin + pectin — Gelatin and pectin holding the texture together. Natural flavor — Undisclosed flavoring.",
+  "properties": {
+   "Sourcing": "conventional"
+  },
+  "status": "published",
+  "source_urls": [
+   "https://yoplait.com"
+  ],
+  "image_url": "https://www.yoplait.com/wp-content/uploads/2022/05/yoplait_original_low_fat_strawberry_yogurt_cup_made_with_real_fruit_6_oz_front_of_package.png"
+ },
+ {
+  "category": "dairy",
+  "name": "Strawberry Probiotic Yogurt",
+  "brand": "Activia",
+  "score": 42,
+  "score_label": "COMPROMISED",
+  "score_rationale": "Every food here starts with 60 points. −4 — it leans on flavorings the label doesn't have to explain. −6 — there's added sugar. −4 — refined starch is doing a job the milk should do. −4 — gums and stabilizers fake a texture real dairy has on its own. Add it up: 42. Compromised — read the flags before you buy.",
+  "description": "The front of the pack sells one story; the back tells another. THE INGREDIENTS: Cultured Reduced Fat Milk, Cane Sugar, Strawberries, Water, Corn Starch, Less Than 1%: Pectin, Natural Flavors, Fruit & Vegetable Juice (For Color), Lemon Juice Concentrate, Vitamin D3. Live Cultures + probiotic strain B. Lactis DN-173-010. THE FLAGS: Cane sugar — Added sugar is the second ingredient — ahead of the strawberries. Corn starch — Refined starch thickener. Pectin — Fruit-derived thickener. Natural flavors — Undisclosed flavoring.",
+  "properties": {
+   "Sourcing": "conventional"
+  },
+  "status": "published",
+  "source_urls": [
+   "https://activia.us.com"
+  ],
+  "image_url": "https://smartmedia.digital4danone.com/is/image/danonecs/ACT-base-4pk-strawberry?ts=1784046534976&fmt=png-alpha&bfc=on&dpr=off"
+ },
+ {
+  "category": "dairy",
+  "name": "Original Buttery Spread",
+  "brand": "Smart Balance",
+  "score": 42,
+  "score_label": "COMPROMISED",
+  "score_rationale": "Every food here starts with 60 points. −8 — there's refined industrial oil where cream should be. −4 — it leans on flavorings the label doesn't have to explain. −6 — it's kept shelf-stable with synthetic preservatives. Add it up: 42. Compromised — read the flags before you buy.",
+  "description": "The front of the pack sells one story; the back tells another. THE INGREDIENTS: Water, Vegetable Oil Blend (Palm Oil, Canola Oil, Flaxseed Oil), Less than 2% of: Salt, Monoglycerides, Olive Oil, Natural and Artificial Flavors, Vitamin A Palmitate, Vitamin D3, Beta Carotene (Color); Potassium Sorbate, Lactic Acid, TBHQ, Calcium Disodium EDTA, Citric Acid (to Preserve Freshness). THE FLAGS: Canola oil (+ palm blend) — An oil-water spread built on refined oils. Natural and artificial flavors — Includes synthetic flavor chemicals. TBHQ + potassium sorbate + calcium disodium EDTA — A three-deep synthetic preservative stack — TBHQ and EDTA are the ones to know. Beta carotene (color) — Natural colorant.",
+  "properties": {
+   "Sourcing": "conventional"
+  },
+  "status": "published",
+  "source_urls": [
+   "https://wegmans.com"
+  ],
+  "image_url": "https://images.openfoodfacts.org/images/products/003/377/601/1604/front_en.35.full.jpg"
+ },
+ {
+  "category": "dairy",
+  "name": "Original Pea Milk",
+  "brand": "Ripple",
+  "score": 39,
+  "score_label": "AVOID",
+  "score_rationale": "Every food here starts with 60 points. +5 — an outside group verifies what's on the label. −8 — there's refined industrial oil where cream should be. −4 — it leans on flavorings the label doesn't have to explain. −6 — there's added sugar. −4 — gums and stabilizers fake a texture real dairy has on its own. −4 — it carries added phosphate salts. Add it up: 39. Bottom of the aisle. The label tells you why.",
+  "description": "This is a factory formula wearing dairy's clothes — the ingredient list gives it away. THE INGREDIENTS: Water, Pea Protein, Cane Sugar, High Oleic Sunflower or Safflower Oil, Contains Less Than 1% of Vitamin A Palmitate, Vitamin D2, Vitamin B12, Tricalcium Phosphate, Dipotassium Phosphate, Natural Flavor, Gum Arabic, Guar Gum, Sea Salt, Gellan Gum. THE FLAGS: Cane sugar — The Original version carries about 6g of added sugar per cup. High oleic sunflower or safflower oil — Refined seed oil for the creamy mouthfeel. Tricalcium + dipotassium phosphate — Phosphate salts — added inorganic phosphorus. Natural flavor — Undisclosed flavoring. Gum arabic + guar gum + gellan gum — Three gums working together to keep the pea protein suspended.",
+  "properties": {
+   "Sourcing": "Non-GMO Project"
+  },
+  "status": "published",
+  "source_urls": [
+   "https://ripplefoods.com/products/ripple-refrigerated-original-milk"
+  ],
+  "image_url": "https://ripplefoods.com/cdn/shop/files/original-48oz.png?v=1729722316"
+ },
+ {
+  "category": "dairy",
+  "name": "The Original Liquid Creamer",
+  "brand": "Coffee mate",
+  "score": 34,
+  "score_label": "AVOID",
+  "score_rationale": "Every food here starts with 60 points. −8 — there's refined industrial oil where cream should be. −4 — it leans on flavorings the label doesn't have to explain. −6 — there's added sugar. −4 — gums and stabilizers fake a texture real dairy has on its own. −4 — it carries added phosphate salts. Add it up: 34. Bottom of the aisle. The label tells you why.",
+  "description": "This is a factory formula wearing dairy's clothes — the ingredient list gives it away. THE INGREDIENTS: Water, Corn Syrup Solids, Soybean Oil, and Less Than 2% of Micellar Casein (a Milk Derivative), Mono- and Diglycerides, Dipotassium Phosphate, Natural Flavor, Carrageenan. THE FLAGS: Corn syrup solids — The second ingredient is corn syrup — there's no cream in this creamer. Soybean oil — The 'cream' is soybean oil, a refined seed oil. Mono- and diglycerides + carrageenan — Processed emulsifiers and seaweed thickener holding the illusion together. Dipotassium phosphate — Phosphate salt to stop curdling. Natural flavor — Undisclosed flavoring.",
+  "properties": {
+   "Sourcing": "conventional"
+  },
+  "status": "published",
+  "source_urls": [
+   "https://goodnes.com"
+  ],
+  "image_url": "https://www.goodnes.com/sites/g/files/jgfbjl321/files/styles/og_image/public/gdn_product/coffeemate/field_product_images/coffeemate-ukvybjknkywughrlg0vy.jpg?itok=k_tsZS2U"
+ },
+ {
+  "category": "dairy",
+  "name": "French Vanilla Creamer",
+  "brand": "International Delight",
+  "score": 34,
+  "score_label": "AVOID",
+  "score_rationale": "Every food here starts with 60 points. −8 — there's refined industrial oil where cream should be. −4 — it leans on flavorings the label doesn't have to explain. −6 — there's added sugar. −4 — gums and stabilizers fake a texture real dairy has on its own. −4 — it carries added phosphate salts. Add it up: 34. Bottom of the aisle. The label tells you why.",
+  "description": "This is a factory formula wearing dairy's clothes — the ingredient list gives it away. THE INGREDIENTS: Water, Sugar, Palm Oil, Contains 2% or less of: Sodium Caseinate, Dipotassium Phosphate, Carrageenan, Mono and Diglycerides, Natural & Artificial Flavors, Sodium Stearoyl Lactylate, Salt. THE FLAGS: Sugar — Second ingredient. This is sweetened oil-water, not cream. Palm oil (replacing cream) — The fat is refined palm oil standing in for dairy cream. Carrageenan + mono/diglycerides + sodium stearoyl lactylate — Three emulsifier/thickener systems. Dipotassium phosphate — Phosphate salt to stop curdling. Natural & artificial flavors — Includes synthetic flavor chemicals — the 'French vanilla' is a lab note.",
+  "properties": {
+   "Sourcing": "conventional"
+  },
+  "status": "published",
+  "source_urls": [
+   "https://internationaldelight.com"
+  ],
+  "image_url": "https://www.internationaldelight.com/wp-content/themes/id/assets/images/products/flavor-faves/big/french-vanilla-coffee-creamer.png"
+ },
+ {
+  "category": "dairy",
+  "name": "Original",
+  "brand": "Velveeta",
+  "score": 34,
+  "score_label": "AVOID",
+  "score_rationale": "Every food here starts with 60 points. −8 — there's refined industrial oil where cream should be. −4 — refined starch is doing a job the milk should do. −6 — it's kept shelf-stable with synthetic preservatives. −4 — gums and stabilizers fake a texture real dairy has on its own. −4 — it carries added phosphate salts. Add it up: 34. Bottom of the aisle. The label tells you why.",
+  "description": "This is a factory formula wearing dairy's clothes — the ingredient list gives it away. THE INGREDIENTS: Skim Milk, Milk, Canola Oil, Milk Protein Concentrate, Sodium Phosphate, Contains less than 2% of Modified Food Starch, Whey Protein Concentrate, Maltodextrin, Whey, Salt, Calcium Phosphate, Lactic Acid, Sorbic Acid as a Preservative, Milkfat, Sodium Alginate, Sodium Citrate, Enzymes, Apocarotenal and Annatto (Color), Cheese Culture, Vitamin A Palmitate. THE FLAGS: Canola oil — The third ingredient is seed oil — partly replacing the dairy fat. Sodium + calcium phosphate + sodium citrate — A stack of melting salts. Maltodextrin — Starch-derived filler. Sorbic acid — Synthetic mold preservative. Modified food starch + sodium alginate — Starch and alginate building the melt. Apocarotenal + annatto (color) — Carotenoid colorants for the orange.",
+  "properties": {
+   "Sourcing": "conventional"
+  },
+  "status": "published",
+  "source_urls": [
+   "https://www.ewg.org/foodscores/products/021000616909"
+  ],
+  "image_url": "https://images.openfoodfacts.org/images/products/002/100/061/6909/front_en.11.full.jpg"
+ }
+]
