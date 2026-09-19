@@ -197,6 +197,19 @@ export const INGREDIENT_NOTES: Record<string, string> = {
   "baking soda": "Sodium bicarbonate; leavening agent.",
   "tocopherols": "Vitamin E compounds used to stop fats going rancid.",
   "rosemary extract": "Natural antioxidant used to keep fats from oxidising.",
+
+  // Meat, cures and seafood processing
+  "celery powder": "Concentrated natural source of nitrate; cures 'uncured' meats the same way sodium nitrite cures conventional ones.",
+  "cultured celery powder": "Fermented celery powder — its nitrate has been converted to nitrite, the active curing agent.",
+  "celery juice powder": "Concentrated natural source of nitrate used to cure 'uncured' meats.",
+  "cherry powder": "Vitamin C source that accelerates the celery-powder cure; part of the curing system, not a flavoring.",
+  "sodium erythorbate": "Cure accelerator that speeds the nitrite reaction and holds cured color.",
+  "turbinado sugar": "Less-refined cane sugar; counts as added sugar.",
+  "potato starch": "Binder that holds added moisture in processed meat.",
+  "chicken broth": "Added liquid; carries water and salt into the meat.",
+  "aqueous natural smoke": "Water-based natural smoke flavoring.",
+  "natural smoke flavor": "Smoke condensate used as flavoring.",
+  "vinegar": "Acidity keeps bacteria down; a real-food shelf-life aid.",
 };
 
 // ── Ingredients worth flagging ────────────────────────────────────────────────
@@ -265,4 +278,30 @@ export const INGREDIENT_CONCERNS: Record<string, string> = {
   "egg whites": "Egg allergen.",
   "wheat": "Contains gluten.",
   "sesame seeds": "Major allergen.",
+
+  // Cures and processed-meat additives.
+  "celery powder": "Natural nitrate cure — 'uncured' on the label does not mean nitrate-free.",
+  "cultured celery powder": "Natural nitrite cure — 'uncured' on the label does not mean nitrate-free.",
+  "celery juice powder": "Natural nitrate cure — 'uncured' on the label does not mean nitrate-free.",
+  "sodium nitrite": "Curing agent; processed meats cured with nitrite are classified by IARC as Group 1 carcinogens.",
+  "sodium nitrate": "Curing agent; converts to nitrite in the meat.",
+  "turbinado sugar": "Added sugar.",
+  "dextrose": "Added sugar.",
+  "maltodextrin": "Refined starch with a higher glycemic impact than table sugar.",
+  "smoke flavor": "Flavoring additive; composition not disclosed.",
+  "natural smoke flavor": "Flavoring additive rather than actual smoking.",
+  "aqueous natural smoke": "Flavoring additive rather than actual smoking.",
+  "monosodium glutamate": "Flavor enhancer some people prefer to avoid; must be declared.",
+  "yeast extract": "Contains free glutamate — an MSG-adjacent flavor enhancer.",
+  "modified food starch": "Processed starch used as a filler and binder.",
+  "caramel color": "Added coloring; some manufacturing methods produce 4-MEI, under safety review.",
+  "carbon monoxide": "Gas treatment that locks in fresh-looking color; masks the fish's true age.",
+  "sodium tripolyphosphate": "Phosphate soak that makes seafood absorb and hold extra water weight.",
+  "sodium phosphate": "Added phosphate; moisture retention and cured texture.",
+  "sodium phosphates": "Added phosphates; moisture retention and cured texture.",
+  "sodium metabisulfite": "Sulfite preservative; can trigger reactions in sulfite-sensitive people.",
+  "red 40": "Artificial color.",
+  "yellow 5": "Artificial color.",
+  "yellow 6": "Artificial color.",
+  "blue 1": "Artificial color.",
 };

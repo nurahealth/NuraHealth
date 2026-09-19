@@ -380,7 +380,7 @@ export default async function LabProductPage({ params }: { params: Promise<{ slu
                 <Eyebrow color={SAGE}>The breakdown</Eyebrow>
                 <div style={{ marginTop: 9, display: "flex", flexDirection: "column", gap: 10, maxWidth: 760 }}>
                   {product.description
-                    .split(/(?= THE STICKER TRICK:| WHERE IT'S GROWN MATTERS:| NOTE:)/)
+                    .split(/(?= THE STICKER TRICK:| WHERE IT'S GROWN MATTERS:| NOTE:| THE INGREDIENTS:| THE FLAGS:)/)
                     .map((seg, i) => (
                       <p key={i} style={{ margin: 0, fontFamily: SANS, fontSize: 14, color: TEXT_SEC, lineHeight: 1.65 }}>{seg.trim()}</p>
                     ))}
