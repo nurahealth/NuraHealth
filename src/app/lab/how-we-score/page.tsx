@@ -61,7 +61,7 @@ export default function HowWeScorePage() {
         Every product starts at 100 and loses points for what is on its label. The rules are fixed, the same for every product, and listed here in full — the score is not an opinion, it is arithmetic you can check.
       </p>
       <p style={{ fontFamily: SANS, fontSize: 15, color: TEXT_SEC, lineHeight: 1.65, margin: "0 0 30px", maxWidth: 640 }}>
-        80 and above is <strong style={{ color: TEXT }}>Excellent</strong>, 60 to 79 <strong style={{ color: TEXT }}>Good</strong>, 40 to 59 <strong style={{ color: TEXT }}>Fair</strong>, below 40 <strong style={{ color: TEXT }}>Poor</strong>. A product with fewer than three of these factors on its label is marked provisional.
+        85 and above is <strong style={{ color: TEXT }}>Top Shelf</strong>, 70 to 84 <strong style={{ color: TEXT }}>Strong</strong>, 55 to 69 <strong style={{ color: TEXT }}>Decent</strong>, 40 to 54 <strong style={{ color: TEXT }}>Compromised</strong>, below 40 <strong style={{ color: TEXT }}>Avoid</strong>. A product with fewer than three of these factors on its label is marked provisional.
       </p>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>

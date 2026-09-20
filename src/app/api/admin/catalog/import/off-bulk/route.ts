@@ -126,9 +126,23 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
       for (const p of hits) {
         if (products.length >= max) { stoppedMidPage = true; break; }
-        const inUS = Array.isArray((p as { countries_tags?: string[] }).countries_tags) && ((p as { countries_tags?: string[] }).countries_tags as string[]).includes("en:united-states");
+        // US-PRIMARY market test: the product's country list must be entirely
+        // North American. A French or German product a traveler once scanned
+        // carries its home country in countries_tags and is rejected here —
+        // "includes US" alone let imports leak in.
+        const countries = ((p as { countries_tags?: string[] }).countries_tags ?? []) as string[];
+        const NA = new Set(["en:united-states", "en:canada", "en:mexico"]);
+        const usPrimary = countries.includes("en:united-states") && countries.every((c) => NA.has(c));
         const isEnglish = ((p as { lang?: string }).lang ?? "en") === "en";
-        if (!inUS || !isEnglish) { skippedNoData++; continue; }
+        // Name hygiene: printable ASCII only (no é/ü/… — those are imports),
+        // and long enough to be a real product name.
+        const rawName = (p.product_name ?? "").trim();
+        const asciiName = /^[\x20-\x7E]+$/.test(rawName) && rawName.length >= 6;
+        if (!usPrimary || !isEnglish || !asciiName) { skippedNoData++; continue; }
+        // SHOUTING labels read like data-entry junk — normalise to title case.
+        if (rawName === rawName.toUpperCase() && /[A-Z]{4,}/.test(rawName)) {
+          p.product_name = rawName.toLowerCase().replace(/\b[a-z]/g, (m) => m.toUpperCase());
+        }
         if (!p.product_name?.trim() || !p.brands?.trim() || !p.image_front_url?.trim() || !hasNutrition(p)) {
           skippedNoData++;
           continue;
@@ -153,7 +167,9 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     const { tally, results } = products.length
       ? await importCatalogProducts(products, {
           updateExisting: false,
-          requirePackshot: false,
+          // IMAGE LAW: a product whose photo won't cut out cleanly is skipped,
+          // never imported with a raw photo or no image.
+          requirePackshot: true,
           deadline: started + TIME_BUDGET_MS,
         })
       : { tally: {}, results: [] };
